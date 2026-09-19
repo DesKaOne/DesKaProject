@@ -290,21 +290,11 @@ func (l *MatureLedger) applyAssetTransactionV3(tx types.Transaction, height uint
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
 		if asset.IsNative(tx.EffectiveAssetID()) {
-			if tx.EffectiveFeePayer() == tx.From {
-				cost, costErr := arith.Add(tx.Amount, tx.Fee)
-				if costErr != nil {
-					return costErr
-				}
-				if err = l.spendNative(tx.From, cost); err != nil {
-					break
-				}
-			} else {
-				if err = l.spendNative(tx.From, tx.Amount); err != nil {
-					break
-				}
-				if err = l.chargeNativeFee(tx.EffectiveFeePayer(), tx.Fee); err != nil {
-					break
-				}
+			if err = l.spendNative(tx.From, tx.Amount); err != nil {
+				break
+			}
+			if err = l.chargeNativeFee(tx.EffectiveFeePayer(), tx.Fee); err != nil {
+				break
 			}
 			err = l.receiveNative(tx.To, tx.Amount)
 		} else {
