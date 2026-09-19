@@ -64,7 +64,7 @@ func TestStakeUnlockRPCAdminMode(t *testing.T) {
 }
 
 func TestStakeListAndStatusRPC(t *testing.T) {
-	paths, server := newMinerRPCServer(t)
+	paths, server := newMinerRPCServerWithProfile(t, fundedRPCProfile())
 	miner := newRPCWallet(t)
 	if err := wallet.NewStore(paths.Wallets).Add(miner); err != nil {
 		t.Fatal(err)
