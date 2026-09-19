@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"deskachain/internal/asset"
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/state"
@@ -79,6 +80,11 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 		Address:   "IDR-tampered",
 		Confirmed: 1,
 		Mature:    1,
+	})
+	snapshot.AssetBalances = append(snapshot.AssetBalances, asset.BalanceEntry{
+		Address: "IDR-tampered",
+		AssetID: asset.NativeAssetID,
+		Amount:  1,
 	})
 	snapshot.StateRoot, err = state.RootForCollectionsWithAssets(snapshot.Accounts, snapshot.Stakes, snapshot.Assets, snapshot.AssetBalances)
 	if err != nil {
