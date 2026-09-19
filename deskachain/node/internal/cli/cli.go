@@ -91,6 +91,11 @@ func (a App) WithDataDir(datadir string) App {
 	return a
 }
 
+func (a App) WithProfile(profile config.NetworkConfig) App {
+	a.profile = profile
+	return a
+}
+
 func (a App) Run(args []string) error {
 	if len(args) > 0 && isHelpArg(args[0]) {
 		printHelp(a.out)
