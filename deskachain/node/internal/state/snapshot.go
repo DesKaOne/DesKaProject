@@ -21,6 +21,7 @@ type Snapshot struct {
 	StateRoot string                `json:"state_root"`
 	Accounts  []ledger.StateAccount `json:"accounts"`
 	Stakes    []staking.Record      `json:"stakes"`
+	Coinbases []ledger.StateCoinbase `json:"coinbases"`
 }
 
 func SnapshotForLedger(l *ledger.MatureLedger) (Snapshot, error) {
