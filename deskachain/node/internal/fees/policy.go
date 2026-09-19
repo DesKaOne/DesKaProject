@@ -36,7 +36,12 @@ func GasUsed(tx types.Transaction, profile config.NetworkConfig) (uint64, uint64
 	if err != nil {
 		return 0, 0, err
 	}
-	raw, err := tx.CanonicalSigningBytesWithChainID(profile.ChainID)
+	// Gas is charged against the unsigned envelope, not key/signature bytes,
+	// so adding the sender signature or a paymaster authorization does not
+	// change the quoted gas.
+	gasTx := tx
+	gasTx.PublicKey = ""
+	raw, err := gasTx.CanonicalSigningBytesWithChainID(profile.ChainID)
 	if err != nil {
 		return 0, 0, fmt.Errorf("fee estimation encoding failed: %w", err)
 	}
