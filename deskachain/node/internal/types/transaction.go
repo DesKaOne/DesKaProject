@@ -12,7 +12,10 @@ const (
 	TxVersionCanonical uint32 = 2
 )
 
-const CoinbaseSender = "COINBASE"
+const (
+	CoinbaseSender = "COINBASE"
+	MaxSupportedTxVersion uint32 = TxVersionLegacy
+)
 
 const (
 	TxTypeTransfer    = "transfer"
