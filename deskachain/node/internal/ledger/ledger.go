@@ -194,13 +194,23 @@ func (l *Ledger) Clone() *Ledger {
 }
 
 func TotalSupply(blocks []types.Block) uint64 {
+	return TotalSupplyWithProfile(blocks, config.Localnet())
+}
+
+func TotalSupplyWithProfile(blocks []types.Block, profile config.NetworkConfig) uint64 {
 	var total uint64
 	for _, block := range blocks {
 		if block.Height == 0 {
 			continue
 		}
 		for _, tx := range block.Transactions {
-			if tx.Coinbase {
+			if !tx.Coinbase {
+				continue
+			}
+			if profile.TxVersion >= types.TxVersionAsset {
+				total = arith.AddCap(total, tx.Amount)
+			} else {
+				// Legacy coinbase amounts bundle subsidy + collected fees.
 				total = arith.AddCap(total, config.InitialBlockReward)
 			}
 		}
