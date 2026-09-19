@@ -1,6 +1,8 @@
 package p2p
 
 import (
+	"time"
+
 	"deskachain/internal/chain"
 	"deskachain/internal/config"
 	"deskachain/internal/types"
@@ -68,7 +70,11 @@ func CommonAncestorWithPeerAndProfile(paths config.Paths, peer string, profile c
 	if err != nil {
 		return LocatorResponse{}, CommonAncestorResponse{}, err
 	}
-	ancestor, err := NewClient().CommonAncestor(peer, CommonAncestorRequest{Locator: locator.Locator})
+	client, err := NewClientForProfile(paths, profile, 5*time.Second)
+	if err != nil {
+		return LocatorResponse{}, CommonAncestorResponse{}, err
+	}
+	ancestor, err := client.CommonAncestor(peer, CommonAncestorRequest{Locator: locator.Locator})
 	if err != nil {
 		return locator, CommonAncestorResponse{}, err
 	}

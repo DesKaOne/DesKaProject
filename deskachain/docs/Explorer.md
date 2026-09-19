@@ -2,7 +2,7 @@
 
 Phase 4.5 hardens the safe read-only explorer web UI and API for public-testnet use. It adds `/explorer/search`, pagination metadata, friendlier API errors, and UI pagination/search polish.
 
-Testnet DKC has no monetary value. Staking remains collateral-only. Service points are simulation-only and are not spendable DKC.
+Testnet IDR has no monetary value. Staking remains collateral-only. Service points are simulation-only and are not spendable IDR.
 
 ## Safety Model
 
@@ -34,7 +34,7 @@ Views included:
 - address summary with recent transaction history and stake records,
 - stake records,
 - service-node simulation summary,
-- search by height, block hash, transaction id, or DKC address.
+- search by height, block hash, transaction id, or IDR address.
 - copy buttons for long hashes and addresses.
 
 The UI fetches the same-host API by default, for example `/explorer/status` and `/explorer/blocks?limit=20`. An optional `api` query parameter can point at another RPC base URL only when the target node's CORS settings allow it:
@@ -124,13 +124,13 @@ curl http://127.0.0.1:9311/explorer/service/<ADDRESS>
 - block height integer,
 - 64-character block hash,
 - 64-character transaction id,
-- `DKC...` address for the active network.
+- `IDR...` address for the active network.
 
 The response contains typed results with a UI `path` and API `api_path`. Hash searches try block and transaction matches and can return more than one typed result if an id is ambiguous.
 
 ## Status Response
 
-`/explorer/status` returns network identity, tip, difficulty, maturity, supply, pending transaction count, peer count, RPC mode flags, `mainnet_available: false`, and a warning that testnet DKC has no monetary value.
+`/explorer/status` returns network identity, tip, difficulty, maturity, supply, pending transaction count, peer count, RPC mode flags, `mainnet_available: false`, and a warning that testnet IDR has no monetary value.
 
 ## Blocks And Transactions
 
@@ -168,4 +168,4 @@ Service endpoints expose local service simulation state:
 
 Important: service registration, challenge samples, and simulated rewards are local to this RPC node's service store. They are not global consensus state. Stake collateral itself is chain-backed and syncs between peers.
 
-Service points are simulation-only and are not DKC.
+Service points are simulation-only and are not IDR.

@@ -6,9 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"deskachain/internal/arith"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
+	"deskachain/internal/fees"
 	"deskachain/internal/ledger"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
 
@@ -56,7 +59,11 @@ func validateChain(blocks []types.Block, params config.DifficultyParams, consens
 		if block.PreviousHash != prev.Hash {
 			return ValidationResult{}, fmt.Errorf("block %d previous_hash mismatch", block.Height)
 		}
-		if block.Height != prev.Height+1 {
+		expectedHeight, heightErr := arith.Add(prev.Height, 1)
+		if heightErr != nil {
+			return ValidationResult{}, errors.New("block height overflow")
+		}
+		if block.Height != expectedHeight {
 			return ValidationResult{}, fmt.Errorf("block %d height mismatch", block.Height)
 		}
 		if err := validateBlock(block, prior, params, consensus, profile); err != nil {
@@ -79,7 +86,7 @@ func validateChain(blocks []types.Block, params config.DifficultyParams, consens
 	return ValidationResult{
 		Height:      blocks[len(blocks)-1].Height,
 		Blocks:      len(blocks),
-		TotalSupply: ledger.TotalSupply(blocks),
+		TotalSupply: ledger.TotalSupplyWithProfile(blocks, profile),
 	}, nil
 }
 
@@ -96,8 +103,12 @@ func ValidateNextBlockWithConsensus(block types.Block, tip types.Block, prior []
 }
 
 func ValidateNextBlockWithNetwork(block types.Block, tip types.Block, prior []types.Block, params config.DifficultyParams, consensus config.ConsensusParams, profile config.NetworkConfig) error {
-	if block.Height != tip.Height+1 {
-		return fmt.Errorf("invalid block height: got %d want %d", block.Height, tip.Height+1)
+	expectedHeight, heightErr := arith.Add(tip.Height, 1)
+	if heightErr != nil {
+		return errors.New("block height overflow")
+	}
+	if block.Height != expectedHeight {
+		return fmt.Errorf("invalid block height: got %d want %d", block.Height, expectedHeight)
 	}
 	if block.PreviousHash != tip.Hash {
 		return errors.New("previous hash does not match tip")
@@ -122,11 +133,17 @@ func ValidateBlockWithNetwork(block types.Block, prior []types.Block, profile co
 }
 
 func validateBlock(block types.Block, prior []types.Block, params config.DifficultyParams, consensus config.ConsensusParams, profile config.NetworkConfig) error {
+	if err := types.ValidateBlockVersion(block.ProtocolVersion(), profile.BlockVersion); err != nil {
+		return err
+	}
 	if block.Hash != block.CalculateHash() {
 		return errors.New("block hash mismatch")
 	}
 	if block.MerkleRoot != types.CalculateMerkleRoot(block.Transactions) {
 		return errors.New("merkle root mismatch")
+	}
+	if err := ValidateBlockResourcesWithProfile(block, profile); err != nil {
+		return err
 	}
 	if block.Height > 0 {
 		expectedDifficulty := CalculateNextDifficultyWithParams(prior, params)
@@ -146,6 +163,9 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	coinbaseCount := 0
 	totalFees := uint64(0)
 	for i, tx := range block.Transactions {
+		if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), profile.TxVersion); err != nil {
+			return fmt.Errorf("tx %d %w", i, err)
+		}
 		if tx.Coinbase {
 			coinbaseCount++
 			if i != 0 {
@@ -154,7 +174,11 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			if tx.From != types.CoinbaseSender {
 				return errors.New("coinbase sender must be COINBASE")
 			}
-			if tx.ID != tx.CalculateID() {
+			expectedID, idErr := tx.CalculateIDForChainID(profile.ChainID)
+			if idErr != nil {
+				return idErr
+			}
+			if tx.ID != expectedID {
 				return errors.New("coinbase transaction id mismatch")
 			}
 			continue
@@ -168,15 +192,31 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 		if tx.TxType() == types.TxTypeTransfer && tx.From == tx.To {
 			return fmt.Errorf("tx %d sender and recipient must differ", i)
 		}
-		if tx.TxType() == types.TxTypeTransfer {
-			totalFees += tx.Fee
+		if err := fees.Validate(tx, profile); err != nil {
+			return fmt.Errorf("tx %d %w", i, err)
+		}
+		if profile.TxVersion >= types.TxVersionAsset || tx.TxType() == types.TxTypeTransfer {
+			nextFees, feeErr := arith.Add(totalFees, tx.Fee)
+			if feeErr != nil {
+				return errors.New("transaction fees overflow")
+			}
+			totalFees = nextFees
 		}
 	}
 	if block.Height > 0 {
 		if coinbaseCount != 1 {
 			return errors.New("block must include exactly one coinbase transaction")
 		}
-		want := config.InitialBlockReward + totalFees
+		want := uint64(0)
+		if profile.TxVersion >= types.TxVersionAsset {
+			want = profile.Economic.BlockSubsidy
+		} else {
+			var rewardErr error
+			want, rewardErr = arith.Add(config.InitialBlockReward, totalFees)
+			if rewardErr != nil {
+				return errors.New("block reward overflow")
+			}
+		}
 		for _, tx := range block.Transactions {
 			if tx.Coinbase && tx.Amount != want {
 				return fmt.Errorf("invalid coinbase amount: got %d want %d", tx.Amount, want)
@@ -187,6 +227,7 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	if err != nil {
 		return err
 	}
+	preBlockLedger := l.Clone()
 	for i, tx := range block.Transactions {
 		if tx.Coinbase {
 			if err := l.ApplyCoinbaseAtHeight(tx, block.Height); err != nil {
@@ -199,6 +240,23 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 				return fmt.Errorf("invalid transaction at height %d: spends immature coinbase", block.Height)
 			}
 			return fmt.Errorf("tx %d %s", i, normalizeTxValidationError(err))
+		}
+	}
+
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		candidate := preBlockLedger.Clone()
+		if err := candidate.ApplyBlock(block); err != nil {
+			return fmt.Errorf("state root replay failed: %w", err)
+		}
+		expectedStateRoot, err := state.RootForLedger(candidate)
+		if err != nil {
+			return fmt.Errorf("state root calculation failed: %w", err)
+		}
+		if block.StateRoot == "" {
+			return errors.New("canonical block state root is empty")
+		}
+		if block.StateRoot != expectedStateRoot {
+			return errors.New("state root mismatch")
 		}
 	}
 	return nil

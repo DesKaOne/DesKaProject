@@ -1,6 +1,6 @@
 # DesKaChain Release Build And Quickstart
 
-Phase 4.10 prepares the `v0.4.10-testnet-rc1` public-testnet mining-stability and difficulty-observation build for external testers and operators. Testnet DKC has no monetary value. Mainnet is not available.
+Phase 4.10 prepares the `v0.4.10-testnet-rc1` public-testnet mining-stability and difficulty-observation build for external testers and operators. Testnet IDR has no monetary value. Mainnet is not available.
 
 ## Requirements
 
@@ -31,11 +31,11 @@ sh ./scripts/build.sh v0.4.10-testnet-rc1
 Outputs:
 
 - `dist/windows-amd64/deskachain.exe`
-- `dist/windows-amd64/dkcminer.exe`
-- `dist/windows-amd64/dkcservice.exe`
+- `dist/windows-amd64/idrminer.exe`
+- `dist/windows-amd64/idrservice.exe`
 - `dist/linux-amd64/deskachain`
-- `dist/linux-amd64/dkcminer`
-- `dist/linux-amd64/dkcservice`
+- `dist/linux-amd64/idrminer`
+- `dist/linux-amd64/idrservice`
 - `dist/linux-arm64/...`
 
 ## Package Archives
@@ -110,18 +110,18 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-test.ps1 -BinDir .\dist
 bash ./scripts/smoke-test.sh ./dist/linux-amd64
 ```
 
-The smoke scripts create temporary datadirs, run `version`, initialize testnet, start a public-safe local node, mine one block with `dkcminer --once`, check `chain info`, `chain validate`, `/explorer/status`, `/explorer/blocks?limit=1`, and `/explorer-ui/`, then clean up unless `--keep-data` is supplied.
+The smoke scripts create temporary datadirs, run `version`, initialize testnet, start a public-safe local node, mine one block with `idrminer --once`, check `chain info`, `chain validate`, `/explorer/status`, `/explorer/blocks?limit=1`, and `/explorer-ui/`, then clean up unless `--keep-data` is supplied.
 
 ## Health Check Script
 
 Check a running RC1 node or public seed RPC endpoint:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID dkc-testnet-1 -ExpectedChainID 777101
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101
 ```
 
 ```sh
-bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id dkc-testnet-1 --expected-chain-id 777101
+bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id idr-testnet-1 --expected-chain-id 777101
 ```
 
 The script checks `/health`, `/explorer/status`, `/explorer/blocks?limit=1`, `/explorer-ui/`, expected network identity, public RPC safety flags, and optional CLI chain checks.
@@ -132,16 +132,16 @@ Windows:
 
 ```powershell
 .\dist\windows-amd64\deskachain.exe version
-.\dist\windows-amd64\dkcminer.exe --version
-.\dist\windows-amd64\dkcservice.exe --version
+.\dist\windows-amd64\idrminer.exe --version
+.\dist\windows-amd64\idrservice.exe --version
 ```
 
 Linux:
 
 ```sh
 ./dist/linux-amd64/deskachain version
-./dist/linux-amd64/dkcminer --version
-./dist/linux-amd64/dkcservice --version
+./dist/linux-amd64/idrminer --version
+./dist/linux-amd64/idrservice --version
 ```
 
 Expected output includes version, commit, build date, Go version, OS/ARCH, supported networks `localnet,testnet`, and `mainnet: not available`.
@@ -165,7 +165,7 @@ Create a miner wallet in a separate datadir:
 Mine once:
 
 ```powershell
-.\dkcminer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
+.\idrminer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
 ```
 
 Check the node:
@@ -178,7 +178,7 @@ Check the node:
 Run service simulation once:
 
 ```powershell
-.\dkcservice.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --endpoint http://127.0.0.1:9971 --once
+.\idrservice.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --endpoint http://127.0.0.1:9971 --once
 ```
 
 ## Linux Testnet Quickstart
@@ -193,7 +193,7 @@ In another shell:
 ```sh
 ./deskachain --datadir ./data/miner --network testnet init
 ADDR="$(./deskachain --datadir ./data/miner wallet new)"
-./dkcminer --rpc-url http://127.0.0.1:9011 --address "$ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9011 --address "$ADDR" --threads 2 --once
 ./deskachain --rpc-url http://127.0.0.1:9011 chain validate
 ```
 
@@ -202,7 +202,7 @@ ADDR="$(./deskachain --datadir ./data/miner wallet new)"
 Example units and environment files are included under:
 
 - `examples/systemd/deskachain-testnet.service`
-- `examples/systemd/dkcservice-testnet.service`
+- `examples/systemd/idrservice-testnet.service`
 - `examples/testnet/public-node.env`
 - `examples/testnet/miner-node.env`
 - `examples/testnet/faucet-node.env`
@@ -213,14 +213,14 @@ For restart checks, run `sudo systemctl restart deskachain-testnet`, then verify
 
 ## Safety Notes
 
-- Testnet DKC has no monetary value.
+- Testnet IDR has no monetary value.
 - Mainnet is not available.
 - Do not expose wallet or admin RPC to the public internet.
 - Public nodes should use `--public-rpc`; enable miner RPC only when direct miner traffic is intended.
 - Use a separate datadir for miner reward wallets when the node datadir is locked.
 - Back up `wallets.json`.
 - Seed peers are not trusted authorities. Network ID, chain ID, genesis hash, and protocol validation still apply.
-- Do not treat testnet DKC as an investment.
+- Do not treat testnet IDR as an investment.
 - There are no mining income, staking APY, profit, or reward promises.
 - Staking is collateral-only.
 - Service points are simulation-only and not spendable.

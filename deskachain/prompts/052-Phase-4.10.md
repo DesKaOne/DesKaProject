@@ -18,7 +18,7 @@ Status saat ini:
   * wallet_rpc false
   * admin_rpc false
 * Explorer API/UI read-only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -56,7 +56,7 @@ Non-goals:
 * Do not add mining pool/Stratum yet.
 * Do not add GPU mining.
 * Do not promise mining profit.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Do not make staking produce blocks.
 * Do not make service points spendable.
@@ -66,7 +66,7 @@ Non-goals:
 1. Miner reconnect and retry hardening
    ==================================================
 
-Harden `dkcminer` runtime behavior.
+Harden `idrminer` runtime behavior.
 
 Requirements:
 
@@ -345,7 +345,7 @@ README-ID.md
 Docs must explain:
 
 * Testnet mining is for testing only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * No mining profit promise.
 * Mainnet is not available.
 * PoW is the only block-production consensus.
@@ -368,16 +368,16 @@ Docs must explain:
 Example commands:
 
 Windows:
-.\dkcminer.exe --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2
+.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
 
 Linux:
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
 
 Once:
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --once
 
 Limited:
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2 --max-blocks 5
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --max-blocks 5
 
 ==================================================
 9. Explorer mining panel
@@ -472,13 +472,13 @@ powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcU
 -CheckMining
 
 C. Run one miner:
-.\dist\windows-amd64\dkcminer.exe `    --rpc-url http://127.0.0.1:9312`
---address <DKC_ADDRESS> `    --threads 2`
+.\dist\windows-amd64\idrminer.exe `    --rpc-url http://127.0.0.1:9312`
+--address <IDR_ADDRESS> `    --threads 2`
 --max-blocks 3
 
 D. Run second miner against VPS or Mini PC:
-.\dist\windows-amd64\dkcminer.exe `    --rpc-url http://100.86.152.39:9311`
---address <DKC_ADDRESS_2> `    --threads 2`
+.\dist\windows-amd64\idrminer.exe `    --rpc-url http://100.86.152.39:9311`
+--address <IDR_ADDRESS_2> `    --threads 2`
 --max-blocks 3
 
 E. Validate:

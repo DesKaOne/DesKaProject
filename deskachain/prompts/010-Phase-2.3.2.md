@@ -295,7 +295,7 @@ Response /mine:
 {
 "mined_blocks": 3,
 "new_height": 3,
-"miner_balance": "150 DKC",
+"miner_balance": "150 IDR",
 "blocks": [...],
 "broadcast": {
 "peers": 1,

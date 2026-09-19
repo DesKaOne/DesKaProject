@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"deskachain/internal/arith"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/types"
@@ -76,7 +77,9 @@ func (l *Ledger) ApplyCoinbase(tx types.Transaction) error {
 		return fmt.Errorf("invalid coinbase recipient: %w", err)
 	}
 	acct := l.accounts[tx.To]
-	acct.Balance += tx.Amount
+	balance, err := arith.Add(acct.Balance, tx.Amount)
+	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	acct.Balance = balance
 	l.accounts[tx.To] = acct
 	return nil
 }
@@ -86,19 +89,36 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 		return err
 	}
 	from := l.accounts[tx.From]
-	from.Nonce = tx.Nonce
-	l.accounts[tx.From] = from
 	if tx.TxType() == types.TxTypeTransfer {
 		to := l.accounts[tx.To]
-		from.Balance -= tx.Amount + tx.Fee
-		to.Balance += tx.Amount
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		balance, err := arith.Sub(from.Balance, cost)
+		if err != nil {
+			return errors.New("insufficient balance")
+		}
+		toBalance, err := arith.Add(to.Balance, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient balance overflow: %w", err)
+		}
+		from.Balance = balance
+		to.Balance = toBalance
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
+		return nil
 	}
+	from.Nonce = tx.Nonce
+	l.accounts[tx.From] = from
 	return nil
 }
 
 func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
+	profile := config.Localnet()
+	if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), profile.TxVersion); err != nil {
+		return err
+	}
 	if tx.Coinbase {
 		return nil
 	}
@@ -125,21 +145,39 @@ func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
 	if crypto.AddressFromPublicKey(tx.PublicKey) != tx.From {
 		return errors.New("public key does not match sender address")
 	}
-	if tx.ID != tx.CalculateID() {
+	expectedID, idErr := tx.CalculateIDForChainID(profile.ChainID)
+	if idErr != nil {
+		return idErr
+	}
+	if tx.ID != expectedID {
 		return errors.New("transaction id mismatch")
 	}
 	if tx.TxType() == types.TxTypeStakeLock && tx.StakeID != "" && tx.StakeID != tx.ID {
 		return errors.New("invalid stake lock: stake id mismatch")
 	}
-	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, tx.SigningBytes()) {
+	signingBytes, signingErr := tx.SigningBytesWithChainID(profile.ChainID)
+	if signingErr != nil {
+		return signingErr
+	}
+	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, signingBytes) {
 		return errors.New("invalid transaction signature")
 	}
 	account := l.accounts[tx.From]
-	if tx.Nonce != account.Nonce+1 {
-		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
+	expectedNonce, nonceErr := arith.Add(account.Nonce, 1)
+	if nonceErr != nil {
+		return errors.New("account nonce overflow")
 	}
-	if tx.TxType() == types.TxTypeTransfer && account.Balance < tx.Amount+tx.Fee {
-		return errors.New("insufficient balance")
+	if tx.Nonce != expectedNonce {
+		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, expectedNonce)
+	}
+	if tx.TxType() == types.TxTypeTransfer {
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		if account.Balance < cost {
+			return errors.New("insufficient balance")
+		}
 	}
 	if tx.TxType() == types.TxTypeStakeLock && account.Balance < tx.Amount {
 		return errors.New("insufficient balance")
@@ -156,14 +194,24 @@ func (l *Ledger) Clone() *Ledger {
 }
 
 func TotalSupply(blocks []types.Block) uint64 {
+	return TotalSupplyWithProfile(blocks, config.Localnet())
+}
+
+func TotalSupplyWithProfile(blocks []types.Block, profile config.NetworkConfig) uint64 {
 	var total uint64
 	for _, block := range blocks {
 		if block.Height == 0 {
 			continue
 		}
 		for _, tx := range block.Transactions {
-			if tx.Coinbase {
-				total += config.InitialBlockReward
+			if !tx.Coinbase {
+				continue
+			}
+			if profile.TxVersion >= types.TxVersionAsset {
+				total = arith.AddCap(total, tx.Amount)
+			} else {
+				// Legacy coinbase amounts bundle subsidy + collected fees.
+				total = arith.AddCap(total, config.InitialBlockReward)
 			}
 		}
 	}

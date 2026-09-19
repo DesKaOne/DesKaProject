@@ -11,7 +11,7 @@ This guide is for non-core testers who want to try the public testnet safely.
 
 ## What This Is
 
-This is a public testnet release candidate. Testnet DKC has no monetary value. Mainnet is not available. Testnet may reset.
+This is a public testnet release candidate. Testnet IDR has no monetary value. Mainnet is not available. Testnet may reset.
 
 ## Download And Verify
 
@@ -32,7 +32,7 @@ Do not trust random binaries from unknown sources.
 ## Join As Miner Tester
 
 1. Create a separate miner wallet datadir.
-2. Run `dkcminer --once`.
+2. Run `idrminer --once`.
 3. Confirm the block appears in Explorer.
 4. Check the miner reward address page.
 
@@ -42,10 +42,10 @@ Coinbase maturity applies before mined rewards become spendable.
 
 1. Request faucet funds only if a faucet URL is provided by an operator.
 2. Lock stake only if you understand this is testnet collateral.
-3. Run `dkcservice --once` against a controlled service RPC node.
+3. Run `idrservice --once` against a controlled service RPC node.
 4. Check service score and eligibility.
 
-Service points are simulation-only and are not spendable DKC. Staking is collateral-only and has no APY.
+Service points are simulation-only and are not spendable IDR. Staking is collateral-only and has no APY.
 
 ## What To Report
 

@@ -10,6 +10,11 @@ import (
 )
 
 func Parse(value string) (uint64, error) {
+	return ParseUnits(value, config.Decimals)
+}
+
+// ParseUnits parses a human-readable asset amount using its decimal scale.
+func ParseUnits(value string, decimals uint8) (uint64, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
 		return 0, errors.New("amount is required")
@@ -29,16 +34,20 @@ func Parse(value string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if wholeUnits > (^uint64(0))/config.UnitsPerCoin {
+	unitsPerWhole := uint64(1)
+	for i := uint8(0); i < decimals; i++ {
+		unitsPerWhole *= 10
+	}
+	if wholeUnits > (^uint64(0))/unitsPerWhole {
 		return 0, errors.New("amount overflows uint64")
 	}
-	total := wholeUnits * config.UnitsPerCoin
+	total := wholeUnits * unitsPerWhole
 	if len(parts) == 2 {
 		fraction := parts[1]
-		if len(fraction) > config.Decimals {
-			return 0, fmt.Errorf("amount has more than %d decimals", config.Decimals)
+		if len(fraction) > int(decimals) {
+			return 0, fmt.Errorf("amount has more than %d decimals", decimals)
 		}
-		for len(fraction) < config.Decimals {
+		for len(fraction) < int(decimals) {
 			fraction += "0"
 		}
 		fracUnits, err := strconv.ParseUint(fraction, 10, 64)
@@ -57,8 +66,20 @@ func Parse(value string) (uint64, error) {
 }
 
 func Format(units uint64) string {
-	whole := units / config.UnitsPerCoin
-	fraction := units % config.UnitsPerCoin
-	value := fmt.Sprintf("%d.%08d", whole, fraction)
+	return FormatUnits(units, config.Decimals)
+}
+
+// FormatUnits renders integer units according to an asset's decimal scale.
+func FormatUnits(units uint64, decimals uint8) string {
+	unitsPerWhole := uint64(1)
+	for i := uint8(0); i < decimals; i++ {
+		unitsPerWhole *= 10
+	}
+	if decimals == 0 {
+		return fmt.Sprintf("%d", units)
+	}
+	whole := units / unitsPerWhole
+	fraction := units % unitsPerWhole
+	value := fmt.Sprintf("%d.%0*d", whole, int(decimals), fraction)
 	return strings.TrimRight(strings.TrimRight(value, "0"), ".")
 }

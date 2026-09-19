@@ -3,6 +3,7 @@ package p2p
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"deskachain/internal/chain"
@@ -84,8 +85,14 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 	if err := ValidatePeerURL(peer); err != nil {
 		return ReorgPlan{}, nil, err
 	}
-	client := NewClientWithTimeout(10 * time.Second)
-	statusClient := NewClientWithTimeout(2 * time.Second)
+	client, err := NewClientForProfile(paths, profile, 10*time.Second)
+	if err != nil {
+		return ReorgPlan{}, nil, err
+	}
+	statusClient, err := NewClientForProfile(paths, profile, 2*time.Second)
+	if err != nil {
+		return ReorgPlan{}, nil, err
+	}
 	hs, err := statusClient.Handshake(peer)
 	if err != nil {
 		return ReorgPlan{}, nil, err
@@ -141,6 +148,13 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		MaxDepth:             maxDepth,
 		MaxReorgDepth:        maxDepth,
 	}
+	plan.ReorgDepth = localTip.Height - ancestor.Height
+	if plan.ReorgDepth > maxDepth {
+		plan.Allowed = false
+		plan.Decision = "reorg_depth_exceeds_max"
+		plan.Reason = "reorg depth exceeds max depth"
+		return plan, nil, nil
+	}
 	for i := len(localBlocks) - 1; i >= 0; i-- {
 		b := localBlocks[i]
 		if b.Height <= ancestor.Height {
@@ -148,8 +162,18 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		}
 		plan.DisconnectBlocks = append(plan.DisconnectBlocks, summarizeBlock(b))
 	}
-	plan.ReorgDepth = uint64(len(plan.DisconnectBlocks))
-	peerBranch := make([]types.Block, 0)
+	maxReorgFetch := profile.NetworkLimits.MaxReorgFetchBlocks
+	if maxReorgFetch == 0 {
+		maxReorgFetch = 512
+	}
+	peerBranchDepth := st.Height - ancestor.Height
+	if peerBranchDepth > maxReorgFetch {
+		plan.Allowed = false
+		plan.Decision = "reorg_fetch_exceeds_max"
+		plan.Reason = "peer reorg branch exceeds max remote fetch"
+		return plan, nil, nil
+	}
+	peerBranch := make([]types.Block, 0, int(peerBranchDepth))
 	for h := ancestor.Height + 1; h <= st.Height; h++ {
 		b, err := client.Block(peer, h)
 		if err != nil {
@@ -172,11 +196,7 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		plan.Allowed = false
 		plan.Decision = "local_ahead_more_work"
 		plan.Reason = "local chain has higher cumulative work"
-	case plan.ReorgDepth > maxDepth:
-		plan.Allowed = false
-		plan.Decision = "reorg_depth_exceeds_max"
-		plan.Reason = "reorg depth exceeds max depth"
-	default:
+default:
 		if _, err := chain.ValidateChainWithNetwork(peerFull, profile); err != nil {
 			plan.Allowed = false
 			plan.Decision = "peer_branch_invalid"
@@ -239,7 +259,7 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 			}
 		}
 	}
-	if err := bc.ReplaceFromHeight(plan.CommonAncestorHeight+1, branch); err != nil {
+	if err := bc.ReplaceFromHeightWithNetwork(plan.CommonAncestorHeight+1, branch, profile); err != nil {
 		return ReorgResult{}, err
 	}
 	newBlocks, err := bc.Blocks()
@@ -269,7 +289,7 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 	if err != nil {
 		return ReorgResult{}, err
 	}
-	kept, reval := revalidateTransactions(pending, l, confirmed)
+	kept, reval := revalidateTransactions(pending, l, confirmed, profile)
 	work := l.Clone()
 	for _, tx := range kept {
 		_ = work.ApplyTransaction(tx)
@@ -292,6 +312,26 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 			droppedInvalid++
 		}
 	}
+	nextNonce := make(map[string]uint64)
+	for _, tx := range kept {
+		if _, ok := nextNonce[tx.From]; ok {
+			continue
+		}
+		nonce := l.Nonce(tx.From)
+		if nonce == ^uint64(0) {
+			continue
+		}
+		nextNonce[tx.From] = nonce + 1
+	}
+	selected, selectErr := mempool.SelectWithNonces(kept, profile, profile.Consensus.MaxGasPerBlock, nextNonce)
+	if selectErr != nil {
+		closeFn()
+		return ReorgResult{}, selectErr
+	}
+	if len(selected) < len(kept) {
+		droppedInvalid += len(kept) - len(selected)
+	}
+	kept = selected
 	if err := mp.Save(kept); err != nil {
 		closeFn()
 		return ReorgResult{}, err
@@ -330,7 +370,7 @@ func RevalidateMempoolAgainstLedgerWithProfile(paths config.Paths, profile confi
 	if err != nil {
 		return MempoolRevalidationSummary{}, err
 	}
-	kept, summary := revalidateTransactions(pending, l, confirmedTransactionIDs(blocks))
+	kept, summary := revalidateTransactions(pending, l, confirmedTransactionIDs(blocks), profile)
 	return summary, mp.Save(kept)
 }
 
@@ -346,12 +386,22 @@ func confirmedTransactionIDs(blocks []types.Block) map[string]struct{} {
 	return ids
 }
 
-func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, confirmed map[string]struct{}) ([]types.Transaction, MempoolRevalidationSummary) {
+func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, confirmed map[string]struct{}, profile config.NetworkConfig) ([]types.Transaction, MempoolRevalidationSummary) {
 	work := l.Clone()
 	seen := map[string]struct{}{}
 	kept := make([]types.Transaction, 0, len(txs))
 	summary := MempoolRevalidationSummary{}
-	for _, tx := range txs {
+	ordered := append([]types.Transaction(nil), txs...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if ordered[i].From != ordered[j].From {
+			return ordered[i].From < ordered[j].From
+		}
+		if ordered[i].Nonce != ordered[j].Nonce {
+			return ordered[i].Nonce < ordered[j].Nonce
+		}
+		return ordered[i].ID < ordered[j].ID
+	})
+	for _, tx := range ordered {
 		if tx.Coinbase {
 			summary.DroppedInvalid++
 			continue
@@ -362,6 +412,19 @@ func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, con
 		}
 		if _, ok := seen[tx.ID]; ok {
 			summary.DroppedDuplicate++
+			continue
+		}
+		policy := mempool.AdmissionPolicy{
+			Profile: profile,
+			MaxTxs:  profile.Consensus.MaxTxCount,
+			MaxGas:  profile.Consensus.MaxGasPerBlock,
+		}
+		if err := mempool.ValidateForRevalidation(tx, policy); err != nil {
+			summary.DroppedInvalid++
+			continue
+		}
+		if profile.Consensus.MaxTxCount > 0 && uint64(len(kept)) >= profile.Consensus.MaxTxCount {
+			summary.DroppedInvalid++
 			continue
 		}
 		if err := work.ApplyTransaction(tx); err != nil {

@@ -35,14 +35,14 @@ type Agent struct {
 
 func DefaultOptions() Options {
 	return Options{
-		StatePath:            "./dkcservice-state.json",
+		StatePath:            "./idrservice-state.json",
 		HeartbeatInterval:    30 * time.Second,
 		ChallengeInterval:    time.Minute,
 		ScoreInterval:        time.Minute,
 		RetryInterval:        5 * time.Second,
 		SafeMode:             true,
 		MaxBytesPerChallenge: 100_000_000,
-		ClientVersion:        "dkcservice/dev",
+		ClientVersion:        "idrservice/dev",
 	}
 }
 
@@ -220,7 +220,7 @@ func (a Agent) request() RegisterRequest {
 		Endpoint:      a.Options.Endpoint,
 		ClientVersion: a.Options.ClientVersion,
 		Platform:      a.Options.Platform,
-		UserAgent:     "dkcservice",
+		UserAgent:     "idrservice",
 	}
 }
 

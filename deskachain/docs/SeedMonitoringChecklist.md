@@ -1,6 +1,6 @@
 # DesKaChain Seed Monitoring Checklist
 
-Testnet DKC has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
+Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
 
 Use this checklist for RC1 seed nodes and any operator-published bootstrap peer.
 
@@ -14,7 +14,7 @@ Use this checklist for RC1 seed nodes and any operator-published bootstrap peer.
   - `http://100.86.152.39:10311`
   - `http://100.101.251.7:10311`
 - Seeds are not trusted authorities; network/genesis/block validation remains mandatory.
-- Network ID is `dkc-testnet-1`.
+- Network ID is `idr-testnet-1`.
 - Chain ID is `777101`.
 - Genesis hash is `db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4`.
 - Public RPC safety is correct:
@@ -30,7 +30,7 @@ Use this checklist for RC1 seed nodes and any operator-published bootstrap peer.
 Health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://<host>:9311 -ExpectedNetwork testnet -ExpectedNetworkID dkc-testnet-1 -ExpectedChainID 777101
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://<host>:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101
 ```
 
 Peer check from another node:

@@ -1,6 +1,6 @@
 # DesKaChain Mining
 
-DesKaChain public testnet mining is for testing only. Testnet DKC has no monetary value, mainnet is not available, and no mining profit is promised.
+DesKaChain public testnet mining is for testing only. Testnet IDR has no monetary value, mainnet is not available, and no mining profit is promised.
 
 PoW is the only block-production consensus. Staking is collateral-only and does not produce blocks. Service points are simulation-only and are not spendable.
 
@@ -9,25 +9,25 @@ PoW is the only block-production consensus. Staking is collateral-only and does 
 Windows:
 
 ```powershell
-.\dkcminer.exe --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2
+.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
 ```
 
 Linux:
 
 ```sh
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
 ```
 
 Mine one accepted block:
 
 ```sh
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --once
 ```
 
 Stop after a bounded run:
 
 ```sh
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --threads 2 --max-blocks 5
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --max-blocks 5
 ```
 
 The miner retries temporary RPC failures in continuous mode. Use `--duration`, `--retry-delay`, `--max-retry-delay`, `--submit-timeout`, `--job-refresh-interval`, and `--log-interval` to bound runtime and logging.

@@ -21,8 +21,8 @@ func TestInfoFallbacks(t *testing.T) {
 }
 
 func TestStringContainsVersionFields(t *testing.T) {
-	text := String("dkcminer")
-	for _, want := range []string{"dkcminer", "version:", "commit:", "built:", "go:", "os/arch:", "networks: localnet,testnet", "mainnet: not available"} {
+	text := String("idrminer")
+	for _, want := range []string{"idrminer", "version:", "commit:", "built:", "go:", "os/arch:", "networks: localnet,testnet", "mainnet: not available"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("version string missing %q:\n%s", want, text)
 		}

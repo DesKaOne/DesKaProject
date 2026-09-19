@@ -17,7 +17,7 @@ Status saat ini:
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 * PoW remains the only block-production consensus.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 
 Patch name:
@@ -29,8 +29,8 @@ Prepare DesKaChain for public testnet binary distribution.
 This phase should make it possible to build and package:
 
 * deskachain CLI/node binary,
-* dkcminer binary,
-* dkcservice binary,
+* idrminer binary,
+* idrservice binary,
   for Windows and Linux, with version metadata, checksums, release archives, and quickstart docs.
 
 Non-goals:
@@ -59,8 +59,8 @@ Add or finalize version output for all binaries.
 Commands:
 
 deskachain version
-dkcminer --version
-dkcservice --version
+idrminer --version
+idrservice --version
 
 or equivalent consistent style if project already has one.
 
@@ -114,12 +114,12 @@ Build outputs:
 dist/
 windows-amd64/
 deskachain.exe
-dkcminer.exe
-dkcservice.exe
+idrminer.exe
+idrservice.exe
 linux-amd64/
 deskachain
-dkcminer
-dkcservice
+idrminer
+idrservice
 
 Support at least:
 
@@ -180,8 +180,8 @@ SHA256SUMS.txt
 Each archive should include:
 
 * deskachain binary
-* dkcminer binary
-* dkcservice binary
+* idrminer binary
+* idrservice binary
 * README or QUICKSTART
 * LICENSE if exists
 * docs links or copied minimal docs if desired
@@ -193,7 +193,7 @@ Do not include:
 * wallets/
 * chain data/
 * faucet_state.json
-* dkcservice-state.json
+* idrservice-state.json
 * private keys
 * .env files with secrets
 * .git
@@ -250,10 +250,10 @@ Examples:
 
 * `deskachain version`
 * `deskachain --help`
-* `dkcminer --version`
-* `dkcminer --help`
-* `dkcservice --version`
-* `dkcservice --help`
+* `idrminer --version`
+* `idrminer --help`
+* `idrservice --version`
+* `idrservice --help`
 
 If tests run compiled binary, keep them fast and cross-platform.
 
@@ -275,8 +275,8 @@ Include:
 * init testnet.
 * start public testnet node.
 * create miner wallet in separate datadir.
-* mine using dkcminer.
-* run dkcservice.
+* mine using idrminer.
+* run idrservice.
 * safe public RPC notes.
 * seed peer usage.
 * systemd usage for Linux.
@@ -293,7 +293,7 @@ Windows:
 .\deskachain.exe --datadir .\data\miner --network testnet init
 .\deskachain.exe --datadir .\data\miner wallet new
 
-.\dkcminer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
+.\idrminer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
 
 Linux:
 
@@ -303,7 +303,7 @@ Linux:
 
 Safety notes:
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
 * Do not expose wallet/admin RPC publicly.
 * Use separate datadir for miner reward wallet if node datadir is locked.
@@ -320,8 +320,8 @@ Update README.md and README-ID.md:
 * Add binary names:
 
   * deskachain
-  * dkcminer
-  * dkcservice
+  * idrminer
+  * idrservice
 * Add build commands.
 * Add package commands.
 * Link docs/Release.md and docs/Operator.md.
@@ -345,7 +345,7 @@ Ensure .gitignore excludes:
 
   * testdata/
   * faucet_state.json
-  * dkcservice-state.json
+  * idrservice-state.json
   * peer store runtime files if needed
   * wallet runtime data if under examples accidentally
 
@@ -410,15 +410,15 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Version v0.3.7-tes
 Expected:
 
 * dist/windows-amd64/deskachain.exe exists
-* dist/windows-amd64/dkcminer.exe exists
-* dist/windows-amd64/dkcservice.exe exists
+* dist/windows-amd64/idrminer.exe exists
+* dist/windows-amd64/idrservice.exe exists
 * version commands work
 
 Manual commands:
 
 .\dist\windows-amd64\deskachain.exe version
-.\dist\windows-amd64\dkcminer.exe --version
-.\dist\windows-amd64\dkcservice.exe --version
+.\dist\windows-amd64\idrminer.exe --version
+.\dist\windows-amd64\idrservice.exe --version
 
 Manual binary smoke:
 
@@ -433,7 +433,7 @@ Start node:
 
 Mine once:
 
-.\dist\windows-amd64\dkcminer.exe --rpc-url http://127.0.0.1:9211 --address <ADDR> --threads 2 --once
+.\dist\windows-amd64\idrminer.exe --rpc-url http://127.0.0.1:9211 --address <ADDR> --threads 2 --once
 
 Check:
 

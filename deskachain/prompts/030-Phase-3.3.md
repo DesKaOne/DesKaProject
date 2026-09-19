@@ -5,8 +5,8 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
-  * cmd/dkcservice/
+  * cmd/idrminer/
+  * cmd/idrservice/
   * internal/
 
     * address/
@@ -54,7 +54,7 @@ Status saat ini:
 * runtime cleanup sudah beres.
 * docs cleanup sudah beres.
 * Staking tetap collateral-only, bukan PoS.
-* Service points tetap simulation-only, bukan spendable DKC.
+* Service points tetap simulation-only, bukan spendable IDR.
 * PoW tetap satu-satunya block production consensus.
 
 Nama patch:
@@ -88,7 +88,7 @@ Non-goals:
 * Jangan implement mainnet.
 * Jangan implement mining pool.
 * Jangan implement GPU miner.
-* Jangan mengubah address format DKC.
+* Jangan mengubah address format IDR.
 * Jangan mengubah private key format.
 * Jangan mengubah localnet genesis hash.
 * Jangan rewrite besar.
@@ -103,10 +103,10 @@ Pastikan `config.Testnet()` punya parameter jelas dan stabil.
 Expected:
 
 * Network: `testnet`
-* NetworkID: `dkc-testnet-1`
+* NetworkID: `idr-testnet-1`
 * ChainID: `777101`
 * ProtocolVersion: sesuai current protocol
-* Address prefix: tetap `DKC` untuk fase ini, kecuali project sudah mendukung version network-specific.
+* Address prefix: tetap `IDR` untuk fase ini, kecuali project sudah mendukung version network-specific.
 * Genesis harus testnet-specific.
 * Testnet genesis hash harus berbeda dari localnet genesis hash.
 * Testnet consensus params harus profile-specific.
@@ -139,7 +139,7 @@ menulis metadata:
 
 {
 "network": "testnet",
-"network_id": "dkc-testnet-1",
+"network_id": "idr-testnet-1",
 "chain_id": 777101,
 "genesis_hash": "..."
 }
@@ -262,13 +262,13 @@ Pastikan miner template testnet mengembalikan:
 
 {
 "network": "testnet",
-"network_id": "dkc-testnet-1",
+"network_id": "idr-testnet-1",
 "chain_id": 777101
 }
 
 Standalone miner harus bisa:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8611 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8611 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 
@@ -293,8 +293,8 @@ Expected:
 
 Test:
 
-* localnet service required stake = 100 DKC.
-* testnet service required stake = value dari config.Testnet(), misalnya 1000 DKC jika sudah diset.
+* localnet service required stake = 100 IDR.
+* testnet service required stake = value dari config.Testnet(), misalnya 1000 IDR jika sudah diset.
 * Jangan hardcode localnet di service collateral.
 
 ==================================================
@@ -317,13 +317,13 @@ Test flow:
 * mine enough for stake if needed.
 * stake lock required amount if possible.
 * service register.
-* dkcservice --once.
+* idrservice --once.
 * service score shows network/testnet stake requirement.
 
 Tetap:
 
 * service points simulation only.
-* no DKC reward.
+* no IDR reward.
 * no supply mutation.
 
 ==================================================
@@ -351,7 +351,7 @@ Node start harus log:
 * tip
 
 Contoh:
-node started network=testnet network_id=dkc-testnet-1 chain_id=777101 genesis=...
+node started network=testnet network_id=idr-testnet-1 chain_id=777101 genesis=...
 
 ==================================================
 11. Commands / CLI UX
@@ -400,7 +400,7 @@ Isi:
 
 * Phase 3.3 adalah controlled/local testnet bootstrap.
 * Belum public production testnet.
-* DKC testnet tidak punya nilai uang.
+* IDR testnet tidak punya nilai uang.
 * Staking testnet bukan APY.
 * Service points simulation only.
 * Cara start Node A bootstrap.
@@ -409,7 +409,7 @@ Isi:
 * Cara sync Node B.
 * Cara cek chain validate.
 * Cara cek network mismatch.
-* Cara run dkcservice controlled.
+* Cara run idrservice controlled.
 
 Update:
 
@@ -449,7 +449,7 @@ Tambahkan/update tests:
 * init testnet.
 * metadata network testnet.
 * chain_id 777101.
-* network_id dkc-testnet-1.
+* network_id idr-testnet-1.
 * genesis_hash testnet.
 
 4. TestStartUsesDatadirNetworkMetadata
@@ -497,12 +497,12 @@ Tambahkan/update tests:
 
 12. TestMinerTemplateTestnetProfile
 
-* /miner/template on testnet returns network testnet, network_id dkc-testnet-1, chain_id 777101.
+* /miner/template on testnet returns network testnet, network_id idr-testnet-1, chain_id 777101.
 
-13. TestDkcMinerTestnetOnce
+13. TestidrMinerTestnetOnce
 
 * optional integration if existing infra supports.
-* mine one block on testnet via dkcminer-style RPC.
+* mine one block on testnet via idrminer-style RPC.
 * chain valid.
 
 14. TestStakeInfoTestnetProfile
@@ -556,7 +556,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 stake info
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain_id 777101
 * genesis_hash testnet
 * stake params testnet
@@ -577,13 +577,13 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer check http://1
 Expected:
 
 * peer accepted.
-* network_id dkc-testnet-1.
+* network_id idr-testnet-1.
 * chain_id 777101.
 * no network mismatch.
 
 Mine Node A:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8611 --address <NODE_A_DKC_ADDR> --threads 4 --max-blocks 3
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --threads 4 --max-blocks 3
 
 Sync Node B:
 
@@ -619,25 +619,25 @@ Expected:
 
 Miner template testnet:
 
-Invoke-RestMethod "http://127.0.0.1:8611/miner/template?address=<NODE_A_DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8611/miner/template?address=<NODE_A_IDR_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain_id 777101
 
 Controlled service node testnet optional:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_DKC_ADDR> --endpoint http://127.0.0.1:9701
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_DKC_ADDR> --endpoint http://127.0.0.1:9701 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701 --once
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_IDR_ADDR>
 
 Expected:
 
 * service works if service_rpc enabled.
 * required stake uses testnet params.
-* simulation only, not DKC.
+* simulation only, not IDR.
 
 ==================================================
 15. Done criteria
@@ -652,7 +652,7 @@ Phase 3.3 valid jika:
 * mismatch network rejected.
 * two testnet nodes can peer/check/sync.
 * localnet/testnet peer mismatch rejected.
-* miner template and dkcminer work on testnet.
+* miner template and idrminer work on testnet.
 * stake/service profile params use testnet.
 * docs/Testnet.md exists.
 * all tests pass.

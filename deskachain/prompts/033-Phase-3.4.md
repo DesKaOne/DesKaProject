@@ -12,11 +12,11 @@ Status saat ini:
 * testnet:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * coinbase maturity: 100
-  * min stake amount: 100 DKC
-  * min service stake: 1000 DKC
+  * min stake amount: 100 IDR
+  * min service stake: 1000 IDR
   * unbonding period: 100 blocks
 * Multi-node controlled local testnet sudah valid:
 
@@ -36,7 +36,7 @@ Nama patch:
 DesKaChain Phase 3.4 — Dev Faucet & Testnet Funding Flow
 
 Tujuan:
-Menambahkan faucet khusus dev/testnet agar wallet bisa menerima DKC testnet untuk testing transfer, staking collateral, dan service node eligibility tanpa harus mining manual terlalu lama.
+Menambahkan faucet khusus dev/testnet agar wallet bisa menerima IDR testnet untuk testing transfer, staking collateral, dan service node eligibility tanpa harus mining manual terlalu lama.
 
 Fokus:
 
@@ -61,7 +61,7 @@ Non-goals:
 * Jangan implement PoS.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali benar-benar perlu.
@@ -127,10 +127,10 @@ Default:
 Flags node start:
 
 * --enable-faucet-rpc
-* --faucet-address <DKC_ADDR>
-* --faucet-amount <DKC_AMOUNT>
+* --faucet-address <IDR_ADDR>
+* --faucet-amount <IDR_AMOUNT>
 * --faucet-min-interval <duration>
-* --faucet-max-per-address <DKC_AMOUNT> optional
+* --faucet-max-per-address <IDR_AMOUNT> optional
 
 Rules:
 
@@ -153,25 +153,25 @@ Response:
 {
 "enabled": true,
 "network": "testnet",
-"network_id": "dkc-testnet-1",
+"network_id": "idr-testnet-1",
 "chain_id": 777101,
 "faucet_address": "...",
 "amount": "100",
 "min_interval_seconds": 3600,
 "mempool_pending": N,
-"note": "testnet faucet only; testnet DKC has no monetary value"
+"note": "testnet faucet only; testnet IDR has no monetary value"
 }
 
 POST /faucet/request
 
 Request:
 {
-"address": "<DKC_ADDR>"
+"address": "<IDR_ADDR>"
 }
 
 Optional:
 {
-"address": "<DKC_ADDR>",
+"address": "<IDR_ADDR>",
 "amount": "100"
 }
 
@@ -226,7 +226,7 @@ Output:
 
 2. faucet request
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 faucet request --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 faucet request --address <IDR_ADDR>
 
 Output:
 
@@ -242,7 +242,7 @@ Output:
 
 If needed, add dev helper:
 
-go run ./node/cmd/deskachain --datadir <DIR> faucet set-address --address <DKC_ADDR>
+go run ./node/cmd/deskachain --datadir <DIR> faucet set-address --address <IDR_ADDR>
 
 or use node start flag only.
 
@@ -278,9 +278,9 @@ Rules:
 
 Suggested defaults for dev:
 
-* faucet amount: 100 DKC
+* faucet amount: 100 IDR
 * min interval: 1 minute for local controlled testing
-* max per address per day: 1000 DKC
+* max per address per day: 1000 IDR
 * For docs, explain dev defaults are not production-safe.
 
 ==================================================
@@ -302,7 +302,7 @@ Testnet coinbase maturity is 100, so manual faucet funding may require mining en
 
 For easier dev flow, add docs command:
 
-dkcminer --max-blocks 105
+idrminer --max-blocks 105
 
 Then faucet wallet has mature balance.
 
@@ -343,7 +343,7 @@ Required tests:
 
   * enabled true
   * network testnet
-  * network_id dkc-testnet-1
+  * network_id idr-testnet-1
   * chain_id 777101
   * faucet_address
   * amount
@@ -465,7 +465,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :88
 
 Fund faucet by mining enough blocks:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check faucet balance:
 
@@ -485,7 +485,7 @@ Expected:
 * enabled true
 * network testnet
 * chain id 777101
-* faucet amount 100 DKC
+* faucet amount 100 IDR
 
 Request faucet:
 
@@ -495,7 +495,7 @@ Expected:
 
 * faucet tx created
 * status pending
-* amount 100 DKC
+* amount 100 IDR
 
 Check recipient before mine:
 
@@ -503,11 +503,11 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_
 
 Expected:
 
-* pending incoming 100 DKC or mempool pending shown.
+* pending incoming 100 IDR or mempool pending shown.
 
 Mine one block:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
 
 Check recipient after mine:
 
@@ -515,8 +515,8 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_
 
 Expected:
 
-* confirmed balance 100 DKC
-* spendable 100 DKC if normal tx maturity does not apply.
+* confirmed balance 100 IDR
+* spendable 100 IDR if normal tx maturity does not apply.
 * if project applies rules differently, document it.
 
 Rate limit check:
@@ -531,7 +531,7 @@ Localnet reject check:
 
 go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln dev reset --yes
 go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln --network localnet init
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln node start --rpc :8821 --p2p :9821 --advertise-p2p http://127.0.0.1:9821 --enable-faucet-rpc --faucet-address <ANY_DKC_ADDR>
+go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln node start --rpc :8821 --p2p :9821 --advertise-p2p http://127.0.0.1:9821 --enable-faucet-rpc --faucet-address <ANY_IDR_ADDR>
 
 Then:
 
@@ -552,7 +552,7 @@ docs/Faucet.md
 Content:
 
 * Dev/testnet faucet only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Faucet does not mint silently.
 * Faucet uses normal transactions.
 * Faucet tx must be mined.

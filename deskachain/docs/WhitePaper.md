@@ -4,9 +4,9 @@
 
 **Status:** Draft awal untuk fase testnet
 **Nama proyek:** DesKaChain
-**Ticker sementara:** DKC
+**Ticker sementara:** IDR
 **Jenis jaringan:** Blockchain native berbasis komunitas
-**Status ekonomi:** Testnet DKC tidak memiliki nilai ekonomi
+**Status ekonomi:** Testnet IDR tidak memiliki nilai ekonomi
 
 ---
 
@@ -52,13 +52,13 @@ DesKaChain tidak menjanjikan harga, keuntungan, APY tetap, atau return finansial
 
 ## 3.3 Testnet Tidak Bernilai Ekonomi
 
-Coin di testnet hanya digunakan untuk pengujian. Testnet DKC tidak memiliki harga, tidak boleh dijual, tidak boleh dianggap sebagai aset, dan tidak memiliki jaminan konversi otomatis ke mainnet.
+Coin di testnet hanya digunakan untuk pengujian. Testnet IDR tidak memiliki harga, tidak boleh dijual, tidak boleh dianggap sebagai aset, dan tidak memiliki jaminan konversi otomatis ke mainnet.
 
 ## 3.3.1 Fondasi Protocol Phase 2.6.6
 
-Address wallet baru DesKaChain memakai format `DKC` + Base58Check dengan payload `version byte + HASH160(compressed secp256k1 public key)`. Private key disimpan dan diexport sebagai raw 32-byte scalar hex. Address dev lama hanya didukung untuk kompatibilitas localnet/dev dan tidak menjadi format public testnet atau mainnet.
+Address wallet baru DesKaChain memakai format `IDR` + Base58Check dengan payload `version byte + HASH160(compressed secp256k1 public key)`. Private key disimpan dan diexport sebagai raw 32-byte scalar hex. Address dev lama hanya didukung untuk kompatibilitas localnet/dev dan tidak menjadi format public testnet atau mainnet.
 
-Network profile awal terdiri dari localnet, testnet, dan mainnet dengan chain id, network id, dan address version yang berbeda. Protocol version awal adalah `1`, P2P protocol version `dkc-p2p/1`, dan RPC API version `v1`.
+Network profile awal terdiri dari localnet, testnet, dan mainnet dengan chain id, network id, dan address version yang berbeda. Protocol version awal adalah `1`, P2P protocol version `idr-p2p/1`, dan RPC API version `v1`.
 
 ## 3.4 Keamanan Sebelum Ekspansi
 
@@ -218,7 +218,7 @@ DesKaChain akan menggunakan format address final sebelum public testnet.
 
 Rencana address:
 
-* prefix: `DKC`,
+* prefix: `IDR`,
 * encoding: Base58Check,
 * payload: version byte + public key hash + checksum,
 * private key: raw 32-byte hex.
@@ -255,7 +255,7 @@ Reward awal localnet/testnet digunakan hanya untuk pengujian.
 
 Contoh parameter sementara:
 
-* block reward: 50 DKC,
+* block reward: 50 IDR,
 * decimals: 8,
 * coinbase maturity: aktif sejak Phase 2.8,
 * dynamic difficulty: aktif sejak Phase 2.7 untuk localnet/testnet,
@@ -292,7 +292,7 @@ Coin testnet tidak memiliki nilai ekonomi.
 
 DesKaChain dapat menyediakan program klaim mainnet terbatas untuk menghargai partisipasi komunitas pada fase testnet.
 
-Program ini bukan berarti coin testnet memiliki harga. Testnet DKC tetap tidak bernilai ekonomi.
+Program ini bukan berarti coin testnet memiliki harga. Testnet IDR tetap tidak bernilai ekonomi.
 
 Program klaim dapat menggunakan prinsip:
 
@@ -389,11 +389,11 @@ Status: rencana berikutnya.
 * Runtime safety cleanup
 * Improved `.gitignore`
 
-## Phase 2.6.6 — Protocol Spec Freeze & DKC Address Migration
+## Phase 2.6.6 — Protocol Spec Freeze & IDR Address Migration
 
 Status: implemented.
 
-* DKC Base58Check address
+* IDR Base58Check address
 * Private key hex
 * Protocol versioning
 * Network profiles
@@ -450,9 +450,9 @@ Status: implemented.
 
 Status: research/planned.
 
-Phase 3.0 adds a service-node research layer only. Service nodes can register, heartbeat, submit simulated challenge measurements, receive service scores, and accumulate simulated service points. Phase 3.1 adds a standalone `dkcservice` safe-mode agent that automates those RPC calls and stores local agent state. These points are not DKC, are not spendable, and do not affect consensus, PoW difficulty, cumulative work, supply, coinbase rewards, balances, or chain validation.
+Phase 3.0 adds a service-node research layer only. Service nodes can register, heartbeat, submit simulated challenge measurements, receive service scores, and accumulate simulated service points. Phase 3.1 adds a standalone `idrservice` safe-mode agent that automates those RPC calls and stores local agent state. These points are not IDR, are not spendable, and do not affect consensus, PoW difficulty, cumulative work, supply, coinbase rewards, balances, or chain validation.
 
-Phase 3.2 adds staking collateral for service-node eligibility. This staking module only locks and unlocks DKC through canonical chain transactions. It is not Proof-of-Stake, does not create validators, does not select block producers, does not mint staking rewards, and does not slash DKC in this phase. Active and unbonding stake reduce spendable balance until released.
+Phase 3.2 adds staking collateral for service-node eligibility. This staking module only locks and unlocks IDR through canonical chain transactions. It is not Proof-of-Stake, does not create validators, does not select block producers, does not mint staking rewards, and does not slash IDR in this phase. Active and unbonding stake reduce spendable balance until released.
 
 * Bandwidth service node research
 * Service reward simulation
@@ -494,8 +494,8 @@ Aturan dasar:
 3. Tidak menggunakan mint tidak terbatas untuk mempertahankan harga.
 4. Tidak menjanjikan APY tetap tinggi.
 5. Tidak membayar reward dari user baru.
-6. Tidak menjadikan DKC sebagai satu-satunya jaminan aset stabil.
-7. Tidak memasarkan DKC sebagai pendapatan pasti.
+6. Tidak menjadikan IDR sebagai satu-satunya jaminan aset stabil.
+7. Tidak memasarkan IDR sebagai pendapatan pasti.
 8. Tidak membuat bandwidth mining sebagai passive income tanpa verifikasi.
 9. Tidak membuat staking sebagai mesin profit otomatis.
 10. Tidak menjadikan harga sebagai fondasi utama proyek.
@@ -504,9 +504,9 @@ DesKaChain fokus pada utilitas, jaringan, mining, wallet, explorer, dan komunita
 
 ---
 
-# 17. Posisi Ekonomi DKC
+# 17. Posisi Ekonomi IDR
 
-DKC adalah native coin jaringan DesKaChain. Fungsi yang direncanakan:
+IDR adalah native coin jaringan DesKaChain. Fungsi yang direncanakan:
 
 * membayar transaksi,
 * menerima block reward,
@@ -515,7 +515,7 @@ DKC adalah native coin jaringan DesKaChain. Fungsi yang direncanakan:
 * digunakan dalam staking/collateral masa depan,
 * dan menjadi unit dasar ekosistem DesKaChain.
 
-DKC bukan stablecoin, bukan yield token, bukan synthetic asset, dan bukan jaminan keuntungan.
+IDR bukan stablecoin, bukan yield token, bukan synthetic asset, dan bukan jaminan keuntungan.
 
 ---
 

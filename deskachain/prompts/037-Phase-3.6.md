@@ -108,7 +108,7 @@ or:
 Choose the style consistent with current CLI.
 
 C. Optional config/env:
-DKC_SEED_PEERS=[http://host1:port,http://host2:port](http://host1:port,http://host2:port)
+IDR_SEED_PEERS=[http://host1:port,http://host2:port](http://host1:port,http://host2:port)
 
 D. Optional file:
 --seed-file ./config/testnet-seeds.txt
@@ -250,7 +250,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/node_b node start --rpc :8812 
 
 Add warnings:
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Bootnodes/seeds are not trusted authorities.
 * Every peer must still pass network id/genesis validation.
@@ -362,7 +362,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/seed_miner wallet new
 
 Mine on A:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
 
 Sync B:
 

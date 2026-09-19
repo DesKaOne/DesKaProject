@@ -198,6 +198,8 @@ func chainTestWallet(t *testing.T) wallet.Wallet {
 
 func stakingTestProfile() config.NetworkConfig {
 	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
 	profile.Difficulty.InitialDifficulty = 1
 	profile.Difficulty.MinDifficulty = 1
 	profile.Difficulty.MaxDifficulty = 1

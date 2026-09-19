@@ -5,7 +5,7 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
+  * cmd/idrminer/
   * internal/
   * go.mod
   * go.sum
@@ -26,8 +26,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -46,7 +46,7 @@ Status saat ini:
 
   * node punya `/miner/template`
   * node punya `/miner/submit`
-  * `dkcminer` bisa mine block via RPC
+  * `idrminer` bisa mine block via RPC
   * submit block sudah tidak deadlock
   * standalone miner bisa include mempool tx
   * chain validate pass
@@ -72,7 +72,7 @@ Phase ini fokus pada:
 
 Aturan penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -288,7 +288,7 @@ Defaults:
 Flags/env:
 
 * `--cors-origins`
-* env `DKC_CORS_ORIGINS`
+* env `IDR_CORS_ORIGINS`
 
 Format:
 
@@ -575,8 +575,8 @@ Pastikan Phase 2.9 tetap valid:
 
 * `/miner/template` tetap cepat.
 * `/miner/submit` tetap cepat.
-* dkcminer --once tetap accepted.
-* dkcminer --max-blocks tetap jalan.
+* idrminer --once tetap accepted.
+* idrminer --max-blocks tetap jalan.
 * body limit submit tidak menolak block normal.
 * rate limit tidak memblok miner normal.
 * public RPC mode tetap bisa enable miner endpoint jika flag enable.
@@ -602,7 +602,7 @@ Command lama wajib tetap bekerja:
 * chain difficulty
 * chain validate
 * fork/reorg dev sims
-* dkcminer
+* idrminer
 
 Jangan breaking CLI output besar-besaran, tapi boleh tambah field.
 
@@ -706,7 +706,7 @@ Tambahkan/update tests:
 
 17. Miner regression:
 
-* dkcminer --once equivalent integration or RPC submit test.
+* idrminer --once equivalent integration or RPC submit test.
 * accepted block.
 * chain validate pass.
 
@@ -751,7 +751,7 @@ Tambahkan dokumentasi:
    curl http://127.0.0.1:8331/health
 
 5. Miner tetap:
-   go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8331 --address <DKC_ADDR> --threads 4 --once
+   go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8331 --address <IDR_ADDR> --threads 4 --once
 
 6. Config file example:
    docs/config.example.json
@@ -790,11 +790,11 @@ Remote wallet local mode:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 wallet new
 
 Expected:
-DKC...
+IDR...
 
 Miner once:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8411 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8411 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 submit accepted

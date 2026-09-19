@@ -16,9 +16,9 @@ Status saat ini:
 * Miner/faucet/balance profile-aware.
 * Faucet creates normal transaction, no silent mint.
 * Faucet rate limit valid.
-* Faucet-funded owner can stake 1000 DKC.
-* Service node becomes eligible when active stake is 1000 DKC.
-* Service points remain simulation-only and not spendable DKC.
+* Faucet-funded owner can stake 1000 IDR.
+* Service node becomes eligible when active stake is 1000 IDR.
+* Service points remain simulation-only and not spendable IDR.
 * Staking remains collateral-only.
 * PoW remains the only block-production consensus.
 
@@ -28,23 +28,23 @@ Latest manual E2E checkpoint:
 * chain id: 777101
 * height: 122
 * difficulty: 6
-* total supply: 6100 DKC
+* total supply: 6100 IDR
 * pending tx count: 0
 * total transactions: 124
 * coinbase transactions: 122
 * normal transactions: 2
 * staking enabled: true
-* min stake amount: 100 DKC
-* min service stake: 1000 DKC
-* total active stake: 1000 DKC
+* min stake amount: 100 IDR
+* min service stake: 1000 IDR
+* total active stake: 1000 IDR
 * active stake count: 1
 * chain validate: chain valid
 
 Important observation:
 `chain info` printed:
-circulating supply: 0 DKC
+circulating supply: 0 IDR
 
-This may be wrong or undefined because at height 122 with coinbase maturity 100, some coinbase rewards should already be mature, and one account has 1000 DKC active stake. Phase 3.5 must define and test circulating supply semantics clearly.
+This may be wrong or undefined because at height 122 with coinbase maturity 100, some coinbase rewards should already be mature, and one account has 1000 IDR active stake. Phase 3.5 must define and test circulating supply semantics clearly.
 
 Patch name:
 DesKaChain Phase 3.5 — Public Testnet Node Packaging & Operator Runbook
@@ -193,13 +193,13 @@ Expected miner endpoints:
 
 Add docs with example:
 
-dkcminer --rpc-url http://<NODE_HOST>:8811 --address <TESTNET_DKC_ADDR> --threads 4
+idrminer --rpc-url http://<NODE_HOST>:8811 --address <TESTNET_IDR_ADDR> --threads 4
 
 Add note:
 
 * HTTP RPC mining is solo/direct-node mining.
 * Stratum/pool mining is not implemented yet.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 
 ==================================================
 4. Bootnode and peer operator workflow
@@ -244,7 +244,7 @@ examples/testnet/miner-node.env
 examples/testnet/faucet-node.env
 examples/testnet/service-agent.env
 examples/systemd/deskachain-testnet.service
-examples/systemd/dkcservice-testnet.service
+examples/systemd/idrservice-testnet.service
 
 If the project does not use env files yet, examples can be docs-only templates.
 
@@ -281,7 +281,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=/opt/deskachain
 EnvironmentFile=/etc/deskachain/testnet.env
-ExecStart=/opt/deskachain/bin/deskachain --datadir ${DKC_DATADIR} node start ...
+ExecStart=/opt/deskachain/bin/deskachain --datadir ${IDR_DATADIR} node start ...
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
@@ -351,10 +351,10 @@ Investigate this observed output after valid Phase 3.4.1 manual E2E:
 
 height: 122
 coinbase maturity: 100
-total supply: 6100 DKC
+total supply: 6100 IDR
 normal transactions: 2
-total active stake: 1000 DKC
-circulating supply: 0 DKC
+total active stake: 1000 IDR
+circulating supply: 0 IDR
 
 Define exact semantics for circulating supply.
 
@@ -364,11 +364,11 @@ Recommended semantics:
 * circulating supply = mature supply, including mature coins that are active stake/unlocking/released, excluding immature coinbase.
 * spendable supply is different from circulating supply and excludes active/unlocking stake and pending outgoing.
 
-Under this definition, at height 122 with maturity 100 and reward 50 DKC:
+Under this definition, at height 122 with maturity 100 and reward 50 IDR:
 
 * mature coinbase blocks should be about 22 blocks.
-* mature supply should be about 1100 DKC.
-* active stake 1000 DKC should still count as circulating because it is mature and owner-controlled collateral, just not spendable.
+* mature supply should be about 1100 IDR.
+* active stake 1000 IDR should still count as circulating because it is mature and owner-controlled collateral, just not spendable.
 
 If the project intentionally defines circulating supply differently, document it clearly and add tests.
 
@@ -437,7 +437,7 @@ docs/Operator.md should include:
 
 Safety notes:
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Service points are simulation-only.
 * Staking is collateral-only, no APY/reward.
@@ -527,7 +527,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/public_node wallet new
 
 Use local datadir wallet address as miner reward.
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
 
 Expected:
 

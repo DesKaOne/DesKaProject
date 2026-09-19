@@ -5,7 +5,7 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
+  * cmd/idrminer/
   * internal/
   * go.mod
   * go.sum
@@ -27,14 +27,14 @@ Status saat ini:
 * Node bisa restart ulang tanpa stale lock.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif:
 
-  * dkcminer bisa mine via /miner/template dan /miner/submit.
+  * idrminer bisa mine via /miner/template dan /miner/submit.
 * Node public hardening sudah aktif:
 
   * /health
@@ -50,7 +50,7 @@ Status saat ini:
   * service challenge submit
   * service score
   * service rewards
-  * simulated points tidak mengubah DKC balance
+  * simulated points tidak mengubah IDR balance
   * total supply tidak berubah karena service rewards
   * public RPC default service_rpc=false
 
@@ -75,14 +75,14 @@ Prinsip penting:
 * Agent ini TIDAK membuka relay publik.
 * Agent ini TIDAK menjual bandwidth.
 * Agent ini TIDAK mengubah consensus.
-* Agent ini TIDAK mencetak DKC.
+* Agent ini TIDAK mencetak IDR.
 * Agent ini hanya berinteraksi dengan service simulation RPC dari Phase 3.0.
 * PoW tetap satu-satunya pembuat block canonical.
 * Service points tetap simulasi dan tidak spendable.
 
 Aturan penting:
 
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -103,27 +103,27 @@ Aturan penting:
 
 ==================================================
 
-1. Tambahkan binary baru dkcservice
+1. Tambahkan binary baru idrservice
    ==================================================
 
 Tambahkan binary baru:
 
-node/cmd/dkcservice/
+node/cmd/idrservice/
 
 Target run:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
 
 Build:
 
-go build -o dkcservice ./node/cmd/dkcservice
+go build -o idrservice ./node/cmd/idrservice
 
 Flags minimal:
 
 * --rpc-url string, required
 * --address string, required
 * --endpoint string, optional
-* --state string, default ./dkcservice-state.json
+* --state string, default ./idrservice-state.json
 * --heartbeat-interval duration, default 30s
 * --challenge-interval duration, default 60s
 * --score-interval duration, default 60s
@@ -131,14 +131,14 @@ Flags minimal:
 * --once bool, run one register/heartbeat/challenge cycle then exit
 * --safe-mode bool, default true
 * --max-bytes-per-challenge int64, default 100000000
-* --client-version string, default dkcservice/dev
+* --client-version string, default idrservice/dev
 * --platform string, auto detect runtime.GOOS/runtime.GOARCH
 
 Output startup:
 
 DesKaChain Service Node Agent
 rpc: http://127.0.0.1:8431
-address: DKC...
+address: IDR...
 endpoint: http://127.0.0.1:9501
 safe mode: true
 heartbeat interval: 30s
@@ -183,7 +183,7 @@ For --once:
 Agent harus menyimpan state lokal di file JSON.
 
 Default:
-./dkcservice-state.json
+./idrservice-state.json
 
 Fields:
 
@@ -225,7 +225,7 @@ Jangan menyimpan private key.
 4. Simulated measurement generator
 ==================================
 
-Tambahkan package internal/serviceagent atau internal/dkcservice.
+Tambahkan package internal/serviceagent atau internal/idrservice.
 
 Measurement simulator:
 
@@ -353,7 +353,7 @@ Existing commands must still work:
 * service rewards
 * service list if exists
 
-The new dkcservice should use the same RPC endpoints.
+The new idrservice should use the same RPC endpoints.
 
 ==================================================
 9. Public RPC mode behavior
@@ -365,7 +365,7 @@ If node is started with:
 
 service RPC default is disabled.
 
-dkcservice should fail clearly:
+idrservice should fail clearly:
 
 error: service RPC disabled on target node
 
@@ -373,7 +373,7 @@ If node is started with:
 
 --public-rpc --enable-service-rpc=true
 
-dkcservice can work.
+idrservice can work.
 
 Add docs warning:
 
@@ -386,7 +386,7 @@ Add docs warning:
 
 No need to change node health heavily.
 
-But if easy, dkcservice can check:
+But if easy, idrservice can check:
 
 GET /health
 
@@ -418,7 +418,7 @@ Add subcommands or flags if easy.
 Option A:
 Binary supports:
 
-dkcservice status --state ./dkcservice-state.json
+idrservice status --state ./idrservice-state.json
 
 Print:
 
@@ -509,7 +509,7 @@ Tambahkan/update tests:
 * server returns service RPC disabled.
 * agent returns clear error.
 
-14. No DKC mutation:
+14. No IDR mutation:
 
 * existing service tests already check no consensus mutation.
 * keep them passing.
@@ -527,7 +527,7 @@ Tambahkan/update tests:
 * wallet
 * chain
 * cli
-* dkcminer
+* idrminer
 
 ==================================================
 13. Docs update
@@ -539,15 +539,15 @@ docs/ServiceAgent.md
 
 Content:
 
-* What dkcservice is.
+* What idrservice is.
 * It is a service node agent for simulation.
 * It is not public exit proxy.
 * It does not mine PoW blocks.
-* It does not earn spendable DKC.
+* It does not earn spendable IDR.
 * It submits service simulation data to node RPC.
 * Safe mode is default.
 * No private key needed.
-* Only DKC address required.
+* Only IDR address required.
 * Future:
 
   * signed service registration,
@@ -574,15 +574,15 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 wallet new
 
 Run service agent once:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Run loop:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
 
 Build:
 
-go build -o dkcservice ./node/cmd/dkcservice
+go build -o idrservice ./node/cmd/idrservice
 
 ==================================================
 14. Expected final commands
@@ -614,7 +614,7 @@ service_rpc true
 
 Run service agent once:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8451 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8451 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Expected:
 DesKaChain Service Node Agent
@@ -624,28 +624,28 @@ challenge created id=...
 challenge submitted status=passed
 service score=...
 simulated points=...
-service points are simulation only and are not spendable DKC
+service points are simulation only and are not spendable IDR
 state saved
 
 Check node service score:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service score --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service rewards --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service score --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service rewards --address <IDR_ADDR>
 
 Expected:
 service score > 0
 simulated points > 0
-not DKC
+not IDR
 
 Consensus check:
 
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 balance <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 chain validate
 
 Expected:
 total supply unchanged by service agent
-DKC balance unchanged by service agent
+IDR balance unchanged by service agent
 chain valid
 
 Public RPC disabled check:
@@ -656,7 +656,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/agent_pub node start --rpc :84
 
 Run agent:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8461 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8461 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Expected:
 error: service RPC disabled
@@ -664,7 +664,7 @@ error: service RPC disabled
 Jangan over-engineer.
 Fokus Phase 3.1 hanya:
 
-* standalone dkcservice binary,
+* standalone idrservice binary,
 * agent local state,
 * safe-mode simulated measurement,
 * auto register/heartbeat/challenge/submit/score,

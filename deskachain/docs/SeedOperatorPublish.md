@@ -2,7 +2,7 @@
 
 This guide helps operators publish a public testnet seed peer safely.
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 
 ## Choose A Seed URL
 

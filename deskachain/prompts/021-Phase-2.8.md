@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address migration sudah selesai:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address final: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address final: `IDR` + Base58Check
   * private key raw 32-byte hex
   * remote wallet new valid
 * Difficulty adjustment sudah valid:
@@ -56,7 +56,7 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * DKC Base58Check address,
+  * IDR Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * dynamic difficulty,
@@ -82,7 +82,7 @@ Fitur utama:
 
 Aturan penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -248,12 +248,12 @@ Ubah menjadi:
 if spendable_balance < amount+fee => insufficient mature funds
 
 Error harus jelas:
-insufficient mature balance: spendable X DKC, required Y DKC, immature Z DKC
+insufficient mature balance: spendable X IDR, required Y IDR, immature Z IDR
 
 Contoh:
 
 * Miner baru mine 3 block localnet.
-* confirmed balance 150 DKC.
+* confirmed balance 150 IDR.
 * maturity 10.
 * mature balance 0.
 * immature balance 150.
@@ -262,7 +262,7 @@ Contoh:
 
 Setelah mine sampai height 11:
 
-* reward height 1 mature 50 DKC.
+* reward height 1 mature 50 IDR.
 * send 10 harus berhasil.
 
 ==================================================
@@ -279,18 +279,18 @@ Tapi output mining harus lebih jelas.
 
 Setelah mining:
 
-miner confirmed balance: 150 DKC
-miner mature balance: 0 DKC
-miner immature balance: 150 DKC
-miner spendable balance: 0 DKC
+miner confirmed balance: 150 IDR
+miner mature balance: 0 IDR
+miner immature balance: 150 IDR
+miner spendable balance: 0 IDR
 
 Jika ingin tetap mempertahankan output lama:
-miner balance: 150 DKC
+miner balance: 150 IDR
 
 Tambahkan field tambahan di bawahnya:
-mature: 0 DKC
-immature: 150 DKC
-spendable: 0 DKC
+mature: 0 IDR
+immature: 150 IDR
+spendable: 0 IDR
 
 Jangan membuat mining gagal hanya karena reward belum mature.
 
@@ -304,22 +304,22 @@ balance <address>
 
 Local dan remote harus menampilkan:
 
-address: DKC...
-confirmed balance: 150 DKC
-mature balance: 0 DKC
-immature balance: 150 DKC
-spendable balance: 0 DKC
-pending outgoing: 0 DKC
-pending incoming: 0 DKC
+address: IDR...
+confirmed balance: 150 IDR
+mature balance: 0 IDR
+immature balance: 150 IDR
+spendable balance: 0 IDR
+pending outgoing: 0 IDR
+pending incoming: 0 IDR
 coinbase maturity: 10
 current height: 3
 
 Jika address punya mature coinbase:
 
-confirmed balance: 550 DKC
-mature balance: 50 DKC
-immature balance: 500 DKC
-spendable balance: 50 DKC
+confirmed balance: 550 IDR
+mature balance: 50 IDR
+immature balance: 500 IDR
+spendable balance: 50 IDR
 
 Jangan hapus output lama jika test lama bergantung pada string tertentu, tapi tambahkan field baru.
 
@@ -336,7 +336,7 @@ Wallet inspect:
 
 * Tampilkan address format tetap:
   base58check
-  DKC
+  IDR
   secp256k1
 * Tidak perlu balance detail jika belum ada.
 
@@ -354,7 +354,7 @@ GET /wallet/balance?address=...
 Tambahkan response fields:
 
 {
-"address": "DKC...",
+"address": "IDR...",
 "confirmed_balance": "150",
 "mature_balance": "0",
 "immature_balance": "150",
@@ -391,8 +391,8 @@ network: localnet
 chain id: 777001
 height: 3
 coinbase maturity: 10
-total supply: 150 DKC
-circulating supply: 0 DKC
+total supply: 150 IDR
+circulating supply: 0 IDR
 
 ==================================================
 11. Circulating supply
@@ -513,7 +513,7 @@ Solusi:
 
 Output dev sim harus tetap jelas:
 funding blocks mined: 11
-spendable balance: 50 DKC
+spendable balance: 50 IDR
 
 ==================================================
 17. Tests wajib
@@ -666,16 +666,16 @@ Tambahkan penjelasan:
 Tambahkan contoh:
 
 Mine 3 blocks:
-confirmed: 150 DKC
-mature: 0 DKC
-immature: 150 DKC
-spendable: 0 DKC
+confirmed: 150 IDR
+mature: 0 IDR
+immature: 150 IDR
+spendable: 0 IDR
 
 Mine 11 blocks:
-confirmed: 550 DKC
-mature: 50 DKC
-immature: 500 DKC
-spendable: 50 DKC
+confirmed: 550 IDR
+mature: 50 IDR
+immature: 500 IDR
+spendable: 50 IDR
 
 ==================================================
 19. Expected final commands
@@ -694,7 +694,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/maturity init
 go run ./node/cmd/deskachain --datadir ./testdata/maturity wallet new
 
 Expected:
-DKC...
+IDR...
 
 Start node:
 
@@ -709,10 +709,10 @@ Balance:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
 
 Expected:
-confirmed balance: 150 DKC
-mature balance: 0 DKC
-immature balance: 150 DKC
-spendable balance: 0 DKC
+confirmed balance: 150 IDR
+mature balance: 0 IDR
+immature balance: 150 IDR
+spendable balance: 0 IDR
 
 Try send:
 
@@ -731,10 +731,10 @@ Balance:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
 
 Expected:
-confirmed balance: 550 DKC
-mature balance: 50 DKC
-immature balance: 500 DKC
-spendable balance: 50 DKC
+confirmed balance: 550 IDR
+mature balance: 50 IDR
+immature balance: 500 IDR
+spendable balance: 50 IDR
 
 Send after maturity:
 
@@ -749,9 +749,9 @@ Mempool:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 mempool list --detail
 
 Balance sender before mining tx:
-mature balance: 50 DKC
-pending outgoing: 10 DKC
-spendable balance: 40 DKC
+mature balance: 50 IDR
+pending outgoing: 10 IDR
+spendable balance: 40 IDR
 
 Mine tx:
 
@@ -762,9 +762,9 @@ Balance receiver:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_B>
 
 Expected:
-confirmed balance: 10 DKC
-mature balance: 10 DKC
-spendable balance: 10 DKC
+confirmed balance: 10 IDR
+mature balance: 10 IDR
+spendable balance: 10 IDR
 
 Chain info:
 
@@ -772,9 +772,9 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 chain info
 
 Expected:
 coinbase maturity: 10
-total supply: 600 DKC
-circulating supply: 100 DKC or sesuai maturity rule after height 12:
-mature coinbase height 1-2 = 100 DKC
+total supply: 600 IDR
+circulating supply: 100 IDR or sesuai maturity rule after height 12:
+mature coinbase height 1-2 = 100 IDR
 normal transactions: 1
 
 Validate:

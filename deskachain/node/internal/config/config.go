@@ -11,17 +11,27 @@ import (
 
 const (
 	CoinName = "DesKaChain"
-	Ticker   = "DKC"
+	// Ticker/Decimals/UnitsPerCoin are retained for legacy v1/v2 compatibility.
+	// v3 uses the explicit native asset model below.
+	Ticker   = "IDR"
 	Decimals = 8
 
-	UnitsPerCoin        uint64 = 100000000
-	InitialBlockReward  uint64 = 50 * UnitsPerCoin
-	DefaultDataDir             = "data"
-	DefaultDBPath              = "data/chain.db"
-	DefaultWalletPath          = "data/wallets.json"
-	DefaultMempoolPath         = "data/mempool.json"
-	InitialDifficulty   uint32 = 4
-	BlockTimeTargetSecs int64  = 10
+	NativeAssetID             = "IDR"
+	NativeAssetSymbol         = "IDR"
+	NativeAssetDecimals uint8 = Decimals
+	FeeAssetID                = NativeAssetID
+
+	UnitsPerCoin         uint64 = 100000000
+	InitialBlockReward   uint64 = 50 * UnitsPerCoin
+	DefaultMaxBlockBytes uint64 = 1 << 20
+	DefaultMaxTxBytes    uint64 = 128 << 10
+	DefaultMaxTxCount    uint64 = 2000
+	DefaultDataDir              = "data"
+	DefaultDBPath               = "data/chain.db"
+	DefaultWalletPath           = "data/wallets.json"
+	DefaultMempoolPath          = "data/mempool.json"
+	InitialDifficulty    uint32 = 4
+	BlockTimeTargetSecs  int64  = 10
 
 	GenesisTimestamp int64 = 1717200000
 	GenesisMessage         = "DesKaChain Genesis - fair CPU mining starts here"
@@ -173,32 +183,43 @@ func EnsureNetworkMatches(paths Paths, profile NetworkConfig) error {
 	return nil
 }
 
+type NetworkLimits struct {
+	MaxHeaderBatch      uint64 `json:"max_header_batch"`
+	MaxSyncBlocks       uint64 `json:"max_sync_blocks"`
+	MaxReorgFetchBlocks uint64 `json:"max_reorg_fetch_blocks"`
+}
+
 type NetworkConfig struct {
-	NetworkName          string           `json:"network_name"`
-	Name                 string           `json:"name"`
-	NetworkID            string           `json:"network_id"`
-	ChainID              uint64           `json:"chain_id"`
-	AddressPrefix        string           `json:"address_prefix"`
-	AddressVersion       byte             `json:"address_version"`
-	LegacyAddressAllowed bool             `json:"legacy_address_allowed"`
-	DefaultRPCPort       int              `json:"default_rpc_port"`
-	DefaultP2PPort       int              `json:"default_p2p_port"`
-	ProtocolVersion      uint32           `json:"protocol_version"`
-	MinProtocolVersion   uint32           `json:"min_protocol_version"`
-	RPCAPIVersion        string           `json:"rpc_api_version"`
-	P2PProtocolVersion   string           `json:"p2p_protocol_version"`
-	BlockVersion         uint32           `json:"block_version"`
-	TxVersion            uint32           `json:"tx_version"`
-	Difficulty           DifficultyParams `json:"difficulty"`
-	Consensus            ConsensusParams  `json:"consensus"`
-	MaxPeers             int              `json:"max_peers"`
-	MaxReorgDepth        uint64           `json:"max_reorg_depth"`
-	MinMiningPeers       int              `json:"min_mining_peers"`
-	AllowIsolatedMining  bool             `json:"allow_isolated_mining"`
-	MinWritePeers        int              `json:"min_write_peers"`
-	AllowIsolatedWrites  bool             `json:"allow_isolated_writes"`
-	SeedPeers            []string         `json:"seed_peers"`
-	GenesisHash          string           `json:"genesis_hash"`
+	NetworkName              string           `json:"network_name"`
+	Name                     string           `json:"name"`
+	NetworkID                string           `json:"network_id"`
+	ChainID                  uint64           `json:"chain_id"`
+	AddressPrefix            string           `json:"address_prefix"`
+	AddressVersion           byte             `json:"address_version"`
+	LegacyAddressAllowed     bool             `json:"legacy_address_allowed"`
+	DefaultRPCPort           int              `json:"default_rpc_port"`
+	DefaultP2PPort           int              `json:"default_p2p_port"`
+	ProtocolVersion          uint32           `json:"protocol_version"`
+	MinProtocolVersion       uint32           `json:"min_protocol_version"`
+	RPCAPIVersion            string           `json:"rpc_api_version"`
+	P2PProtocolVersion       string           `json:"p2p_protocol_version"`
+	BlockVersion             uint32           `json:"block_version"`
+	TxVersion                uint32           `json:"tx_version"`
+	Difficulty               DifficultyParams `json:"difficulty"`
+	Consensus                ConsensusParams  `json:"consensus"`
+	Asset                    AssetParams      `json:"asset"`
+	Fee                      FeeParams        `json:"fee"`
+	Economic                 EconomicParams   `json:"economic"`
+	MaxPeers                 int              `json:"max_peers"`
+	MaxReorgDepth            uint64           `json:"max_reorg_depth"`
+	MinMiningPeers           int              `json:"min_mining_peers"`
+	AllowIsolatedMining      bool             `json:"allow_isolated_mining"`
+	MinWritePeers            int              `json:"min_write_peers"`
+	AllowIsolatedWrites      bool             `json:"allow_isolated_writes"`
+	RequireAuthenticatedNode bool             `json:"require_authenticated_node"`
+	SeedPeers                []string         `json:"seed_peers"`
+	GenesisHash              string           `json:"genesis_hash"`
+	NetworkLimits            NetworkLimits    `json:"network_limits"`
 }
 
 type DifficultyParams struct {
@@ -210,8 +231,42 @@ type DifficultyParams struct {
 	MaxFutureDriftSeconds  int64  `json:"max_future_drift_seconds"`
 }
 
+type AssetParams struct {
+	NativeAssetID           string `json:"native_asset_id"`
+	NativeAssetSymbol       string `json:"native_asset_symbol"`
+	NativeAssetDecimals     uint8  `json:"native_asset_decimals"`
+	FeeAssetID              string `json:"fee_asset_id"`
+	TokenTransfersEnabled   bool   `json:"token_transfers_enabled"`
+	UserIssuedTokensEnabled bool   `json:"user_issued_tokens_enabled"`
+	PaymasterEnabled        bool   `json:"paymaster_enabled"`
+}
+
+type FeeParams struct {
+	Enabled              bool   `json:"enabled"`
+	MinFee               uint64 `json:"min_fee"`
+	MinGasPrice          uint64 `json:"min_gas_price"`
+	BytesPerGas          uint64 `json:"bytes_per_gas"`
+	MaxGasPerTx          uint64 `json:"max_gas_per_tx"`
+	BaseGasTransfer      uint64 `json:"base_gas_transfer"`
+	BaseGasAssetTransfer uint64 `json:"base_gas_asset_transfer"`
+	BaseGasStakeLock     uint64 `json:"base_gas_stake_lock"`
+	BaseGasStakeUnlock   uint64 `json:"base_gas_stake_unlock"`
+	BaseGasAssetCreate   uint64 `json:"base_gas_asset_create"`
+	BaseGasAssetMint     uint64 `json:"base_gas_asset_mint"`
+	BaseGasAssetBurn     uint64 `json:"base_gas_asset_burn"`
+}
+
+type EconomicParams struct {
+	BlockSubsidy  uint64 `json:"block_subsidy"`
+	FeeOnlyBlocks bool   `json:"fee_only_blocks"`
+}
+
 type ConsensusParams struct {
 	CoinbaseMaturity uint64        `json:"coinbase_maturity"`
+	MaxBlockBytes    uint64        `json:"max_block_bytes,omitempty"`
+	MaxTxBytes       uint64        `json:"max_tx_bytes,omitempty"`
+	MaxTxCount       uint64        `json:"max_tx_count,omitempty"`
+	MaxGasPerBlock   uint64        `json:"max_gas_per_block,omitempty"`
 	Staking          StakingParams `json:"staking"`
 }
 
@@ -228,9 +283,9 @@ func Localnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "localnet",
 		Name:                 "localnet",
-		NetworkID:            "dkc-local-1",
+		NetworkID:            "idr-local-1",
 		ChainID:              777001,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x1E,
 		LegacyAddressAllowed: true,
 		DefaultRPCPort:       8331,
@@ -238,9 +293,9 @@ func Localnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            3,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      4,
 			MinDifficulty:          1,
@@ -251,6 +306,10 @@ func Localnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 10,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               100 * UnitsPerCoin,
@@ -260,6 +319,33 @@ func Localnet() NetworkConfig {
 				RequireStakeForServiceRewards: true,
 			},
 		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
+		},
 		MaxPeers:            32,
 		MaxReorgDepth:       64,
 		MinMiningPeers:      0,
@@ -268,6 +354,11 @@ func Localnet() NetworkConfig {
 		AllowIsolatedWrites: true,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
@@ -275,9 +366,9 @@ func Testnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "testnet",
 		Name:                 "testnet",
-		NetworkID:            "dkc-testnet-1",
+		NetworkID:            "idr-testnet-1",
 		ChainID:              777101,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x1F,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       18331,
@@ -285,9 +376,9 @@ func Testnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            3,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      4,
 			MinDifficulty:          1,
@@ -298,6 +389,10 @@ func Testnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 100,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               1000 * UnitsPerCoin,
@@ -307,6 +402,33 @@ func Testnet() NetworkConfig {
 				RequireStakeForServiceRewards: true,
 			},
 		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
+		},
 		MaxPeers:            128,
 		MaxReorgDepth:       128,
 		MinMiningPeers:      1,
@@ -315,6 +437,11 @@ func Testnet() NetworkConfig {
 		AllowIsolatedWrites: false,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
@@ -322,9 +449,9 @@ func Mainnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "mainnet",
 		Name:                 "mainnet",
-		NetworkID:            "dkc-main-1",
+		NetworkID:            "idr-main-1",
 		ChainID:              777000,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x20,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       8333,
@@ -332,9 +459,9 @@ func Mainnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            3,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      6,
 			MinDifficulty:          1,
@@ -345,6 +472,10 @@ func Mainnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 100,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       false,
 				MinServiceStake:               0,
@@ -354,6 +485,33 @@ func Mainnet() NetworkConfig {
 				RequireStakeForServiceRewards: true,
 			},
 		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
+		},
 		MaxPeers:            256,
 		MaxReorgDepth:       64,
 		MinMiningPeers:      1,
@@ -362,6 +520,11 @@ func Mainnet() NetworkConfig {
 		AllowIsolatedWrites: false,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
@@ -391,31 +554,31 @@ func DefaultMaxReorgDepth(profile NetworkConfig) uint64 {
 }
 
 func MaxReorgDepthFromEnv(profile NetworkConfig) (uint64, error) {
-	value := strings.TrimSpace(os.Getenv("DKC_MAX_REORG_DEPTH"))
+	value := strings.TrimSpace(os.Getenv("IDR_MAX_REORG_DEPTH"))
 	if value == "" {
 		return DefaultMaxReorgDepth(profile), nil
 	}
 	parsed, err := strconv.ParseUint(value, 10, 64)
 	if err != nil || parsed == 0 {
-		return 0, fmt.Errorf("invalid DKC_MAX_REORG_DEPTH: %q", value)
+		return 0, fmt.Errorf("invalid IDR_MAX_REORG_DEPTH: %q", value)
 	}
 	return parsed, nil
 }
 
 func MinMiningPeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("DKC_MIN_MINING_PEERS", profile.MinMiningPeers)
+	return intFromEnv("IDR_MIN_MINING_PEERS", profile.MinMiningPeers)
 }
 
 func AllowIsolatedMiningFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("DKC_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
+	return boolFromEnv("IDR_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
 }
 
 func MinWritePeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("DKC_MIN_WRITE_PEERS", profile.MinWritePeers)
+	return intFromEnv("IDR_MIN_WRITE_PEERS", profile.MinWritePeers)
 }
 
 func AllowIsolatedWritesFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("DKC_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
+	return boolFromEnv("IDR_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
 }
 
 func intFromEnv(name string, fallback int) (int, error) {

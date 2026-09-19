@@ -24,7 +24,7 @@ Status saat ini:
   * service_rpc=false by default
 * Real multi-host testnet sudah valid.
 * Faucet -> stake -> service eligible multi-host sudah valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -179,7 +179,7 @@ Shows:
 * testnet warning
 
 Must show visible warning:
-“Testnet DKC has no monetary value.”
+“Testnet IDR has no monetary value.”
 “Mainnet is not available.”
 “Explorer is read-only.”
 
@@ -292,7 +292,7 @@ Shows:
 * simulation_only flag
 
 Must visibly say:
-“Service points are simulation-only and are not spendable DKC.”
+“Service points are simulation-only and are not spendable IDR.”
 
 ==================================================
 4. Search
@@ -305,12 +305,12 @@ Search should accept:
 * block height integer,
 * block hash,
 * txid,
-* DKC address.
+* IDR address.
 
 Behavior:
 
 * If numeric, open block detail by height.
-* If DKC address, open address page.
+* If IDR address, open address page.
 * If hash-like string, try:
 
   1. tx detail,
@@ -402,7 +402,7 @@ Requirements:
 Footer or banner:
 
 * Testnet only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet not available.
 * Read-only explorer.
 
@@ -475,7 +475,7 @@ Add:
 * Explain no wallet/admin/write actions.
 * Explain API is still available under `/explorer/*`.
 * Explain service points are simulation-only.
-* Explain testnet DKC has no monetary value.
+* Explain testnet IDR has no monetary value.
 * Explain mainnet not available.
 
 ==================================================
@@ -581,7 +581,7 @@ Manual checks:
   * block height,
   * block hash,
   * txid,
-  * DKC address.
+  * IDR address.
 * invalid search shows friendly error.
 * mobile width still readable.
 

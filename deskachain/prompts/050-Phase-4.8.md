@@ -24,7 +24,7 @@ Status saat ini:
   * announcement draft
 * Public RPC safety tetap aman.
 * Explorer API/UI read-only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -57,7 +57,7 @@ Non-goals:
 * Do not change consensus.
 * Do not change block/tx format.
 * Do not promise price/profit/rewards.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not add staking APY.
 * Do not make service points spendable.
 * Do not expose wallet/admin RPC publicly.
@@ -180,7 +180,7 @@ Fail conditions:
 Options:
 
 * `-ExpectedNetwork testnet`
-* `-ExpectedNetworkID dkc-testnet-1`
+* `-ExpectedNetworkID idr-testnet-1`
 * `-ExpectedChainID 777101`
 * `-AllowWalletRPC`
 * `-AllowAdminRPC`
@@ -208,7 +208,7 @@ Include:
 * Confirm seed advertises correct URL.
 * Confirm network ID:
 
-  * dkc-testnet-1
+  * idr-testnet-1
 * Confirm chain ID:
 
   * 777101
@@ -248,7 +248,7 @@ Initial sections:
 Seed with expected known limitations:
 
 * Mainnet is not available.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Explorer uses simple scan mode.
 * No persistent explorer database yet.
 * No wallet web UI.
@@ -375,7 +375,7 @@ Template for daily/weekly RC1 feedback summary:
 
 ## No monetary value reminder
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 
 ==================================================
 7. RC2 planning doc
@@ -445,7 +445,7 @@ Include copy-paste responses for:
   * PowerShell terminal output.
   * systemd `journalctl -u deskachain-testnet -n 200 --no-pager`
 * warning not to paste private keys.
-* explaining testnet DKC no monetary value.
+* explaining testnet IDR no monetary value.
 * explaining coinbase maturity.
 * explaining localnet/testnet mismatch.
 * explaining public RPC safety.
@@ -477,7 +477,7 @@ Add short section:
 * verify explorer,
 * report issues using template,
 * do not expose wallet/admin RPC,
-* remember testnet DKC has no monetary value.
+* remember testnet IDR has no monetary value.
 
 ==================================================
 10. Optional GitHub issue labels docs
@@ -549,7 +549,7 @@ Manual post-release style validation:
 3. Confirm output shows:
 
    * network testnet.
-   * network_id dkc-testnet-1.
+   * network_id idr-testnet-1.
    * chain_id 777101.
    * wallet_rpc false.
    * admin_rpc false.
@@ -582,4 +582,4 @@ Phase 4.8 valid if:
 * smoke test passes.
 * build/package still works.
 * public safety remains intact.
-* docs clearly say testnet DKC has no monetary value and mainnet is unavailable.
+* docs clearly say testnet IDR has no monetary value and mainnet is unavailable.

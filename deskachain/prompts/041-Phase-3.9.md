@@ -14,7 +14,7 @@ Status saat ini:
 * Faucet testnet valid.
 * Faucet -> stake 1000 -> service eligible E2E valid.
 * Binary release smoke test valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
@@ -58,7 +58,7 @@ docs/TestnetGenesis.md
 It should include:
 
 * network: testnet
-* network_id: dkc-testnet-1
+* network_id: idr-testnet-1
 * chain_id: 777101
 * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * target block time: 30s
@@ -66,11 +66,11 @@ It should include:
 * min difficulty: 1
 * max difficulty: 12
 * coinbase maturity: 100
-* min stake amount: 100 DKC
-* min service stake: 1000 DKC
+* min stake amount: 100 IDR
+* min service stake: 1000 IDR
 * unbonding period: 100
 * block reward if defined in code/docs
-* note: testnet DKC has no monetary value
+* note: testnet IDR has no monetary value
 * note: mainnet not available
 
 Add command examples to verify:
@@ -105,16 +105,16 @@ examples/testnet/service-node.env
 
 Seed node env should include:
 
-* DKC_DATADIR
-* DKC_NETWORK=testnet
-* DKC_RPC_ADDR=:9011 or :8811
-* DKC_P2P_ADDR=:10011 or :9811
-* DKC_ADVERTISE_P2P=http://<PUBLIC_HOST>:10011
-* DKC_PUBLIC_RPC=true
-* DKC_ENABLE_MINER_RPC=true or false depending recommended role
-* DKC_ENABLE_FAUCET_RPC=false by default
-* DKC_ENABLE_SERVICE_RPC=false by default
-* DKC_SEED_PEERS optional
+* IDR_DATADIR
+* IDR_NETWORK=testnet
+* IDR_RPC_ADDR=:9011 or :8811
+* IDR_P2P_ADDR=:10011 or :9811
+* IDR_ADVERTISE_P2P=http://<PUBLIC_HOST>:10011
+* IDR_PUBLIC_RPC=true
+* IDR_ENABLE_MINER_RPC=true or false depending recommended role
+* IDR_ENABLE_FAUCET_RPC=false by default
+* IDR_ENABLE_SERVICE_RPC=false by default
+* IDR_SEED_PEERS optional
 
 Do not include private keys.
 Do not include real wallet addresses unless placeholder.
@@ -204,7 +204,7 @@ Checklist:
 * chain validate passes.
 * `/health` reachable.
 * `chain info` shows expected network and chain id.
-* testnet DKC has no monetary value.
+* testnet IDR has no monetary value.
 * mainnet not available.
 
 Optional CLI command:
@@ -252,7 +252,7 @@ Update docs to show:
 
 * `--seed-file config/testnet-seeds.txt`
 * `--seed-peer http://<HOST>:<P2P_PORT>`
-* `DKC_SEED_PEERS=http://host1:port,http://host2:port`
+* `IDR_SEED_PEERS=http://host1:port,http://host2:port`
 
 ==================================================
 6. Public faucet operator prep
@@ -265,11 +265,11 @@ Update docs/Faucet.md and docs/DeployTestnet.md:
 * faucet is disabled by default.
 * faucet RPC should only be enabled deliberately.
 * faucet wallet must have mature balance.
-* recommended faucet amount for service collateral testing: 1000 DKC only for controlled dev/testnet.
+* recommended faucet amount for service collateral testing: 1000 IDR only for controlled dev/testnet.
 * max per address and min interval should be configured.
 * faucet uses normal tx, no silent mint.
 * faucet state must be backed up if operator wants rate-limit continuity.
-* testnet DKC has no monetary value.
+* testnet IDR has no monetary value.
 
 Add config example:
 
@@ -283,8 +283,8 @@ Do not include private key or real faucet address.
 
 Update docs/ServiceNode.md and docs/DeployTestnet.md:
 
-* service node requires testnet DKC collateral for eligibility.
-* min service stake: 1000 DKC.
+* service node requires testnet IDR collateral for eligibility.
+* min service stake: 1000 IDR.
 * service points are simulation-only and not spendable.
 * staking is collateral-only, no APY.
 * service agent should use its own state file.
@@ -324,7 +324,7 @@ Explain:
 Ensure docs and startup summary clearly state:
 
 * Testnet only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet not available.
 * Do not expose wallet/admin RPC.
 * Back up wallets.
@@ -404,7 +404,7 @@ Mine on A and ensure B imports/broadcasts:
 deskachain --datadir ./testdata/deploy_miner --network testnet init
 deskachain --datadir ./testdata/deploy_miner wallet new
 
-dkcminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
+idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
 
 Check B:
 deskachain --rpc-url http://127.0.0.1:9312 chain info

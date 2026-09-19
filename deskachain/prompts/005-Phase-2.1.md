@@ -184,13 +184,13 @@ Response:
 {
 "mined_blocks": 3,
 "new_height": 6,
-"miner_balance": "300 DKC",
+"miner_balance": "300 IDR",
 "blocks": [
 {
 "height": 4,
 "hash": "...",
 "txs": 2,
-"reward": "50 DKC",
+"reward": "50 IDR",
 "difficulty": 4,
 "nonce": 12345
 }
@@ -224,8 +224,8 @@ Response:
 "id": "<txid>",
 "from": "<addressA>",
 "to": "<addressB>",
-"amount": "10 DKC",
-"fee": "0 DKC",
+"amount": "10 IDR",
+"fee": "0 IDR",
 "nonce": 1,
 "broadcast": {
 "peers": 1,
@@ -408,7 +408,7 @@ Alur:
 
 2. Node2 sync otomatis atau manual dari node1.
 
-3. Node1 send 10 DKC ke walletB lewat RPC remote CLI:
+3. Node1 send 10 IDR ke walletB lewat RPC remote CLI:
    go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
 
 Expected:
@@ -436,7 +436,7 @@ Expected:
 * Node2 menerima block.
 * Node2 append block jika extend tip.
 * Mempool node2 kosong setelah block diterima.
-* Balance walletB di node2 menjadi 10 DKC.
+* Balance walletB di node2 menjadi 10 IDR.
 * Tip hash node1 dan node2 sama.
 * Chain validate node2 pass.
 
@@ -561,7 +561,7 @@ Expected:
 
 * node2 menerima tx broadcast.
 * node2 menerima block broadcast.
-* walletB balance 10 DKC.
+* walletB balance 10 IDR.
 * node1 dan node2 in sync.
 * chain validate pass di kedua node.
 
@@ -613,7 +613,7 @@ Expected:
 * Remote send sukses.
 * Tx broadcast ke node2.
 * Block broadcast ke node2.
-* WalletB balance 10 DKC di node2.
+* WalletB balance 10 IDR di node2.
 * Node compare menunjukkan nodes in sync.
 * Kedua node chain valid.
 

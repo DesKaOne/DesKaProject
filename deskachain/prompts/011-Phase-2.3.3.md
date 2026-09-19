@@ -11,7 +11,7 @@ Status saat ini:
 * Node2 menerima block dari node1.
 * Node2 menerima tx pending dari node1.
 * Setelah block berikutnya diterima, mempool node2 kosong.
-* Wallet node2 menerima 10 DKC.
+* Wallet node2 menerima 10 IDR.
 * node compare menunjukkan nodes in sync.
 * chain validate pass di node1 dan node2.
 

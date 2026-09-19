@@ -13,7 +13,7 @@ Status saat ini:
   node1 mine block berisi tx.
   node2 menerima block.
   node2 mempool kosong.
-  walletB balance = 10 DKC.
+  walletB balance = 10 IDR.
   node compare menunjukkan nodes in sync.
   chain validate pass di node1 dan node2.
 

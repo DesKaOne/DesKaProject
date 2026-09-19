@@ -15,7 +15,7 @@ Status saat ini:
 
 Log terbaru:
 peer ok
-network id: dkc-local-1
+network id: idr-local-1
 chain id: 777001
 height: 6
 peer sync: local chain already up to date
@@ -163,7 +163,7 @@ local mempool: 1
 tx broadcast: success=1 failed=0
 mined block: height=7 hash=<hash> txs=2
 block broadcast: success=1 failed=0
-peer balance: 10 DKC
+peer balance: 10 IDR
 compare: nodes in sync
 p2p broadcast test passed
 
@@ -199,8 +199,8 @@ RPC /send response:
 "id": "...",
 "from": "...",
 "to": "...",
-"amount": "10 DKC",
-"fee": "0 DKC",
+"amount": "10 IDR",
+"fee": "0 IDR",
 "nonce": 1,
 "broadcast": {
 "peers": 1,
@@ -232,13 +232,13 @@ Saat node menerima request P2P dari peer:
 * Jika tidak ada, jangan memaksa.
 
 Tambahkan optional header untuk semua P2P request dari client:
-X-DKC-Node-ID
-X-DKC-P2P-URL
-X-DKC-Network-ID
+X-IDR-Node-ID
+X-IDR-P2P-URL
+X-IDR-Network-ID
 
 Saat menerima request valid:
 
-* Jika X-DKC-P2P-URL ada dan valid, tambahkan/update peer metadata.
+* Jika X-IDR-P2P-URL ada dan valid, tambahkan/update peer metadata.
 * Jangan tambahkan URL kosong.
 * Jangan tambahkan self URL.
 * Jangan gagal jika header tidak ada.
@@ -272,13 +272,13 @@ RPC /mine response:
 {
 "mined_blocks": 1,
 "new_height": 7,
-"miner_balance": "350 DKC",
+"miner_balance": "350 IDR",
 "blocks": [
 {
 "height": 7,
 "hash": "...",
 "txs": 2,
-"reward": "50 DKC",
+"reward": "50 IDR",
 "difficulty": 4,
 "nonce": 123
 }
@@ -313,8 +313,8 @@ Response:
 "id": "...",
 "from": "...",
 "to": "...",
-"amount": "10 DKC",
-"fee": "0 DKC",
+"amount": "10 IDR",
+"fee": "0 IDR",
 "nonce": 1
 }
 ]
@@ -347,7 +347,7 @@ Body:
 {
 "url": "http://127.0.0.1:9332",
 "node_id": "...",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001
 }
 
@@ -454,7 +454,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer
 Expected:
 
 * Mempool node2 kosong.
-* Balance walletB = 10 DKC.
+* Balance walletB = 10 IDR.
 * Nodes in sync.
 
 ==================================================
@@ -565,7 +565,7 @@ Expected:
 * mempool node2 berisi tx pending.
 * mine node1 broadcast block ke node2.
 * mempool node2 kosong setelah block diterima.
-* balance walletB = 10 DKC.
+* balance walletB = 10 IDR.
 * nodes in sync.
 * chain validate pass di kedua node.
 

@@ -8,7 +8,7 @@ Status saat ini:
 * Node2 auto-sync dari node1 sudah berhasil.
 * node compare via RPC menunjukkan:
   nodes in sync
-  network id: dkc-local-1
+  network id: idr-local-1
   chain id: 777001
   height: 6
   tip hash sama.
@@ -93,7 +93,7 @@ Response sukses:
 "ok": true,
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001,
 "height": 6,
 "tip_hash": "...",
@@ -135,7 +135,7 @@ Response:
 {
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001,
 "height": 6,
 "tip_hash": "...",
@@ -227,7 +227,7 @@ Output sukses:
 peer ok
 url: http://127.0.0.1:9331
 node id: <id>
-network id: dkc-local-1
+network id: idr-local-1
 chain id: 777001
 height: 6
 tip hash: <hash>

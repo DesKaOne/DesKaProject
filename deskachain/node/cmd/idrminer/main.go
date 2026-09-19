@@ -72,10 +72,10 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 		return nil
 	}
 	if len(args) > 0 && (args[0] == "--version" || args[0] == "-version" || args[0] == "version") {
-		fmt.Fprint(out, version.String("dkcminer"))
+		fmt.Fprint(out, version.String("idrminer"))
 		return nil
 	}
-	fs := flag.NewFlagSet("dkcminer", flag.ContinueOnError)
+	fs := flag.NewFlagSet("idrminer", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	showVersion := fs.Bool("version", false, "print version and exit")
 	showHelp := fs.Bool("help", false, "print help and exit")
@@ -93,13 +93,13 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 	submitTimeout := fs.Duration("submit-timeout", 20*time.Second, "submit request timeout")
 	jobRefreshInterval := fs.Duration("job-refresh-interval", 5*time.Second, "stale job refresh interval")
 	duration := fs.Duration("duration", 0, "maximum miner runtime, 0 means unlimited")
-	userAgent := fs.String("user-agent", version.UserAgent("dkcminer"), "HTTP user agent")
+	userAgent := fs.String("user-agent", version.UserAgent("idrminer"), "HTTP user agent")
 	_ = fs.String("network", "", "optional network hint")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if *showVersion {
-		fmt.Fprint(out, version.String("dkcminer"))
+		fmt.Fprint(out, version.String("idrminer"))
 		return nil
 	}
 	if *showHelp {
@@ -107,7 +107,7 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 		return nil
 	}
 	if *rpcURL == "" || *address == "" {
-		return errors.New("usage: dkcminer --rpc-url <url> --address <DKC_ADDR> [--threads N]")
+		return errors.New("usage: idrminer --rpc-url <url> --address <IDR_ADDR> [--threads N]")
 	}
 	if *threads < 1 {
 		*threads = 1
@@ -239,13 +239,13 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 
 func printMinerHelp(out io.Writer) {
 	fmt.Fprintln(out, "DesKaChain CPU Miner")
-	fmt.Fprintln(out, "usage: dkcminer --rpc-url <url> --address <DKC_ADDR> [--threads N] [--once]")
+	fmt.Fprintln(out, "usage: idrminer --rpc-url <url> --address <IDR_ADDR> [--threads N] [--once]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "options:")
 	fmt.Fprintln(out, "  --version")
 	fmt.Fprintln(out, "  --help")
 	fmt.Fprintln(out, "  --rpc-url <url>")
-	fmt.Fprintln(out, "  --address <DKC_ADDR>")
+	fmt.Fprintln(out, "  --address <IDR_ADDR>")
 	fmt.Fprintln(out, "  --threads <n>")
 	fmt.Fprintln(out, "  --retry")
 	fmt.Fprintln(out, "  --retry-delay <duration>")

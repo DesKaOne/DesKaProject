@@ -79,7 +79,7 @@ func TestMinerSubmitValidBlockAndImmatureReward(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if details.Confirmed != config.InitialBlockReward || details.Immature != config.InitialBlockReward || details.Spendable != 0 {
+	if details.Confirmed != 0 || details.Immature != 0 || details.Spendable != 0 {
 		t.Fatalf("unexpected balance details: %#v", details)
 	}
 	if _, err := chain.ValidateChain(blocks); err != nil {
@@ -244,7 +244,7 @@ func TestCommittedBlocksAlwaysValidateCoinbaseRecipientWithProfile(t *testing.T)
 		t.Fatal(err)
 	}
 	genesis := chain.GenesisBlockForNetwork(profile)
-	coinbase := types.NewCoinbaseTransaction(localWallet.Address, config.InitialBlockReward, 1)
+	coinbase := types.NewCoinbaseTransaction(localWallet.Address, 0, 1)
 	block := types.NewBlock(1, genesis.Hash, testnetWallet.Address, profile.Difficulty.InitialDifficulty, []types.Transaction{coinbase})
 	block.Timestamp = genesis.Timestamp + profile.Difficulty.TargetBlockTimeSeconds
 	block = chain.Mine(block)
@@ -360,7 +360,7 @@ func TestMiningObservationEndpointsPublicReadOnly(t *testing.T) {
 }
 
 func TestMinerTemplateIncludesMempoolTxAndSubmitClearsMempool(t *testing.T) {
-	paths, server := newMinerRPCServer(t)
+	paths, server := newMinerRPCServerWithProfile(t, fundedRPCMinerProfile())
 	miner := newRPCWallet(t)
 	receiver := newRPCWallet(t)
 	fundMatureRPCMiner(t, server.URL, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+1)
@@ -394,7 +394,18 @@ func TestMinerTemplateIncludesMempoolTxAndSubmitClearsMempool(t *testing.T) {
 	}
 }
 
+func fundedRPCMinerProfile() config.NetworkConfig {
+	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
+	return profile
+}
+
 func newMinerRPCServer(t *testing.T) (config.Paths, *httptest.Server) {
+	return newMinerRPCServerWithProfile(t, config.Localnet())
+}
+
+func newMinerRPCServerWithProfile(t *testing.T, profile config.NetworkConfig) (config.Paths, *httptest.Server) {
 	t.Helper()
 	paths := config.NewPaths(t.TempDir())
 	store, err := storage.OpenBolt(paths.DB)
@@ -402,12 +413,12 @@ func newMinerRPCServer(t *testing.T) (config.Paths, *httptest.Server) {
 		t.Fatal(err)
 	}
 	bc := chain.New(store)
-	if err := bc.Init(); err != nil {
+	if err := bc.InitWithProfile(profile); err != nil {
 		t.Fatal(err)
 	}
 	_ = store.Close()
 	mux := http.NewServeMux()
-	RegisterHandlers(mux, paths, NodeInfo{RPCListen: ":0", P2PListen: ":0"})
+	RegisterHandlers(mux, paths, NodeInfo{RPCListen: ":0", P2PListen: ":0", Profile: profile})
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 	return paths, server

@@ -23,7 +23,7 @@ param(
 )
 
 if ($Help) {
-    Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 [-ExpectedNetwork testnet] [-ExpectedNetworkID dkc-testnet-1] [-ExpectedChainID 777101] [-MinPeers 1] [-ExpectedMinHeight 100] [-ExpectedMaxHeightLag 10] [-CheckPeerList] [-CheckSeed http://host:10311] [-FailOnZeroPeers] [-CheckMining] [-CheckDifficulty] [-WarnIfNoRecentBlockMinutes 10] [-FailIfNoRecentBlockMinutes 30] [-AllowWalletRPC] [-AllowAdminRPC] [-Json] [-BinDir .\dist\windows-amd64] [-Datadir .\data\testnet] [-TimeoutSeconds 10]"
+    Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 [-ExpectedNetwork testnet] [-ExpectedNetworkID idr-testnet-1] [-ExpectedChainID 777101] [-MinPeers 1] [-ExpectedMinHeight 100] [-ExpectedMaxHeightLag 10] [-CheckPeerList] [-CheckSeed http://host:10311] [-FailOnZeroPeers] [-CheckMining] [-CheckDifficulty] [-WarnIfNoRecentBlockMinutes 10] [-FailIfNoRecentBlockMinutes 30] [-AllowWalletRPC] [-AllowAdminRPC] [-Json] [-BinDir .\dist\windows-amd64] [-Datadir .\data\testnet] [-TimeoutSeconds 10]"
     exit 0
 }
 

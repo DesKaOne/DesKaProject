@@ -6,8 +6,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/var/lib/deskachain
-EnvironmentFile=/etc/deskachain/dkcservice.env
-ExecStart=/usr/local/bin/dkcservice --rpc-url ${DKC_SERVICE_RPC_URL} --address ${DKC_SERVICE_ADDRESS} --endpoint ${DKC_SERVICE_ENDPOINT} --state ${DKC_SERVICE_STATE}
+EnvironmentFile=/etc/deskachain/idrservice.env
+ExecStart=/usr/local/bin/idrservice --rpc-url ${IDR_SERVICE_RPC_URL} --address ${IDR_SERVICE_ADDRESS} --endpoint ${IDR_SERVICE_ENDPOINT} --state ${IDR_SERVICE_STATE}
 Restart=always
 RestartSec=5
 KillSignal=SIGINT

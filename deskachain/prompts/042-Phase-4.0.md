@@ -15,7 +15,7 @@ Status saat ini:
 * Node B chain validate OK.
 * CI dan release artifact workflow sudah hijau.
 * Release binary Windows/Linux + SHA256SUMS valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
@@ -93,7 +93,7 @@ Include safety notes:
 * P2P port can be public.
 * Public RPC must be read-only unless specific safe toggles are intended.
 * Wallet/admin RPC must never be public.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
 * Seed peers are not trusted authorities; network ID and genesis are validated.
 
@@ -280,16 +280,16 @@ examples/systemd/deskachain-testnet.env
 
 Example env:
 
-DKC_DATADIR=/var/lib/deskachain/testnet
-DKC_NETWORK=testnet
-DKC_RPC_ADDR=0.0.0.0:9311
-DKC_P2P_ADDR=0.0.0.0:10311
-DKC_ADVERTISE_P2P=http://100.101.251.7:10311
-DKC_PUBLIC_RPC=true
-DKC_ENABLE_MINER_RPC=true
-DKC_ENABLE_FAUCET_RPC=false
-DKC_ENABLE_SERVICE_RPC=false
-DKC_SEED_PEERS=
+IDR_DATADIR=/var/lib/deskachain/testnet
+IDR_NETWORK=testnet
+IDR_RPC_ADDR=0.0.0.0:9311
+IDR_P2P_ADDR=0.0.0.0:10311
+IDR_ADVERTISE_P2P=http://100.101.251.7:10311
+IDR_PUBLIC_RPC=true
+IDR_ENABLE_MINER_RPC=true
+IDR_ENABLE_FAUCET_RPC=false
+IDR_ENABLE_SERVICE_RPC=false
+IDR_SEED_PEERS=
 
 Systemd unit:
 
@@ -378,7 +378,7 @@ Mine from Host B to Host B or Host A:
 ./deskachain --datadir ./data/miner --network testnet init
 ADDR=$(./deskachain --datadir ./data/miner wallet new)
 
-./dkcminer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
 
 Check Host A:
 

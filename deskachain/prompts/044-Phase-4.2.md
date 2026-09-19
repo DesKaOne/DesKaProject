@@ -18,12 +18,12 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * CI dan release artifact workflow hijau.
 * Release binary Windows/Linux valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -38,10 +38,10 @@ Validate faucet, staking collateral, and service node simulation across multiple
 This phase should prove:
 
 * faucet can run on a controlled testnet seed/operator node,
-* another host can request testnet DKC,
+* another host can request testnet IDR,
 * faucet creates normal transactions, no silent mint,
 * requested faucet funds become available after mining and maturity rules as expected,
-* remote host can lock 1000 DKC as service collateral,
+* remote host can lock 1000 IDR as service collateral,
 * service agent can run from another host,
 * service score/eligibility works across public testnet nodes,
 * all nodes remain in sync and chain valid,
@@ -51,7 +51,7 @@ This phase should prove:
 Non-goals:
 
 * Do not launch mainnet.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not promise real mining/service rewards.
 * Do not implement staking APY.
 * Do not implement slashing/PoS.
@@ -84,7 +84,7 @@ Host A: Mini PC / faucet seed node
 * Faucet wallet must be funded and mature.
 * Faucet sends normal transactions.
 * Faucet state stores rate limits.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 
 Host B: Windows/Linux user node
 
@@ -93,7 +93,7 @@ Host B: Windows/Linux user node
 * Requests faucet from Host A.
 * Mines or waits for mined tx.
 * Checks balance.
-* Optionally locks 1000 DKC for service collateral.
+* Optionally locks 1000 IDR for service collateral.
 
 Warnings:
 
@@ -119,7 +119,7 @@ A. Prepare faucet wallet datadir on Host A:
 
 B. Fund faucet wallet by mining to faucet address:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <FAUCET_ADDR> --threads 2 --max-blocks 120
+./idrminer --rpc-url http://127.0.0.1:9311 --address <FAUCET_ADDR> --threads 2 --max-blocks 120
 
 Because testnet coinbase maturity is 100, ensure faucet has mature balance.
 
@@ -147,7 +147,7 @@ or if only local RPC is used, document the correct command pattern.
 
 E. Mine block to confirm faucet tx:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
 
 F. Check Host B balance:
 
@@ -190,7 +190,7 @@ Document E2E service flow:
 Host B:
 
 1. Create owner wallet.
-2. Request faucet 1000 DKC or receive test funds.
+2. Request faucet 1000 IDR or receive test funds.
 3. Confirm mature/spendable funds if required by transaction model.
 4. Lock stake:
    ./deskachain --rpc-url http://127.0.0.1:9312 stake lock --address <OWNER_ADDR> --amount 1000
@@ -198,18 +198,18 @@ Host B:
 6. Register service node:
    ./deskachain --rpc-url http://127.0.0.1:9312 service register --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971
 7. Run service agent:
-   ./dkcservice --rpc-url http://127.0.0.1:9312 --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
+   ./idrservice --rpc-url http://127.0.0.1:9312 --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
 8. Check score:
    ./deskachain --rpc-url http://127.0.0.1:9312 service score --address <OWNER_ADDR>
 
 Expected:
 
-* active stake: 1000 DKC.
-* required stake: 1000 DKC.
+* active stake: 1000 IDR.
+* required stake: 1000 IDR.
 * stake eligible: true.
 * service collateral status: eligible.
 * service points visible as simulation-only.
-* no spendable DKC minted by service score.
+* no spendable IDR minted by service score.
 
 Warnings:
 
@@ -253,7 +253,7 @@ Do not invent behavior. Patch docs/tests to match actual architecture.
 6. Service agent multi-host behavior
 ====================================
 
-Validate `dkcservice` from a host different from seed node.
+Validate `idrservice` from a host different from seed node.
 
 Cases:
 
@@ -265,7 +265,7 @@ Cases:
 * Insufficient stake should show not eligible.
 * Stake unlocked/released should lose eligibility.
 
-Keep `dkcservice --once` fast and deterministic enough for testnet smoke.
+Keep `idrservice --once` fast and deterministic enough for testnet smoke.
 
 ==================================================
 7. RPC safety with faucet/service
@@ -366,12 +366,12 @@ C. Host B peer check Host A OK.
 D. Host B wallet creates testnet address.
 E. Host B requests faucet from Host A.
 F. Faucet tx confirmed by mining.
-G. Host B balance shows 1000 DKC.
-H. Host B locks stake 1000 DKC.
+G. Host B balance shows 1000 IDR.
+H. Host B locks stake 1000 IDR.
 I. Stake tx confirmed by mining.
 J. Host B stake list/info shows active stake 1000.
 K. Host B registers service endpoint.
-L. Run dkcservice --once.
+L. Run idrservice --once.
 M. service score shows eligible.
 N. Host A and Host B chain info same height/tip.
 O. Host A and Host B chain validate pass.
@@ -379,7 +379,7 @@ P. Confirm total supply only reflects mined coinbase, not faucet/service mint.
 
 Expected final:
 
-* owner active stake: 1000 DKC.
+* owner active stake: 1000 IDR.
 * service collateral eligible: true.
 * service points > 0 or valid score output.
 * chain valid on both hosts.
@@ -397,7 +397,7 @@ FAUCET_ADDR=$(./deskachain --datadir ./data/faucet_wallet wallet new)
 
 Mine mature faucet funds:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --max-blocks 120
+./idrminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --max-blocks 120
 
 Start/restart Host A with faucet enabled:
 
@@ -437,7 +437,7 @@ Request faucet:
 
 Mine confirmation:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --once
 
 Check balance:
 
@@ -449,7 +449,7 @@ Stake:
 
 Mine confirmation:
 
-./dkcminer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
 
 Check stake:
 
@@ -461,7 +461,7 @@ Service register:
 
 Run service once:
 
-./dkcservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971 --once
+./idrservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971 --once
 
 Score:
 
@@ -512,8 +512,8 @@ Phase 4.2 valid if:
 * faucet creates normal tx and does not mint supply directly.
 * multi-host faucet request works.
 * Host B receives/spends testnet faucet funds.
-* Host B locks 1000 DKC stake.
-* service node becomes eligible with 1000 DKC active stake.
+* Host B locks 1000 IDR stake.
+* service node becomes eligible with 1000 IDR active stake.
 * service points remain simulation-only.
 * Host A and Host B remain synced with same height/tip.
 * chain validate passes on both hosts.

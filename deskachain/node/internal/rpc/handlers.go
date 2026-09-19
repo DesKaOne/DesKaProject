@@ -14,16 +14,20 @@ import (
 	"time"
 
 	"deskachain/internal/amount"
+	"deskachain/internal/arith"
+	"deskachain/internal/asset"
 	"deskachain/internal/chain"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/faucet"
+	"deskachain/internal/fees"
 	"deskachain/internal/ledger"
 	"deskachain/internal/mempool"
 	"deskachain/internal/mining"
 	"deskachain/internal/p2p"
 	"deskachain/internal/servicenode"
 	"deskachain/internal/staking"
+	"deskachain/internal/state"
 	"deskachain/internal/storage"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
@@ -143,11 +147,19 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /mining/blocks", h.wrap("generic", h.miningBlocks))
 	mux.HandleFunc("POST /chain/common-ancestor", h.wrap("generic", h.chainCommonAncestor))
 	mux.HandleFunc("GET /chain/blocks", h.wrap("generic", h.chainBlocks))
+	mux.HandleFunc("GET /chain/state", h.wrap("generic", h.chainState))
+	mux.HandleFunc("GET /chain/state/validate", h.wrap("admin", h.chainStateValidate))
 	mux.HandleFunc("GET /chain/validate", h.wrap("generic", h.chainValidate))
 	mux.HandleFunc("POST /fork/check", h.wrap("generic", h.forkCheck))
 	mux.HandleFunc("POST /fork/inspect-datadir", h.wrap("admin", h.forkInspectDatadir))
 	mux.HandleFunc("GET /balance/", h.wrap("generic", h.balance))
 	mux.HandleFunc("GET /address/", h.wrap("generic", h.address))
+	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
+	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
+	mux.HandleFunc("GET /asset/balances", h.assetBalances)
+	mux.HandleFunc("GET /fee/policy", h.wrap("generic", h.feePolicy))
+	mux.HandleFunc("GET /fee/pool", h.wrap("generic", h.feePool))
+	mux.HandleFunc("POST /fee/estimate", h.wrap("generic", h.feeEstimate))
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
 	mux.HandleFunc("GET /mempool", h.wrap("generic", h.mempoolList))
 	mux.HandleFunc("GET /mempool/list", h.wrap("generic", h.mempoolList))
@@ -267,7 +279,7 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"faucet_rpc":                h.info.EnableFaucetRPC,
 		"service_rpc":               h.info.EnableServiceRPC,
 		"mainnet_available":         false,
-		"testnet_value_warning":     "testnet DKC has no monetary value",
+		"testnet_value_warning":     "testnet IDR has no monetary value",
 		"indexer_mode":              "simple_scan",
 	})
 }
@@ -320,7 +332,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-	} else if strings.HasPrefix(query, "DKC") {
+	} else if strings.HasPrefix(query, "IDR") {
 		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
 			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
 			return
@@ -352,7 +364,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or DKC address")
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
 		return
 	}
 
@@ -490,7 +502,7 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		writeError(w, err)
 		return
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := h.openChainBalanceDetails(address, pending)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -516,8 +528,17 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		"service_collateral_eligible": score.StakeEligible,
 		"service_points":              score.SimulatedPoints,
 		"simulation_only":             true,
-		"service_points_warning":      "service points are simulation-only and are not spendable DKC",
+		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
 	})
+}
+
+func (h handler) openChainBalanceDetails(address string, pending []types.Transaction) (ledger.BalanceDetails, error) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		return ledger.BalanceDetails{}, err
+	}
+	defer closeFn()
+	return bc.BalanceDetailsForWithProfile(address, pending, h.profile())
 }
 
 func (h handler) explorerAddressTxs(w http.ResponseWriter, r *http.Request, address string) {
@@ -1735,7 +1756,7 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"coinbase_maturity":              net.Consensus.CoinbaseMaturity,
 		"pending_tx_count":               pendingCount,
 		"peer_count":                     peerCount,
-		"note":                           "testnet mining is for testing only; testnet DKC has no monetary value",
+		"note":                           "testnet mining is for testing only; testnet IDR has no monetary value",
 	}
 }
 
@@ -1863,11 +1884,19 @@ func stakingSummaryMap(blocks []types.Block, net config.NetworkConfig) map[strin
 	}
 }
 
-func balanceDetailsMap(details ledger.BalanceDetails) map[string]any {
+func balanceDetailsMap(details ledger.BalanceDetails, profile config.NetworkConfig) map[string]any {
+	ticker := config.Ticker
+	if profile.TxVersion >= types.TxVersionAsset {
+		ticker = profile.Asset.NativeAssetSymbol
+	}
+	total, err := arith.Add(details.Confirmed, details.PendingIncoming)
+	if err != nil {
+		total = ^uint64(0)
+	}
 	return map[string]any{
 		"address":            details.Address,
 		"balance":            amount.Format(details.Confirmed),
-		"ticker":             config.Ticker,
+		"ticker":             ticker,
 		"confirmed_balance":  amount.Format(details.Confirmed),
 		"mature_balance":     amount.Format(details.Mature),
 		"immature_balance":   amount.Format(details.Immature),
@@ -1878,7 +1907,7 @@ func balanceDetailsMap(details ledger.BalanceDetails) map[string]any {
 		"pending_stake_lock": amount.Format(details.PendingStakeLock),
 		"pending_outgoing":   amount.Format(details.PendingOutgoing),
 		"pending_incoming":   amount.Format(details.PendingIncoming),
-		"total_balance":      amount.Format(details.Confirmed + details.PendingIncoming),
+		"total_balance":      amount.Format(total),
 		"coinbase_maturity":  details.CoinbaseMaturity,
 		"current_height":     details.CurrentHeight,
 	}
@@ -1963,6 +1992,36 @@ func (h handler) forkInspectDatadir(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, result)
 }
 
+func (h handler) chainState(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := bc.StateStatusWithNetwork(h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h handler) chainStateValidate(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := bc.ValidateStateWithNetwork(h.profile())
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, result)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
 func (h handler) chainValidate(w http.ResponseWriter, _ *http.Request) {
 	bc, closeFn, err := h.openChain()
 	if err != nil {
@@ -2000,22 +2059,190 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
 	pending, err := mempool.New(h.paths.Mempool).Load()
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(address, pending, h.profile())
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, balanceDetailsMap(details))
+	writeJSON(w, http.StatusOK, balanceDetailsMap(details, h.profile()))
+}
+
+func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
+	p := h.profile()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"enabled":        p.Fee.Enabled,
+		"fee_asset_id":   config.FeeAssetID,
+		"fee_asset":      config.NativeAssetID,
+		"gas_price":      p.Fee.MinGasPrice,
+		"min_fee":        p.Fee.MinFee,
+		"bytes_per_gas":  p.Fee.BytesPerGas,
+		"max_gas_per_tx": p.Fee.MaxGasPerTx,
+		"base_gas": map[string]uint64{
+			"transfer_idr":   p.Fee.BaseGasTransfer,
+			"transfer_token": p.Fee.BaseGasAssetTransfer,
+			"stake_lock":     p.Fee.BaseGasStakeLock,
+			"stake_unlock":   p.Fee.BaseGasStakeUnlock,
+			"asset_create":   p.Fee.BaseGasAssetCreate,
+			"asset_mint":     p.Fee.BaseGasAssetMint,
+			"asset_burn":     p.Fee.BaseGasAssetBurn,
+		},
+		"paymaster_enabled": p.Asset.PaymasterEnabled,
+	})
+}
+
+func (h handler) feePool(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := chain.FeePoolBalanceWithProfile(bc, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"asset_id": result.AssetID,
+		"symbol":   result.Symbol,
+		"pool":     result.Pool,
+		"amount":   amount.FormatUnits(result.Amount, 0),
+		"units":    result.Amount,
+	})
+}
+
+func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
+	var tx types.Transaction
+	if err := json.NewDecoder(r.Body).Decode(&tx); err != nil {
+		writeError(w, err)
+		return
+	}
+	quote, err := chain.EstimateFee(tx, h.profile())
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "quote": quote})
+}
+
+func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
+	assetID := strings.TrimSpace(r.URL.Query().Get("asset_id"))
+	if assetID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "asset_id is required"})
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	def, found, err := bc.AssetDefinitionWithProfile(assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]any{"ok": false, "error": "asset not found", "asset_id": assetID})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":        true,
+		"asset":     def,
+		"native":    def.ID == config.NativeAssetID,
+		"fee_asset": def.ID == config.FeeAssetID,
+		"network":   h.profile().Name,
+	})
+}
+
+func (h handler) assetBalances(w http.ResponseWriter, r *http.Request) {
+	address := strings.TrimSpace(r.URL.Query().Get("address"))
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		writeError(w, err)
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	entries, err := bc.AssetBalancesForAddressWithProfile(address, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	out := make([]map[string]any, 0, len(entries))
+	for _, entry := range entries {
+		def, found, err := bc.AssetDefinitionWithProfile(entry.AssetID, h.profile())
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if !found {
+			continue
+		}
+		out = append(out, map[string]any{
+			"asset_id": entry.AssetID,
+			"symbol":   def.Symbol,
+			"decimals": def.Decimals,
+			"amount":   amount.FormatUnits(entry.Amount, def.Decimals),
+			"units":    entry.Amount,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"address":  address,
+		"balances": out,
+	})
+}
+
+func (h handler) assetBalance(w http.ResponseWriter, r *http.Request) {
+	address := strings.TrimSpace(r.URL.Query().Get("address"))
+	assetID := strings.TrimSpace(r.URL.Query().Get("asset_id"))
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		writeError(w, err)
+		return
+	}
+	if assetID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "asset_id is required"})
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	def, found, err := bc.AssetDefinitionWithProfile(assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]any{"ok": false, "error": "asset not found", "asset_id": assetID})
+		return
+	}
+	balance, err := bc.AssetBalanceWithProfile(address, assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"address":  address,
+		"asset_id": assetID,
+		"symbol":   def.Symbol,
+		"decimals": def.Decimals,
+		"amount":   amount.FormatUnits(balance, def.Decimals),
+		"units":    balance,
+	})
 }
 
 func (h handler) address(w http.ResponseWriter, r *http.Request) {
@@ -2025,6 +2252,10 @@ func (h handler) address(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"address": address, "valid": false})
 		return
 	}
+	ticker := config.Ticker
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		ticker = h.profile().Asset.NativeAssetSymbol
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"address":                 info.address,
 		"valid":                   true,
@@ -2032,15 +2263,15 @@ func (h handler) address(w http.ResponseWriter, r *http.Request) {
 		"network":                 h.profile().Name,
 		"key_curve":               "secp256k1",
 		"legacy":                  crypto.IsLegacyDevAddress(info.address),
-		"confirmed_balance":       amount.Format(info.confirmedBalance) + " " + config.Ticker,
-		"mature_balance":          amount.Format(info.matureBalance) + " " + config.Ticker,
-		"immature_balance":        amount.Format(info.immatureBalance) + " " + config.Ticker,
-		"spendable_balance":       amount.Format(info.spendableBalance) + " " + config.Ticker,
+		"confirmed_balance":       amount.Format(info.confirmedBalance) + " " + ticker,
+		"mature_balance":          amount.Format(info.matureBalance) + " " + ticker,
+		"immature_balance":        amount.Format(info.immatureBalance) + " " + ticker,
+		"spendable_balance":       amount.Format(info.spendableBalance) + " " + ticker,
 		"confirmed_nonce":         info.confirmedNonce,
 		"pending_outgoing_count":  info.pendingOutgoingCount,
-		"pending_outgoing_amount": amount.Format(info.pendingOutgoingAmount) + " " + config.Ticker,
+		"pending_outgoing_amount": amount.Format(info.pendingOutgoingAmount) + " " + ticker,
 		"pending_incoming_count":  info.pendingIncomingCount,
-		"pending_incoming_amount": amount.Format(info.pendingIncomingAmount) + " " + config.Ticker,
+		"pending_incoming_amount": amount.Format(info.pendingIncomingAmount) + " " + ticker,
 	})
 }
 
@@ -2060,10 +2291,17 @@ func (h handler) tx(w http.ResponseWriter, r *http.Request) {
 		"status":   result.status,
 		"from":     result.tx.From,
 		"to":       result.tx.To,
-		"amount":   amount.Format(result.tx.Amount) + " " + config.Ticker,
-		"fee":      amount.Format(result.tx.Fee) + " " + config.Ticker,
 		"nonce":    result.tx.Nonce,
 		"coinbase": result.tx.Coinbase,
+	}
+	if result.tx.ProtocolVersion() >= types.TxVersionAsset {
+		response["asset_id"] = result.tx.EffectiveAssetID()
+		response["amount_units"] = result.tx.Amount
+		response["fee"] = amount.FormatUnits(result.tx.Fee, h.profile().Asset.NativeAssetDecimals) + " " + h.profile().Asset.FeeAssetID
+		response["fee_units"] = result.tx.Fee
+	} else {
+		response["amount"] = amount.Format(result.tx.Amount) + " " + config.Ticker
+		response["fee"] = amount.Format(result.tx.Fee) + " " + config.Ticker
 	}
 	if result.status == "confirmed" {
 		response["block_height"] = result.blockHeight
@@ -2080,7 +2318,7 @@ func (h handler) mempoolList(w http.ResponseWriter, r *http.Request) {
 	detail := r.URL.Query().Get("detail") == "true"
 	views := make([]map[string]any, 0, len(txs))
 	for _, tx := range txs {
-		v := txView(tx, "pending")
+		v := txView(tx, "pending", h.profile())
 		if !detail {
 			delete(v, "timestamp")
 		}
@@ -2111,7 +2349,7 @@ func (h handler) faucetInfo(w http.ResponseWriter, _ *http.Request) {
 		"max_per_address":      amount.Format(h.faucetMaxPerAddress()),
 		"min_interval_seconds": int64(h.faucetMinInterval().Seconds()),
 		"mempool_pending":      len(pending),
-		"note":                 "testnet faucet only; testnet DKC has no monetary value",
+		"note":                 "testnet faucet only; testnet IDR has no monetary value",
 	})
 }
 
@@ -2206,7 +2444,7 @@ func (h handler) createFaucetTransaction(recipient, amountText string, now time.
 		}
 		return nil, err
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil {
+	if err := h.admitMempoolTx(tx); err != nil {
 		if errors.Is(err, mempool.ErrDuplicateTx) {
 			return nil, errors.New("pending faucet tx already exists for address")
 		}
@@ -2308,24 +2546,17 @@ func (h handler) send(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
 	h.refreshState()
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
 	broadcast := p2p.BroadcastTxToPeers(h.paths.Peers, peers, tx)
-	writeJSON(w, http.StatusOK, map[string]any{
-		"status":    "pending",
-		"id":        tx.ID,
-		"tx_id":     tx.ID,
-		"from":      tx.From,
-		"to":        tx.To,
-		"amount":    amount.Format(tx.Amount) + " " + config.Ticker,
-		"fee":       amount.Format(tx.Fee) + " " + config.Ticker,
-		"nonce":     tx.Nonce,
-		"broadcast": broadcast,
-	})
+	view := txView(tx, "pending", h.profile())
+	view["status"] = "pending"
+	view["broadcast"] = broadcast
+	writeJSON(w, http.StatusOK, view)
 }
 
 func (h handler) minerTemplate(w http.ResponseWriter, r *http.Request) {
@@ -2785,7 +3016,7 @@ func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
@@ -2817,7 +3048,7 @@ func (h handler) stakeUnlock(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
@@ -2938,18 +3169,13 @@ func (h handler) mine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
 	tip, err := bc.Tip()
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 	pending, _ := mempool.New(h.paths.Mempool).Load()
-	details, err := ledger.BalanceDetailsForWithProfile(req.Address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(req.Address, pending, h.profile())
 	if err != nil {
 		writeError(w, err)
 		return
@@ -3003,9 +3229,15 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 	if err != nil {
 		return types.Block{}, 0, err
 	}
-	workLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
+	baseLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
 	if err != nil {
 		return types.Block{}, 0, err
+	}
+	workLedger := baseLedger.Clone()
+	tip := blocks[len(blocks)-1]
+	height, err := arith.Add(tip.Height, 1)
+	if err != nil {
+		return types.Block{}, 0, errors.New("block height overflow")
 	}
 	validPending := make([]types.Transaction, 0, len(pending))
 	totalFees := uint64(0)
@@ -3013,16 +3245,42 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 		if tx.Coinbase {
 			continue
 		}
-		if err := workLedger.ApplyTransaction(tx); err != nil {
+		if err := workLedger.ApplyTransactionAtHeight(tx, height); err != nil {
 			continue
 		}
 		validPending = append(validPending, tx)
-		totalFees += tx.Fee
+		nextFees, feeErr := arith.Add(totalFees, tx.Fee)
+		if feeErr != nil {
+			return types.Block{}, 0, errors.New("transaction fees overflow")
+		}
+		totalFees = nextFees
 	}
-	tip := blocks[len(blocks)-1]
-	height := tip.Height + 1
-	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, config.InitialBlockReward+totalFees, height)}, validPending...)
-	block := types.NewBlock(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs)
+	reward := h.profile().Economic.BlockSubsidy
+	if h.profile().TxVersion < types.TxVersionAsset {
+		reward, err = arith.Add(config.InitialBlockReward, totalFees)
+		if err != nil {
+			return types.Block{}, 0, errors.New("block reward overflow")
+		}
+	}
+	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, h.profile().TxVersion)
+	if coinbase.ProtocolVersion() >= types.TxVersionCanonical {
+		if err := coinbase.RefreshIDForChainID(h.profile().ChainID); err != nil {
+			return types.Block{}, 0, err
+		}
+	}
+	txs := append([]types.Transaction{coinbase}, validPending...)
+	block := types.NewBlockWithVersion(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs, h.profile().BlockVersion)
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		candidate := baseLedger.Clone()
+		if err := candidate.ApplyBlock(block); err != nil {
+			return types.Block{}, 0, err
+		}
+		root, err := state.RootForLedger(candidate)
+		if err != nil {
+			return types.Block{}, 0, err
+		}
+		block.StateRoot = root
+	}
 	return block, len(validPending), nil
 }
 
@@ -3077,6 +3335,15 @@ func firstN(value string, n int) string {
 		return value
 	}
 	return value[:n]
+}
+
+func (h handler) admitMempoolTx(tx types.Transaction) error {
+	policy := mempool.AdmissionPolicy{
+		Profile: h.profile(),
+		MaxTxs:  h.profile().Consensus.MaxTxCount,
+		MaxGas:  h.profile().Consensus.MaxGasPerBlock,
+	}
+	return mempool.New(h.paths.Mempool).Admit(tx, policy)
 }
 
 func (h handler) refreshState() {
@@ -3143,12 +3410,41 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 	if err != nil {
 		return types.Transaction{}, err
 	}
-	details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
-	if details.Spendable < txAmount {
-		return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), config.Ticker, amount.Format(details.UnlockingStake), config.Ticker)
+	nonceBase, err := arith.Add(matureLedger.Nonce(from), pendingFromCount(pending, from))
+	if err != nil {
+		return types.Transaction{}, errors.New("account nonce overflow")
 	}
-	tx := types.NewUnsignedTransaction(from, to, txAmount, 0, matureLedger.Nonce(from)+pendingFromCount(pending, from)+1)
-	if err := fromWallet.SignTransaction(&tx); err != nil {
+	nonce, err := arith.Add(nonceBase, 1)
+	if err != nil {
+		return types.Transaction{}, errors.New("account nonce overflow")
+	}
+	var tx types.Transaction
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		tx = types.NewAssetTransferTransaction(from, to, h.profile().Asset.NativeAssetID, txAmount, 0, nonce)
+		minFee, feeErr := fees.MinimumFee(tx, h.profile())
+		if feeErr != nil {
+			return types.Transaction{}, feeErr
+		}
+		tx.Fee = minFee
+	} else {
+		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
+		if details.Spendable < txAmount {
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), config.Ticker, amount.Format(details.UnlockingStake), config.Ticker)
+		}
+		tx = types.NewUnsignedTransaction(from, to, txAmount, 0, nonce)
+	}
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		fee := tx.Fee
+		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
+		required, requiredErr := arith.Add(txAmount, fee)
+		if requiredErr != nil {
+			return types.Transaction{}, errors.New("transaction amount and fee overflow")
+		}
+		if details.Spendable < required {
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol, amount.Format(details.ActiveStake), h.profile().Asset.NativeAssetSymbol, amount.Format(details.UnlockingStake), h.profile().Asset.NativeAssetSymbol)
+		}
+	}
+	if err := fromWallet.SignTransactionWithProfile(&tx, h.profile()); err != nil {
 		return types.Transaction{}, err
 	}
 	return tx, nil
@@ -3440,7 +3736,7 @@ func (h handler) explorerServiceSummary(address string, node *servicenode.Node) 
 		"status":                      eligibleStatus,
 		"simulation_only":             true,
 		"scope":                       "local_node_service_store",
-		"service_points_warning":      "service points are simulation-only and are not spendable DKC",
+		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
 		"service_registry_consensus":  false,
 		"stake_collateral_consensus":  true,
 		"local_service_state_warning": "service registration and score samples are local to this RPC node",
@@ -3660,19 +3956,15 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		return addressInspection{}, err
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return addressInspection{}, err
-	}
-	l, err := bc.Ledger()
-	if err != nil {
-		return addressInspection{}, err
-	}
 	pending, err := mempool.New(h.paths.Mempool).Load()
 	if err != nil {
 		return addressInspection{}, err
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(address, pending, h.profile())
+	if err != nil {
+		return addressInspection{}, err
+	}
+	nonce, err := bc.AccountNonceWithProfile(address, h.profile())
 	if err != nil {
 		return addressInspection{}, err
 	}
@@ -3682,19 +3974,29 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		matureBalance:    details.Mature,
 		immatureBalance:  details.Immature,
 		spendableBalance: details.Spendable,
-		confirmedNonce:   l.Nonce(address),
+		confirmedNonce:   nonce,
 	}
 	for _, tx := range pending {
 		if tx.Coinbase {
 			continue
 		}
-		if tx.From == address {
-			info.pendingOutgoingCount++
-			info.pendingOutgoingAmount += tx.Amount + tx.Fee
+		involvesOutgoing := false
+		outgoingAmount := uint64(0)
+		if tx.TxType() == types.TxTypeTransfer && tx.From == address && asset.IsNative(tx.EffectiveAssetID()) {
+			involvesOutgoing = true
+			outgoingAmount = arith.AddCap(outgoingAmount, tx.Amount)
 		}
-		if tx.To == address {
+		if tx.EffectiveFeePayer() == address && tx.Fee > 0 {
+			involvesOutgoing = true
+			outgoingAmount = arith.AddCap(outgoingAmount, tx.Fee)
+		}
+		if involvesOutgoing {
+			info.pendingOutgoingCount++
+			info.pendingOutgoingAmount = arith.AddCap(info.pendingOutgoingAmount, outgoingAmount)
+		}
+		if tx.TxType() == types.TxTypeTransfer && tx.To == address && asset.IsNative(tx.EffectiveAssetID()) {
 			info.pendingIncomingCount++
-			info.pendingIncomingAmount += tx.Amount
+			info.pendingIncomingAmount = arith.AddCap(info.pendingIncomingAmount, tx.Amount)
 		}
 	}
 	return info, nil
@@ -3791,19 +4093,29 @@ func peerView(peer p2p.PeerMetadata) map[string]any {
 	}
 }
 
-func txView(tx types.Transaction, status string) map[string]any {
-	return map[string]any{
+func txView(tx types.Transaction, status string, profile config.NetworkConfig) map[string]any {
+	view := map[string]any{
 		"id":        tx.ID,
 		"txid":      tx.ID,
 		"status":    status,
 		"from":      tx.From,
 		"to":        tx.To,
-		"amount":    amount.Format(tx.Amount) + " " + config.Ticker,
-		"fee":       amount.Format(tx.Fee) + " " + config.Ticker,
 		"nonce":     tx.Nonce,
 		"coinbase":  tx.Coinbase,
 		"timestamp": tx.Timestamp,
 	}
+	if tx.ProtocolVersion() >= types.TxVersionAsset {
+		view["asset_id"] = tx.EffectiveAssetID()
+		view["amount_units"] = tx.Amount
+		// Keep a human-readable amount for generic RPC/CLI consumers; amount_units remains canonical.
+		view["amount"] = amount.FormatUnits(tx.Amount, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
+		view["fee"] = amount.FormatUnits(tx.Fee, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
+		view["fee_units"] = tx.Fee
+	} else {
+		view["amount"] = amount.Format(tx.Amount) + " " + config.Ticker
+		view["fee"] = amount.Format(tx.Fee) + " " + config.Ticker
+	}
+	return view
 }
 
 func miningJobView(job mining.MiningJob) map[string]any {
@@ -3853,7 +4165,7 @@ func (h handler) compareInfo() (map[string]any, error) {
 		"protocol_version": h.profile().ProtocolVersion,
 		"height":           tip.Height,
 		"tip_hash":         tip.Hash,
-		"total_supply":     amount.Format(ledger.TotalSupply(blocks)) + " " + config.Ticker,
+		"total_supply":     amount.Format(ledger.TotalSupplyWithProfile(blocks, h.profile())) + " " + config.NativeAssetSymbol,
 		"cumulative_work":  chain.CalculateCumulativeWork(blocks),
 		"pending_tx_count": len(pending),
 	}, nil

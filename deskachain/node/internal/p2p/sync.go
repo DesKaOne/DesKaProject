@@ -28,10 +28,16 @@ func SyncFromPeerWithProfileAndMaxDepth(paths config.Paths, peer string, out io.
 		return err
 	}
 	peer = normalized
-	client := NewClientWithTimeout(10 * time.Second)
-	statusClient := NewClientWithTimeout(2 * time.Second)
 	if profile.Name == "" {
 		profile = config.Localnet()
+	}
+	client, err := NewClientForProfile(paths, profile, 10*time.Second)
+	if err != nil {
+		return err
+	}
+	statusClient, err := NewClientForProfile(paths, profile, 2*time.Second)
+	if err != nil {
+		return err
 	}
 	if maxReorgDepth == 0 {
 		maxReorgDepth = config.DefaultMaxReorgDepth(profile)
@@ -114,7 +120,28 @@ func SyncFromPeerWithProfileAndMaxDepth(paths config.Paths, peer string, out io.
 		_ = notePeerSuccess(paths, peer, handshake, 1, "sync up to date")
 		return nil
 	}
-	needed := int(status.Height - localTip.Height)
+	missing := status.Height - localTip.Height
+	maxSyncBlocks := profile.NetworkLimits.MaxSyncBlocks
+	if maxSyncBlocks == 0 {
+		maxSyncBlocks = 500
+	}
+	if missing > maxSyncBlocks {
+		closeFn()
+		err := fmt.Errorf("sync range exceeds max remote fetch: missing=%d max=%d", missing, maxSyncBlocks)
+		_ = notePeerFailure(paths, peer, err.Error(), -10, "sync range too large")
+		return err
+	}
+	needed := int(missing)
+	maxHeaderBatch := profile.NetworkLimits.MaxHeaderBatch
+	if maxHeaderBatch == 0 {
+		maxHeaderBatch = 500
+	}
+	if missing > maxHeaderBatch {
+		closeFn()
+		err := fmt.Errorf("sync header range exceeds max batch: missing=%d max=%d", missing, maxHeaderBatch)
+		_ = notePeerFailure(paths, peer, err.Error(), -10, "header range too large")
+		return err
+	}
 	headers, err := client.Headers(peer, localTip.Height+1, needed)
 	if err != nil {
 		closeFn()

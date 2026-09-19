@@ -35,7 +35,7 @@ Add new feature:
 * repeatable like `--seed-peer`
 * optional config/env support if project has env config:
 
-  * `DKC_UPSTREAM_PEERS=http://100.86.152.39:10311,http://...`
+  * `IDR_UPSTREAM_PEERS=http://100.86.152.39:10311,http://...`
 
 Definition:
 
@@ -66,7 +66,7 @@ Non-goals:
 * Do not bypass validation.
 * Do not accept invalid blocks.
 * Do not expose wallet/admin RPC publicly.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not add mainnet.
 
 ==================================================
@@ -80,7 +80,7 @@ Add CLI flags:
 --upstream-file <path> optional if easy
 
 Optional env:
-DKC_UPSTREAM_PEERS=[http://100.86.152.39:10311,http://100.101.251.7:10311](http://100.86.152.39:10311,http://100.101.251.7:10311)
+IDR_UPSTREAM_PEERS=[http://100.86.152.39:10311,http://100.101.251.7:10311](http://100.86.152.39:10311,http://100.101.251.7:10311)
 
 Normalize and dedupe URLs using existing peer URL normalization.
 
@@ -205,8 +205,8 @@ New flags:
 --allow-isolated-mining
 
 Optional env:
-DKC_MIN_MINING_PEERS=1
-DKC_ALLOW_ISOLATED_MINING=false
+IDR_MIN_MINING_PEERS=1
+IDR_ALLOW_ISOLATED_MINING=false
 
 Suggested defaults:
 
@@ -478,7 +478,7 @@ Explain:
 * `--seed-peer` is for pulling/discovery.
 * `--upstream-peer` is for pushing/backfill.
 * Mining nodes must not mine isolated on testnet.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
 * PoW remains the only block production consensus.
 

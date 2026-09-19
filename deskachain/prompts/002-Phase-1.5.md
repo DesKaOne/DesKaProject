@@ -174,7 +174,7 @@ Jika sukses:
 chain valid
 height: 4
 blocks: 5
-total supply: 200 DKC
+total supply: 200 IDR
 ```
 
 Jika gagal:
@@ -198,7 +198,7 @@ mined block 2 <hash>
 Ubah menjadi:
 
 ```text
-mined block height=2 hash=<hash> txs=1 reward=50 DKC difficulty=4 nonce=<nonce>
+mined block height=2 hash=<hash> txs=1 reward=50 IDR difficulty=4 nonce=<nonce>
 ```
 
 Jika menambang beberapa block, tampilkan informasi setiap block.
@@ -209,7 +209,7 @@ Setelah selesai:
 mining complete
 mined blocks: 3
 new height: 4
-miner balance: 150 DKC
+miner balance: 150 IDR
 ```
 
 Saldo miner harus dihitung setelah seluruh proses mining selesai.
@@ -327,8 +327,8 @@ tx created
 id: <txid>
 from: <from>
 to: <to>
-amount: 1.25 DKC
-fee: 0 DKC
+amount: 1.25 IDR
+fee: 0 IDR
 nonce: <nonce>
 status: pending
 ```
@@ -410,9 +410,9 @@ Formatter harus konsisten.
 Contoh:
 
 ```text
-100000000   => 1 DKC
-15000000000 => 150 DKC
-1           => 0.00000001 DKC
+100000000   => 1 IDR
+15000000000 => 150 IDR
+1           => 0.00000001 IDR
 ```
 
 Rekomendasi:
@@ -486,7 +486,7 @@ Response valid:
   "valid": true,
   "height": 4,
   "blocks": 5,
-  "total_supply": "200 DKC"
+  "total_supply": "200 IDR"
 }
 ```
 

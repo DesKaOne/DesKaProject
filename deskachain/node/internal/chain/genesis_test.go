@@ -25,7 +25,7 @@ func TestLocalnetGenesisUnchanged(t *testing.T) {
 }
 
 func TestTestnetGenesisStable(t *testing.T) {
-	const want = "db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4"
+	const want = "0f1f5aa7053ca39deb8eb9f75dbb63ac8a8de68a5d9b4cbf3017daca2c9f0ee5"
 	first := GenesisBlockForNetwork(config.Testnet())
 	second := GenesisBlockForNetwork(config.Testnet())
 	if first.Hash == "" {

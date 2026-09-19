@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"deskachain/internal/arith"
+	"deskachain/internal/asset"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/staking"
@@ -40,6 +42,7 @@ type MatureLedger struct {
 	maturity      uint64
 	currentHeight uint64
 	stakes        *staking.State
+	assets        *asset.State
 	params        config.ConsensusParams
 	profile       config.NetworkConfig
 }
@@ -63,9 +66,59 @@ func NewMatureWithProfile(params config.ConsensusParams, profile config.NetworkC
 		accounts: make(map[string]MatureAccount),
 		maturity: params.CoinbaseMaturity,
 		stakes:   staking.NewState(params.Staking),
+		assets:   asset.NewState(),
 		params:   params,
 		profile:  profile,
 	}
+}
+
+func NewMatureFromState(
+	params config.ConsensusParams,
+	profile config.NetworkConfig,
+	height uint64,
+	accounts []StateAccount,
+	stakes []staking.Record,
+	coinbases []StateCoinbase,
+) *MatureLedger {
+	l := NewMatureWithProfile(params, profile)
+	l.currentHeight = height
+	for _, account := range accounts {
+		l.accounts[account.Address] = MatureAccount{
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		}
+	}
+	for _, record := range stakes {
+		l.stakes.ApplyRecord(record)
+	}
+	for _, credit := range coinbases {
+		l.coinbases = append(l.coinbases, coinbaseCredit{
+			Address: credit.Address,
+			Amount:  credit.Amount,
+			Height:  credit.Height,
+			Matured: false,
+		})
+	}
+	return l
+}
+
+func NewMatureFromStateWithAssets(
+	params config.ConsensusParams,
+	profile config.NetworkConfig,
+	height uint64,
+	accounts []StateAccount,
+	stakes []staking.Record,
+	coinbases []StateCoinbase,
+	assetDefinitions []asset.Definition,
+	assetBalances []asset.BalanceEntry,
+) (*MatureLedger, error) {
+	l := NewMatureFromState(params, profile, height, accounts, stakes, coinbases)
+	if err := l.assets.Restore(assetDefinitions, assetBalances); err != nil {
+		return nil, err
+	}
+	l.syncNativeAssetsFromAccounts()
+	return l, nil
 }
 
 func ReplayMature(blocks []types.Block, params config.ConsensusParams) (*MatureLedger, error) {
@@ -113,6 +166,94 @@ func CirculatingSupplyWithProfile(blocks []types.Block, params config.ConsensusP
 	return l.TotalMature()
 }
 
+type StateAccount struct {
+	Address   string `json:"address"`
+	Confirmed uint64 `json:"confirmed"`
+	Mature    uint64 `json:"mature"`
+	Nonce     uint64 `json:"nonce"`
+}
+
+type StateCoinbase struct {
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
+	Height  uint64 `json:"height"`
+}
+
+func (l *MatureLedger) StateAccounts() []StateAccount {
+	out := make([]StateAccount, 0, len(l.accounts))
+	for address, account := range l.accounts {
+		out = append(out, StateAccount{
+			Address:   address,
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		})
+	}
+	return out
+}
+
+func (l *MatureLedger) StateStakes() []staking.Record {
+	return l.stakes.Records(l.currentHeight)
+}
+
+func (l *MatureLedger) StateAssetDefinitions() []asset.Definition {
+	if l.profile.TxVersion < types.TxVersionAsset {
+		return nil
+	}
+	return l.assets.Definitions()
+}
+
+func (l *MatureLedger) StateAssetBalances() []asset.BalanceEntry {
+	if l.profile.TxVersion < types.TxVersionAsset {
+		return nil
+	}
+	return l.assets.Balances()
+}
+
+func (l *MatureLedger) AssetBalance(address, assetID string) uint64 {
+	return l.assets.Balance(address, assetID)
+}
+
+func (l *MatureLedger) AssetDefinition(assetID string) (asset.Definition, bool) {
+	return l.assets.Definition(assetID)
+}
+
+func (l *MatureLedger) AssetState() *asset.State {
+	return l.assets
+}
+
+func (l *MatureLedger) AssetModelEnabled() bool {
+	return l.profile.TxVersion >= types.TxVersionAsset
+}
+
+// FeePoolBalance returns the pending native IDR fees collected from transactions
+// that have been applied but not yet settled to the block producer.
+func (l *MatureLedger) FeePoolBalance() uint64 {
+	if l == nil || !l.AssetModelEnabled() {
+		return 0
+	}
+	return l.assets.Balance(asset.FeeCollectorAddress, asset.NativeAssetID)
+}
+
+func (l *MatureLedger) StateCoinbases() []StateCoinbase {
+	out := make([]StateCoinbase, 0, len(l.coinbases))
+	for _, credit := range l.coinbases {
+		if credit.Matured {
+			continue
+		}
+		out = append(out, StateCoinbase{
+			Address: credit.Address,
+			Amount:  credit.Amount,
+			Height:  credit.Height,
+		})
+	}
+	return out
+}
+
+func (l *MatureLedger) Height() uint64 {
+	return l.currentHeight
+}
+
 func (l *MatureLedger) Balance(address string) uint64 {
 	return l.accounts[address].Confirmed
 }
@@ -128,7 +269,7 @@ func (l *MatureLedger) Nonce(address string) uint64 {
 func (l *MatureLedger) TotalMature() uint64 {
 	var total uint64
 	for _, account := range l.accounts {
-		total += account.Mature
+		total = arith.AddCap(total, account.Mature)
 	}
 	return total
 }
@@ -140,6 +281,7 @@ func (l *MatureLedger) Clone() *MatureLedger {
 		maturity:      l.maturity,
 		currentHeight: l.currentHeight,
 		stakes:        staking.NewState(l.params.Staking),
+		assets:        l.assets.Clone(),
 		params:        l.params,
 		profile:       l.profile,
 	}
@@ -154,6 +296,18 @@ func (l *MatureLedger) Clone() *MatureLedger {
 }
 
 func (l *MatureLedger) ApplyBlock(block types.Block) error {
+	if !l.AssetModelEnabled() {
+		return l.applyBlock(block)
+	}
+	backup := l.Clone()
+	if err := l.applyBlock(block); err != nil {
+		*l = *backup
+		return err
+	}
+	return nil
+}
+
+func (l *MatureLedger) applyBlock(block types.Block) error {
 	if block.Height > 0 {
 		l.matureCoinbases(block.Height - 1)
 	}
@@ -173,10 +327,17 @@ func (l *MatureLedger) ApplyBlock(block types.Block) error {
 			return err
 		}
 	}
+	if l.AssetModelEnabled() {
+		if err := l.settleFees(block.MinerAddress); err != nil {
+			return err
+		}
+	}
 	l.currentHeight = block.Height
 	l.matureCoinbases(block.Height)
 	return nil
+
 }
+
 
 func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64) error {
 	if !tx.Coinbase {
@@ -186,9 +347,18 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 		return fmt.Errorf("invalid coinbase recipient: %w", err)
 	}
 	acct := l.accounts[tx.To]
-	acct.Confirmed += tx.Amount
+	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)
+	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	if l.AssetModelEnabled() {
+		if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
+			return fmt.Errorf("native IDR coinbase credit: %w", err)
+		}
+	}
+	acct.Confirmed = confirmed
 	l.accounts[tx.To] = acct
-	l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
+	if tx.Amount > 0 {
+		l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
+	}
 	return nil
 }
 
@@ -200,30 +370,60 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 	if err := l.ValidateTransaction(tx); err != nil {
 		return err
 	}
+	if tx.ProtocolVersion() == types.TxVersionAsset {
+		return l.applyAssetTransactionV3(tx, height)
+	}
 	from := l.accounts[tx.From]
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
 		to := l.accounts[tx.To]
-		cost := tx.Amount + tx.Fee
-		from.Confirmed -= cost
-		from.Mature -= cost
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		confirmed, err := arith.Sub(from.Confirmed, cost)
+		if err != nil {
+			return errors.New("insufficient balance")
+		}
+		mature, err := arith.Sub(from.Mature, cost)
+		if err != nil {
+			return ErrImmatureBalance
+		}
+		toConfirmed, err := arith.Add(to.Confirmed, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient balance overflow: %w", err)
+		}
+		toMature, err := arith.Add(to.Mature, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient mature balance overflow: %w", err)
+		}
+		from.Confirmed = confirmed
+		from.Mature = mature
 		from.Nonce = tx.Nonce
-		to.Confirmed += tx.Amount
-		to.Mature += tx.Amount
+		to.Confirmed = toConfirmed
+		to.Mature = toMature
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
+		if l.AssetModelEnabled() {
+			if err := l.assets.Debit(tx.From, asset.NativeAssetID, cost); err != nil {
+				return fmt.Errorf("legacy native IDR asset debit: %w", err)
+			}
+			if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
+				return fmt.Errorf("legacy native IDR asset credit: %w", err)
+			}
+		}
 	case types.TxTypeStakeLock:
-		from.Nonce = tx.Nonce
-		l.accounts[tx.From] = from
 		if err := l.stakes.ApplyLock(tx, height); err != nil {
 			return err
 		}
-	case types.TxTypeStakeUnlock:
 		from.Nonce = tx.Nonce
 		l.accounts[tx.From] = from
+	case types.TxTypeStakeUnlock:
 		if err := l.stakes.ApplyUnlock(tx, height); err != nil {
 			return err
 		}
+		from.Nonce = tx.Nonce
+		l.accounts[tx.From] = from
 	default:
 		return fmt.Errorf("unknown transaction type: %s", tx.TxType())
 	}
@@ -231,8 +431,14 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 }
 
 func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
+	if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), l.profile.TxVersion); err != nil {
+		return err
+	}
 	if tx.Coinbase {
 		return nil
+	}
+	if tx.ProtocolVersion() == types.TxVersionAsset {
+		return l.validateAssetTransactionV3(tx)
 	}
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
@@ -274,22 +480,37 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 	if err != nil || address != tx.From {
 		return errors.New("public key does not match sender address")
 	}
-	if tx.ID != tx.CalculateID() {
+	expectedID, idErr := tx.CalculateIDForChainID(l.profile.ChainID)
+	if idErr != nil {
+		return idErr
+	}
+	if tx.ID != expectedID {
 		return errors.New("transaction id mismatch")
 	}
 	if tx.TxType() == types.TxTypeStakeLock && tx.StakeID != "" && tx.StakeID != tx.ID {
 		return errors.New("invalid stake lock: stake id mismatch")
 	}
-	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, tx.SigningBytes()) {
+	signingBytes, signingErr := tx.SigningBytesWithChainID(l.profile.ChainID)
+	if signingErr != nil {
+		return signingErr
+	}
+	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, signingBytes) {
 		return errors.New("invalid transaction signature")
 	}
 	account := l.accounts[tx.From]
-	if tx.Nonce != account.Nonce+1 {
-		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
+	expectedNonce, nonceErr := arith.Add(account.Nonce, 1)
+	if nonceErr != nil {
+		return errors.New("account nonce overflow")
+	}
+	if tx.Nonce != expectedNonce {
+		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, expectedNonce)
 	}
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
-		cost := tx.Amount + tx.Fee
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
 		if account.Confirmed < cost {
 			return errors.New("insufficient balance")
 		}
@@ -297,13 +518,19 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 			return ErrImmatureBalance
 		}
 		active, unlocking, _ := l.stakes.AddressSummary(tx.From, l.currentHeight)
-		locked := active + unlocking
+		locked, lockErr := arith.Add(active, unlocking)
+		if lockErr != nil {
+			return errors.New("locked stake total overflow")
+		}
 		if account.Mature < locked || account.Mature-locked < cost {
 			return errors.New("invalid transaction: spends locked stake")
 		}
 	case types.TxTypeStakeLock:
 		active, unlocking, _ := l.stakes.AddressSummary(tx.From, l.currentHeight)
-		locked := active + unlocking
+		locked, lockErr := arith.Add(active, unlocking)
+		if lockErr != nil {
+			return errors.New("locked stake total overflow")
+		}
 		if account.Mature < locked || account.Mature-locked < tx.Amount {
 			return errors.New("invalid stake lock: insufficient mature spendable balance")
 		}
@@ -327,23 +554,66 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 
 func (l *MatureLedger) BalanceDetails(address string, pending []types.Transaction, currentHeight uint64) BalanceDetails {
 	account := l.accounts[address]
+	return BalanceDetailsFromState(
+		address,
+		StateAccount{
+			Address:   address,
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		},
+		l.stakes.Records(currentHeight),
+		pending,
+		l.maturity,
+		currentHeight,
+	)
+}
+
+// BalanceDetailsFromState calculates address balances from persisted state
+// indexes plus pending transactions, without replaying the blockchain.
+func BalanceDetailsFromState(
+	address string,
+	account StateAccount,
+	stakes []staking.Record,
+	pending []types.Transaction,
+	coinbaseMaturity uint64,
+	currentHeight uint64,
+) BalanceDetails {
+	stakeState := staking.NewState(config.StakingParams{})
+	for _, record := range stakes {
+		stakeState.ApplyRecord(record)
+	}
+
 	pendingOutgoing := uint64(0)
 	pendingIncoming := uint64(0)
 	for _, tx := range pending {
 		if tx.Coinbase {
 			continue
 		}
-		if tx.From == address && tx.TxType() == types.TxTypeTransfer {
-			pendingOutgoing += tx.Amount + tx.Fee
-		}
-		if tx.To == address && tx.TxType() == types.TxTypeTransfer {
-			pendingIncoming += tx.Amount
+		if tx.TxType() == types.TxTypeTransfer {
+			// Only native IDR transfers change the native balance.
+			if asset.IsNative(tx.EffectiveAssetID()) {
+				if tx.From == address {
+					pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Amount)
+				}
+				if tx.To == address {
+					pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
+				}
+			}
+			if tx.EffectiveFeePayer() == address {
+				pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Fee)
+			}
 		}
 	}
-	activeStake, unlockingStake, releasedStake := l.stakes.AddressSummary(address, currentHeight)
+
+	activeStake, unlockingStake, releasedStake := stakeState.AddressSummary(address, currentHeight)
 	pendingStakeLock := staking.PendingStakeLock(pending, address)
+	locked := arith.AddCap(
+		arith.AddCap(activeStake, unlockingStake),
+		arith.AddCap(pendingStakeLock, pendingOutgoing),
+	)
+
 	spendable := uint64(0)
-	locked := activeStake + unlockingStake + pendingStakeLock + pendingOutgoing
 	if account.Mature > locked {
 		spendable = account.Mature - locked
 	}
@@ -351,6 +621,7 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 	if account.Confirmed > account.Mature {
 		immature = account.Confirmed - account.Mature
 	}
+
 	return BalanceDetails{
 		Address:          address,
 		Confirmed:        account.Confirmed,
@@ -363,23 +634,30 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 		UnlockingStake:   unlockingStake,
 		ReleasedStake:    releasedStake,
 		PendingStakeLock: pendingStakeLock,
-		CoinbaseMaturity: l.maturity,
+		CoinbaseMaturity: coinbaseMaturity,
 		CurrentHeight:    currentHeight,
 	}
 }
 
 func (l *MatureLedger) matureCoinbases(currentHeight uint64) {
-	for i := range l.coinbases {
-		credit := &l.coinbases[i]
+	pending := l.coinbases[:0]
+	for _, credit := range l.coinbases {
 		if credit.Matured {
 			continue
 		}
-		if currentHeight < credit.Height+l.maturity {
+		maturityHeight, err := arith.Add(credit.Height, l.maturity)
+		if err != nil || currentHeight < maturityHeight {
+			pending = append(pending, credit)
 			continue
 		}
 		acct := l.accounts[credit.Address]
-		acct.Mature += credit.Amount
+		mature, err := arith.Add(acct.Mature, credit.Amount)
+		if err != nil {
+			pending = append(pending, credit)
+			continue
+		}
+		acct.Mature = mature
 		l.accounts[credit.Address] = acct
-		credit.Matured = true
 	}
+	l.coinbases = pending
 }

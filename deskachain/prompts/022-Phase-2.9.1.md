@@ -7,25 +7,25 @@ Status:
 * go work sync berhasil.
 * go test ./node/... pass.
 * Template endpoint sudah bekerja:
-  GET /miner/template?address=<DKC_ADDR>
+  GET /miner/template?address=<IDR_ADDR>
   mengembalikan block template height=1 difficulty=4.
-* dkcminer berhasil mengambil template dan menemukan valid nonce/hash.
+* idrminer berhasil mengambil template dan menemukan valid nonce/hash.
 * Tetapi submit block timeout dan setelah itu node RPC ikut macet.
 
 Log manual:
 
 Template OK:
-GET http://127.0.0.1:8401/miner/template?address=DKC...
+GET http://127.0.0.1:8401/miner/template?address=IDR...
 returns height=1 difficulty=4 tx_count=1
 
 Miner:
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address DKC... --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address IDR... --threads 4 --once
 
 Output:
 new job height=1 difficulty=4 txs=1 prev=6e1b3fed63a01109
 block found height=1 hash=00006b03... nonce=167659 thread=3
 submit failed: Post "http://127.0.0.1:8401/miner/submit": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-template fetch failed: Get "http://127.0.0.1:8401/miner/template?address=DKC...": context deadline exceeded
+template fetch failed: Get "http://127.0.0.1:8401/miner/template?address=IDR...": context deadline exceeded
 
 Masalah:
 
@@ -48,7 +48,7 @@ Memperbaiki endpoint /miner/submit agar:
 
 Aturan penting:
 
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -206,7 +206,7 @@ Jangan terlalu noisy, tapi cukup untuk tahu macet di tahap mana.
 
 Setelah submit invalid/stale/timeout, endpoint ini harus tetap responsif:
 
-GET /miner/template?address=<DKC_ADDR>
+GET /miner/template?address=<IDR_ADDR>
 
 Jika submit gagal, tidak boleh meninggalkan lock terkunci.
 
@@ -218,7 +218,7 @@ Jika submit panic, recover di HTTP handler jika pattern project sudah ada.
 7. Miner client timeout
 =======================
 
-dkcminer boleh punya client timeout, tapi jangan terlalu pendek.
+idrminer boleh punya client timeout, tapi jangan terlalu pendek.
 
 Default:
 
@@ -295,7 +295,7 @@ Tambahkan/update tests:
 * submit should still return or broadcast should timeout.
 * No deadlock.
 
-6. dkcminer --once integration:
+6. idrminer --once integration:
 
 * run miner against test RPC if integration test exists.
 * miner exits after accepted block.
@@ -338,7 +338,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 -
 
 Template:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
 
 Expected:
 height: 1
@@ -347,7 +347,7 @@ tx_count: 1
 
 Standalone miner once:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 new job height=1 difficulty=4
@@ -358,12 +358,12 @@ miner exits cleanly
 Check chain:
 
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain validate
 
 Expected:
 height: 1
-total supply: 50 DKC
+total supply: 50 IDR
 confirmed balance: 50
 mature balance: 0
 immature balance: 50
@@ -372,7 +372,7 @@ chain valid
 
 Call template again:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
 
 Expected:
 height: 2

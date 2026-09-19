@@ -1,6 +1,6 @@
 # DesKaChain systemd Testnet Node
 
-This guide runs a public-testnet node under systemd with restart recovery. It does not launch mainnet. Testnet DKC has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
+This guide runs a public-testnet node under systemd with restart recovery. It does not launch mainnet. Testnet IDR has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
 
 ## Unit Behavior
 
@@ -21,7 +21,7 @@ The environment file must not contain private keys. Wallet files, faucet state, 
 sudo useradd --system --home /var/lib/deskachain --shell /usr/sbin/nologin deskachain || true
 sudo mkdir -p /opt/deskachain /var/lib/deskachain/testnet /etc/deskachain
 sudo chown -R deskachain:deskachain /var/lib/deskachain
-sudo install -m 0755 deskachain dkcminer dkcservice /opt/deskachain/
+sudo install -m 0755 deskachain idrminer idrservice /opt/deskachain/
 sudo install -m 0644 examples/systemd/deskachain-testnet.env /etc/deskachain/testnet.env
 sudo install -m 0644 examples/systemd/deskachain-testnet.service /etc/systemd/system/deskachain-testnet.service
 sudo editor /etc/deskachain/testnet.env
@@ -29,7 +29,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now deskachain-testnet
 ```
 
-Set `DKC_ADVERTISE_P2P` to a LAN, Tailscale, or VPS address that other peers can reach. Keep wallet/admin RPC disabled on public RPC. Enable miner RPC only when the node should accept mining clients.
+Set `IDR_ADVERTISE_P2P` to a LAN, Tailscale, or VPS address that other peers can reach. Keep wallet/admin RPC disabled on public RPC. Enable miner RPC only when the node should accept mining clients.
 
 ## Operate
 

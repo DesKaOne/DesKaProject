@@ -607,7 +607,7 @@ Expected:
 nodes in sync
 chain valid
 height: 5
-total supply: 250 DKC
+total supply: 250 IDR
 
 Jangan over-engineer.
 Fokus Phase 2.5 hanya pada:

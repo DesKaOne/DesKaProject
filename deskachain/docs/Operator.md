@@ -1,6 +1,6 @@
 # DesKaChain Testnet Operator Guide
 
-Phase 3.6 prepares public-testnet style operation with bootstrap seed peers. This is still experimental testnet software: testnet DKC has no monetary value, staking is collateral-only, service points are simulation-only, and PoW remains the only block-production consensus.
+Phase 3.6 prepares public-testnet style operation with bootstrap seed peers. This is still experimental testnet software: testnet IDR has no monetary value, staking is collateral-only, service points are simulation-only, and PoW remains the only block-production consensus.
 
 ## Public Testnet Node
 
@@ -42,7 +42,7 @@ go run ./node/cmd/deskachain --datadir ./data/testnet-public node start --rpc :8
 Mine with a testnet address:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://<PUBLIC_HOST>:8811 --address <TESTNET_DKC_ADDR> --threads 4
+go run ./node/cmd/idrminer --rpc-url http://<PUBLIC_HOST>:8811 --address <TESTNET_IDR_ADDR> --threads 4
 ```
 
 HTTP RPC mining is solo/direct-node mining. Stratum and pool mining are not implemented.
@@ -99,7 +99,7 @@ Seed peers are startup hints for public-testnet discovery. They are normalized, 
 Seed sources are merged in this order:
 
 - Network profile seed peers.
-- `DKC_SEED_PEERS` or config `p2p.seed_peers`.
+- `IDR_SEED_PEERS` or config `p2p.seed_peers`.
 - `--seed-file` or config `p2p.seed_file`.
 - CLI `--seed-peer`, `--seed-peers`, `--bootnode`, and `--bootnodes`.
 
@@ -143,16 +143,16 @@ Register and run the safe service simulation:
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://<NODE_HOST>:8811 service register --address <OWNER_ADDR> --endpoint http://<SERVICE_HOST>:9971
-go run ./node/cmd/dkcservice --rpc-url http://<NODE_HOST>:8811 --address <OWNER_ADDR> --endpoint http://<SERVICE_HOST>:9971 --once
+go run ./node/cmd/idrservice --rpc-url http://<NODE_HOST>:8811 --address <OWNER_ADDR> --endpoint http://<SERVICE_HOST>:9971 --once
 go run ./node/cmd/deskachain --rpc-url http://<NODE_HOST>:8811 service score --address <OWNER_ADDR>
 ```
 
-Service write RPC should be enabled only in controlled verifier/test setups. Service points are not DKC and are not spendable.
+Service write RPC should be enabled only in controlled verifier/test setups. Service points are not IDR and are not spendable.
 
 ## Preflight Checklist
 
 - Datadir initialized with `--network testnet`.
-- `network.json` matches `dkc-testnet-1`, chain ID `777101`, and the testnet genesis hash.
+- `network.json` matches `idr-testnet-1`, chain ID `777101`, and the testnet genesis hash.
 - Public node uses `--public-rpc`.
 - Wallet/admin RPC are not exposed publicly.
 - Miner RPC is enabled only when intended.
@@ -172,7 +172,7 @@ Example templates are available:
 - `examples/testnet/miner-node.env`
 - `examples/testnet/faucet-node.env`
 - `examples/systemd/deskachain-testnet.service`
-- `examples/systemd/dkcservice-testnet.service`
+- `examples/systemd/idrservice-testnet.service`
 
 Typical commands:
 
@@ -186,7 +186,7 @@ journalctl -u deskachain-testnet -f
 
 Public-testnet release artifacts are built by `.github/workflows/release-artifacts.yml`. Run it manually from GitHub Actions with a version such as `v0.4.6-testnet-rc1`, or push a `v*` tag to build artifacts from the tag name.
 
-The workflow uploads archives only. It does not publish a GitHub Release automatically, does not require secrets, and does not launch mainnet. Artifacts include `deskachain`, `dkcminer`, `dkcservice`, quickstart docs, README files, and example testnet/systemd templates.
+The workflow uploads archives only. It does not publish a GitHub Release automatically, does not require secrets, and does not launch mainnet. Artifacts include `deskachain`, `idrminer`, `idrservice`, quickstart docs, README files, and example testnet/systemd templates.
 
 Before deploying downloaded artifacts:
 
@@ -203,5 +203,25 @@ Artifacts intentionally exclude runtime datadirs, wallets, chain DBs, mempool an
 - `service RPC disabled`: service write RPC is not enabled.
 - `wrong network version`: the address belongs to another network profile.
 - `peer rejected`: inspect network ID, chain ID, genesis hash, and protocol version.
-- `invalid seed peer`: inspect the seed file line number or `DKC_SEED_PEERS` entry printed in the error.
-- `circulating supply: 0 DKC` above maturity: run `chain validate` and check the active network profile; circulating supply should equal mature coinbase supply and includes active/unlocking stake.
+- `invalid seed peer`: inspect the seed file line number or `IDR_SEED_PEERS` entry printed in the error.
+- `circulating supply: 0 IDR` above maturity: run `chain validate` and check the active network profile; circulating supply should equal mature coinbase supply and includes active/unlocking stake.
+
+
+## State Database Verification
+
+Before or after a testnet maintenance window, check the state database without forcing normal RPC queries to replay the entire chain:
+
+```bash
+curl http://127.0.0.1:8811/chain/state
+curl http://127.0.0.1:8811/chain/state/validate
+```
+
+`/chain/state` is a lightweight status check. `/chain/state/validate` is an admin diagnostic and may replay the full chain.
+
+The node keeps its existing `node_id` file for the logical peer identifier and stores the Ed25519 authentication private key in `node_id.ed25519`. Keep that file private and include it in the operator backup set alongside other node identity material. The key file is created with restrictive permissions by the node.
+
+### P2P Message Authentication
+
+Phase 5.15 adds signed request/response authentication above the existing handshake. The node identity private key in `node_id.ed25519` is used for message signatures. Authenticated requests bind the method, URI, network, chain ID, timestamp, nonce, and body digest; authenticated responses bind the request nonce, status, timestamp, and body digest.
+
+`RequireAuthenticatedNode` remains disabled in the built-in network profiles during rollout. When enabled for a profile, P2P endpoints other than the bootstrap health/handshake paths require authenticated request headers and return signed responses. Keep `node_id.ed25519` private and do not copy it between independently operated nodes.

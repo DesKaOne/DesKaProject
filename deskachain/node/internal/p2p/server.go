@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -105,17 +106,17 @@ func (s Server) network() config.NetworkConfig {
 func (s Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /p2p/health", s.health)
 	mux.HandleFunc("GET /p2p/handshake", s.handshake)
-	mux.HandleFunc("GET /p2p/peers", s.peers)
-	mux.HandleFunc("GET /p2p/status", s.status)
-	mux.HandleFunc("GET /p2p/tip", s.tip)
-	mux.HandleFunc("GET /p2p/block/", s.block)
-	mux.HandleFunc("GET /p2p/blocks", s.blocks)
-	mux.HandleFunc("GET /p2p/headers", s.headers)
-	mux.HandleFunc("GET /p2p/locator", s.locator)
-	mux.HandleFunc("POST /p2p/common-ancestor", s.commonAncestor)
-	mux.HandleFunc("POST /p2p/tx", s.receiveTx)
-	mux.HandleFunc("POST /p2p/block", s.receiveBlock)
-	mux.HandleFunc("POST /p2p/peer", s.receivePeer)
+	mux.Handle("GET /p2p/peers", s.authenticated(http.HandlerFunc(s.peers)))
+	mux.Handle("GET /p2p/status", s.authenticated(http.HandlerFunc(s.status)))
+	mux.Handle("GET /p2p/tip", s.authenticated(http.HandlerFunc(s.tip)))
+	mux.Handle("GET /p2p/block/", s.authenticated(http.HandlerFunc(s.block)))
+	mux.Handle("GET /p2p/blocks", s.authenticated(http.HandlerFunc(s.blocks)))
+	mux.Handle("GET /p2p/headers", s.authenticated(http.HandlerFunc(s.headers)))
+	mux.Handle("GET /p2p/locator", s.authenticated(http.HandlerFunc(s.locator)))
+	mux.Handle("POST /p2p/common-ancestor", s.authenticated(http.HandlerFunc(s.commonAncestor)))
+	mux.Handle("POST /p2p/tx", s.authenticated(http.HandlerFunc(s.receiveTx)))
+	mux.Handle("POST /p2p/block", s.authenticated(http.HandlerFunc(s.receiveBlock)))
+	mux.Handle("POST /p2p/peer", s.authenticated(http.HandlerFunc(s.receivePeer)))
 }
 
 func (s Server) health(w http.ResponseWriter, _ *http.Request) {
@@ -127,22 +128,34 @@ func (s Server) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "network": status.Network, "network_id": status.NetworkID, "chain_id": status.ChainID, "genesis_hash": status.GenesisHash, "height": status.Height, "tip_hash": status.TipHash, "cumulative_work": status.CumulativeWork})
 }
 
-func (s Server) handshake(w http.ResponseWriter, _ *http.Request) {
+func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 	status, err := s.localStatus()
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	nodeID, err := LoadOrCreateNodeID(s.paths.NodeID)
+	identity, err := LoadOrCreateNodeIdentity(s.paths.NodeID)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 	net := s.network()
 	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
-	writeJSON(w, http.StatusOK, Handshake{
+	challenge := strings.TrimSpace(r.URL.Query().Get("challenge"))
+	if challenge != "" {
+		if len(challenge) != 64 {
+			writeError(w, errors.New("invalid handshake challenge"))
+			return
+		}
+		if _, err := hex.DecodeString(challenge); err != nil {
+			writeError(w, errors.New("invalid handshake challenge"))
+			return
+		}
+	}
+	handshake := Handshake{
 		NetworkName:        net.NetworkName,
 		NetworkID:          net.NetworkID,
+		AuthChallenge:      challenge,
 		ChainID:            net.ChainID,
 		ProtocolVersion:    net.ProtocolVersion,
 		P2PProtocolVersion: net.P2PProtocolVersion,
@@ -151,12 +164,20 @@ func (s Server) handshake(w http.ResponseWriter, _ *http.Request) {
 		Height:             status.Height,
 		TipHash:            status.TipHash,
 		CumulativeWork:     status.CumulativeWork,
-		NodeID:             nodeID,
+		NodeID:             identity.NodeID,
+		IdentityVersion:    NodeIdentityVersion,
+		NodePublicKey:      hex.EncodeToString(identity.PublicKey),
 		P2PListen:          s.p2pListen,
 		P2PAdvertise:       s.p2pAdvertise,
 		Services:           []string{"p2p"},
 		KnownPeers:         PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
-	})
+	}
+	handshake.NodeSignature, err = SignHandshake(identity, handshake)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, handshake)
 }
 
 func (s Server) peers(w http.ResponseWriter, _ *http.Request) {
@@ -231,6 +252,13 @@ func (s Server) blocks(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 {
 		limit = 100
 	}
+	maxBlocks := s.network().NetworkLimits.MaxSyncBlocks
+	if maxBlocks == 0 {
+		maxBlocks = 500
+	}
+	if uint64(limit) > maxBlocks {
+		limit = int(maxBlocks)
+	}
 	all, err := s.allBlocks()
 	if err != nil {
 		writeError(w, err)
@@ -255,8 +283,12 @@ func (s Server) headers(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 {
 		limit = 100
 	}
-	if limit > 500 {
-		limit = 500
+	maxHeaders := s.network().NetworkLimits.MaxHeaderBatch
+	if maxHeaders == 0 {
+		maxHeaders = 500
+	}
+	if uint64(limit) > maxHeaders {
+		limit = int(maxHeaders)
 	}
 	all, err := s.allBlocks()
 	if err != nil {
@@ -423,9 +455,9 @@ func (s Server) acceptPeerIntroduction(intro PeerIntroduction) error {
 
 func (s Server) learnInboundPeer(r *http.Request) {
 	intro := PeerIntroduction{
-		URL:       r.Header.Get("X-DKC-P2P-URL"),
-		NodeID:    r.Header.Get("X-DKC-Node-ID"),
-		NetworkID: r.Header.Get("X-DKC-Network-ID"),
+		URL:       r.Header.Get("X-IDR-P2P-URL"),
+		NodeID:    r.Header.Get("X-IDR-Node-ID"),
+		NetworkID: r.Header.Get("X-IDR-Network-ID"),
 		ChainID:   s.network().ChainID,
 		Version:   s.network().NetworkName,
 		Protocol:  s.network().P2PProtocolVersion,
@@ -454,6 +486,12 @@ func isSelfPeerURL(peerURL, selfURL string) bool {
 func (s Server) acceptTx(tx types.Transaction) error {
 	if tx.Coinbase {
 		return fmt.Errorf("coinbase tx is not accepted in mempool")
+	}
+	// Revalidate before opening the chain database. bbolt takes an exclusive
+	// file lock on Windows, so holding an open chain handle while revalidation
+	// opens the same database can deadlock.
+	if _, err := RevalidateMempoolAgainstLedgerWithProfile(s.paths, s.network()); err != nil {
+		return fmt.Errorf("mempool revalidation failed: %w", err)
 	}
 	bc, closeFn, err := s.openChain()
 	if err != nil {
@@ -492,7 +530,12 @@ func (s Server) acceptTx(tx types.Transaction) error {
 	if err := work.ValidateTransaction(tx); err != nil {
 		return fmt.Errorf("sender balance insufficient or chain not synced: %w", err)
 	}
-	if err := mp.Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	policy := mempool.AdmissionPolicy{
+		Profile: s.network(),
+		MaxTxs:  s.network().Consensus.MaxTxCount,
+		MaxGas:  s.network().Consensus.MaxGasPerBlock,
+	}
+	if err := mp.Admit(tx, policy); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		return err
 	}
 	return nil
@@ -623,6 +666,50 @@ func (s Server) openChain() (*chain.Blockchain, func(), error) {
 		return nil, nil, err
 	}
 	return bc, func() { _ = store.Close() }, nil
+}
+
+func (s Server) authenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hasAuth := hasP2PAuthHeaders(r.Header)
+		if !hasAuth && !s.network().RequireAuthenticatedNode {
+			next.ServeHTTP(w, r)
+			return
+		}
+		body, err := readAuthenticatedRequestBody(r)
+		if err != nil {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": err.Error()})
+			return
+		}
+		if !hasAuth {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated p2p message required"})
+			return
+		}
+		auth, err := VerifyP2PRequest(s.network().NetworkID, s.network().ChainID, r, body, time.Now())
+		if err != nil {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
+			return
+		}
+		capture := newAuthenticatedResponseWriter(w)
+		next.ServeHTTP(capture, r)
+		responseBody := capture.body.Bytes()
+		if len(responseBody) > p2pMessageAuthResponseLimit {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "authenticated p2p response too large"})
+			return
+		}
+		identity, err := LoadOrCreateNodeIdentity(s.paths.NodeID)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		responseHeaders, err := SignP2PResponse(identity, s.network().NetworkID, s.network().ChainID, auth.Nonce, capture.status, responseBody, time.Now())
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		if err := capture.commit(responseHeaders, responseBody, capture.status); err != nil {
+			log.Printf("authenticated p2p response write failed: %v", err)
+		}
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

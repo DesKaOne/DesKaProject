@@ -9,9 +9,9 @@ Peringatan: DesKaChain adalah software blockchain lokal yang masih eksperimental
 Detail coin:
 
 - Nama: DesKaChain
-- Ticker: DKC
+- Ticker: IDR
 - Decimals: 8
-- Unit terkecil: 1 DKC = 100000000 unit
+- Unit terkecil: 1 IDR = 100000000 unit
 
 ## Scope
 
@@ -39,19 +39,19 @@ Sudah termasuk:
 - Runtime status cache, debug latency P2P, dan guarded auto-sync loop
 - State mining job RPC sinkron, PoW yang bisa dibatalkan, dan timeout block broadcast yang dibatasi
 - Statistik `chain info` canonical, atomic write mempool, guard duplicate tx mempool, dan fondasi timeout/body limit HTTP
-- Format address final `DKC...` Base58Check, key/signature secp256k1, network profile, dan metadata protocol version awal
+- Format address final `IDR...` Base58Check, key/signature secp256k1, network profile, dan metadata protocol version awal
 - Dynamic difficulty localnet, validasi timestamp ringan, `chain difficulty`, dan cumulative work berbasis `16^difficulty`
 - Coinbase maturity, mature/immature/spendable balance, dan circulating supply berbasis reward yang sudah mature
-- Standalone CPU miner CLI (`dkcminer`) memakai RPC block template dan submit validation dari node
+- Standalone CPU miner CLI (`idrminer`) memakai RPC block template dan submit validation dari node
 - Public RPC safety mode, rate limiting sederhana per IP, CORS allowlist, endpoint health/readiness, graceful shutdown, dan fondasi config file JSON
 - Layer riset service node / kontribusi bandwidth dengan registration, heartbeat, challenge simulation lokal, scoring, dan simulated service points
-- Standalone `dkcservice` agent untuk safe-mode service-node simulation cycle
-- Modul staking collateral untuk mengunci DKC mature dan eligibility service node
+- Standalone `idrservice` agent untuk safe-mode service-node simulation cycle
+- Modul staking collateral untuk mengunci IDR mature dan eligibility service node
 - RPC faucet dev/testnet untuk transaksi funding normal yang signed dari wallet faucet matang
 - Bootstrap seed peer public-testnet melalui flag, config, environment, dan seed file
 - Backfill upstream peer public-testnet agar miner dapat push block ke head/explorer node tanpa mempercayai node tersebut sebagai otoritas consensus
 - Guard isolated mining dan faucet/write di testnet dengan flag override eksplisit untuk pengujian lokal
-- Script build dan packaging release untuk `deskachain`, `dkcminer`, dan `dkcservice`
+- Script build dan packaging release untuk `deskachain`, `idrminer`, dan `idrservice`
 - Workflow GitHub Actions CI dan artifact release untuk binary public-testnet
 - Kandidat genesis public-testnet, profile deployment seed node, dan runbook deployment VPS
 - Runbook deployment multi-host LAN, Tailscale, dan VPS public-testnet
@@ -74,13 +74,13 @@ DesKaChain Phase 2.6.6 membekukan fondasi address/key/metadata protocol. Phase 2
 
 Phase 2.10 memperkuat node untuk persiapan public testnet tanpa mengubah consensus rule.
 
-Phase 3.0 menambahkan riset kontribusi service node sebagai simulasi saja. PoW tetap satu-satunya pembuat canonical block; service points bukan DKC, tidak spendable, dan tidak memengaruhi supply, difficulty, cumulative work, coinbase reward, balance, atau chain validation.
+Phase 3.0 menambahkan riset kontribusi service node sebagai simulasi saja. PoW tetap satu-satunya pembuat canonical block; service points bukan IDR, tidak spendable, dan tidak memengaruhi supply, difficulty, cumulative work, coinbase reward, balance, atau chain validation.
 
-Phase 3.1 menambahkan `dkcservice`, standalone safe-mode service node agent yang register ke node RPC, mengirim heartbeat, membuat/submit simulated challenge, mengambil score, dan menyimpan local agent state tanpa membuka proxy, relay, atau public listener.
+Phase 3.1 menambahkan `idrservice`, standalone safe-mode service node agent yang register ke node RPC, mengirim heartbeat, membuat/submit simulated challenge, mengambil score, dan menyimpan local agent state tanpa membuka proxy, relay, atau public listener.
 
 Phase 3.2 menambahkan staking sebagai collateral saja. Ini bukan PoS, tidak membuat validator, tidak mencetak staking reward, dan tidak memengaruhi produksi block PoW.
 
-Phase 3.2.1 menambahkan regression test staking dan consensus safety check. Staking tetap hanya collateral: bukan PoS, tanpa validator set, tanpa APY, tanpa DKC staking reward, dan tanpa slashing di fase ini.
+Phase 3.2.1 menambahkan regression test staking dan consensus safety check. Staking tetap hanya collateral: bukan PoS, tanpa validator set, tanpa APY, tanpa IDR staking reward, dan tanpa slashing di fase ini.
 
 Phase 3.2.2 memisahkan plumbing runtime localnet dan testnet sebelum multi-node bootstrap. RPC, P2P, miner template, staking info, dan metadata collateral service sekarang menampilkan active network profile.
 
@@ -94,11 +94,11 @@ Phase 3.3.2 memperkuat controlled multi-node sync dengan normalisasi URL peer, p
 
 Phase 3.4 menambahkan flow faucet dev/testnet. Faucet disabled secara default, hanya testnet saat diaktifkan, memakai wallet yang dikonfigurasi sebagai source, membuat transaksi signed normal ke mempool, membutuhkan mining untuk confirmed, dan tidak mencetak supply langsung.
 
-Phase 3.4.1 menambahkan skenario end-to-end collateral service dari faucet: request 1000 DKC testnet, mine transaksi faucet, lock 1000 DKC sebagai collateral, mine transaksi stake, jalankan simulasi service, lalu verifikasi service score eligible. Lihat `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, dan `docs/Testnet.md`.
+Phase 3.4.1 menambahkan skenario end-to-end collateral service dari faucet: request 1000 IDR testnet, mine transaksi faucet, lock 1000 IDR sebagai collateral, mine transaksi stake, jalankan simulasi service, lalu verifikasi service score eligible. Lihat `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, dan `docs/Testnet.md`.
 
 Phase 3.5 menambahkan packaging operator public-testnet: default public RPC yang aman, miner RPC harus diaktifkan eksplisit, startup/status summary lebih jelas, docs operator, contoh systemd/env, dan regression test circulating supply. Lihat `docs/Operator.md`.
 
-Phase 3.6 menambahkan bootstrap seed peer public-testnet. Node dapat memuat seed peer yang dinormalisasi dari network profile, `--seed-peer`, `--seed-peers`, `DKC_SEED_PEERS`, config `p2p.seed_peers`, atau `--seed-file`; seed disimpan di peer store dengan source `seed`, dan validasi peer normal tetap menolak network atau genesis yang salah. Lihat `docs/Operator.md` dan `docs/Testnet.md`.
+Phase 3.6 menambahkan bootstrap seed peer public-testnet. Node dapat memuat seed peer yang dinormalisasi dari network profile, `--seed-peer`, `--seed-peers`, `IDR_SEED_PEERS`, config `p2p.seed_peers`, atau `--seed-file`; seed disimpan di peer store dengan source `seed`, dan validasi peer normal tetap menolak network atau genesis yang salah. Lihat `docs/Operator.md` dan `docs/Testnet.md`.
 
 Phase 3.7 menambahkan packaging build release public-testnet: metadata versi untuk semua binary, script build Windows/Linux, arsip release, checksum, dan quickstart docs. Lihat `docs/Release.md`.
 
@@ -114,7 +114,7 @@ Phase 4.2 mendokumentasikan flow public-testnet terkontrol untuk faucet, staking
 
 Phase 4.3 menambahkan explorer API read-only di `/explorer/*` untuk ringkasan chain, block, transaction, address, stake record, dan data simulasi service lokal public-testnet.
 
-Phase 4.4 menambahkan explorer web UI read-only yang di-embed di `/explorer-ui/`. UI ini menyediakan dashboard, blocks, detail block, detail transaction, history address, stake record, ringkasan simulasi service node, dan search tanpa aksi wallet/admin/write. Testnet DKC tidak punya nilai moneter, mainnet belum tersedia, dan service points hanya simulasi. Lihat `docs/Explorer.md`.
+Phase 4.4 menambahkan explorer web UI read-only yang di-embed di `/explorer-ui/`. UI ini menyediakan dashboard, blocks, detail block, detail transaction, history address, stake record, ringkasan simulasi service node, dan search tanpa aksi wallet/admin/write. Testnet IDR tidak punya nilai moneter, mainnet belum tersedia, dan service points hanya simulasi. Lihat `docs/Explorer.md`.
 
 Phase 4.5 memperkuat search dan pagination explorer. API read-only sekarang memiliki `/explorer/search?q=<query>`, metadata pagination untuk endpoint list, limit yang di-cap, error JSON explorer yang stabil, serta polish UI untuk search, tombol copy, empty state, dan paging. Lihat `docs/Explorer.md`.
 
@@ -126,7 +126,7 @@ Phase 4.8 menambahkan workflow monitoring pasca-rilis dan planning RC2 untuk RC1
 
 Phase 4.9 memperkuat konektivitas public-testnet dengan repeated `--seed-peer`, bootstrap multi-seed, peer discovery hints, metadata health peer, diagnostik peer read-only, dan opsi peer di health-check script. Lihat `docs/TestnetTopology.md`, `docs/SeedMonitoringChecklist.md`, `docs/PostReleaseMonitoring.md`, dan `docs/PublicTestnetQuickstart.md`.
 
-Phase 4.10 memperkuat stabilitas mining public-testnet tanpa mengubah consensus. `dkcminer` memiliki retry/backoff bounded, stale job detection, submit timeout control, miner stats, dan submit response yang lebih jelas; node mengekspos metrics read-only `/mining/*` dan CLI `mining status|difficulty|blocks`. Lihat `docs/Mining.md`, `docs/MiningStability.md`, dan `docs/DifficultyObservation.md`.
+Phase 4.10 memperkuat stabilitas mining public-testnet tanpa mengubah consensus. `idrminer` memiliki retry/backoff bounded, stale job detection, submit timeout control, miner stats, dan submit response yang lebih jelas; node mengekspos metrics read-only `/mining/*` dan CLI `mining status|difficulty|blocks`. Lihat `docs/Mining.md`, `docs/MiningStability.md`, dan `docs/DifficultyObservation.md`.
 
 Phase 4.10.3 menambahkan upstream seed backfill dan guard isolated mining/write. Node miner dapat memakai `--upstream-peer` untuk push/backfill block yang sudah diterima ke VPS head/explorer node, sedangkan `--seed-peer` tetap untuk pull/discovery. Template miner dan write faucet testnet diblokir saat node isolated secara default. Cumulative work PoW tetap menjadi consensus; mainnet belum tersedia.
 
@@ -136,11 +136,11 @@ Phase 4.12 menambahkan maintenance automatic peer discovery dan bootstrap. Node 
 
 Format address:
 
-- Address wallet baru memakai `DKC` + payload Base58Check.
+- Address wallet baru memakai `IDR` + payload Base58Check.
 - Payload adalah `version byte + HASH160(compressed secp256k1 public key)`.
 - Checksum adalah 4 byte pertama dari double SHA256 terhadap payload.
 - Public key hash adalah `RIPEMD160(SHA256(compressed_public_key))`.
-- Format address dev lama hanya legacy localnet. Wallet baru selalu membuat address Base58Check `DKC...`, dan address legacy dev tidak valid untuk public testnet/mainnet.
+- Format address dev lama hanya legacy localnet. Wallet baru selalu membuat address Base58Check `IDR...`, dan address legacy dev tidak valid untuk public testnet/mainnet.
 
 Key dan signature:
 
@@ -150,19 +150,19 @@ Key dan signature:
 
 Network profile:
 
-- `localnet`: chain id `777001`, network id `dkc-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev address boleh.
-- `testnet`: chain id `777101`, network id `dkc-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev address tidak boleh.
-- `mainnet`: chain id `777000`, network id `dkc-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev address tidak boleh.
+- `localnet`: chain id `777001`, network id `idr-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev address boleh.
+- `testnet`: chain id `777101`, network id `idr-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev address tidak boleh.
+- `mainnet`: chain id `777000`, network id `idr-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev address tidak boleh.
 
 Protocol version:
 
 - protocol version: `1`
 - block version: `1`
 - tx version: `1`
-- P2P protocol version: `dkc-p2p/1`
+- P2P protocol version: `idr-p2p/1`
 - RPC API version: `v1`
 
-Catatan public network: testnet DKC tidak memiliki nilai ekonomi. Tidak ada janji harga, APY, atau profit. Proses claim mainnet di masa depan, jika dibuat, harus memiliki batas jumlah dan batas waktu.
+Catatan public network: testnet IDR tidak memiliki nilai ekonomi. Tidak ada janji harga, APY, atau profit. Proses claim mainnet di masa depan, jika dibuat, harus memiliki batas jumlah dan batas waktu.
 
 ## Difficulty
 
@@ -195,13 +195,13 @@ Reward mining langsung confirmed, tapi belum spendable sampai mature. Localnet m
 - `immature balance`: reward mining confirmed yang masih terkunci maturity.
 - `spendable balance`: mature balance dikurangi pending outgoing di mempool.
 
-Command `send` memakai spendable balance. Miner yang menambang 3 block localnet punya `150 DKC` confirmed, `0 DKC` mature, `150 DKC` immature, dan `0 DKC` spendable. Pada height 11, reward height 1 sudah mature, sehingga miner punya `550 DKC` confirmed, `50 DKC` mature, `500 DKC` immature, dan `50 DKC` spendable.
+Command `send` memakai spendable balance. Miner yang menambang 3 block localnet punya `150 IDR` confirmed, `0 IDR` mature, `150 IDR` immature, dan `0 IDR` spendable. Pada height 11, reward height 1 sudah mature, sehingga miner punya `550 IDR` confirmed, `50 IDR` mature, `500 IDR` immature, dan `50 IDR` spendable.
 
 `chain info` menampilkan total supply sebagai semua reward coinbase confirmed, sedangkan circulating supply adalah supply coinbase yang sudah mature. Circulating supply tetap mencakup coin mature yang sedang active/unlocking/released stake karena itu collateral milik owner. Spendable balance adalah field terpisah dan mengecualikan active/unlocking stake plus pending outgoing transaction.
 
 ## Standalone CPU Miner
 
-Phase 2.9 menambahkan `dkcminer`, proses CPU miner terpisah. Miner hanya membutuhkan RPC URL node dan reward address. Miner tidak membaca file wallet, private key, atau datadir node; node yang membuat block template, memvalidasi submitted block, menyimpan block yang diterima, membersihkan transaction mempool yang sudah confirmed, dan broadcast block ke peer.
+Phase 2.9 menambahkan `idrminer`, proses CPU miner terpisah. Miner hanya membutuhkan RPC URL node dan reward address. Miner tidak membaca file wallet, private key, atau datadir node; node yang membuat block template, memvalidasi submitted block, menyimpan block yang diterima, membersihkan transaction mempool yang sudah confirmed, dan broadcast block ke peer.
 
 Start node:
 
@@ -218,17 +218,17 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 wallet new
 Mine satu block:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
 ```
 
 Mine terus-menerus atau build binary:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4
-go build -o dkcminer ./node/cmd/dkcminer
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4
+go build -o idrminer ./node/cmd/idrminer
 ```
 
-`dkcminer` menampilkan job baru, hashrate, block ditemukan, stale template, retry, dan submit accepted. Coinbase maturity tetap berlaku untuk reward standalone miner.
+`idrminer` menampilkan job baru, hashrate, block ditemukan, stale template, retry, dan submit accepted. Coinbase maturity tetap berlaku untuk reward standalone miner.
 
 ## Public RPC Hardening
 
@@ -284,8 +284,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1 -Version v0.4.10-
 Nama binary:
 
 - `deskachain`
-- `dkcminer`
-- `dkcservice`
+- `idrminer`
+- `idrservice`
 
 Untuk Linux/macOS:
 
@@ -304,53 +304,53 @@ Dokumentasi release ada di `docs/Release.md`; dokumentasi deployment ada di `doc
 
 ## Simulasi Service Node
 
-Phase 3.0 menambahkan layer service node khusus riset. Layer ini mencatat service node registration, heartbeat uptime, simulated verification challenge, komponen score, anti-abuse flags, dan simulated service points harian. Points ini hanya untuk riset lokal/testnet dan leaderboard; bukan DKC dan tidak bisa dibelanjakan.
+Phase 3.0 menambahkan layer service node khusus riset. Layer ini mencatat service node registration, heartbeat uptime, simulated verification challenge, komponen score, anti-abuse flags, dan simulated service points harian. Points ini hanya untuk riset lokal/testnet dan leaderboard; bukan IDR dan tidak bisa dibelanjakan.
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <IDR_ADDR>
 ```
 
 Dalam public RPC mode, service write endpoint mati secara default. Gunakan `--enable-service-rpc=true` hanya untuk verifier/test setup yang terkontrol.
 
 ## Service Node Agent
 
-`dkcservice` mengotomasi workflow simulasi service Phase 3.0. Agent hanya membutuhkan node RPC URL dan address DKC. Agent tidak membaca private key, tidak mine PoW block, tidak membuat DKC spendable, dan tetap berjalan dalam safe simulation mode.
+`idrservice` mengotomasi workflow simulasi service Phase 3.0. Agent hanya membutuhkan node RPC URL dan address IDR. Agent tidak membaca private key, tidak mine PoW block, tidak membuat IDR spendable, dan tetap berjalan dalam safe simulation mode.
 
 ```powershell
 go run ./node/cmd/deskachain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 wallet new
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
-go build -o dkcservice ./node/cmd/dkcservice
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go build -o idrservice ./node/cmd/idrservice
 ```
 
-Agent state default berada di `./dkcservice-state.json`. Inspect dengan:
+Agent state default berada di `./idrservice-state.json`. Inspect dengan:
 
 ```powershell
-go run ./node/cmd/dkcservice status --state ./dkcservice-state.json
+go run ./node/cmd/idrservice status --state ./idrservice-state.json
 ```
 
 Jangan aktifkan service RPC secara publik tanpa rate limit dan abuse protection. Service RPC Phase 3.1 ditujukan untuk controlled testnet/verifier simulation.
 
 ## Staking Collateral
 
-Staking Phase 3.2 mengunci DKC mature sebagai collateral service node. Active dan unbonding stake mengurangi spendable balance, tetapi confirmed balance, mature balance, total supply, coinbase reward, difficulty, dan PoW consensus tidak berubah.
+Staking Phase 3.2 mengunci IDR mature sebagai collateral service node. Active dan unbonding stake mengurangi spendable balance, tetapi confirmed balance, mature balance, total supply, coinbase reward, difficulty, dan PoW consensus tidak berubah.
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <DKC_ADDR> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 ```
 
-Localnet memakai minimum stake 10 DKC dan active stake 100 DKC untuk eligibility simulasi service reward. Tidak ada slashing dan tidak ada APY staking pada Phase 3.2.
+Localnet memakai minimum stake 10 IDR dan active stake 100 IDR untuk eligibility simulasi service reward. Tidak ada slashing dan tidak ada APY staking pada Phase 3.2.
 
-Untuk collateral service node testnet, threshold saat ini adalah 1000 DKC. Runbook faucet-funded tersedia di `docs/Testnet.md`.
+Untuk collateral service node testnet, threshold saat ini adalah 1000 IDR. Runbook faucet-funded tersedia di `docs/Testnet.md`.
 
 ## Data Directory
 
@@ -378,7 +378,7 @@ Total supply bisa lebih tinggi dari balance satu wallet karena block yang sudah 
 
 ## Contoh Transfer
 
-Pending transaction tidak mengubah confirmed balance sampai transaction tersebut ditambang ke dalam block. Miner menerima 50 DKC per block. Fee transaction masih 0 DKC pada Phase 1.6.
+Pending transaction tidak mengubah confirmed balance sampai transaction tersebut ditambang ke dalam block. Miner menerima 50 IDR per block. Fee transaction masih 0 IDR pada Phase 1.6.
 
 ```powershell
 go run ./node/cmd/deskachain dev reset --yes
@@ -397,7 +397,7 @@ go run ./node/cmd/deskachain chain validate
 go run ./node/cmd/deskachain tx get <txid>
 ```
 
-Dalam alur tersebut, wallet A berakhir dengan 190 DKC, wallet B berakhir dengan 10 DKC, dan total supply menjadi 200 DKC.
+Dalam alur tersebut, wallet A berakhir dengan 190 IDR, wallet B berakhir dengan 10 IDR, dan total supply menjadi 200 IDR.
 
 ## Contoh Local P2P
 
@@ -480,7 +480,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
 ```
 
-Expected: node 2 menerima tx broadcast, menerima block broadcast, balance wallet B menjadi 10 DKC, kedua chain valid, dan `node compare` melaporkan `nodes in sync`.
+Expected: node 2 menerima tx broadcast, menerima block broadcast, balance wallet B menjadi 10 IDR, kedua chain valid, dan `node compare` melaporkan `nodes in sync`.
 
 Command debug broadcast Phase 2.3:
 
@@ -832,14 +832,14 @@ Menjalankan `peer sync` berulang kali tidak boleh menduplikasi block: height, to
 - `POST /fork/check`
 - `GET /faucet/info`
 - `POST /faucet/request`
-- `GET /miner/template?address=<DKC_ADDR>`
+- `GET /miner/template?address=<IDR_ADDR>`
 - `POST /miner/submit`
 - `POST /service/register`
 - `POST /service/heartbeat`
 - `POST /service/challenge/create`
 - `POST /service/challenge/submit`
-- `GET /service/score?address=<DKC_ADDR>`
-- `GET /service/rewards?address=<DKC_ADDR>`
+- `GET /service/score?address=<IDR_ADDR>`
+- `GET /service/rewards?address=<IDR_ADDR>`
 - `GET /service/list`
 - `GET /stake/info`
 - `GET /stake/list`
@@ -888,8 +888,8 @@ Contoh body send:
 
 ```json
 {
-  "from": "<DKC_ADDR>",
-  "to": "<DKC_ADDR>",
+  "from": "<IDR_ADDR>",
+  "to": "<IDR_ADDR>",
   "amount": "1.25"
 }
 ```
@@ -898,7 +898,7 @@ Contoh body mine:
 
 ```json
 {
-  "address": "<DKC_ADDR>",
+  "address": "<IDR_ADDR>",
   "blocks": 1
 }
 ```

@@ -277,7 +277,7 @@ func (s Store) Score(address string) (Score, error) {
 		StakeEligible:           stakeEligible,
 		CollateralStatus:        collateralStatus,
 		EligibilityNote:         eligibilityNote,
-		Note:                    "service points are simulation only and are not spendable DKC",
+		Note:                    "service points are simulation only and are not spendable IDR",
 	}, nil
 }
 
@@ -320,9 +320,9 @@ func (s Store) Rewards(address string) ([]Reward, error) {
 
 func rewardReason(score Score) string {
 	if score.EligibilityNote != "" {
-		return score.EligibilityNote + "; not DKC"
+		return score.EligibilityNote + "; not IDR"
 	}
-	return "daily service score simulation; not DKC"
+	return "daily service score simulation; not IDR"
 }
 
 func (s Store) collateral(address string) (required uint64, active uint64, eligible bool, status string) {

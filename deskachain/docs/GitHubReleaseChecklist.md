@@ -12,7 +12,7 @@ Use this checklist before publishing DesKaChain Public Testnet RC1.
 - Confirm `SHA256SUMS.txt` exists.
 - Confirm release archives contain expected binaries, docs, examples, and config.
 - Confirm archives contain no datadir, wallet files, chain DB, mempool, peer store, faucet state, service state, private keys, or `.git`.
-- Confirm public docs state that testnet DKC has no monetary value and mainnet is not available.
+- Confirm public docs state that testnet IDR has no monetary value and mainnet is not available.
 - Confirm wallet/admin RPC examples remain private or disabled.
 
 ## Artifacts To Attach

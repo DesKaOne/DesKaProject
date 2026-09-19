@@ -39,6 +39,10 @@ type Handshake struct {
 	TipHash            string     `json:"tip_hash"`
 	CumulativeWork     uint64     `json:"cumulative_work"`
 	NodeID             string     `json:"node_id"`
+	IdentityVersion    uint32     `json:"identity_version,omitempty"`
+	NodePublicKey      string     `json:"node_public_key,omitempty"`
+	NodeSignature      string     `json:"node_signature,omitempty"`
+	AuthChallenge      string     `json:"auth_challenge,omitempty"`
 	P2PListen          string     `json:"p2p_listen"`
 	P2PAdvertise       string     `json:"p2p_advertise"`
 	Services           []string   `json:"services,omitempty"`
@@ -112,12 +116,14 @@ type PeerIntroduction struct {
 }
 
 type BlockHeader struct {
+	Version      uint32 `json:"version,omitempty"`
 	Height       uint64 `json:"height"`
 	Hash         string `json:"hash"`
 	PreviousHash string `json:"previous_hash"`
 	Timestamp    int64  `json:"timestamp"`
 	Difficulty   uint32 `json:"difficulty"`
 	MerkleRoot   string `json:"merkle_root"`
+	StateRoot    string `json:"state_root,omitempty"`
 	TxCount      int    `json:"tx_count"`
 	MinerAddress string `json:"miner_address"`
 }

@@ -240,13 +240,13 @@ Sebelum sync:
 
 * height A = 3
 * tip A = hashA
-* total supply A = 150 DKC
+* total supply A = 150 IDR
 
 Setelah peer sync ke forkB yang fork:
 
 * height A tetap 3
 * tip A tetap hashA
-* total supply A tetap 150 DKC
+* total supply A tetap 150 IDR
 * chain validate A tetap pass
 * mempool A tidak berubah
 
@@ -430,7 +430,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
 Expected:
 height: 3
 tip hash: original forkA tip
-total supply: 150 DKC
+total supply: 150 IDR
 total transactions: 3
 coinbase transactions: 3
 normal transactions: 0

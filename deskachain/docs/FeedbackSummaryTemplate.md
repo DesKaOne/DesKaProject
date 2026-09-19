@@ -1,6 +1,6 @@
 # DesKaChain RC1 Feedback Summary - YYYY-MM-DD
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 
 ## Overall Status
 
@@ -41,5 +41,5 @@ Testnet DKC has no monetary value. Mainnet is not available.
 
 ## No Monetary Value Reminder
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 

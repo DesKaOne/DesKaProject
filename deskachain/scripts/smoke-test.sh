@@ -32,7 +32,7 @@ case "$BIN_DIR" in
   *) BIN_PATH="$ROOT/$BIN_DIR" ;;
 esac
 DESKACHAIN="$BIN_PATH/deskachain"
-MINER="$BIN_PATH/dkcminer"
+MINER="$BIN_PATH/idrminer"
 [ -x "$DESKACHAIN" ] || { echo "missing executable: $DESKACHAIN" >&2; exit 1; }
 [ -x "$MINER" ] || { echo "missing executable: $MINER" >&2; exit 1; }
 

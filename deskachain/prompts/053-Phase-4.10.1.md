@@ -7,7 +7,7 @@ Observed nodes:
 
 * VPS:
 
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * height: 308
@@ -16,7 +16,7 @@ Observed nodes:
 
 * Windows/Mini PC:
 
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * height: 300

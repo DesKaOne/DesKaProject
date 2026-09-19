@@ -32,7 +32,7 @@ Status saat ini:
     nodes in sync
   * chain info setelah reorg:
     height: 5
-    total supply: 250 DKC
+    total supply: 250 IDR
     total transactions: 5
     coinbase transactions: 5
     normal transactions: 0
@@ -110,8 +110,8 @@ Setup:
   * user2
 * Chain A:
 
-  1. Mine 3 block ke minerA agar minerA punya 150 DKC.
-  2. Buat tx normal dari minerA ke user1 sebesar 10 DKC.
+  1. Mine 3 block ke minerA agar minerA punya 150 IDR.
+  2. Buat tx normal dari minerA ke user1 sebesar 10 IDR.
   3. Mine tx tersebut ke block A4.
   4. Height A = 4.
 * Chain B:
@@ -135,16 +135,16 @@ Agar tx tetap valid:
 * Gunakan funding yang ada di common ancestor sebelum fork.
 * Buat shared pre-fork chain dulu:
 
-  * common chain height 3, minerCommon punya 150 DKC.
+  * common chain height 3, minerCommon punya 150 IDR.
   * fork dari height 3.
-  * Chain A membuat tx minerCommon -> user1 sebesar 10 DKC di A4.
+  * Chain A membuat tx minerCommon -> user1 sebesar 10 IDR di A4.
   * Chain B mine block B4-B6 tanpa tx tersebut.
-* Setelah reorg ke B, minerCommon masih punya 150 DKC dari common ancestor, jadi tx masih valid.
+* Setelah reorg ke B, minerCommon masih punya 150 IDR dari common ancestor, jadi tx masih valid.
 * Expected:
   requeued transactions: 1
   mempool count: 1
   tx minerCommon->user1 ada di mempool
-  user1 balance setelah reorg: 0 DKC
+  user1 balance setelah reorg: 0 IDR
   minerCommon balance belum berkurang di ledger canonical
   chain valid
 
@@ -160,7 +160,7 @@ Setup:
 * Common chain height 3, minerCommon punya saldo.
 * Fork A:
 
-  * tx1 minerCommon -> user1 sebesar 10 DKC masuk block A4.
+  * tx1 minerCommon -> user1 sebesar 10 IDR masuk block A4.
 * Fork B:
 
   * tx1 yang sama juga masuk block B4.
@@ -172,7 +172,7 @@ Expected:
 * requeued transactions: 0
 * dropped/confirmed transactions: 1
 * mempool count: 0
-* user1 balance setelah reorg: 10 DKC
+* user1 balance setelah reorg: 10 IDR
 * tx1 confirmed di canonical chain
 * chain valid
 
@@ -185,13 +185,13 @@ Jika orphaned tx konflik dengan branch baru, tx harus drop, bukan requeue.
 
 Setup:
 
-* Common chain height 3, minerCommon punya 150 DKC.
+* Common chain height 3, minerCommon punya 150 IDR.
 * Fork A:
 
-  * txA: minerCommon -> user1 sebesar 100 DKC masuk block A4.
+  * txA: minerCommon -> user1 sebesar 100 IDR masuk block A4.
 * Fork B:
 
-  * txB: minerCommon -> user2 sebesar 120 DKC masuk block B4.
+  * txB: minerCommon -> user2 sebesar 120 IDR masuk block B4.
   * B lanjut sampai height 6.
 * Jika setelah branch B, saldo minerCommon tidak cukup untuk txA lagi atau nonce/sequence konflik, txA harus invalid.
 * Reorg A ke B.
@@ -201,8 +201,8 @@ Expected:
 * txA tidak masuk mempool.
 * dropped transactions: 1
 * mempool count: 0
-* user1 balance setelah reorg: 0 DKC
-* user2 balance setelah reorg: 120 DKC
+* user1 balance setelah reorg: 0 IDR
+* user2 balance setelah reorg: 120 IDR
 * chain valid
 
 Catatan:
@@ -301,7 +301,7 @@ pending tx count: 1
 txid: ...
 from: ...
 to: ...
-amount: 10 DKC
+amount: 10 IDR
 fee: ...
 status: pending
 
@@ -406,8 +406,8 @@ Tambahkan/update tests:
 
 7. Total supply after reorg:
 
-* Canonical height 6 dengan reward 50 DKC.
-* total supply 300 DKC.
+* Canonical height 6 dengan reward 50 IDR.
+* total supply 300 IDR.
 * Orphaned coinbase tidak dihitung.
 
 8. Balance after reorg:

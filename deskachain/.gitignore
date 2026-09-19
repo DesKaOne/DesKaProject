@@ -20,10 +20,10 @@ faucet_state.json
 **/node.lock
 **/node_id
 *.exe
-dkcservice-state.json
-dkcservice-states.json
-**/dkcservice-state.json
-**/dkcservice-states.json
+idrservice-state.json
+idrservice-states.json
+**/idrservice-state.json
+**/idrservice-states.json
 service_nodes.json
 service_challenges.json
 service_rewards.json

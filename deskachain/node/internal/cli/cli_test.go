@@ -170,7 +170,7 @@ func TestStartUsesDatadirNetworkMetadata(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "network name: testnet")
-	assertOutputContains(t, out.String(), "network id: dkc-testnet-1")
+	assertOutputContains(t, out.String(), "network id: idr-testnet-1")
 	assertOutputContains(t, out.String(), "chain id: 777101")
 }
 
@@ -404,10 +404,17 @@ func TestSeedPeersPersistSourceAndSkipSelf(t *testing.T) {
 	}
 }
 
+func fundedTestProfile() config.NetworkConfig {
+	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
+	return profile
+}
+
 func TestMiningNBlocksIncreasesHeightAndBalance(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -427,15 +434,15 @@ func TestMiningNBlocksIncreasesHeightAndBalance(t *testing.T) {
 	if err := app.Run([]string{"balance", addr}); err != nil {
 		t.Fatal(err)
 	}
-	assertOutputContains(t, out.String(), "confirmed balance: 100 DKC")
-	assertOutputContains(t, out.String(), "mature balance: 0 DKC")
-	assertOutputContains(t, out.String(), "spendable balance: 0 DKC")
+	assertOutputContains(t, out.String(), "confirmed balance: 100 IDR")
+	assertOutputContains(t, out.String(), "mature balance: 0 IDR")
+	assertOutputContains(t, out.String(), "spendable balance: 0 IDR")
 	out.Reset()
 	if err := app.Run([]string{"chain", "info"}); err != nil {
 		t.Fatal(err)
 	}
 	info := out.String()
-	for _, want := range []string{"height: 2", "blocks: 3", "coinbase blocks: 2", "total transactions: 2", "coinbase transactions: 2", "normal transactions: 0", "total supply: 100 DKC"} {
+	for _, want := range []string{"height: 2", "blocks: 3", "coinbase blocks: 2", "total transactions: 2", "coinbase transactions: 2", "normal transactions: 0", "total supply: 100 IDR"} {
 		if !strings.Contains(info, want) {
 			t.Fatalf("chain info missing %q:\n%s", want, info)
 		}
@@ -486,7 +493,7 @@ func TestServiceRewardSimulationDoesNotMutateConsensus(t *testing.T) {
 	if err := app.Run([]string{"service", "rewards", "--address", addr}); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "not spendable DKC") {
+	if !strings.Contains(out.String(), "not spendable IDR") {
 		t.Fatalf("missing simulation note: %s", out.String())
 	}
 
@@ -553,7 +560,7 @@ func TestMineRejectsInvalidChecksumAddress(t *testing.T) {
 func TestChainInfoStatsGenesisCoinbaseAndNormalTx(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -574,7 +581,7 @@ func TestChainInfoStatsGenesisCoinbaseAndNormalTx(t *testing.T) {
 	if err := app.Run([]string{"chain", "info"}); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"height: 11", "blocks: 12", "coinbase blocks: 11", "total transactions: 11", "coinbase transactions: 11", "normal transactions: 0", "circulating supply: 50 DKC"} {
+	for _, want := range []string{"height: 11", "blocks: 12", "coinbase blocks: 11", "total transactions: 11", "coinbase transactions: 11", "normal transactions: 0", "circulating supply: 50 IDR"} {
 		assertOutputContains(t, out.String(), want)
 	}
 	out.Reset()
@@ -679,7 +686,7 @@ func TestWalletListAndExportSafety(t *testing.T) {
 	}
 }
 
-func TestWalletNewInspectExportImportUsesDKCBase58Secp256k1(t *testing.T) {
+func TestWalletNewInspectExportImportUsesIDRBase58Secp256k1(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
 	app := New(&out).WithDataDir(dir)
@@ -687,7 +694,7 @@ func TestWalletNewInspectExportImportUsesDKCBase58Secp256k1(t *testing.T) {
 		t.Fatal(err)
 	}
 	addr := createTestWallet(t, app, &out)
-	if !strings.HasPrefix(addr, "DKC") {
+	if !strings.HasPrefix(addr, "IDR") {
 		t.Fatalf("wallet address = %s", addr)
 	}
 	out.Reset()
@@ -722,7 +729,7 @@ func TestWalletNewInspectExportImportUsesDKCBase58Secp256k1(t *testing.T) {
 func TestSendMempoolNonceAndPendingOverspend(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -768,7 +775,7 @@ func TestSendMempoolNonceAndPendingOverspend(t *testing.T) {
 func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -778,8 +785,8 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 	if err := app.Run([]string{"mine", "--address", walletA, "--blocks", "11"}); err != nil {
 		t.Fatal(err)
 	}
-	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "confirmed balance: 550 DKC")
-	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "spendable balance: 50 DKC")
+	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "confirmed balance: 550 IDR")
+	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "spendable balance: 50 IDR")
 	out.Reset()
 	if err := app.Run([]string{"send", "--from", walletA, "--to", walletB, "--amount", "10"}); err != nil {
 		t.Fatal(err)
@@ -791,7 +798,7 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "pending tx count: 1")
-	assertOutputContains(t, out.String(), "amount=10 DKC")
+	assertOutputContains(t, out.String(), "amount=10 IDR")
 	out.Reset()
 	if err := app.Run([]string{"tx", "get", txID}); err != nil {
 		t.Fatal(err)
@@ -802,13 +809,13 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "pending outgoing tx: 1")
-	assertOutputContains(t, out.String(), "pending outgoing amount: 10 DKC")
+	assertOutputContains(t, out.String(), "pending outgoing amount: 10 IDR")
 	out.Reset()
 	if err := app.Run([]string{"wallet", "inspect", "--address", walletB}); err != nil {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "pending incoming tx: 1")
-	assertOutputContains(t, out.String(), "pending incoming amount: 10 DKC")
+	assertOutputContains(t, out.String(), "pending incoming amount: 10 IDR")
 	out.Reset()
 	if err := app.Run([]string{"mine", "--address", walletA, "--blocks", "1"}); err != nil {
 		t.Fatal(err)
@@ -819,13 +826,13 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "pending tx count: 0")
-	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "confirmed balance: 590 DKC")
-	assertOutputContainsCommand(t, app, &out, []string{"balance", walletB}, "mature balance: 10 DKC")
+	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "confirmed balance: 590 IDR")
+	assertOutputContainsCommand(t, app, &out, []string{"balance", walletB}, "mature balance: 10 IDR")
 	out.Reset()
 	if err := app.Run([]string{"chain", "info"}); err != nil {
 		t.Fatal(err)
 	}
-	assertOutputContains(t, out.String(), "total supply: 600 DKC")
+	assertOutputContains(t, out.String(), "total supply: 600 IDR")
 	out.Reset()
 	if err := app.Run([]string{"chain", "validate"}); err != nil {
 		t.Fatal(err)
@@ -842,15 +849,15 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 func TestStakeCommandsAndBalanceOutput(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
 	walletA := createTestWallet(t, app, &out)
 	assertOutputContainsCommand(t, app, &out, []string{"mine", "--address", walletA, "--blocks", "12"}, "mining complete")
 	assertOutputContainsCommand(t, app, &out, []string{"stake", "info"}, "staking enabled: true")
-	assertOutputContains(t, out.String(), "min stake amount: 10 DKC")
-	assertOutputContains(t, out.String(), "min service stake: 100 DKC")
+	assertOutputContains(t, out.String(), "min stake amount: 10 IDR")
+	assertOutputContains(t, out.String(), "min service stake: 100 IDR")
 	assertOutputContains(t, out.String(), "unbonding period: 10")
 
 	out.Reset()
@@ -866,10 +873,10 @@ func TestStakeCommandsAndBalanceOutput(t *testing.T) {
 	assertOutputContainsCommand(t, app, &out, []string{"stake", "list", "--address", walletA}, "status: active")
 	assertOutputContains(t, out.String(), "stake id: "+stakeID)
 	assertOutputContains(t, out.String(), "lock height:")
-	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "active stake: 10 DKC")
-	assertOutputContains(t, out.String(), "unlocking stake: 0 DKC")
-	assertOutputContains(t, out.String(), "released stake: 0 DKC")
-	assertOutputContains(t, out.String(), "pending stake lock: 0 DKC")
+	assertOutputContainsCommand(t, app, &out, []string{"balance", walletA}, "active stake: 10 IDR")
+	assertOutputContains(t, out.String(), "unlocking stake: 0 IDR")
+	assertOutputContains(t, out.String(), "released stake: 0 IDR")
+	assertOutputContains(t, out.String(), "pending stake lock: 0 IDR")
 	assertOutputContains(t, out.String(), "spendable balance:")
 
 	out.Reset()
@@ -884,7 +891,7 @@ func TestStakeCommandsAndBalanceOutput(t *testing.T) {
 func TestSendFailureCasesAndMempoolClear(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -896,7 +903,7 @@ func TestSendFailureCasesAndMempoolClear(t *testing.T) {
 	if err := app.Run([]string{"send", "--from", from, "--to", "bad", "--amount", "1"}); err == nil || !strings.Contains(err.Error(), "send failed: invalid recipient address") {
 		t.Fatalf("expected invalid recipient, got %v", err)
 	}
-	missing := "dkc10000000000000000000000000000000000000000"
+	missing := "idr10000000000000000000000000000000000000000"
 	if err := app.Run([]string{"send", "--from", missing, "--to", to, "--amount", "1"}); err == nil || !strings.Contains(err.Error(), "send failed: local wallet not found for sender") {
 		t.Fatalf("expected missing sender wallet, got %v", err)
 	}
@@ -957,7 +964,7 @@ func TestLockRejectsWriteAllowsRead(t *testing.T) {
 	if err := app.Run([]string{"chain", "info"}); err != nil {
 		t.Fatalf("read command blocked by lock: %v", err)
 	}
-	if err := app.Run([]string{"mine", "--address", "dkc10000000000000000000000000000000000000000", "--blocks", "1"}); err == nil || !strings.Contains(err.Error(), "datadir is locked by running node") {
+	if err := app.Run([]string{"mine", "--address", "idr10000000000000000000000000000000000000000", "--blocks", "1"}); err == nil || !strings.Contains(err.Error(), "datadir is locked by running node") {
 		t.Fatalf("expected lock error, got %v", err)
 	}
 	if err := app.Run([]string{"wallet", "new"}); err == nil || !strings.Contains(err.Error(), "--rpc-url http://127.0.0.1:8331 wallet new") {
@@ -974,18 +981,18 @@ func TestRemoteCLIMineSendAndMempool(t *testing.T) {
 	dir := t.TempDir()
 	paths := config.NewPaths(dir)
 	var setupOut bytes.Buffer
-	local := New(&setupOut).WithDataDir(dir)
+	local := New(&setupOut).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := local.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
 	walletA := createTestWallet(t, local, &setupOut)
 	walletB := createTestWallet(t, local, &setupOut)
 	mux := http.NewServeMux()
-	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0"})
+	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", Profile: fundedTestProfile()})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	var out bytes.Buffer
-	remote := New(&out)
+	remote := New(&out).WithProfile(fundedTestProfile())
 	if err := remote.Run([]string{"--rpc-url", server.URL, "chain", "info"}); err != nil {
 		t.Fatal(err)
 	}
@@ -1018,7 +1025,7 @@ func TestRemoteCLIMineSendAndMempool(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "pending tx count: 1")
-	assertOutputContains(t, out.String(), "amount=10 DKC")
+	assertOutputContains(t, out.String(), "amount=10 IDR")
 }
 
 func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
@@ -1039,7 +1046,7 @@ func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	addr, _ := info["address"].(string)
-	if !strings.HasPrefix(addr, "DKC") {
+	if !strings.HasPrefix(addr, "IDR") {
 		t.Fatalf("rpc wallet address = %q", addr)
 	}
 	if info["format"] != "base58check" || info["network"] != "localnet" || info["key_curve"] != "secp256k1" {
@@ -1062,7 +1069,7 @@ func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	cliAddr := strings.TrimSpace(out.String())
-	if !strings.HasPrefix(cliAddr, "DKC") || strings.Contains(out.String(), "private") {
+	if !strings.HasPrefix(cliAddr, "IDR") || strings.Contains(out.String(), "private") {
 		t.Fatalf("unexpected remote wallet new output: %q", out.String())
 	}
 	out.Reset()
@@ -1084,7 +1091,7 @@ func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
 func TestRPCChainInfoRuntimeStatsAndBodyErrors(t *testing.T) {
 	paths := config.NewPaths(t.TempDir())
 	var setupOut bytes.Buffer
-	local := New(&setupOut).WithDataDir(paths.DataDir)
+	local := New(&setupOut).WithDataDir(paths.DataDir).WithProfile(fundedTestProfile())
 	if err := local.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -1104,7 +1111,7 @@ func TestRPCChainInfoRuntimeStatsAndBodyErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", State: state})
+	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", State: state, Profile: fundedTestProfile()})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	info, err := remoteGetMap(server.URL, "/chain/info")
@@ -1804,7 +1811,7 @@ func TestFaucetCLIInfo(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /faucet/info", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"enabled":true,"network":"testnet","network_id":"dkc-testnet-1","chain_id":777101,"faucet_address":"DKCFAUCET","amount":"100","max_per_address":"1000","min_interval_seconds":60,"mempool_pending":0,"note":"testnet faucet only; testnet DKC has no monetary value"}`))
+		_, _ = w.Write([]byte(`{"enabled":true,"network":"testnet","network_id":"idr-testnet-1","chain_id":777101,"faucet_address":"IDRFAUCET","amount":"100","max_per_address":"1000","min_interval_seconds":60,"mempool_pending":0,"note":"testnet faucet only; testnet IDR has no monetary value"}`))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
@@ -1815,8 +1822,8 @@ func TestFaucetCLIInfo(t *testing.T) {
 	}
 	assertOutputContains(t, out.String(), "enabled: true")
 	assertOutputContains(t, out.String(), "network: testnet")
-	assertOutputContains(t, out.String(), "faucet address: DKCFAUCET")
-	assertOutputContains(t, out.String(), "amount: 100 DKC")
+	assertOutputContains(t, out.String(), "faucet address: IDRFAUCET")
+	assertOutputContains(t, out.String(), "amount: 100 IDR")
 }
 
 func TestFaucetCLIRequest(t *testing.T) {
@@ -1826,22 +1833,22 @@ func TestFaucetCLIRequest(t *testing.T) {
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			t.Fatal(err)
 		}
-		if req["address"] != "DKCRECIPIENT" {
+		if req["address"] != "IDRRECIPIENT" {
 			t.Fatalf("unexpected request: %#v", req)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"tx_id":"abc123","from":"DKCFAUCET","to":"DKCRECIPIENT","amount":"100","status":"pending","note":"mine a block to confirm faucet transaction"}`))
+		_, _ = w.Write([]byte(`{"tx_id":"abc123","from":"IDRFAUCET","to":"IDRRECIPIENT","amount":"100","status":"pending","note":"mine a block to confirm faucet transaction"}`))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	var out bytes.Buffer
 	app := New(&out)
-	if err := app.Run([]string{"--rpc-url", server.URL, "faucet", "request", "--address", "DKCRECIPIENT"}); err != nil {
+	if err := app.Run([]string{"--rpc-url", server.URL, "faucet", "request", "--address", "IDRRECIPIENT"}); err != nil {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "faucet tx created")
 	assertOutputContains(t, out.String(), "tx id: abc123")
-	assertOutputContains(t, out.String(), "amount: 100 DKC")
+	assertOutputContains(t, out.String(), "amount: 100 IDR")
 	assertOutputContains(t, out.String(), "status: pending")
 }
 
@@ -1887,18 +1894,18 @@ func TestCLI_FaucetStakeServiceE2E(t *testing.T) {
 
 	var out bytes.Buffer
 	remote := New(&out)
-	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "faucet", "info"}, "amount: 1000 DKC")
+	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "faucet", "info"}, "amount: 1000 IDR")
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "faucet", "request", "--address", ownerWallet.Address}, "faucet tx created")
-	assertOutputContains(t, out.String(), "amount: 1000 DKC")
+	assertOutputContains(t, out.String(), "amount: 1000 IDR")
 	cliMinePendingFixture(t, paths, faucetWallet.Address)
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "balance", ownerWallet.Address}, "confirmed balance: 1000")
 	assertOutputContains(t, out.String(), "spendable balance: 1000")
 
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "stake", "lock", "--address", ownerWallet.Address, "--amount", "1000"}, "stake lock tx created")
-	assertOutputContains(t, out.String(), "amount: 1000 DKC")
+	assertOutputContains(t, out.String(), "amount: 1000 IDR")
 	cliMinePendingFixture(t, paths, faucetWallet.Address)
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "stake", "list", "--address", ownerWallet.Address}, "status: active")
-	assertOutputContains(t, out.String(), "amount: 1000 DKC")
+	assertOutputContains(t, out.String(), "amount: 1000 IDR")
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "balance", ownerWallet.Address}, "active stake: 1000")
 	assertOutputContains(t, out.String(), "spendable balance: 0")
 
@@ -1910,8 +1917,8 @@ func TestCLI_FaucetStakeServiceE2E(t *testing.T) {
 		t.Fatalf("challenge id not found:\n%s", out.String())
 	}
 	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "service", "challenge", "submit", "--challenge-id", challengeID, "--latency-ms", "50", "--bytes-up", "100000000", "--bytes-down", "100000000", "--success", "true"}, "service challenge submitted")
-	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "service", "score", "--address", ownerWallet.Address}, "required stake: 1000 DKC")
-	assertOutputContains(t, out.String(), "active stake: 1000 DKC")
+	assertOutputContainsCommand(t, remote, &out, []string{"--rpc-url", server.URL, "service", "score", "--address", ownerWallet.Address}, "required stake: 1000 IDR")
+	assertOutputContains(t, out.String(), "active stake: 1000 IDR")
 	assertOutputContains(t, out.String(), "stake eligible: true")
 	assertOutputContains(t, out.String(), "collateral status: eligible")
 	assertOutputContains(t, out.String(), "eligible simulated points:")

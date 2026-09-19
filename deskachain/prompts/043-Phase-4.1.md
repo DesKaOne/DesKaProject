@@ -17,10 +17,10 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -125,8 +125,8 @@ Add flags/env only if project already has config style:
 
 * `--peer-sync-interval`
 * `--peer-check-interval`
-* `DKC_PEER_SYNC_INTERVAL`
-* `DKC_PEER_CHECK_INTERVAL`
+* `IDR_PEER_SYNC_INTERVAL`
+* `IDR_PEER_CHECK_INTERVAL`
 
 If adding flags is too much, use internal defaults and document them.
 
@@ -408,11 +408,11 @@ Host B Windows/Linux:
 
 Mine blocks:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 3
+./idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 3
 
 or:
 
-./dkcminer --rpc-url http://127.0.0.1:9312 --address <ADDR_B> --threads 2 --max-blocks 3
+./idrminer --rpc-url http://127.0.0.1:9312 --address <ADDR_B> --threads 2 --max-blocks 3
 
 Check both:
 

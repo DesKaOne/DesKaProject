@@ -11,8 +11,8 @@ Status saat ini:
   * Host A Mini PC Linux sebagai seed/faucet node.
   * Host B Windows sebagai peer/staker/service owner.
   * Faucet request multi-host lolos.
-  * Stake lock 1000 DKC lolos.
-  * Service register dan dkcservice --once lolos.
+  * Stake lock 1000 IDR lolos.
+  * Service register dan idrservice --once lolos.
   * Service eligible lolos.
   * Host A dan Host B tetap sync.
   * Chain validate pass.
@@ -21,10 +21,10 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -151,7 +151,7 @@ Response should include:
   * faucet_rpc
   * service_rpc
 * mainnet_available: false
-* testnet_value_warning or equivalent: testnet DKC has no monetary value
+* testnet_value_warning or equivalent: testnet IDR has no monetary value
 
 Do not expose secrets or local private wallet data.
 
@@ -367,7 +367,7 @@ Important:
 If service registry/score is node-local simulation state, document that explorer service endpoint reflects this node’s local service store, not global consensus state.
 If service registration is chain-backed, expose confirmed registration height/tx.
 
-Do not claim service points are DKC.
+Do not claim service points are IDR.
 Do not expose service write actions.
 
 ==================================================
@@ -574,7 +574,7 @@ Start node with public RPC and miner RPC:
 
 Mine a block if needed:
 
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
 
 Validate:
 

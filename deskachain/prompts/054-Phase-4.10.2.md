@@ -6,8 +6,8 @@ Phase 4.10.1 fixed the false-positive `network id mismatch` during fork sync.
 Current result:
 Fork sync now correctly reports matching network/chain/genesis:
 
-* local network id: dkc-testnet-1
-* peer network id: dkc-testnet-1
+* local network id: idr-testnet-1
+* peer network id: idr-testnet-1
 * local chain id: 777101
 * peer chain id: 777101
 * local genesis matches peer genesis
@@ -52,7 +52,7 @@ Add config/CLI/env support:
 * CLI flag:
   --max-reorg-depth <int>
 * env:
-  DKC_MAX_REORG_DEPTH=<int>
+  IDR_MAX_REORG_DEPTH=<int>
 
 Suggested defaults:
 
@@ -133,7 +133,7 @@ Add/update tests:
 * public RPC peer sync still disabled.
 * private/local RPC peer sync allowed.
 * startup config parses `--max-reorg-depth`.
-* env `DKC_MAX_REORG_DEPTH` works if env config is supported.
+* env `IDR_MAX_REORG_DEPTH` works if env config is supported.
 
 8. Manual validation after patch.
 

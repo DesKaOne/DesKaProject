@@ -7,7 +7,7 @@ Status: Phase 2.7 protocol foundation.
 New wallet addresses use:
 
 ```text
-DKC + Base58Check(version_byte + pubkey_hash)
+IDR + Base58Check(version_byte + pubkey_hash)
 ```
 
 The checksum is the first 4 bytes of `SHA256(SHA256(payload))`.
@@ -20,7 +20,7 @@ RIPEMD160(SHA256(compressed secp256k1 public key))
 
 Rules:
 
-* `DKC` prefix is uppercase and case-sensitive.
+* `IDR` prefix is uppercase and case-sensitive.
 * Address payload is 21 bytes: 1 version byte + 20-byte public key hash.
 * Base58 alphabet is Bitcoin-style: `123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`.
 * Wrong checksum, wrong version, wrong prefix, and invalid Base58 characters are rejected.
@@ -39,11 +39,11 @@ Rules:
 
 | Network | Chain ID | Network ID | Address Version | Default RPC | Default P2P | Legacy dev address |
 | --- | ---: | --- | --- | ---: | ---: | --- |
-| localnet | 777001 | `dkc-local-1` | `0x1E` | 8331 | 9331 | allowed |
-| testnet | 777101 | `dkc-testnet-1` | `0x1F` | 18331 | 19331 | rejected |
-| mainnet | 777000 | `dkc-main-1` | `0x20` | 8333 | 9333 | rejected |
+| localnet | 777001 | `idr-local-1` | `0x1E` | 8331 | 9331 | allowed |
+| testnet | 777101 | `idr-testnet-1` | `0x1F` | 18331 | 19331 | rejected |
+| mainnet | 777000 | `idr-main-1` | `0x20` | 8333 | 9333 | rejected |
 
-All profiles currently use the visual prefix `DKC`. Network separation is enforced through the address version byte and network id.
+All profiles currently use the visual prefix `IDR`. Network separation is enforced through the address version byte and network id.
 
 ## Protocol Versions
 
@@ -52,7 +52,7 @@ Initial versions:
 * protocol version: `1`
 * block version: `1`
 * tx version: `1`
-* P2P protocol version: `dkc-p2p/1`
+* P2P protocol version: `idr-p2p/1`
 * RPC API version: `v1`
 
 `/p2p/handshake` exposes `network_id`, `chain_id`, `protocol_version`, and `p2p_protocol_version`.
@@ -75,6 +75,6 @@ Genesis or difficulty `0` contributes work `1`. Reorg decisions compare cumulati
 
 ## Public Network Notice
 
-Testnet DKC has no monetary value. DesKaChain makes no price promise, APY promise, or profit promise.
+Testnet IDR has no monetary value. DesKaChain makes no price promise, APY promise, or profit promise.
 
 Any future mainnet claim process, if implemented, must be capped and time-limited.

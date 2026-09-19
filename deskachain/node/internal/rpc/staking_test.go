@@ -24,8 +24,15 @@ func TestStakeInfoRPC(t *testing.T) {
 	}
 }
 
+func fundedRPCProfile() config.NetworkConfig {
+	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
+	return profile
+}
+
 func TestStakeLockRPCAdminMode(t *testing.T) {
-	paths, server := newMinerRPCServer(t)
+	paths, server := newMinerRPCServerWithProfile(t, fundedRPCProfile())
 	miner := newRPCWallet(t)
 	if err := wallet.NewStore(paths.Wallets).Add(miner); err != nil {
 		t.Fatal(err)
@@ -38,7 +45,7 @@ func TestStakeLockRPCAdminMode(t *testing.T) {
 }
 
 func TestStakeUnlockRPCAdminMode(t *testing.T) {
-	paths, server := newMinerRPCServer(t)
+	paths, server := newMinerRPCServerWithProfile(t, fundedRPCProfile())
 	miner := newRPCWallet(t)
 	if err := wallet.NewStore(paths.Wallets).Add(miner); err != nil {
 		t.Fatal(err)
@@ -57,7 +64,7 @@ func TestStakeUnlockRPCAdminMode(t *testing.T) {
 }
 
 func TestStakeListAndStatusRPC(t *testing.T) {
-	paths, server := newMinerRPCServer(t)
+	paths, server := newMinerRPCServerWithProfile(t, fundedRPCProfile())
 	miner := newRPCWallet(t)
 	if err := wallet.NewStore(paths.Wallets).Add(miner); err != nil {
 		t.Fatal(err)

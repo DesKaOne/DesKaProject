@@ -26,7 +26,7 @@ deskachain
 ## Koin
 
 * Nama: DesKaChain
-* Ticker: DKC
+* Ticker: IDR
 * Desimal: 8
 
 ## Fitur Fase 1
@@ -148,9 +148,9 @@ coinbase bool
 
 ## Aturan Nilai (Amount)
 
-* DKC memiliki 8 digit desimal.
+* IDR memiliki 8 digit desimal.
 * Simpan jumlah secara internal sebagai uint64 dalam satuan terkecil.
-* 1 DKC = 100000000 unit.
+* 1 IDR = 100000000 unit.
 * CLI boleh menerima format desimal seperti `"1.5"` dan mengonversinya secara aman ke uint64.
 * Jangan gunakan floating point untuk penyimpanan saldo.
 
@@ -185,7 +185,7 @@ harus diawali sejumlah karakter `"0"` sesuai difficulty.
 Reward awal:
 
 ```text
-50 DKC per block
+50 IDR per block
 ```
 
 ### Coinbase Transaction
@@ -261,7 +261,7 @@ Phase 1 wallet storage is not production safe.
 * Format:
 
 ```text
-dkc1 + suffix hash/heksadesimal
+idr1 + suffix hash/heksadesimal
 ```
 
 atau placeholder mirip bech32.
@@ -327,7 +327,7 @@ go run ./node/cmd/deskachain wallet list
 go run ./node/cmd/deskachain balance <address>
 ```
 
-* Menampilkan saldo terkonfirmasi dalam format desimal DKC.
+* Menampilkan saldo terkonfirmasi dalam format desimal IDR.
 
 ### Mengirim Transaksi
 

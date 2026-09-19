@@ -53,7 +53,7 @@ Tujuan:
 Membersihkan bug kecil dan memperkuat safety runtime sebelum masuk ke:
 
 * Protocol Spec Freeze,
-* DKC Base58 Address Migration,
+* IDR Base58 Address Migration,
 * Difficulty Adjustment,
 * Coinbase Maturity,
 * Standalone Miner.
@@ -597,7 +597,7 @@ coinbase blocks: 3
 total transactions: 3
 coinbase transactions: 3
 normal transactions: 0
-total supply: 150 DKC
+total supply: 150 IDR
 
 Mempool duplicate/manual if possible:
 send same tx twice or submit same tx twice.
