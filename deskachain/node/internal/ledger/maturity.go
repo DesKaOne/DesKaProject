@@ -114,6 +114,30 @@ func CirculatingSupplyWithProfile(blocks []types.Block, params config.ConsensusP
 	return l.TotalMature()
 }
 
+type StateAccount struct {
+	Address   string
+	Confirmed uint64
+	Mature    uint64
+	Nonce     uint64
+}
+
+func (l *MatureLedger) StateAccounts() []StateAccount {
+	out := make([]StateAccount, 0, len(l.accounts))
+	for address, account := range l.accounts {
+		out = append(out, StateAccount{
+			Address:   address,
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		})
+	}
+	return out
+}
+
+func (l *MatureLedger) StateStakes() []staking.Record {
+	return l.stakes.Records(l.currentHeight)
+}
+
 func (l *MatureLedger) Balance(address string) uint64 {
 	return l.accounts[address].Confirmed
 }
