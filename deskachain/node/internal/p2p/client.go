@@ -2,6 +2,8 @@ package p2p
 
 import (
 	"bytes"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -40,9 +42,20 @@ func (c Client) Status(peer string) (Status, error) {
 }
 
 func (c Client) Handshake(peer string) (Handshake, error) {
+	challengeBytes := make([]byte, 32)
+	if _, err := rand.Read(challengeBytes); err != nil {
+		return Handshake{}, err
+	}
+	challenge := hex.EncodeToString(challengeBytes)
 	var handshake Handshake
-	err := c.getJSON(peer, "/p2p/handshake", &handshake)
-	return handshake, err
+	err := c.getJSON(peer, "/p2p/handshake?challenge="+challenge, &handshake)
+	if err != nil {
+		return Handshake{}, err
+	}
+	if handshake.AuthChallenge != challenge {
+		return Handshake{}, fmt.Errorf("peer handshake challenge mismatch")
+	}
+	return handshake, nil
 }
 
 func (c Client) Peers(peer string) (PeersResponse, error) {
