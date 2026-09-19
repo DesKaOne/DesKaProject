@@ -18,7 +18,7 @@ const (
 
 	NativeAssetID             = "IDR"
 	NativeAssetSymbol         = "IDR"
-	NativeAssetDecimals uint8 = 0
+	NativeAssetDecimals uint8 = Decimals
 	FeeAssetID                = NativeAssetID
 
 	UnitsPerCoin         uint64 = 100000000
