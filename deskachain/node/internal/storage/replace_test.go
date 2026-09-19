@@ -112,3 +112,31 @@ func TestReplaceFromHeightRejectsHeightOverflow(t *testing.T) {
 		t.Fatalf("expected replacement height overflow, got %v", err)
 	}
 }
+
+
+func TestReplaceFromHeightRejectsMissingPredecessor(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	if err := store.SaveBlock(types.Block{Height: 0, Hash: "genesis"}); err != nil {
+		t.Fatal(err)
+	}
+
+	err = store.ReplaceFromHeight(2, []types.Block{
+		{Height: 2, Hash: "new-2"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "predecessor not found") {
+		t.Fatalf("expected missing predecessor rejection, got %v", err)
+	}
+
+	tip, err := store.Tip()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tip.Height != 0 || tip.Hash != "genesis" {
+		t.Fatalf("tip changed after missing-predecessor rejection: %#v", tip)
+	}
+}
