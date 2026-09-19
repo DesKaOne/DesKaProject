@@ -3,6 +3,9 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+	"errors"
+
+	"deskachain/internal/fees"
 
 	"deskachain/internal/config"
 	"deskachain/internal/types"
@@ -24,6 +27,14 @@ func ValidateTransactionSize(tx types.Transaction, consensus config.ConsensusPar
 }
 
 func ValidateBlockResources(block types.Block, consensus config.ConsensusParams) error {
+	return validateBlockResources(block, consensus, config.Localnet())
+}
+
+func ValidateBlockResourcesWithProfile(block types.Block, profile config.NetworkConfig) error {
+	return validateBlockResources(block, profile.Consensus, profile)
+}
+
+func validateBlockResources(block types.Block, consensus config.ConsensusParams, profile config.NetworkConfig) error {
 	maxTxCount := consensus.MaxTxCount
 	if maxTxCount == 0 {
 		maxTxCount = config.DefaultMaxTxCount
@@ -32,10 +43,22 @@ func ValidateBlockResources(block types.Block, consensus config.ConsensusParams)
 		return fmt.Errorf("block exceeds max transaction count: got %d want <= %d", len(block.Transactions), maxTxCount)
 	}
 
+	var totalGas uint64
 	for i, tx := range block.Transactions {
 		if err := ValidateTransactionSize(tx, consensus); err != nil {
 			return fmt.Errorf("tx %d %w", i, err)
 		}
+		gas, _, err := fees.GasUsed(tx, profile)
+		if err != nil {
+			return fmt.Errorf("tx %d gas validation failed: %w", i, err)
+		}
+		if ^uint64(0)-totalGas < gas {
+			return errors.New("block gas calculation overflow")
+		}
+		totalGas += gas
+	}
+	if maxGas := consensus.MaxGasPerBlock; maxGas > 0 && totalGas > maxGas {
+		return fmt.Errorf("block exceeds max gas: got %d want <= %d", totalGas, maxGas)
 	}
 
 	maxBlockBytes := consensus.MaxBlockBytes
