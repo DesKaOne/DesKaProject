@@ -28,10 +28,16 @@ func SyncFromPeerWithProfileAndMaxDepth(paths config.Paths, peer string, out io.
 		return err
 	}
 	peer = normalized
-	client := NewClientWithTimeout(10 * time.Second)
-	statusClient := NewClientWithTimeout(2 * time.Second)
 	if profile.Name == "" {
 		profile = config.Localnet()
+	}
+	client, err := NewClientForProfile(paths, profile, 10*time.Second)
+	if err != nil {
+		return err
+	}
+	statusClient, err := NewClientForProfile(paths, profile, 2*time.Second)
+	if err != nil {
+		return err
 	}
 	if maxReorgDepth == 0 {
 		maxReorgDepth = config.DefaultMaxReorgDepth(profile)
