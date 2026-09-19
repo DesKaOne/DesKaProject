@@ -10,6 +10,8 @@ import (
 	"deskachain/internal/staking"
 	"deskachain/internal/state"
 	"deskachain/internal/types"
+
+	bolt "go.etcd.io/bbolt"
 )
 
 func emptySnapshot(t *testing.T) state.Snapshot {
@@ -196,5 +198,77 @@ func TestSaveBlockAndStatePersistsBothDatasets(t *testing.T) {
 	}
 	if got.Height != 0 || got.StateRoot != snapshot.StateRoot {
 		t.Fatalf("unexpected persisted state: %#v", got)
+	}
+}
+
+func TestValidateStateIndexesDetectsOwnerIndexCorruption(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	snapshot.Stakes = []staking.Record{
+		{
+			StakeID:      "stake-1",
+			OwnerAddress: "DKC-alice",
+			Amount:       25,
+			Status:       staking.StatusActive,
+		},
+	}
+	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ValidateStateIndexes(); err != nil {
+		t.Fatalf("fresh index validation failed: %v", err)
+	}
+
+	err = store.db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		return root.Bucket(stateStakesByOwnerBucket).Delete(
+			stateStakeOwnerKey("DKC-alice", "stake-1"),
+		)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ValidateStateIndexes(); err == nil || !strings.Contains(err.Error(), "owner index") {
+		t.Fatalf("expected owner index corruption, got %v", err)
+	}
+}
+
+func TestValidateStateIndexesDetectsCoinbaseKeyCorruption(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	snapshot.Coinbases = []ledger.StateCoinbase{
+		{Address: "DKC-alice", Amount: 10, Height: 2},
+	}
+	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
+
+	err = store.db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		return root.Bucket(stateCoinbasesBucket).Put([]byte("bad"), []byte("{}"))
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.ValidateStateIndexes(); err == nil || !strings.Contains(err.Error(), "coinbase key length") {
+		t.Fatalf("expected coinbase key corruption, got %v", err)
 	}
 }
