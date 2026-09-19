@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"sort"
 
 	"deskachain/internal/crypto"
 	"deskachain/internal/ledger"
@@ -22,17 +21,11 @@ func RootForLedger(l *ledger.MatureLedger) (string, error) {
 	if l == nil {
 		return "", ErrNilLedger
 	}
-	accounts := l.StateAccounts()
-	stakes := l.StateStakes()
-	sort.Slice(accounts, func(i, j int) bool {
-		return accounts[i].Address < accounts[j].Address
-	})
-	sort.Slice(stakes, func(i, j int) bool {
-		if stakes[i].StakeID != stakes[j].StakeID {
-			return stakes[i].StakeID < stakes[j].StakeID
-		}
-		return stakes[i].OwnerAddress < stakes[j].OwnerAddress
-	})
+	return RootForCollections(l.StateAccounts(), l.StateStakes())
+}
+
+func RootForCollections(accounts []ledger.StateAccount, stakes []staking.Record) (string, error) {
+	accounts, stakes = StableDigestInputs(accounts, stakes)
 
 	var buf bytes.Buffer
 	buf.WriteByte(StateRootVersion)
