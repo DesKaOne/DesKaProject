@@ -1,0 +1,171 @@
+package ledger
+
+import (
+	"errors"
+	"fmt"
+
+	"deskachain/internal/config"
+	"deskachain/internal/crypto"
+	"deskachain/internal/types"
+)
+
+type Account struct {
+	Balance uint64 `json:"balance"`
+	Nonce   uint64 `json:"nonce"`
+}
+
+type Ledger struct {
+	accounts map[string]Account
+}
+
+func New() *Ledger {
+	return &Ledger{accounts: make(map[string]Account)}
+}
+
+func Replay(blocks []types.Block) (*Ledger, error) {
+	l := New()
+	for _, block := range blocks {
+		if err := l.ApplyBlock(block); err != nil {
+			return nil, err
+		}
+	}
+	return l, nil
+}
+
+func (l *Ledger) Balance(address string) uint64 {
+	return l.accounts[address].Balance
+}
+
+func (l *Ledger) Nonce(address string) uint64 {
+	return l.accounts[address].Nonce
+}
+
+func (l *Ledger) Snapshot() map[string]Account {
+	out := make(map[string]Account, len(l.accounts))
+	for k, v := range l.accounts {
+		out[k] = v
+	}
+	return out
+}
+
+func (l *Ledger) ApplyBlock(block types.Block) error {
+	coinbaseCount := 0
+	for _, tx := range block.Transactions {
+		if tx.Coinbase {
+			coinbaseCount++
+			if coinbaseCount > 1 {
+				return errors.New("multiple coinbase transactions")
+			}
+			if err := l.ApplyCoinbase(tx); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := l.ApplyTransaction(tx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (l *Ledger) ApplyCoinbase(tx types.Transaction) error {
+	if !tx.Coinbase {
+		return errors.New("transaction is not coinbase")
+	}
+	if err := crypto.ValidateAddress(tx.To); err != nil {
+		return fmt.Errorf("invalid coinbase recipient: %w", err)
+	}
+	acct := l.accounts[tx.To]
+	acct.Balance += tx.Amount
+	l.accounts[tx.To] = acct
+	return nil
+}
+
+func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
+	if err := l.ValidateTransaction(tx); err != nil {
+		return err
+	}
+	from := l.accounts[tx.From]
+	from.Nonce = tx.Nonce
+	l.accounts[tx.From] = from
+	if tx.TxType() == types.TxTypeTransfer {
+		to := l.accounts[tx.To]
+		from.Balance -= tx.Amount + tx.Fee
+		to.Balance += tx.Amount
+		l.accounts[tx.From] = from
+		l.accounts[tx.To] = to
+	}
+	return nil
+}
+
+func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
+	if tx.Coinbase {
+		return nil
+	}
+	if tx.TxType() == types.TxTypeTransfer && tx.Amount == 0 {
+		return errors.New("amount must be greater than zero")
+	}
+	if tx.TxType() == types.TxTypeStakeLock && tx.Amount == 0 {
+		return errors.New("amount must be greater than zero")
+	}
+	if tx.TxType() == types.TxTypeTransfer && tx.From == tx.To {
+		return errors.New("sender and recipient must differ")
+	}
+	if err := crypto.ValidateAddress(tx.From); err != nil {
+		return fmt.Errorf("invalid sender address: %w", err)
+	}
+	if tx.TxType() == types.TxTypeTransfer {
+		if err := crypto.ValidateAddress(tx.To); err != nil {
+			return fmt.Errorf("invalid recipient address: %w", err)
+		}
+	}
+	if tx.TxType() == types.TxTypeStakeLock && tx.To != "" && tx.To != tx.From {
+		return errors.New("invalid stake lock: recipient must match owner")
+	}
+	if crypto.AddressFromPublicKey(tx.PublicKey) != tx.From {
+		return errors.New("public key does not match sender address")
+	}
+	if tx.ID != tx.CalculateID() {
+		return errors.New("transaction id mismatch")
+	}
+	if tx.TxType() == types.TxTypeStakeLock && tx.StakeID != "" && tx.StakeID != tx.ID {
+		return errors.New("invalid stake lock: stake id mismatch")
+	}
+	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, tx.SigningBytes()) {
+		return errors.New("invalid transaction signature")
+	}
+	account := l.accounts[tx.From]
+	if tx.Nonce != account.Nonce+1 {
+		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
+	}
+	if tx.TxType() == types.TxTypeTransfer && account.Balance < tx.Amount+tx.Fee {
+		return errors.New("insufficient balance")
+	}
+	if tx.TxType() == types.TxTypeStakeLock && account.Balance < tx.Amount {
+		return errors.New("insufficient balance")
+	}
+	return nil
+}
+
+func (l *Ledger) Clone() *Ledger {
+	clone := New()
+	for address, account := range l.accounts {
+		clone.accounts[address] = account
+	}
+	return clone
+}
+
+func TotalSupply(blocks []types.Block) uint64 {
+	var total uint64
+	for _, block := range blocks {
+		if block.Height == 0 {
+			continue
+		}
+		for _, tx := range block.Transactions {
+			if tx.Coinbase {
+				total += config.InitialBlockReward
+			}
+		}
+	}
+	return total
+}

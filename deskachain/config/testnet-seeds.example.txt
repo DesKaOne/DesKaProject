@@ -1,0 +1,17 @@
+# DesKaChain public testnet RC1 seed peers
+#
+# Replace with operator-published seeds.
+# Seeds are not trusted authorities. Nodes still validate network ID,
+# chain ID, genesis hash, headers, and blocks.
+# Multiple seeds improve availability when one operator is offline.
+#
+# Current operator examples:
+http://100.86.152.39:10311
+http://100.101.251.7:10311
+#
+# Optional LAN/community seeds:
+# http://192.168.1.5:10311
+# http://<COMMUNITY_SEED>:10311
+#
+# Public seed operators should expose P2P port 10311.
+# RPC exposure is optional and must remain public-safe.

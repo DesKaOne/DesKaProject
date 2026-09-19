@@ -1,0 +1,19 @@
+[Unit]
+Description=DesKaChain Testnet Service Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/lib/deskachain
+EnvironmentFile=/etc/deskachain/dkcservice.env
+ExecStart=/usr/local/bin/dkcservice --rpc-url ${DKC_SERVICE_RPC_URL} --address ${DKC_SERVICE_ADDRESS} --endpoint ${DKC_SERVICE_ENDPOINT} --state ${DKC_SERVICE_STATE}
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

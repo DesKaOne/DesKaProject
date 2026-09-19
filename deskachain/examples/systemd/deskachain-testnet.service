@@ -1,0 +1,20 @@
+[Unit]
+Description=DesKaChain Testnet Node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/deskachain
+EnvironmentFile=/etc/deskachain/testnet.env
+ExecStart=/opt/deskachain/deskachain --datadir=${DKC_DATADIR} --network=${DKC_NETWORK} node start --rpc=${DKC_RPC_ADDR} --p2p=${DKC_P2P_ADDR} --advertise-p2p=${DKC_ADVERTISE_P2P} --bootnode=${DKC_BOOTNODE} --seed-peers=${DKC_SEED_PEERS} --seed-file=${DKC_SEED_FILE} --public-rpc --enable-miner-rpc=${DKC_ENABLE_MINER_RPC} --enable-wallet-rpc=${DKC_ENABLE_WALLET_RPC} --enable-admin-rpc=${DKC_ENABLE_ADMIN_RPC} --enable-service-rpc=${DKC_ENABLE_SERVICE_RPC} --enable-faucet-rpc=${DKC_ENABLE_FAUCET_RPC}
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+KillSignal=SIGINT
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

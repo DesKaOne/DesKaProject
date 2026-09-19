@@ -1,0 +1,8 @@
+# DesKaChain public testnet RC1 seed peers.
+# Keep one P2P URL per line. Blank lines and comments are ignored.
+# Seeds are discovery helpers only; they are not trusted for consensus.
+#
+http://100.86.152.39:10311
+http://100.101.251.7:10311
+
+# http://<COMMUNITY_SEED>:10311

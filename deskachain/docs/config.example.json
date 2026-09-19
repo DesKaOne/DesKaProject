@@ -1,0 +1,31 @@
+{
+  "network": "testnet",
+  "rpc": {
+    "addr": ":8811",
+    "public": false,
+    "enable_wallet": true,
+    "enable_miner": true,
+    "enable_admin": true,
+    "enable_service": true,
+    "rate_limit_per_minute": 300,
+    "cors_origins": [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000"
+    ]
+  },
+  "p2p": {
+    "addr": ":9811",
+    "advertise": "http://127.0.0.1:9811",
+    "seed_peers": [
+      "http://seed1.example.testnet:9811",
+      "http://seed2.example.testnet:9811"
+    ],
+    "seed_file": "./examples/testnet/testnet-seeds.txt",
+    "max_peers": 32,
+    "allow_private_peers": true
+  },
+  "limits": {
+    "max_json_body_bytes": 1048576,
+    "max_block_body_bytes": 8388608
+  }
+}
