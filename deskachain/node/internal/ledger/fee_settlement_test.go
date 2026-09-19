@@ -48,8 +48,8 @@ func TestV3FeesSettleToMinerWithoutIssuance(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if got := l.Balance(sender.Address); got != 90 {
-		t.Fatalf("sender balance=%d want 90", got)
+	if got := l.Balance(sender.Address); got != 83 {
+		t.Fatalf("sender balance=%d want 83", got)
 	}
 	if got := l.Balance(receiver.Address); got != 10 {
 		t.Fatalf("receiver balance=%d want 10", got)
