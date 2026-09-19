@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"deskachain/internal/arith"
-\t"deskachain/internal/config"
+	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/types"
 )
@@ -78,8 +78,8 @@ func (l *Ledger) ApplyCoinbase(tx types.Transaction) error {
 	}
 	acct := l.accounts[tx.To]
 	balance, err := arith.Add(acct.Balance, tx.Amount)
-\tif err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
-\tacct.Balance = balance
+	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	acct.Balance = balance
 	l.accounts[tx.To] = acct
 	return nil
 }
@@ -93,8 +93,20 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 	l.accounts[tx.From] = from
 	if tx.TxType() == types.TxTypeTransfer {
 		to := l.accounts[tx.To]
-		from.Balance -= tx.Amount + tx.Fee
-		to.Balance += tx.Amount
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		balance, err := arith.Sub(from.Balance, cost)
+		if err != nil {
+			return errors.New("insufficient balance")
+		}
+		toBalance, err := arith.Add(to.Balance, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient balance overflow: %w", err)
+		}
+		from.Balance = balance
+		to.Balance = toBalance
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
 	}
@@ -141,8 +153,14 @@ func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
 	if tx.Nonce != account.Nonce+1 {
 		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
 	}
-	if tx.TxType() == types.TxTypeTransfer && account.Balance < tx.Amount+tx.Fee {
-		return errors.New("insufficient balance")
+	if tx.TxType() == types.TxTypeTransfer {
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		if account.Balance < cost {
+			return errors.New("insufficient balance")
+		}
 	}
 	if tx.TxType() == types.TxTypeStakeLock && account.Balance < tx.Amount {
 		return errors.New("insufficient balance")
