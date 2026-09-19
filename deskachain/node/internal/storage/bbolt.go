@@ -10,6 +10,7 @@ import (
 
 	bolt "go.etcd.io/bbolt"
 
+	"deskachain/internal/asset"
 	"deskachain/internal/ledger"
 	"deskachain/internal/staking"
 	"deskachain/internal/state"
@@ -26,6 +27,8 @@ var (
 	stateStakesBucket        = []byte("stakes")
 	stateStakesByOwnerBucket = []byte("stakes_by_owner")
 	stateCoinbasesBucket     = []byte("coinbases")
+	stateAssetsBucket        = []byte("assets")
+	stateAssetBalancesBucket = []byte("asset_balances")
 	stateVersionKey     = []byte("version")
 	stateHeightKey      = []byte("height")
 	stateRootKey        = []byte("root")
@@ -74,7 +77,13 @@ func (s *BoltStore) Init() error {
 		if _, err := root.CreateBucketIfNotExists(stateStakesByOwnerBucket); err != nil {
 			return err
 		}
-		_, err = root.CreateBucketIfNotExists(stateCoinbasesBucket)
+		if _, err := root.CreateBucketIfNotExists(stateCoinbasesBucket); err != nil {
+			return err
+		}
+		if _, err := root.CreateBucketIfNotExists(stateAssetsBucket); err != nil {
+			return err
+		}
+		_, err = root.CreateBucketIfNotExists(stateAssetBalancesBucket)
 		return err
 	})
 }
@@ -353,6 +362,112 @@ func (s *BoltStore) GetStateAccount(address string) (ledger.StateAccount, bool, 
 	return account, found, err
 }
 
+func (s *BoltStore) GetStateAsset(assetID string) (asset.Definition, bool, error) {
+	var def asset.Definition
+	var found bool
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateAssetsBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		raw := bucket.Get([]byte(assetID))
+		if raw == nil {
+			return nil
+		}
+		if err := json.Unmarshal(raw, &def); err != nil {
+			return err
+		}
+		if def.ID != assetID {
+			return errors.New("state asset key mismatch")
+		}
+		found = true
+		return nil
+	})
+	return def, found, err
+}
+
+func stateAssetBalancePrefix(address string) []byte {
+	return append([]byte(address), 0)
+}
+
+func stateAssetBalanceKey(address, assetID string) []byte {
+	return append(stateAssetBalancePrefix(address), []byte(assetID)...)
+}
+
+func (s *BoltStore) GetStateAssetBalance(address, assetID string) (uint64, bool, error) {
+	var amount uint64
+	var found bool
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateAssetBalancesBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		raw := bucket.Get(stateAssetBalanceKey(address, assetID))
+		if raw == nil {
+			return nil
+		}
+		if len(raw) != 8 {
+			return errors.New("state asset balance encoding mismatch")
+		}
+		amount = binary.BigEndian.Uint64(raw)
+		found = true
+		return nil
+	})
+	return amount, found, err
+}
+
+func (s *BoltStore) GetStateAssetBalancesForAddress(address string) ([]asset.BalanceEntry, error) {
+	var entries []asset.BalanceEntry
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateAssetBalancesBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		prefix := stateAssetBalancePrefix(address)
+		cursor := bucket.Cursor()
+		for key, raw := cursor.Seek(prefix); key != nil && bytes.HasPrefix(key, prefix); key, raw = cursor.Next() {
+			if len(raw) != 8 {
+				return errors.New("state asset balance encoding mismatch")
+			}
+			assetID := string(key[len(prefix):])
+			if assetID == "" {
+				return errors.New("invalid state asset balance key")
+			}
+			entries = append(entries, asset.BalanceEntry{
+				Address: address,
+				AssetID: assetID,
+				Amount:  binary.BigEndian.Uint64(raw),
+			})
+		}
+		return nil
+	})
+	return entries, err
+}
+
 func (s *BoltStore) GetStateStake(stakeID string) (staking.Record, bool, error) {
 	var record staking.Record
 	var found bool
@@ -435,8 +550,32 @@ func (s *BoltStore) ValidateStateIndexes() error {
 		stakes := root.Bucket(stateStakesBucket)
 		ownerIndex := root.Bucket(stateStakesByOwnerBucket)
 		coinbases := root.Bucket(stateCoinbasesBucket)
-		if accounts == nil || stakes == nil || ownerIndex == nil || coinbases == nil {
+		assets := root.Bucket(stateAssetsBucket)
+		assetBalances := root.Bucket(stateAssetBalancesBucket)
+		if accounts == nil || stakes == nil || ownerIndex == nil || coinbases == nil || assets == nil || assetBalances == nil {
 			return ErrStateNotInitialized
+		}
+
+		assetIDs := make(map[string]struct{})
+		if err := assets.ForEach(func(k, v []byte) error {
+			var def asset.Definition
+			if err := json.Unmarshal(v, &def); err != nil {
+				return err
+			}
+			if def.ID != string(k) {
+				return errors.New("state asset key mismatch")
+			}
+			if asset.IsNative(def.ID) {
+				if def.ID != asset.NativeAssetID || def.Symbol != asset.NativeSymbol || def.Decimals != asset.NativeDecimals {
+					return errors.New("invalid persisted native IDR definition")
+				}
+			} else if err := asset.ValidateDefinition(def); err != nil {
+				return err
+			}
+			assetIDs[def.ID] = struct{}{}
+			return nil
+		}); err != nil {
+			return err
 		}
 
 		if err := accounts.ForEach(func(k, v []byte) error {
@@ -500,6 +639,24 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			return errors.New("state stake owner index count mismatch")
 		}
 
+		if err := assetBalances.ForEach(func(k, v []byte) error {
+			separator := bytes.IndexByte(k, 0)
+			if separator <= 0 || separator == len(k)-1 {
+				return errors.New("invalid state asset balance key")
+			}
+			address := string(k[:separator])
+			assetID := string(k[separator+1:])
+			if _, ok := assetIDs[assetID]; !ok {
+				return errors.New("state asset balance references unknown asset")
+			}
+			if len(v) != 8 || binary.BigEndian.Uint64(v) == 0 {
+				return errors.New("invalid persisted asset balance")
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
 		if err := coinbases.ForEach(func(k, v []byte) error {
 			if len(k) != 8 {
 				return errors.New("state coinbase key length mismatch")
@@ -533,7 +690,9 @@ func (s *BoltStore) LoadState() (state.Snapshot, error) {
 		accountsBucket := root.Bucket(stateAccountsBucket)
 		stakesBucket := root.Bucket(stateStakesBucket)
 		coinbasesBucket := root.Bucket(stateCoinbasesBucket)
-		if meta == nil || accountsBucket == nil || stakesBucket == nil || coinbasesBucket == nil {
+		assetsBucket := root.Bucket(stateAssetsBucket)
+		assetBalancesBucket := root.Bucket(stateAssetBalancesBucket)
+		if meta == nil || accountsBucket == nil || stakesBucket == nil || coinbasesBucket == nil || assetsBucket == nil || assetBalancesBucket == nil {
 			return ErrStateNotInitialized
 		}
 		version := meta.Get(stateVersionKey)
@@ -554,6 +713,36 @@ func (s *BoltStore) LoadState() (state.Snapshot, error) {
 				return errors.New("state account key mismatch")
 			}
 			snapshot.Accounts = append(snapshot.Accounts, account)
+			return nil
+		}); err != nil {
+			return err
+		}
+		if err := assetsBucket.ForEach(func(k, v []byte) error {
+			var def asset.Definition
+			if err := json.Unmarshal(v, &def); err != nil {
+				return err
+			}
+			if def.ID != string(k) {
+				return errors.New("state asset key mismatch")
+			}
+			snapshot.Assets = append(snapshot.Assets, def)
+			return nil
+		}); err != nil {
+			return err
+		}
+		if err := assetBalancesBucket.ForEach(func(k, v []byte) error {
+			separator := bytes.IndexByte(k, 0)
+			if separator <= 0 || separator == len(k)-1 {
+				return errors.New("invalid state asset balance key")
+			}
+			if len(v) != 8 {
+				return errors.New("state asset balance encoding mismatch")
+			}
+			snapshot.AssetBalances = append(snapshot.AssetBalances, asset.BalanceEntry{
+				Address: string(k[:separator]),
+				AssetID: string(k[separator+1:]),
+				Amount:  binary.BigEndian.Uint64(v),
+			})
 			return nil
 		}); err != nil {
 			return err
@@ -609,7 +798,9 @@ func (s *BoltStore) DeleteState() error {
 		stakes := root.Bucket(stateStakesBucket)
 		stakesByOwner := root.Bucket(stateStakesByOwnerBucket)
 		coinbases := root.Bucket(stateCoinbasesBucket)
-		if meta == nil || accounts == nil || stakes == nil || stakesByOwner == nil || coinbases == nil {
+		assets := root.Bucket(stateAssetsBucket)
+		assetBalances := root.Bucket(stateAssetBalancesBucket)
+		if meta == nil || accounts == nil || stakes == nil || stakesByOwner == nil || coinbases == nil || assets == nil || assetBalances == nil {
 			return ErrStateNotInitialized
 		}
 		if err := clearBucket(meta); err != nil {
@@ -624,7 +815,13 @@ func (s *BoltStore) DeleteState() error {
 		if err := clearBucket(stakesByOwner); err != nil {
 			return err
 		}
-		return clearBucket(coinbases)
+		if err := clearBucket(coinbases); err != nil {
+			return err
+		}
+		if err := clearBucket(assets); err != nil {
+			return err
+		}
+		return clearBucket(assetBalances)
 	})
 }
 
@@ -693,6 +890,14 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 	if err != nil {
 		return err
 	}
+	assetsBucket, err := root.CreateBucketIfNotExists(stateAssetsBucket)
+	if err != nil {
+		return err
+	}
+	assetBalancesBucket, err := root.CreateBucketIfNotExists(stateAssetBalancesBucket)
+	if err != nil {
+		return err
+	}
 
 	if err := clearBucket(meta); err != nil {
 		return err
@@ -707,6 +912,12 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 		return err
 	}
 	if err := clearBucket(coinbasesBucket); err != nil {
+		return err
+	}
+	if err := clearBucket(assetsBucket); err != nil {
+		return err
+	}
+	if err := clearBucket(assetBalancesBucket); err != nil {
 		return err
 	}
 
@@ -738,6 +949,22 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 			return err
 		}
 		if err := stakesByOwnerBucket.Put(stateStakeOwnerKey(record.OwnerAddress, record.StakeID), raw); err != nil {
+			return err
+		}
+	}
+	for _, def := range snapshot.Assets {
+		raw, err := json.Marshal(def)
+		if err != nil {
+			return err
+		}
+		if err := assetsBucket.Put([]byte(def.ID), raw); err != nil {
+			return err
+		}
+	}
+	for _, entry := range snapshot.AssetBalances {
+		var raw [8]byte
+		binary.BigEndian.PutUint64(raw[:], entry.Amount)
+		if err := assetBalancesBucket.Put(stateAssetBalanceKey(entry.Address, entry.AssetID), raw[:]); err != nil {
 			return err
 		}
 	}
