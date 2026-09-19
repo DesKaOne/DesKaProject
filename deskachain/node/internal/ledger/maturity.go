@@ -226,6 +226,15 @@ func (l *MatureLedger) AssetModelEnabled() bool {
 	return l.profile.TxVersion >= types.TxVersionAsset
 }
 
+// FeePoolBalance returns the pending native IDR fees collected from transactions
+// that have been applied but not yet settled to the block producer.
+func (l *MatureLedger) FeePoolBalance() uint64 {
+	if l == nil || !l.AssetModelEnabled() {
+		return 0
+	}
+	return l.assets.Balance(asset.FeeCollectorAddress, asset.NativeAssetID)
+}
+
 func (l *MatureLedger) StateCoinbases() []StateCoinbase {
 	out := make([]StateCoinbase, 0, len(l.coinbases))
 	for _, credit := range l.coinbases {
