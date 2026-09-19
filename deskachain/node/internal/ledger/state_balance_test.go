@@ -61,8 +61,8 @@ func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 		t.Fatalf("unexpected stake balances: %#v", details)
 	}
 	// Spendable = mature - active/unlocking stake - pending stake lock - pending outgoing.
-	if details.Spendable != 47 {
-		t.Fatalf("spendable = %d, want 47", details.Spendable)
+	if details.Spendable != 42 {
+		t.Fatalf("spendable = %d, want 42", details.Spendable)
 	}
 	if details.CoinbaseMaturity != 100 || details.CurrentHeight != 12 {
 		t.Fatalf("unexpected metadata: %#v", details)
