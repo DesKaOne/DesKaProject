@@ -12,7 +12,7 @@ import (
 	"deskachain/internal/types"
 )
 
-const SnapshotVersion uint8 = 2
+const SnapshotVersion uint8 = 3
 
 var ErrInvalidSnapshot = errors.New("invalid state snapshot")
 
