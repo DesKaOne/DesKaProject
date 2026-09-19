@@ -409,13 +409,18 @@ func (l *MatureLedger) matureCoinbases(currentHeight uint64) {
 		if credit.Matured {
 			continue
 		}
-		maturityHeight := arith.AddCap(credit.Height, l.maturity)
+		maturityHeight, err := arith.Add(credit.Height, l.maturity)
+		if err != nil {
+			continue
+		}
 		if currentHeight < maturityHeight {
 			continue
 		}
 		acct := l.accounts[credit.Address]
 		mature, err := arith.Add(acct.Mature, credit.Amount)
-		if err != nil { continue }
+		if err != nil {
+			continue
+		}
 		acct.Mature = mature
 		l.accounts[credit.Address] = acct
 		credit.Matured = true
