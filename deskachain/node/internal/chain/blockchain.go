@@ -51,20 +51,7 @@ func (bc *Blockchain) GetBlockByHeight(height uint64) (types.Block, error) {
 }
 
 func (bc *Blockchain) ReplaceFromHeight(from uint64, blocks []types.Block) error {
-	for h, err := bc.store.GetHeight(); err == nil && h >= from; h-- {
-		if err := bc.store.DeleteBlockByHeight(h); err != nil {
-			return err
-		}
-		if h == 0 {
-			break
-		}
-	}
-	for _, block := range blocks {
-		if err := bc.store.SaveBlock(block); err != nil {
-			return err
-		}
-	}
-	return nil
+	return bc.store.ReplaceFromHeight(from, blocks)
 }
 
 func (bc *Blockchain) Ledger() (*ledger.Ledger, error) {
