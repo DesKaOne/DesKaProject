@@ -87,7 +87,7 @@ func TestValidateBlockResourcesRejectsExcessGas(t *testing.T) {
 	block := types.Block{
 		Height: 0,
 		Transactions: []types.Transaction{
-			{ProtocolVersion: types.TxVersionAsset, ID: "a", From: "from", To: "to", Amount: 1, Fee: 1},
+			{Version: types.TxVersionAsset, ID: "a", From: "from", To: "to", Amount: 1, Fee: 1},
 			{ProtocolVersion: types.TxVersionAsset, ID: "b", From: "from", To: "to", Amount: 1, Fee: 1},
 		},
 	}
