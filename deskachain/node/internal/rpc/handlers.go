@@ -15,6 +15,7 @@ import (
 
 	"deskachain/internal/amount"
 	"deskachain/internal/arith"
+	"deskachain/internal/asset"
 	"deskachain/internal/chain"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
@@ -3962,21 +3963,21 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		}
 		involvesOutgoing := false
 		outgoingAmount := uint64(0)
-		if tx.TxType() == types.TxTypeTransfer && tx.From == address {
+		if tx.TxType() == types.TxTypeTransfer && tx.From == address && asset.IsNative(tx.EffectiveAssetID()) {
 			involvesOutgoing = true
-			outgoingAmount += tx.Amount
+			outgoingAmount = arith.AddCap(outgoingAmount, tx.Amount)
 		}
 		if tx.EffectiveFeePayer() == address && tx.Fee > 0 {
 			involvesOutgoing = true
-			outgoingAmount += tx.Fee
+			outgoingAmount = arith.AddCap(outgoingAmount, tx.Fee)
 		}
 		if involvesOutgoing {
 			info.pendingOutgoingCount++
-			info.pendingOutgoingAmount += outgoingAmount
+			info.pendingOutgoingAmount = arith.AddCap(info.pendingOutgoingAmount, outgoingAmount)
 		}
-		if tx.TxType() == types.TxTypeTransfer && tx.To == address {
+		if tx.TxType() == types.TxTypeTransfer && tx.To == address && asset.IsNative(tx.EffectiveAssetID()) {
 			info.pendingIncomingCount++
-			info.pendingIncomingAmount += tx.Amount
+			info.pendingIncomingAmount = arith.AddCap(info.pendingIncomingAmount, tx.Amount)
 		}
 	}
 	return info, nil
