@@ -25,6 +25,9 @@ func TestCanonicalTransactionVersionWaitsForNetworkActivation(t *testing.T) {
 		To:      to.Address,
 		Amount:  1,
 	}
+	if err := from.SignTransaction(&tx); err != nil {
+		t.Fatal(err)
+	}
 
 	l := New()
 	err = l.ValidateTransaction(tx)
