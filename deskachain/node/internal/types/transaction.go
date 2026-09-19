@@ -288,7 +288,11 @@ func ValidateTransactionVersion(version, activeVersion uint32) error {
 	if version > MaxSupportedTxVersion {
 		return fmt.Errorf("unsupported transaction version: %d", version)
 	}
-	if version != activeVersion {
+	// Protocol activation is monotonic: once a network activates a newer
+	// transaction version, older transaction versions remain valid for
+	// backwards-compatible legacy/staking traffic. Newer versions than the
+	// active version remain invalid until explicitly activated.
+	if version > activeVersion {
 		return fmt.Errorf("transaction version %d is not active on this network (active version %d)", version, activeVersion)
 	}
 	return nil
