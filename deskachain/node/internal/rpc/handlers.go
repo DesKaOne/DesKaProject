@@ -143,6 +143,8 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /mining/blocks", h.wrap("generic", h.miningBlocks))
 	mux.HandleFunc("POST /chain/common-ancestor", h.wrap("generic", h.chainCommonAncestor))
 	mux.HandleFunc("GET /chain/blocks", h.wrap("generic", h.chainBlocks))
+	mux.HandleFunc("GET /chain/state", h.wrap("generic", h.chainState))
+	mux.HandleFunc("GET /chain/state/validate", h.wrap("admin", h.chainStateValidate))
 	mux.HandleFunc("GET /chain/validate", h.wrap("generic", h.chainValidate))
 	mux.HandleFunc("POST /fork/check", h.wrap("generic", h.forkCheck))
 	mux.HandleFunc("POST /fork/inspect-datadir", h.wrap("admin", h.forkInspectDatadir))
@@ -1967,6 +1969,36 @@ func (h handler) forkInspectDatadir(w http.ResponseWriter, r *http.Request) {
 	result, err := p2p.InspectDatadirFork(h.paths, config.NewPaths(req.OtherDataDir))
 	if err != nil {
 		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h handler) chainState(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := bc.StateStatusWithNetwork(h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h handler) chainStateValidate(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := bc.ValidateStateWithNetwork(h.profile())
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, result)
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
