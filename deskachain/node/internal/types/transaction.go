@@ -42,6 +42,7 @@ type Transaction struct {
 
 func NewUnsignedTransaction(from, to string, amount, fee, nonce uint64) Transaction {
 	tx := Transaction{
+		Version:   TxVersionLegacy,
 		From:      from,
 		To:        to,
 		Amount:    amount,
@@ -55,6 +56,7 @@ func NewUnsignedTransaction(from, to string, amount, fee, nonce uint64) Transact
 
 func NewStakeLockTransaction(address string, amount, nonce uint64) Transaction {
 	tx := Transaction{
+		Version:   TxVersionLegacy,
 		From:      address,
 		To:        address,
 		Amount:    amount,
@@ -69,6 +71,7 @@ func NewStakeLockTransaction(address string, amount, nonce uint64) Transaction {
 
 func NewStakeUnlockTransaction(address, stakeID string, nonce uint64) Transaction {
 	tx := Transaction{
+		Version:   TxVersionLegacy,
 		From:      address,
 		To:        address,
 		Nonce:     nonce,
@@ -82,6 +85,7 @@ func NewStakeUnlockTransaction(address, stakeID string, nonce uint64) Transactio
 
 func NewCoinbaseTransaction(to string, amount uint64, height uint64) Transaction {
 	tx := Transaction{
+		Version:   TxVersionLegacy,
 		From:      CoinbaseSender,
 		To:        to,
 		Amount:    amount,
