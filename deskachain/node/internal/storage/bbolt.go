@@ -50,7 +50,33 @@ func OpenBolt(path string) (*BoltStore, error) {
 		return nil, err
 	}
 	store := &BoltStore{path: path, db: db}
-	return store, store.Init()
+	if err := store.Init(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := store.ValidateStartupIntegrity(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	return store, nil
+}
+
+func (s *BoltStore) ValidateStartupIntegrity() error {
+	hasChain, err := s.HasChain()
+	if err != nil {
+		return err
+	}
+	if !hasChain {
+		return nil
+	}
+	if err := s.ValidateChainStateConsistency(); err != nil {
+		return err
+	}
+	if err := s.ValidateStateIndexes(); err != nil {
+		return err
+	}
+	_, _, _, err = s.GetStateMetadata()
+	return err
 }
 
 func (s *BoltStore) Init() error {
