@@ -48,6 +48,8 @@ func (s *queryOnlyStore) GetStateStakesForAddress(string) ([]staking.Record, err
 	return s.stakes, nil
 }
 
+func (s *queryOnlyStore) ValidateStateIndexes() error { return nil }
+
 func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
 		tip: types.Block{Height: 5, Hash: "tip"},
