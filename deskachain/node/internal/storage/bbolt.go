@@ -644,7 +644,6 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			if separator <= 0 || separator == len(k)-1 {
 				return errors.New("invalid state asset balance key")
 			}
-			address := string(k[:separator])
 			assetID := string(k[separator+1:])
 			if _, ok := assetIDs[assetID]; !ok {
 				return errors.New("state asset balance references unknown asset")
