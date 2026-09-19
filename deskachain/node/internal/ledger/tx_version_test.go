@@ -11,6 +11,7 @@ import (
 
 func TestCanonicalTransactionVersionWaitsForNetworkActivation(t *testing.T) {
 	profile := config.Localnet()
+	profile.TxVersion = types.TxVersionLegacy
 	from, err := wallet.NewWithProfile(profile)
 	if err != nil {
 		t.Fatal(err)
