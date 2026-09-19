@@ -57,7 +57,11 @@ func validateChain(blocks []types.Block, params config.DifficultyParams, consens
 		if block.PreviousHash != prev.Hash {
 			return ValidationResult{}, fmt.Errorf("block %d previous_hash mismatch", block.Height)
 		}
-		if block.Height != prev.Height+1 {
+		expectedHeight, heightErr := arith.Add(prev.Height, 1)
+		if heightErr != nil {
+			return ValidationResult{}, errors.New("block height overflow")
+		}
+		if block.Height != expectedHeight {
 			return ValidationResult{}, fmt.Errorf("block %d height mismatch", block.Height)
 		}
 		if err := validateBlock(block, prior, params, consensus, profile); err != nil {
@@ -97,8 +101,12 @@ func ValidateNextBlockWithConsensus(block types.Block, tip types.Block, prior []
 }
 
 func ValidateNextBlockWithNetwork(block types.Block, tip types.Block, prior []types.Block, params config.DifficultyParams, consensus config.ConsensusParams, profile config.NetworkConfig) error {
-	if block.Height != tip.Height+1 {
-		return fmt.Errorf("invalid block height: got %d want %d", block.Height, tip.Height+1)
+	expectedHeight, heightErr := arith.Add(tip.Height, 1)
+	if heightErr != nil {
+		return errors.New("block height overflow")
+	}
+	if block.Height != expectedHeight {
+		return fmt.Errorf("invalid block height: got %d want %d", block.Height, expectedHeight)
 	}
 	if block.PreviousHash != tip.Hash {
 		return errors.New("previous hash does not match tip")
