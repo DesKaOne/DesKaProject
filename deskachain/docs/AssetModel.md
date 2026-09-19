@@ -88,3 +88,48 @@ Phase 5.16 introduces the protocol envelope and amount primitives for:
 - asset-specific decimal formatting/parsing
 
 Phase 5.17 now includes the multi-asset state/execution foundation: per-asset balances are part of the deterministic state snapshot and StateRoot, persisted in bbolt, queryable through the chain/RPC layer, and executed through the v3 ledger path. Consensus activation remains gated by the network transaction-version profile.
+
+
+## Phase 5.18 fee / gas policy
+
+v3 protocol fees are paid exclusively in native **IDR**. The transaction `Fee` field is an integer IDR amount.
+
+The active network profile defines a deterministic gas policy:
+
+- base gas depends on the transaction type;
+- encoded v3 signing bytes are charged in `BytesPerGas` units;
+- `GasUsed = BaseGas + ceil(SigningBytes / BytesPerGas)`;
+- `MinimumFee = max(MinFee, GasUsed * MinGasPrice)`;
+- `MaxGasPerTx` is a consensus limit.
+
+The gas estimate uses the chain-bound transaction signing preimage, so the result is stable before the sender signature and after any paymaster authorization is attached.
+
+For an issued-token transfer, the token owner pays the IDR fee by default. When `FeePayer` is a different address, the user signs the transaction and the external paymaster supplies its own authorization signature.
+
+Fees are not newly minted by the v3 coinbase. During block execution the fee is debited from the effective fee payer, held in the protocol fee collector, and settled to the block miner. The v3 coinbase is therefore limited to the configured block subsidy.
+
+### Fee RPC
+
+`GET /fee/policy` exposes the active fee schedule and confirms that the fee asset is IDR.
+
+`POST /fee/estimate` accepts a transaction envelope and returns gas units, encoded signing-byte size, minimum fee, fee asset, and whether the requested fee meets policy.
+
+Example:
+
+```json
+{
+  "transaction": {
+    "version": 3,
+    "type": "transfer",
+    "from": "<FROM_ADDR>",
+    "to": "<TO_ADDR>",
+    "asset_id": "asset:example",
+    "amount": 100,
+    "fee": 5,
+    "nonce": 1,
+    "timestamp": 1780000000
+  }
+}
+```
+
+Migration remains profile-gated: built-in localnet, testnet, and mainnet configurations currently keep v1 transactions active, so the v3 fee/gas rules are not yet the default network consensus.
