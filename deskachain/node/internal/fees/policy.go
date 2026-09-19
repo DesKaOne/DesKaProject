@@ -25,7 +25,7 @@ var (
 )
 
 func GasUsed(tx types.Transaction, profile config.NetworkConfig) (uint64, uint64, error) {
-	if tx.Coinbase {
+	if tx.Coinbase || tx.ProtocolVersion() < types.TxVersionAsset {
 		return 0, 0, nil
 	}
 	params := profile.Fee
