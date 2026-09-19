@@ -503,6 +503,9 @@ func (s Server) acceptTx(tx types.Transaction) error {
 			}
 		}
 	}
+	if _, err := RevalidateMempoolAgainstLedgerWithProfile(s.paths, s.network()); err != nil {
+		return fmt.Errorf("mempool revalidation failed: %w", err)
+	}
 	mp := mempool.New(s.paths.Mempool)
 	pending, err := mp.Load()
 	if err != nil {
