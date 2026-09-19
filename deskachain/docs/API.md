@@ -1323,6 +1323,27 @@ Returns profile and node identity used by peer validation.
 }
 ```
 
+## P2P Message Authentication
+
+Phase 5.15 adds optional application-level Ed25519 authentication for node-to-node HTTP messages.
+
+When a client uses an authenticated node identity, every P2P request carries:
+
+- `X-DKC-Auth-Version`
+- `X-DKC-Node-ID`
+- `X-DKC-Node-PubKey`
+- `X-DKC-Network-ID`
+- `X-DKC-Chain-ID`
+- `X-DKC-Auth-Timestamp`
+- `X-DKC-Auth-Nonce`
+- `X-DKC-Auth-Signature`
+
+The signature binds the HTTP method, exact request URI, network, chain ID, timestamp, nonce, and SHA-256 digest of the request body. Nonces are replay-protected for the configured five-minute authentication window.
+
+Authenticated responses return the corresponding node identity and a signature bound to the request nonce, HTTP status, timestamp, and response body digest. This protects both request integrity and response integrity at the application layer.
+
+`RequireAuthenticatedNode` is the rollout switch in the active network profile. The current built-in localnet, testnet, and mainnet profiles keep it disabled for compatibility. The handshake identity remains available even while message authentication is optional.
+
 ## `GET /p2p/status`
 
 Returns chain/network status with height, tip, difficulty, cumulative work, total supply, and mempool count.
