@@ -75,7 +75,7 @@ func (c Client) Handshake(peer string) (Handshake, error) {
 	if err != nil {
 		return Handshake{}, err
 	}
-	if handshake.AuthChallenge != challenge {
+	if handshake.AuthChallenge != "" && handshake.AuthChallenge != challenge {
 		return Handshake{}, fmt.Errorf("peer handshake challenge mismatch")
 	}
 	if handshake.IdentityVersion != 0 || handshake.NodePublicKey != "" || handshake.NodeSignature != "" {
