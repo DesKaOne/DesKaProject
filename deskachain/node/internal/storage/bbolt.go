@@ -329,6 +329,10 @@ func (s *BoltStore) GetStateAccount(address string) (ledger.StateAccount, bool, 
 		if root == nil {
 			return ErrStateNotInitialized
 		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
+			return ErrStateNotInitialized
+		}
 		bucket := root.Bucket(stateAccountsBucket)
 		if bucket == nil {
 			return ErrStateNotInitialized
@@ -355,6 +359,10 @@ func (s *BoltStore) GetStateStake(stakeID string) (staking.Record, bool, error) 
 	err := s.db.View(func(tx *bolt.Tx) error {
 		root := tx.Bucket(stateBucket)
 		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
 			return ErrStateNotInitialized
 		}
 		bucket := root.Bucket(stateStakesBucket)
@@ -390,6 +398,10 @@ func (s *BoltStore) GetStateStakesForAddress(address string) ([]staking.Record, 
 	err := s.db.View(func(tx *bolt.Tx) error {
 		root := tx.Bucket(stateBucket)
 		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil || meta.Get(stateVersionKey) == nil || meta.Get(stateHeightKey) == nil || meta.Get(stateRootKey) == nil {
 			return ErrStateNotInitialized
 		}
 		bucket := root.Bucket(stateStakesByOwnerBucket)
