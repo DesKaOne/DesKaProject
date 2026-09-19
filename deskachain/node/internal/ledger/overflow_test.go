@@ -99,9 +99,6 @@ func TestLedgerRejectsFutureTransactionVersion(t *testing.T) {
 	l := New()
 	tx := types.NewUnsignedTransaction(from.Address, to.Address, 1, 0, 1)
 	tx.Version = types.MaxSupportedTxVersion + 1
-	if err := from.SignTransaction(&tx); err != nil {
-		t.Fatal(err)
-	}
 	err := l.ValidateTransaction(tx)
 	if err == nil || !strings.Contains(err.Error(), "unsupported transaction version") {
 		t.Fatalf("expected future transaction version rejection, got %v", err)
