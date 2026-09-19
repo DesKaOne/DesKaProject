@@ -187,16 +187,21 @@ func (s Snapshot) Validate() error {
 			return fmt.Errorf("%w: pending coinbase height %d exceeds snapshot height %d", ErrInvalidSnapshot, coinbase.Height, s.Height)
 		}
 	}
+	nativeSeen := false
 	for _, def := range s.Assets {
 		if asset.IsNative(def.ID) {
-			if def.ID != asset.NativeAssetID || def.Symbol != asset.NativeSymbol || def.Decimals != asset.NativeDecimals {
+			if nativeSeen || def.ID != asset.NativeAssetID || def.Symbol != asset.NativeSymbol || def.Decimals != asset.NativeDecimals {
 				return fmt.Errorf("%w: invalid native IDR definition", ErrInvalidSnapshot)
 			}
+			nativeSeen = true
 			continue
 		}
 		if err := asset.ValidateDefinition(def); err != nil {
 			return fmt.Errorf("%w: invalid asset %q: %v", ErrInvalidSnapshot, def.ID, err)
 		}
+	}
+	if len(s.Assets) > 0 && !nativeSeen {
+		return fmt.Errorf("%w: missing native IDR definition", ErrInvalidSnapshot)
 	}
 	assets := append([]asset.Definition(nil), s.Assets...)
 	balances := append([]asset.BalanceEntry(nil), s.AssetBalances...)
