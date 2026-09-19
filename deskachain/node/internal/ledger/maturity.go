@@ -112,15 +112,13 @@ func NewMatureFromStateWithAssets(
 	coinbases []StateCoinbase,
 	assetDefinitions []asset.Definition,
 	assetBalances []asset.BalanceEntry,
-) *MatureLedger {
+) (*MatureLedger, error) {
 	l := NewMatureFromState(params, profile, height, accounts, stakes, coinbases)
 	if err := l.assets.Restore(assetDefinitions, assetBalances); err != nil {
-		// Snapshot validation should reject malformed asset state before this
-		// constructor is called. Keep an empty state on defensive failure.
-		l.assets = asset.NewState()
+		return nil, err
 	}
 	l.syncNativeAssetsFromAccounts()
-	return l
+	return l, nil
 }
 
 func ReplayMature(blocks []types.Block, params config.ConsensusParams) (*MatureLedger, error) {
