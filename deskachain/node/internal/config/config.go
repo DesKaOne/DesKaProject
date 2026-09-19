@@ -205,8 +205,9 @@ type NetworkConfig struct {
 	MinMiningPeers       int              `json:"min_mining_peers"`
 	AllowIsolatedMining  bool             `json:"allow_isolated_mining"`
 	MinWritePeers        int              `json:"min_write_peers"`
-	AllowIsolatedWrites  bool             `json:"allow_isolated_writes"`
-	SeedPeers            []string         `json:"seed_peers"`
+	AllowIsolatedWrites      bool             `json:"allow_isolated_writes"`
+	RequireAuthenticatedNode bool            `json:"require_authenticated_node"`
+	SeedPeers                []string         `json:"seed_peers"`
 	GenesisHash          string           `json:"genesis_hash"`
 	NetworkLimits        NetworkLimits    `json:"network_limits"`
 }
