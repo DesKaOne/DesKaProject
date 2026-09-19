@@ -528,17 +528,66 @@ func Mainnet() NetworkConfig {
 	}
 }
 
+// ValidateNetworkProfile enforces the protocol invariants shared by all
+// built-in DesKaChain networks. Keeping these checks centralized prevents a
+// network profile from silently drifting away from the frozen v3 asset/fee
+// model.
+func ValidateNetworkProfile(profile NetworkConfig) error {
+	if profile.Name == "" || profile.NetworkID == "" || profile.NetworkName == "" {
+		return fmt.Errorf("network identity is incomplete")
+	}
+	if profile.ChainID == 0 {
+		return fmt.Errorf("chain id must be non-zero")
+	}
+	if profile.ProtocolVersion != 1 || profile.MinProtocolVersion != 1 {
+		return fmt.Errorf("unsupported protocol version range: %d/%d", profile.MinProtocolVersion, profile.ProtocolVersion)
+	}
+	if profile.RPCAPIVersion != "v1" || profile.P2PProtocolVersion != "idr-p2p/1" {
+		return fmt.Errorf("unsupported transport protocol versions")
+	}
+	if profile.BlockVersion != 1 || profile.TxVersion != 3 {
+		return fmt.Errorf("unsupported consensus versions: block=%d tx=%d", profile.BlockVersion, profile.TxVersion)
+	}
+	if profile.Asset.NativeAssetID != NativeAssetID || profile.Asset.NativeAssetSymbol != NativeAssetSymbol || profile.Asset.NativeAssetDecimals != NativeAssetDecimals {
+		return fmt.Errorf("native asset must remain IDR with %d decimals", NativeAssetDecimals)
+	}
+	if profile.Asset.FeeAssetID != NativeAssetID {
+		return fmt.Errorf("fee asset must remain IDR")
+	}
+	if !profile.Asset.TokenTransfersEnabled || !profile.Asset.UserIssuedTokensEnabled || !profile.Asset.PaymasterEnabled {
+		return fmt.Errorf("v3 asset capabilities are incomplete")
+	}
+	if !profile.Fee.Enabled || profile.Fee.MinFee == 0 || profile.Fee.MaxGasPerTx == 0 || profile.Consensus.MaxGasPerBlock == 0 {
+		return fmt.Errorf("fee/gas policy is incomplete")
+	}
+	if profile.Economic.BlockSubsidy != 0 || !profile.Economic.FeeOnlyBlocks {
+		return fmt.Errorf("v3 economics must be fee-only with zero block subsidy")
+	}
+	if profile.Consensus.MaxBlockBytes == 0 || profile.Consensus.MaxTxBytes == 0 || profile.Consensus.MaxTxCount == 0 {
+		return fmt.Errorf("consensus size limits are incomplete")
+	}
+	if profile.NetworkLimits.MaxHeaderBatch == 0 || profile.NetworkLimits.MaxSyncBlocks == 0 || profile.NetworkLimits.MaxReorgFetchBlocks == 0 {
+		return fmt.Errorf("network fetch limits are incomplete")
+	}
+	return nil
+}
+
 func NetworkByName(name string) (NetworkConfig, error) {
+	var profile NetworkConfig
 	switch name {
 	case "", "localnet":
-		return Localnet(), nil
+		profile = Localnet()
 	case "testnet":
-		return Testnet(), nil
+		profile = Testnet()
 	case "mainnet":
-		return Mainnet(), nil
+		profile = Mainnet()
 	default:
 		return NetworkConfig{}, fmt.Errorf("unknown network: %s", name)
 	}
+	if err := ValidateNetworkProfile(profile); err != nil {
+		return NetworkConfig{}, fmt.Errorf("invalid %s network profile: %w", profile.Name, err)
+	}
+	return profile, nil
 }
 
 func DefaultMaxReorgDepth(profile NetworkConfig) uint64 {
