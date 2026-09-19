@@ -21,12 +21,14 @@ var ErrInvalidSnapshot = errors.New("invalid state snapshot")
 
 // Snapshot is the persisted deterministic state at one canonical chain tip.
 type Snapshot struct {
-	Version   uint8                 `json:"version"`
-	Height    uint64                `json:"height"`
-	StateRoot string                `json:"state_root"`
-	Accounts  []ledger.StateAccount `json:"accounts"`
-	Stakes    []staking.Record      `json:"stakes"`
-	Coinbases []ledger.StateCoinbase `json:"coinbases"`
+	Version       uint8                  `json:"version"`
+	Height        uint64                 `json:"height"`
+	StateRoot     string                 `json:"state_root"`
+	Accounts      []ledger.StateAccount  `json:"accounts"`
+	Stakes        []staking.Record       `json:"stakes"`
+	Coinbases     []ledger.StateCoinbase `json:"coinbases"`
+	Assets        []asset.Definition     `json:"assets,omitempty"`
+	AssetBalances []asset.BalanceEntry   `json:"asset_balances,omitempty"`
 }
 
 func SnapshotForLedger(l *ledger.MatureLedger) (Snapshot, error) {
@@ -76,13 +78,15 @@ func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.Cons
 	if block.Height != expectedHeight {
 		return Snapshot{}, fmt.Errorf("%w: block height %d does not follow state height %d", ErrInvalidSnapshot, block.Height, snapshot.Height)
 	}
-	l := ledger.NewMatureFromState(
+	l := ledger.NewMatureFromStateWithAssets(
 		params,
 		profile,
 		snapshot.Height,
 		snapshot.Accounts,
 		snapshot.Stakes,
 		snapshot.Coinbases,
+		snapshot.Assets,
+		snapshot.AssetBalances,
 	)
 	if err := l.ApplyBlock(block); err != nil {
 		return Snapshot{}, err
