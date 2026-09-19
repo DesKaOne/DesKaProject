@@ -157,6 +157,9 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
 	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
 	mux.HandleFunc("GET /asset/balances", h.assetBalances)
+	mux.HandleFunc("GET /fee/policy", h.feePolicy)
+	mux.HandleFunc("GET /fee/pool", h.feePool)
+	mux.HandleFunc("POST /fee/estimate", h.feeEstimate)
 	mux.HandleFunc("GET /fee/policy", h.wrap("generic", h.feePolicy))
 	mux.HandleFunc("POST /fee/estimate", h.wrap("generic", h.feeEstimate))
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
@@ -2119,6 +2122,60 @@ func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
 		"fee_asset_id": h.profile().Asset.FeeAssetID,
 		"quote":        quote,
 	})
+}
+
+func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
+	p := h.profile()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"enabled":       p.Fee.Enabled,
+		"fee_asset_id":  config.FeeAssetID,
+		"fee_asset":     config.NativeAssetID,
+		"gas_price":     p.Fee.MinGasPrice,
+		"min_fee":       p.Fee.MinFee,
+		"bytes_per_gas": p.Fee.BytesPerGas,
+		"max_gas_per_tx": p.Fee.MaxGasPerTx,
+		"base_gas": map[string]uint64{
+			"transfer_idr":  p.Fee.BaseGasTransfer,
+			"transfer_token": p.Fee.BaseGasAssetTransfer,
+			"stake_lock":    p.Fee.BaseGasStakeLock,
+			"stake_unlock":  p.Fee.BaseGasStakeUnlock,
+			"asset_create":  p.Fee.BaseGasAssetCreate,
+			"asset_mint":    p.Fee.BaseGasAssetMint,
+			"asset_burn":    p.Fee.BaseGasAssetBurn,
+		},
+		"paymaster_enabled": p.Asset.PaymasterEnabled,
+	})
+}
+
+func (h handler) feePool(w http.ResponseWriter, _ *http.Request) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	result, err := chain.FeePoolBalanceWithProfile(bc, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	result["amount"] = amount.FormatUnits(result["amount"].(uint64), 0)
+	writeJSON(w, http.StatusOK, result)
+}
+
+func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
+	var tx types.Transaction
+	if err := json.NewDecoder(r.Body).Decode(&tx); err != nil {
+		writeError(w, err)
+		return
+	}
+	quote, err := chain.EstimateFee(tx, h.profile())
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "quote": quote})
 }
 
 func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
