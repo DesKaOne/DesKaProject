@@ -231,6 +231,13 @@ func (s Server) blocks(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 {
 		limit = 100
 	}
+	maxBlocks := s.network().NetworkLimits.MaxSyncBlocks
+	if maxBlocks == 0 {
+		maxBlocks = 500
+	}
+	if uint64(limit) > maxBlocks {
+		limit = int(maxBlocks)
+	}
 	all, err := s.allBlocks()
 	if err != nil {
 		writeError(w, err)
@@ -255,8 +262,12 @@ func (s Server) headers(w http.ResponseWriter, r *http.Request) {
 	if limit <= 0 {
 		limit = 100
 	}
-	if limit > 500 {
-		limit = 500
+	maxHeaders := s.network().NetworkLimits.MaxHeaderBatch
+	if maxHeaders == 0 {
+		maxHeaders = 500
+	}
+	if uint64(limit) > maxHeaders {
+		limit = int(maxHeaders)
 	}
 	all, err := s.allBlocks()
 	if err != nil {
