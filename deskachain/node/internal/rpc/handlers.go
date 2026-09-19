@@ -2159,8 +2159,13 @@ func (h handler) feePool(w http.ResponseWriter, _ *http.Request) {
 		writeError(w, err)
 		return
 	}
-	result["amount"] = amount.FormatUnits(result["amount"].(uint64), 0)
-	writeJSON(w, http.StatusOK, result)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"asset_id": result.AssetID,
+		"symbol":   result.Symbol,
+		"pool":     result.Pool,
+		"amount":   amount.FormatUnits(result.Amount, 0),
+		"units":    result.Amount,
+	})
 }
 
 func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
