@@ -53,3 +53,60 @@ func TestAssetStateFeeFailureRollsBackTransfer(t *testing.T) {
 		t.Fatalf("token transfer was not rolled back")
 	}
 }
+
+
+func TestAssetStateMintAndBurnAuthorizationAndInvariants(t *testing.T) {
+	s := NewState()
+	if _, err := s.CreateFromTransactionID("issuer-tx", "Example USD", "EUSD", 6, 100, true, true, false, false, "issuer"); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := s.Mint("asset:issuer-tx", "attacker", "alice", 10); !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("expected unauthorized mint, got %v", err)
+	}
+	if err := s.Mint("asset:issuer-tx", "issuer", "", 10); err == nil {
+		t.Fatal("expected empty mint recipient to be rejected")
+	}
+	if err := s.Mint("asset:issuer-tx", "issuer", "alice", 60); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Burn("asset:issuer-tx", "alice", 61); err == nil {
+		t.Fatal("expected insufficient balance burn to fail")
+	}
+	def, _ := s.Definition("asset:issuer-tx")
+	if def.TotalSupply != 60 || s.Balance("alice", "asset:issuer-tx") != 60 {
+		t.Fatalf("failed burn mutated state: supply=%d balance=%d", def.TotalSupply, s.Balance("alice", "asset:issuer-tx"))
+	}
+	if err := s.Burn("asset:issuer-tx", "alice", 10); err != nil {
+		t.Fatal(err)
+	}
+	def, _ = s.Definition("asset:issuer-tx")
+	if def.TotalSupply != 50 || s.Balance("alice", "asset:issuer-tx") != 50 {
+		t.Fatalf("unexpected post-burn state: supply=%d balance=%d", def.TotalSupply, s.Balance("alice", "asset:issuer-tx"))
+	}
+}
+
+func TestAssetStateMaxSupplyAndFrozenAsset(t *testing.T) {
+	s := NewState()
+	if _, err := s.CreateFromTransactionID("frozen-tx", "Frozen USD", "FUSD", 6, 100, true, true, false, false, "issuer"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Mint("asset:frozen-tx", "issuer", "alice", 100); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Mint("asset:frozen-tx", "issuer", "alice", 1); err == nil {
+		t.Fatal("expected max supply rejection")
+	}
+	def, _ := s.Definition("asset:frozen-tx")
+	def.Status = StatusFrozen
+	s.assets[def.ID] = def
+	if err := s.Mint(def.ID, "issuer", "alice", 1); !errors.Is(err, ErrAssetFrozen) {
+		t.Fatalf("expected frozen mint rejection, got %v", err)
+	}
+	if err := s.Transfer(def.ID, "alice", "bob", 1); !errors.Is(err, ErrAssetFrozen) {
+		t.Fatalf("expected frozen transfer rejection, got %v", err)
+	}
+	if err := s.Burn(def.ID, "alice", 1); !errors.Is(err, ErrAssetFrozen) {
+		t.Fatalf("expected frozen burn rejection, got %v", err)
+	}
+}
