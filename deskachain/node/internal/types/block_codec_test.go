@@ -78,3 +78,22 @@ func TestCanonicalBlockHeaderRejectsWrongVersion(t *testing.T) {
 		t.Fatal("legacy block unexpectedly accepted by canonical header codec")
 	}
 }
+
+func TestCanonicalBlockHeaderBindsStateRoot(t *testing.T) {
+	block := NewBlockWithVersion(2, "prev", "miner", 1, nil, BlockVersionCanonical)
+	block.Timestamp = 1700000000
+	block.MerkleRoot = "merkle"
+	block.StateRoot = "state-a"
+	first, err := block.CanonicalHeaderBytesWithNonce(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	block.StateRoot = "state-b"
+	second, err := block.CanonicalHeaderBytesWithNonce(0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(first, second) {
+		t.Fatal("canonical block header does not bind state root")
+	}
+}
