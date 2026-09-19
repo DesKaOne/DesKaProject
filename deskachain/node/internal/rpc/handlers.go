@@ -4077,7 +4077,7 @@ func (h handler) compareInfo() (map[string]any, error) {
 		"protocol_version": h.profile().ProtocolVersion,
 		"height":           tip.Height,
 		"tip_hash":         tip.Hash,
-		"total_supply":     amount.Format(ledger.TotalSupply(blocks)) + " " + config.Ticker,
+		"total_supply":     amount.Format(ledger.TotalSupplyWithProfile(blocks, h.profile())) + " " + config.NativeAssetSymbol,
 		"cumulative_work":  chain.CalculateCumulativeWork(blocks),
 		"pending_tx_count": len(pending),
 	}, nil
