@@ -5,17 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	"deskachain/internal/asset"
 	"deskachain/internal/crypto"
 )
 
 const (
 	TxVersionLegacy    uint32 = 1
 	TxVersionCanonical uint32 = 2
+	TxVersionAsset     uint32 = 3
 )
 
 const (
 	CoinbaseSender        = "COINBASE"
-	MaxSupportedTxVersion uint32 = TxVersionCanonical
+	MaxSupportedTxVersion uint32 = TxVersionAsset
 )
 
 const (
@@ -23,6 +25,9 @@ const (
 	TxTypeCoinbase    = "coinbase"
 	TxTypeStakeLock   = "stake_lock"
 	TxTypeStakeUnlock = "stake_unlock"
+	TxTypeAssetCreate = "asset_create"
+	TxTypeAssetMint   = "asset_mint"
+	TxTypeAssetBurn   = "asset_burn"
 )
 
 type Transaction struct {
@@ -84,6 +89,59 @@ func NewStakeUnlockTransaction(address, stakeID string, nonce uint64) Transactio
 	return tx
 }
 
+// NewAssetTransferTransaction creates a v3 transfer whose amount is denominated
+// in AssetID while Fee is always denominated in native IDR.
+func NewAssetTransferTransaction(from, to, assetID string, amount, fee, nonce uint64) Transaction {
+	tx := newAssetTransaction(TxTypeTransfer, from, to, assetID, amount, fee, nonce)
+	return tx
+}
+
+// NewAssetCreateTransaction creates a v3 fungible token definition.
+// The resulting AssetID is derived deterministically from the transaction ID.
+func NewAssetCreateTransaction(from, name, symbol string, decimals uint8, maxSupply uint64, mintable, burnable, pausable, permissioned bool, fee, nonce uint64) Transaction {
+	tx := newAssetTransaction(TxTypeAssetCreate, from, "", "", 0, fee, nonce)
+	tx.AssetName = name
+	tx.AssetSymbol = symbol
+	tx.AssetDecimals = decimals
+	tx.AssetMaxSupply = maxSupply
+	tx.AssetMintable = mintable
+	tx.AssetBurnable = burnable
+	tx.AssetPausable = pausable
+	tx.AssetPermissioned = permissioned
+	tx.ID = tx.CalculateID()
+	tx.AssetID = asset.DerivedID(tx.ID)
+	return tx
+}
+
+// NewAssetMintTransaction mints an issued token to To. From is the issuer authority.
+func NewAssetMintTransaction(from, assetID, to string, amount, fee, nonce uint64) Transaction {
+	return newAssetTransaction(TxTypeAssetMint, from, to, assetID, amount, fee, nonce)
+}
+
+// NewAssetBurnTransaction burns issued tokens from From.
+func NewAssetBurnTransaction(from, assetID string, amount, fee, nonce uint64) Transaction {
+	return newAssetTransaction(TxTypeAssetBurn, from, from, assetID, amount, fee, nonce)
+}
+
+func newAssetTransaction(txType, from, to, assetID string, amount, fee, nonce uint64) Transaction {
+	tx := Transaction{
+		Version:   TxVersionAsset,
+		From:      from,
+		To:        to,
+		Amount:    amount,
+		Fee:       fee,
+		Nonce:     nonce,
+		Timestamp: time.Now().Unix(),
+		Type:      txType,
+		AssetID:   assetID,
+		FeePayer:  from,
+	}
+	if tx.AssetID == "" && txType != TxTypeAssetCreate {
+		tx.AssetID = asset.NativeAssetID
+	}
+	return tx
+}
+
 func NewCoinbaseTransaction(to string, amount uint64, height uint64) Transaction {
 	return NewCoinbaseTransactionWithVersion(to, amount, height, TxVersionLegacy)
 }
@@ -99,6 +157,24 @@ func NewCoinbaseTransactionWithVersion(to string, amount uint64, height uint64, 
 	}
 	tx.ID = tx.CalculateID()
 	return tx
+}
+
+func (tx Transaction) EffectiveAssetID() string {
+	if tx.AssetID == "" {
+		return asset.NativeAssetID
+	}
+	return tx.AssetID
+}
+
+func (tx Transaction) EffectiveFeePayer() string {
+	if tx.FeePayer == "" {
+		return tx.From
+	}
+	return tx.FeePayer
+}
+
+func (tx Transaction) IsIssuedAssetTransaction() bool {
+	return tx.ProtocolVersion() >= TxVersionAsset && !asset.IsNative(tx.EffectiveAssetID())
 }
 
 func (tx Transaction) ProtocolVersion() uint32 {
@@ -128,7 +204,7 @@ func (tx Transaction) SigningBytesWithChainID(chainID uint64) ([]byte, error) {
 	switch tx.ProtocolVersion() {
 	case TxVersionLegacy:
 		return tx.SigningBytes(), nil
-	case TxVersionCanonical:
+	case TxVersionCanonical, TxVersionAsset:
 		return tx.CanonicalSigningBytesWithChainID(chainID)
 	default:
 		return nil, fmt.Errorf("unsupported transaction version: %d", tx.ProtocolVersion())
@@ -163,8 +239,11 @@ func (tx Transaction) TxType() string {
 }
 
 func (tx Transaction) SigningBytes() []byte {
-	if tx.ProtocolVersion() >= TxVersionCanonical {
+	switch tx.ProtocolVersion() {
+	case TxVersionCanonical:
 		return tx.CanonicalSigningBytes()
+	case TxVersionAsset:
+		return tx.CanonicalSigningBytesV3()
 	}
 	copy := tx
 	copy.ID = ""
@@ -183,4 +262,15 @@ func (tx Transaction) CalculateID() string {
 
 func (tx *Transaction) RefreshID() {
 	tx.ID = tx.CalculateID()
+}
+
+
+// FeePayerSigningBytesWithChainID returns the payload a paymaster signs.
+// Sponsor signature material is intentionally excluded so it can be added
+// after the sender has signed without changing tx.ID.
+func (tx Transaction) FeePayerSigningBytesWithChainID(chainID uint64) ([]byte, error) {
+	if tx.ProtocolVersion() != TxVersionAsset {
+		return nil, fmt.Errorf("fee payer authorization requires transaction version 3")
+	}
+	return canonicalFeePayerSigningBytes(tx, chainID)
 }
