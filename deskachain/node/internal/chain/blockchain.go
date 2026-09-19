@@ -144,6 +144,7 @@ type StateValidationResult struct {
 	Accounts         int    `json:"accounts"`
 	Stakes           int    `json:"stakes"`
 	PendingCoinbases int    `json:"pending_coinbases"`
+	Error            string `json:"error,omitempty"`
 }
 
 type StateStatusResult struct {
@@ -201,7 +202,11 @@ func (bc *Blockchain) ValidateStateWithNetwork(profile config.NetworkConfig) (St
 		return StateValidationResult{}, errors.New("state query store is not available")
 	}
 	if err := q.ValidateStateIndexes(); err != nil {
-		return StateValidationResult{}, err
+		return StateValidationResult{
+			Valid:  false,
+			Height: tip.Height,
+			Error:  err.Error(),
+		}, err
 	}
 	persisted, err := ss.LoadState()
 	if err != nil {
@@ -228,7 +233,8 @@ func (bc *Blockchain) ValidateStateWithNetwork(profile config.NetworkConfig) (St
 		PendingCoinbases: len(persisted.Coinbases),
 	}
 	if !result.Valid {
-		return result, errors.New("state snapshot does not match canonical chain")
+		result.Error = "state snapshot does not match canonical chain"
+		return result, errors.New(result.Error)
 	}
 	return result, nil
 }
