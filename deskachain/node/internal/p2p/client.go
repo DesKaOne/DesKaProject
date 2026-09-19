@@ -55,6 +55,11 @@ func (c Client) Handshake(peer string) (Handshake, error) {
 	if handshake.AuthChallenge != challenge {
 		return Handshake{}, fmt.Errorf("peer handshake challenge mismatch")
 	}
+	if handshake.IdentityVersion != 0 || handshake.NodePublicKey != "" || handshake.NodeSignature != "" {
+		if err := VerifyHandshakeIdentity(handshake); err != nil {
+			return Handshake{}, err
+		}
+	}
 	return handshake, nil
 }
 
