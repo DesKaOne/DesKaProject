@@ -14,6 +14,7 @@ func assetProfile() config.NetworkConfig {
 	profile := config.Localnet()
 	profile.TxVersion = types.TxVersionAsset
 	profile.BlockVersion = types.BlockVersionCanonical
+	profile.Consensus.CoinbaseMaturity = 0
 	return profile
 }
 
@@ -32,7 +33,9 @@ func TestV3AssetLifecycleAndIDRFees(t *testing.T) {
 	bob, err := wallet.NewWithProfile(profile); if err != nil { t.Fatal(err) }
 
 	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(issuer.Address, 100, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+	l.matureCoinbases(1)
 	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(alice.Address, 20, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+	l.matureCoinbases(1)
 	l.syncNativeAssetsFromAccounts()
 
 	create := types.NewAssetCreateTransaction(issuer.Address, "Example USD", "EUSD", 6, 1_000_000, true, true, false, false, 2, 1)
@@ -63,6 +66,7 @@ func TestV3PaymasterPaysNativeIDRFee(t *testing.T) {
 
 	for _, recipient := range []string{issuer.Address, paymaster.Address} {
 		if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(recipient, 20, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+		l.matureCoinbases(1)
 	}
 	l.syncNativeAssetsFromAccounts()
 	create := types.NewAssetCreateTransaction(issuer.Address, "Example", "EXT", 6, 0, true, false, false, false, 1, 1)
@@ -92,7 +96,9 @@ func TestV3NativeIDRTransferSeparatesFeePayer(t *testing.T) {
 	paymaster, err := wallet.NewWithProfile(profile); if err != nil { t.Fatal(err) }
 	receiver, err := wallet.NewWithProfile(profile); if err != nil { t.Fatal(err) }
 	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(sender.Address, 50, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+	l.matureCoinbases(1)
 	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(paymaster.Address, 10, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+	l.matureCoinbases(1)
 	l.syncNativeAssetsFromAccounts()
 
 	tx := types.NewAssetTransferTransaction(sender.Address, receiver.Address, asset.NativeAssetID, 20, 3, 1)
@@ -111,6 +117,7 @@ func TestV3SnapshotRoundTripKeepsAssets(t *testing.T) {
 	l := NewMatureWithProfile(profile.Consensus, profile)
 	w, err := wallet.NewWithProfile(profile); if err != nil { t.Fatal(err) }
 	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(w.Address, 100, 1, types.TxVersionAsset), 1); err != nil { t.Fatal(err) }
+	l.matureCoinbases(1)
 	l.syncNativeAssetsFromAccounts()
 	create := types.NewAssetCreateTransaction(w.Address, "Example", "EXT", 6, 1000, true, true, false, false, 1, 1)
 	signAssetTx(t, w, &create, profile)
@@ -118,6 +125,7 @@ func TestV3SnapshotRoundTripKeepsAssets(t *testing.T) {
 	mint := types.NewAssetMintTransaction(w.Address, create.AssetID, w.Address, 10, 1, 2)
 	signAssetTx(t, w, &mint, profile)
 	if err := l.ApplyTransactionAtHeight(mint, 3); err != nil { t.Fatal(err) }
+	l.currentHeight = 3
 
 	snapshot, err := state.SnapshotForLedger(l)
 	if err != nil { t.Fatal(err) }
