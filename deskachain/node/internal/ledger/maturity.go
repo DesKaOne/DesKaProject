@@ -287,6 +287,18 @@ func (l *MatureLedger) Clone() *MatureLedger {
 }
 
 func (l *MatureLedger) ApplyBlock(block types.Block) error {
+	if !l.AssetModelEnabled() {
+		return l.applyBlock(block)
+	}
+	backup := l.Clone()
+	if err := l.applyBlock(block); err != nil {
+		*l = *backup
+		return err
+	}
+	return nil
+}
+
+func (l *MatureLedger) applyBlock(block types.Block) error {
 	if block.Height > 0 {
 		l.matureCoinbases(block.Height - 1)
 	}
