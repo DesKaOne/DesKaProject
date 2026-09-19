@@ -2444,7 +2444,7 @@ func (h handler) createFaucetTransaction(recipient, amountText string, now time.
 		}
 		return nil, err
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil {
+	if err := h.admitMempoolTx(tx); err != nil {
 		if errors.Is(err, mempool.ErrDuplicateTx) {
 			return nil, errors.New("pending faucet tx already exists for address")
 		}
@@ -2546,7 +2546,7 @@ func (h handler) send(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
@@ -3335,6 +3335,15 @@ func firstN(value string, n int) string {
 		return value
 	}
 	return value[:n]
+}
+
+func (h handler) admitMempoolTx(tx types.Transaction) error {
+	policy := mempool.AdmissionPolicy{
+		Profile: h.profile(),
+		MaxTxs:  h.profile().Consensus.MaxTxCount,
+		MaxGas:  h.profile().Consensus.MaxGasPerBlock,
+	}
+	return mempool.New(h.paths.Mempool).Admit(tx, policy)
 }
 
 func (h handler) refreshState() {
