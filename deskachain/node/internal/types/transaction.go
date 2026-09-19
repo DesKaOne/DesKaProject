@@ -85,8 +85,12 @@ func NewStakeUnlockTransaction(address, stakeID string, nonce uint64) Transactio
 }
 
 func NewCoinbaseTransaction(to string, amount uint64, height uint64) Transaction {
+	return NewCoinbaseTransactionWithVersion(to, amount, height, TxVersionLegacy)
+}
+
+func NewCoinbaseTransactionWithVersion(to string, amount uint64, height uint64, version uint32) Transaction {
 	tx := Transaction{
-		Version:   TxVersionLegacy,
+		Version:   version,
 		From:      CoinbaseSender,
 		To:        to,
 		Amount:    amount,
