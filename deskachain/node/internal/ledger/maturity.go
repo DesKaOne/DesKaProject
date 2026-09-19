@@ -287,6 +287,10 @@ func (l *MatureLedger) Clone() *MatureLedger {
 }
 
 func (l *MatureLedger) ApplyBlock(block types.Block) error {
+	var backup *MatureLedger
+	if l.AssetModelEnabled() {
+		backup = l.Clone()
+	}
 	if block.Height > 0 {
 		l.matureCoinbases(block.Height - 1)
 	}
@@ -314,7 +318,9 @@ func (l *MatureLedger) ApplyBlock(block types.Block) error {
 	l.currentHeight = block.Height
 	l.matureCoinbases(block.Height)
 	return nil
+
 }
+
 
 func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64) error {
 	if !tx.Coinbase {
