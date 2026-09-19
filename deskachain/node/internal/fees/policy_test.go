@@ -92,6 +92,6 @@ func TestGasQuoteStableAfterSenderSigning(t *testing.T) {
 		t.Fatal(err)
 	}
 	if beforeGas != afterGas || beforeBytes != afterBytes {
-		t.Fatalf("gas changed after signing: before=%v after=%v", before, after)
+		t.Fatalf("gas changed after signing: before=%v/%d after=%v/%d", beforeGas, beforeBytes, afterGas, afterBytes)
 	}
 }
