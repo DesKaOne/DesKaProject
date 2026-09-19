@@ -42,6 +42,7 @@ type Handshake struct {
 	IdentityVersion    uint32     `json:"identity_version,omitempty"`
 	NodePublicKey      string     `json:"node_public_key,omitempty"`
 	NodeSignature      string     `json:"node_signature,omitempty"`
+	AuthChallenge      string     `json:"auth_challenge,omitempty"`
 	P2PListen          string     `json:"p2p_listen"`
 	P2PAdvertise       string     `json:"p2p_advertise"`
 	Services           []string   `json:"services,omitempty"`
