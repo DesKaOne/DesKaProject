@@ -1526,3 +1526,30 @@ Peers are rejected when network ID, chain ID, genesis hash, or protocol version 
 ## Reorg Safety
 
 Reorg endpoints are admin-only and profile-aware. Use preview first, and require explicit `yes: true` before applying.
+
+
+## State DB Diagnostics
+
+### `GET /chain/state`
+
+Returns state database metadata without replaying the blockchain:
+
+```json
+{
+  "available": true,
+  "current": true,
+  "version": 3,
+  "height": 197,
+  "state_root": "<STATE_ROOT>",
+  "tip_height": 197,
+  "tip_hash": "<HASH>"
+}
+```
+
+`current` is false when the persisted state height/version does not match the canonical tip, or when a canonical block's `StateRoot` does not match the persisted state root.
+
+### `GET /chain/state/validate`
+
+Admin diagnostic endpoint. Replays the canonical chain and compares the result with the persisted state database, including secondary indexes and pending coinbase maturity state.
+
+The endpoint returns HTTP 200 when the state database matches the canonical chain and HTTP 400 with `valid: false` when a mismatch or index corruption is detected.
