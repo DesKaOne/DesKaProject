@@ -309,6 +309,7 @@ func Localnet() NetworkConfig {
 			MaxBlockBytes:    DefaultMaxBlockBytes,
 			MaxTxBytes:       DefaultMaxTxBytes,
 			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               100 * UnitsPerCoin,
