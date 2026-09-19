@@ -1,0 +1,86 @@
+package state
+
+import (
+	"errors"
+	"fmt"
+
+	"deskachain/internal/config"
+	"deskachain/internal/ledger"
+	"deskachain/internal/staking"
+	"deskachain/internal/types"
+)
+
+const SnapshotVersion uint8 = 1
+
+var ErrInvalidSnapshot = errors.New("invalid state snapshot")
+
+// Snapshot is the persisted deterministic state at one canonical chain tip.
+type Snapshot struct {
+	Version   uint8                 `json:"version"`
+	Height    uint64                `json:"height"`
+	StateRoot string                `json:"state_root"`
+	Accounts  []ledger.StateAccount `json:"accounts"`
+	Stakes    []staking.Record      `json:"stakes"`
+}
+
+func SnapshotForLedger(l *ledger.MatureLedger) (Snapshot, error) {
+	if l == nil {
+		return Snapshot{}, ErrNilLedger
+	}
+	accounts, stakes := StableDigestInputs(l.StateAccounts(), l.StateStakes())
+	snapshot := Snapshot{
+		Version:  SnapshotVersion,
+		Height:   l.Height(),
+		Accounts: accounts,
+		Stakes:    stakes,
+	}
+	root, err := RootForCollections(accounts, stakes)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	snapshot.StateRoot = root
+	return snapshot, nil
+}
+
+func SnapshotForBlocks(blocks []types.Block, params config.ConsensusParams, profile config.NetworkConfig) (Snapshot, error) {
+	l, err := ledger.ReplayMatureWithProfile(blocks, params, profile)
+	if err != nil {
+		return Snapshot{}, err
+	}
+	return SnapshotForLedger(l)
+}
+
+func (s Snapshot) Validate() error {
+	if s.Version != SnapshotVersion {
+		return fmt.Errorf("%w: unsupported version %d", ErrInvalidSnapshot, s.Version)
+	}
+	if s.StateRoot == "" {
+		return fmt.Errorf("%w: empty state root", ErrInvalidSnapshot)
+	}
+	root, err := RootForCollections(s.Accounts, s.Stakes)
+	if err != nil {
+		return err
+	}
+	if root != s.StateRoot {
+		return fmt.Errorf("%w: state root mismatch", ErrInvalidSnapshot)
+	}
+	return nil
+}
+
+func (s Snapshot) Account(address string) (ledger.StateAccount, bool) {
+	for _, account := range s.Accounts {
+		if account.Address == address {
+			return account, true
+		}
+	}
+	return ledger.StateAccount{}, false
+}
+
+func (s Snapshot) Stake(stakeID string) (staking.Record, bool) {
+	for _, record := range s.Stakes {
+		if record.StakeID == stakeID {
+			return record, true
+		}
+	}
+	return staking.Record{}, false
+}
