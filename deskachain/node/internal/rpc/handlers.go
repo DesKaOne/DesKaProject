@@ -152,7 +152,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /address/", h.wrap("generic", h.address))
 	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
 	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
-	mux.HandleFunc("GET /asset/balances", h.assetBalances))
+	mux.HandleFunc("GET /asset/balances", h.assetBalances)
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
 	mux.HandleFunc("GET /mempool", h.wrap("generic", h.mempoolList))
 	mux.HandleFunc("GET /mempool/list", h.wrap("generic", h.mempoolList))
