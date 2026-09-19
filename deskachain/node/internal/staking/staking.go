@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/config"
+	"deskachain/internal/arith"\n\t"deskachain/internal/config"
 	"deskachain/internal/types"
 )
 
@@ -118,7 +118,7 @@ func (s *State) ApplyUnlock(tx types.Transaction, height uint64) error {
 	record.Status = StatusUnlocking
 	record.UnlockTxID = tx.ID
 	record.UnlockHeight = height
-	record.ReleaseHeight = height + s.params.UnbondingPeriodBlocks
+	releaseHeight, err := arith.Add(height, s.params.UnbondingPeriodBlocks)\n\tif err != nil { return errors.New("invalid stake unlock: release height overflow") }\n\trecord.ReleaseHeight = releaseHeight
 	s.records[tx.StakeID] = record
 	return nil
 }
@@ -159,11 +159,11 @@ func (s *State) AddressSummary(address string, currentHeight uint64) (active, un
 		}
 		switch record.Status {
 		case StatusActive:
-			active += record.Amount
+			active = arith.AddCap(active, record.Amount)
 		case StatusUnlocking:
-			unlocking += record.Amount
+			unlocking = arith.AddCap(unlocking, record.Amount)
 		case StatusReleased:
-			released += record.Amount
+			released = arith.AddCap(released, record.Amount)
 		}
 	}
 	return active, unlocking, released
@@ -185,12 +185,12 @@ func (s *State) Summary(currentHeight uint64) Summary {
 	for _, record := range s.records {
 		switch record.Status {
 		case StatusActive:
-			summary.TotalActiveStake += record.Amount
+			summary.TotalActiveStake = arith.AddCap(summary.TotalActiveStake, record.Amount)
 			summary.ActiveStakeCount++
 		case StatusUnlocking:
-			summary.TotalUnlockingStake += record.Amount
+			summary.TotalUnlockingStake = arith.AddCap(summary.TotalUnlockingStake, record.Amount)
 		case StatusReleased:
-			summary.TotalReleasedStake += record.Amount
+			summary.TotalReleasedStake = arith.AddCap(summary.TotalReleasedStake, record.Amount)
 		}
 	}
 	return summary
@@ -200,7 +200,7 @@ func PendingStakeLock(txs []types.Transaction, address string) uint64 {
 	var total uint64
 	for _, tx := range txs {
 		if tx.TxType() == types.TxTypeStakeLock && tx.From == address {
-			total += tx.Amount
+			total = arith.AddCap(total, tx.Amount)
 		}
 	}
 	return total
