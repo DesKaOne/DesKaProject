@@ -356,7 +356,9 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 	}
 	acct.Confirmed = confirmed
 	l.accounts[tx.To] = acct
-	if tx.Amount > 0 {\n\t\tl.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})\n\t}
+	if tx.Amount > 0 {
+		l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
+	}
 	return nil
 }
 
