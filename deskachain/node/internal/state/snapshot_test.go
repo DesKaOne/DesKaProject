@@ -57,3 +57,36 @@ func TestSnapshotRejectsTamperedRoot(t *testing.T) {
 		t.Fatal("tampered snapshot accepted")
 	}
 }
+
+func TestSnapshotEquivalentIncludesPendingCoinbaseState(t *testing.T) {
+	a := Snapshot{
+		Version:   SnapshotVersion,
+		Height:    3,
+		StateRoot: "root",
+		Coinbases: []ledger.StateCoinbase{{Address: "DKC-a", Amount: 1, Height: 2}},
+	}
+	b := Snapshot{
+		Version:   SnapshotVersion,
+		Height:    3,
+		StateRoot: "root",
+		Coinbases: []ledger.StateCoinbase{{Address: "DKC-a", Amount: 2, Height: 2}},
+	}
+	if Equivalent(a, b) {
+		t.Fatal("snapshots with different pending coinbase state considered equivalent")
+	}
+}
+
+func TestSnapshotValidateRejectsFuturePendingCoinbase(t *testing.T) {
+	snapshot := Snapshot{
+		Version:   SnapshotVersion,
+		Height:    3,
+		StateRoot: "root",
+		Coinbases: []ledger.StateCoinbase{{Address: "DKC-a", Amount: 1, Height: 4}},
+	}
+	// Root is populated from empty consensus state so validation reaches the
+	// structural pending-coinbase checks below.
+	snapshot.StateRoot, _ = RootForCollections(nil, nil)
+	if err := snapshot.Validate(); err == nil {
+		t.Fatal("future pending coinbase accepted")
+	}
+}
