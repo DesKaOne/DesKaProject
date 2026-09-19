@@ -153,6 +153,9 @@ func (s *BoltStore) SaveBlockAndState(block types.Block, snapshot state.Snapshot
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
+		if err := validateCanonicalCommitPreconditionsTx(tx, block); err != nil {
+			return err
+		}
 		key := heightKey(block.Height)
 		if err := tx.Bucket(blocksBucket).Put(key, raw); err != nil {
 			return err
@@ -166,37 +169,41 @@ func (s *BoltStore) SaveBlockAndState(block types.Block, snapshot state.Snapshot
 
 func (s *BoltStore) validateCanonicalCommitPreconditions(block types.Block) error {
 	return s.db.View(func(tx *bolt.Tx) error {
-		meta := tx.Bucket(metaBucket)
-		blocks := tx.Bucket(blocksBucket)
-		if meta == nil || blocks == nil {
-			return errors.New("chain storage is not initialized")
-		}
-		tip := meta.Get(tipKey)
-		if block.Height == 0 {
-			if tip != nil {
-				return errors.New("genesis commit attempted on initialized chain")
-			}
-			return nil
-		}
-		if tip == nil {
-			return errors.New("non-genesis commit requires existing chain tip")
-		}
-		var tipBlock types.Block
-		raw := blocks.Get(tip)
-		if raw == nil {
-			return errors.New("chain tip block missing")
-		}
-		if err := json.Unmarshal(raw, &tipBlock); err != nil {
-			return err
-		}
-		if tipBlock.Height == ^uint64(0) || tipBlock.Height+1 != block.Height {
-			return errors.New("block height is not the next canonical height")
-		}
-		if tipBlock.Hash == "" || block.PreviousHash != tipBlock.Hash {
-			return errors.New("block predecessor does not match canonical tip")
+		return validateCanonicalCommitPreconditionsTx(tx, block)
+	})
+}
+
+func validateCanonicalCommitPreconditionsTx(tx *bolt.Tx, block types.Block) error {
+	meta := tx.Bucket(metaBucket)
+	blocks := tx.Bucket(blocksBucket)
+	if meta == nil || blocks == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	tip := meta.Get(tipKey)
+	if block.Height == 0 {
+		if tip != nil {
+			return errors.New("genesis commit attempted on initialized chain")
 		}
 		return nil
-	})
+	}
+	if tip == nil {
+		return errors.New("non-genesis commit requires existing chain tip")
+	}
+	var tipBlock types.Block
+	raw := blocks.Get(tip)
+	if raw == nil {
+		return errors.New("chain tip block missing")
+	}
+	if err := json.Unmarshal(raw, &tipBlock); err != nil {
+		return err
+	}
+	if tipBlock.Height == ^uint64(0) || tipBlock.Height+1 != block.Height {
+		return errors.New("block height is not the next canonical height")
+	}
+	if tipBlock.Hash == "" || block.PreviousHash != tipBlock.Hash {
+		return errors.New("block predecessor does not match canonical tip")
+	}
+	return nil
 }
 
 func (s *BoltStore) ValidateChainStateConsistency() error {
