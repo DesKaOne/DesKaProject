@@ -150,6 +150,8 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("POST /fork/inspect-datadir", h.wrap("admin", h.forkInspectDatadir))
 	mux.HandleFunc("GET /balance/", h.wrap("generic", h.balance))
 	mux.HandleFunc("GET /address/", h.wrap("generic", h.address))
+	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
+	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
 	mux.HandleFunc("GET /mempool", h.wrap("generic", h.mempoolList))
 	mux.HandleFunc("GET /mempool/list", h.wrap("generic", h.mempoolList))
@@ -2052,6 +2054,78 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, balanceDetailsMap(details))
+}
+
+func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
+	assetID := strings.TrimSpace(r.URL.Query().Get("asset_id"))
+	if assetID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "asset_id is required"})
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	def, found, err := bc.AssetDefinitionWithProfile(assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]any{"ok": false, "error": "asset not found", "asset_id": assetID})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":           true,
+		"asset":        def,
+		"native":       def.ID == config.NativeAssetID,
+		"fee_asset":    def.ID == config.FeeAssetID,
+		"network":      h.profile().Name,
+	})
+}
+
+func (h handler) assetBalance(w http.ResponseWriter, r *http.Request) {
+	address := strings.TrimSpace(r.URL.Query().Get("address"))
+	assetID := strings.TrimSpace(r.URL.Query().Get("asset_id"))
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		writeError(w, err)
+		return
+	}
+	if assetID == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": "asset_id is required"})
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	def, found, err := bc.AssetDefinitionWithProfile(assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		writeJSON(w, http.StatusNotFound, map[string]any{"ok": false, "error": "asset not found", "asset_id": assetID})
+		return
+	}
+	balance, err := bc.AssetBalanceWithProfile(address, assetID, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"address":  address,
+		"asset_id": assetID,
+		"symbol":   def.Symbol,
+		"decimals": def.Decimals,
+		"amount":   amount.FormatUnits(balance, def.Decimals),
+		"units":    balance,
+	})
 }
 
 func (h handler) address(w http.ResponseWriter, r *http.Request) {
