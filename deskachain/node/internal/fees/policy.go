@@ -36,7 +36,7 @@ func GasUsed(tx types.Transaction, profile config.NetworkConfig) (uint64, uint64
 	if err != nil {
 		return 0, 0, err
 	}
-	raw, err := tx.CanonicalBytes()
+	raw, err := tx.CanonicalSigningBytesWithChainID(profile.ChainID)
 	if err != nil {
 		return 0, 0, fmt.Errorf("fee estimation encoding failed: %w", err)
 	}
