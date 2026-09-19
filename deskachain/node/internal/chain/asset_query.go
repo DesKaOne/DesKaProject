@@ -54,7 +54,25 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 			current = tip.StateRoot != "" && tip.StateRoot == root
 		}
 		if current {
-			return q.GetStateAsset(assetID)
+			def, found, err := q.GetStateAsset(assetID)
+			if err != nil {
+				return asset.Definition{}, false, err
+			}
+			if found {
+				return def, true, nil
+			}
+			if asset.IsNative(assetID) {
+				return asset.Definition{
+					ID: asset.NativeAssetID,
+					Name: asset.NativeSymbol,
+					Symbol: asset.NativeSymbol,
+					Decimals: asset.NativeDecimals,
+					Kind: asset.KindFungible,
+					Issuer: "protocol",
+					Status: asset.StatusActive,
+				}, true, nil
+			}
+			return asset.Definition{}, false, nil
 		}
 	}
 	blocks, err := bc.Blocks()
