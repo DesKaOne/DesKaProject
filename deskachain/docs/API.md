@@ -1591,3 +1591,80 @@ The v3 fee asset is native `IDR`. A token transfer therefore has an asset amount
 
 
 `GET /asset/balances?address=<address>` returns all non-zero native/token balances indexed for the address.
+
+
+## Fee / Gas RPC
+
+### `GET /fee/policy`
+
+Returns the active fee policy. In v3 the fee asset is native IDR and the response includes the gas schedule, minimum fee, gas price, and per-transaction gas limit.
+
+Example:
+
+```json
+{
+  "ok": true,
+  "enabled": true,
+  "fee_asset_id": "IDR",
+  "min_fee": 1,
+  "min_gas_price": 0,
+  "bytes_per_gas": 32,
+  "max_gas_per_tx": 100000,
+  "base_gas_transfer": 10,
+  "base_gas_asset_transfer": 12,
+  "base_gas_stake_lock": 12,
+  "base_gas_stake_unlock": 8,
+  "base_gas_asset_create": 50,
+  "base_gas_asset_mint": 30,
+  "base_gas_asset_burn": 25,
+  "distribution": {
+    "model": "block-fee-settlement",
+    "recipient": "miner"
+  }
+}
+```
+
+### `POST /fee/estimate`
+
+Estimates gas and the minimum IDR fee for a transaction envelope.
+
+Request:
+
+```json
+{
+  "transaction": {
+    "version": 3,
+    "type": "transfer",
+    "from": "<FROM_ADDR>",
+    "to": "<TO_ADDR>",
+    "asset_id": "asset:example",
+    "amount": 100,
+    "fee": 5,
+    "nonce": 1,
+    "timestamp": 1780000000
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "network": "testnet",
+  "chain_id": 777101,
+  "fee_asset_id": "IDR",
+  "quote": {
+    "gas_units": 20,
+    "tx_bytes": 160,
+    "min_fee": 1,
+    "requested_fee": 5,
+    "fee_asset_id": "IDR",
+    "sufficient": true
+  }
+}
+```
+
+The exact `gas_units`, `tx_bytes`, and `min_fee` values depend on the active network fee policy and transaction signing envelope.
+
+For v3 issued-asset transfers, the default fee payer is the sender. A different fee payer must provide paymaster authorization, and that payer is charged in native IDR.
