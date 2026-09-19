@@ -2075,56 +2075,6 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
-	p := h.profile().Fee
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":                  true,
-		"enabled":             p.Enabled,
-		"fee_asset_id":        h.profile().Asset.FeeAssetID,
-		"min_fee":             p.MinFee,
-		"min_gas_price":       p.MinGasPrice,
-		"bytes_per_gas":       p.BytesPerGas,
-		"max_gas_per_tx":      p.MaxGasPerTx,
-		"base_gas_transfer":   p.BaseGasTransfer,
-		"base_gas_asset_transfer": p.BaseGasAssetTransfer,
-		"base_gas_stake_lock": p.BaseGasStakeLock,
-		"base_gas_stake_unlock": p.BaseGasStakeUnlock,
-		"base_gas_asset_create": p.BaseGasAssetCreate,
-		"base_gas_asset_mint": p.BaseGasAssetMint,
-		"base_gas_asset_burn": p.BaseGasAssetBurn,
-		"distribution": map[string]any{
-			"model": "block-fee-settlement",
-			"recipient": "miner",
-		},
-	})
-}
-
-func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
-	var req struct {
-		Transaction types.Transaction `json:"transaction"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	if req.Transaction.ProtocolVersion() == 0 {
-		req.Transaction.Version = types.TxVersionAsset
-	}
-	quote, err := fees.Estimate(req.Transaction, h.profile())
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":           true,
-		"network":      h.profile().Name,
-		"chain_id":     h.profile().ChainID,
-		"fee_asset_id": h.profile().Asset.FeeAssetID,
-		"quote":        quote,
-	})
-}
-
-func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
 	p := h.profile()
 	writeJSON(w, http.StatusOK, map[string]any{
 		"enabled":       p.Fee.Enabled,
