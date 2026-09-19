@@ -115,6 +115,9 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 }
 
 func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
+	if tx.ProtocolVersion() > types.MaxSupportedTxVersion {
+		return fmt.Errorf("unsupported transaction version: %d", tx.ProtocolVersion())
+	}
 	if tx.Coinbase {
 		return nil
 	}
