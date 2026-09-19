@@ -3410,7 +3410,7 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 	} else {
 		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
 		if details.Spendable < txAmount {
-			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), amount.Format(details.UnlockingStake))
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), config.Ticker, amount.Format(details.UnlockingStake), config.Ticker)
 		}
 		tx = types.NewUnsignedTransaction(from, to, txAmount, 0, nonce)
 	}
