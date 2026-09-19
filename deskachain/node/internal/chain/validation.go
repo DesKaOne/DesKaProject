@@ -230,6 +230,23 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			return fmt.Errorf("tx %d %s", i, normalizeTxValidationError(err))
 		}
 	}
+
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		candidate := l.Clone()
+		if err := candidate.ApplyBlock(block); err != nil {
+			return fmt.Errorf("state root replay failed: %w", err)
+		}
+		expectedStateRoot, err := state.RootForLedger(candidate)
+		if err != nil {
+			return fmt.Errorf("state root calculation failed: %w", err)
+		}
+		if block.StateRoot == "" {
+			return errors.New("canonical block state root is empty")
+		}
+		if block.StateRoot != expectedStateRoot {
+			return errors.New("state root mismatch")
+		}
+	}
 	return nil
 }
 
