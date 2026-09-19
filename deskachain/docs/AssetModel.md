@@ -133,3 +133,29 @@ Example:
 ```
 
 Migration remains profile-gated: built-in localnet, testnet, and mainnet configurations currently keep v1 transactions active, so the v3 fee/gas rules are not yet the default network consensus.
+
+
+## Protocol fee system
+
+V3 fees are denominated exclusively in native `IDR`. The protocol separates the transferred asset from the fee asset.
+
+For a normal transaction:
+
+`sender -> token/IDR transfer + IDR protocol fee`
+
+For a sponsored transaction:
+
+`sender -> token/IDR transfer`
+`paymaster -> IDR protocol fee`
+
+The fee policy is deterministic and transaction-type aware. A fee quote combines a base-gas schedule with the canonical unsigned envelope size. The configured `MinFee` is the minimum payable fee, while `MinGasPrice` can make the minimum scale with gas usage.
+
+The current fee lifecycle is:
+
+`payer IDR`
+`    -> protocol fee pool`
+`    -> block producer settlement`
+
+V3 uses zero block subsidy in the current economic profile, so fee income is not created as new IDR. It is transferred from the effective fee payer to the protocol fee pool and then settled to the block producer. The pool is represented as a protocol-owned asset balance and is not a normal user account.
+
+Fee policy is exposed through RPC so DesKaWallet/DesKaBank can quote a fee before signing. Paymaster authorization does not alter the transaction ID.
