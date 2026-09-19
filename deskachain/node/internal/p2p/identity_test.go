@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
 	"os"
@@ -56,10 +57,10 @@ func TestLoadOrCreateNodeIdentityPersistsKeyMaterial(t *testing.T) {
 	if first.NodeID != second.NodeID {
 		t.Fatal("node id changed between identity loads")
 	}
-	if !ed25519.PrivateKey(first.PrivateKey).Equal(second.PrivateKey) {
+	if !bytes.Equal(first.PrivateKey, second.PrivateKey) {
 		t.Fatal("private key changed between identity loads")
 	}
-	if !ed25519.PublicKey(first.PublicKey).Equal(second.PublicKey) {
+	if !bytes.Equal(first.PublicKey, second.PublicKey) {
 		t.Fatal("public key changed between identity loads")
 	}
 
