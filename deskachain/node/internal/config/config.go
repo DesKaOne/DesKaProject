@@ -310,9 +310,6 @@ func Testnet() NetworkConfig {
 			MaxBlockBytes:    DefaultMaxBlockBytes,
 			MaxTxBytes:       DefaultMaxTxBytes,
 			MaxTxCount:       DefaultMaxTxCount,
-			MaxBlockBytes:    DefaultMaxBlockBytes,
-			MaxTxBytes:       DefaultMaxTxBytes,
-			MaxTxCount:       DefaultMaxTxCount,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               1000 * UnitsPerCoin,
@@ -360,6 +357,9 @@ func Mainnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 100,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
 			Staking: StakingParams{
 				Enabled:                       false,
 				MinServiceStake:               0,
