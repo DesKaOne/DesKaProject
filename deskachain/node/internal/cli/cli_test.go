@@ -404,10 +404,17 @@ func TestSeedPeersPersistSourceAndSkipSelf(t *testing.T) {
 	}
 }
 
+func fundedTestProfile() config.NetworkConfig {
+	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
+	return profile
+}
+
 func TestMiningNBlocksIncreasesHeightAndBalance(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -553,7 +560,7 @@ func TestMineRejectsInvalidChecksumAddress(t *testing.T) {
 func TestChainInfoStatsGenesisCoinbaseAndNormalTx(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -722,7 +729,7 @@ func TestWalletNewInspectExportImportUsesIDRBase58Secp256k1(t *testing.T) {
 func TestSendMempoolNonceAndPendingOverspend(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -768,7 +775,7 @@ func TestSendMempoolNonceAndPendingOverspend(t *testing.T) {
 func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -842,7 +849,7 @@ func TestEndToEndTransferMempoolMiningAndTxGet(t *testing.T) {
 func TestStakeCommandsAndBalanceOutput(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -884,7 +891,7 @@ func TestStakeCommandsAndBalanceOutput(t *testing.T) {
 func TestSendFailureCasesAndMempoolClear(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
+	app := New(&out).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := app.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
