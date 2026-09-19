@@ -1882,11 +1882,19 @@ func stakingSummaryMap(blocks []types.Block, net config.NetworkConfig) map[strin
 	}
 }
 
-func balanceDetailsMap(details ledger.BalanceDetails) map[string]any {
+func balanceDetailsMap(details ledger.BalanceDetails, profile config.NetworkConfig) map[string]any {
+	ticker := config.Ticker
+	if profile.TxVersion >= types.TxVersionAsset {
+		ticker = profile.Asset.NativeAssetSymbol
+	}
+	total, err := arith.Add(details.Confirmed, details.PendingIncoming)
+	if err != nil {
+		total = ^uint64(0)
+	}
 	return map[string]any{
 		"address":            details.Address,
 		"balance":            amount.Format(details.Confirmed),
-		"ticker":             config.Ticker,
+		"ticker":             ticker,
 		"confirmed_balance":  amount.Format(details.Confirmed),
 		"mature_balance":     amount.Format(details.Mature),
 		"immature_balance":   amount.Format(details.Immature),
@@ -1897,7 +1905,7 @@ func balanceDetailsMap(details ledger.BalanceDetails) map[string]any {
 		"pending_stake_lock": amount.Format(details.PendingStakeLock),
 		"pending_outgoing":   amount.Format(details.PendingOutgoing),
 		"pending_incoming":   amount.Format(details.PendingIncoming),
-		"total_balance":      amount.Format(details.Confirmed + details.PendingIncoming),
+		"total_balance":      amount.Format(total),
 		"coinbase_maturity":  details.CoinbaseMaturity,
 		"current_height":     details.CurrentHeight,
 	}
@@ -2059,7 +2067,7 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, balanceDetailsMap(details))
+	writeJSON(w, http.StatusOK, balanceDetailsMap(details, h.profile()))
 }
 
 func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
@@ -2233,6 +2241,10 @@ func (h handler) address(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]any{"address": address, "valid": false})
 		return
 	}
+	ticker := config.Ticker
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		ticker = h.profile().Asset.NativeAssetSymbol
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"address":                 info.address,
 		"valid":                   true,
@@ -2240,15 +2252,15 @@ func (h handler) address(w http.ResponseWriter, r *http.Request) {
 		"network":                 h.profile().Name,
 		"key_curve":               "secp256k1",
 		"legacy":                  crypto.IsLegacyDevAddress(info.address),
-		"confirmed_balance":       amount.Format(info.confirmedBalance) + " " + config.Ticker,
-		"mature_balance":          amount.Format(info.matureBalance) + " " + config.Ticker,
-		"immature_balance":        amount.Format(info.immatureBalance) + " " + config.Ticker,
-		"spendable_balance":       amount.Format(info.spendableBalance) + " " + config.Ticker,
+		"confirmed_balance":       amount.Format(info.confirmedBalance) + " " + ticker,
+		"mature_balance":          amount.Format(info.matureBalance) + " " + ticker,
+		"immature_balance":        amount.Format(info.immatureBalance) + " " + ticker,
+		"spendable_balance":       amount.Format(info.spendableBalance) + " " + ticker,
 		"confirmed_nonce":         info.confirmedNonce,
 		"pending_outgoing_count":  info.pendingOutgoingCount,
-		"pending_outgoing_amount": amount.Format(info.pendingOutgoingAmount) + " " + config.Ticker,
+		"pending_outgoing_amount": amount.Format(info.pendingOutgoingAmount) + " " + ticker,
 		"pending_incoming_count":  info.pendingIncomingCount,
-		"pending_incoming_amount": amount.Format(info.pendingIncomingAmount) + " " + config.Ticker,
+		"pending_incoming_amount": amount.Format(info.pendingIncomingAmount) + " " + ticker,
 	})
 }
 
@@ -2530,17 +2542,10 @@ func (h handler) send(w http.ResponseWriter, r *http.Request) {
 	h.refreshState()
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
 	broadcast := p2p.BroadcastTxToPeers(h.paths.Peers, peers, tx)
-	writeJSON(w, http.StatusOK, map[string]any{
-		"status":    "pending",
-		"id":        tx.ID,
-		"tx_id":     tx.ID,
-		"from":      tx.From,
-		"to":        tx.To,
-		"amount":    amount.Format(tx.Amount) + " " + config.Ticker,
-		"fee":       amount.Format(tx.Fee) + " " + config.Ticker,
-		"nonce":     tx.Nonce,
-		"broadcast": broadcast,
-	})
+	view := txView(tx, "pending", h.profile())
+	view["status"] = "pending"
+	view["broadcast"] = broadcast
+	writeJSON(w, http.StatusOK, view)
 }
 
 func (h handler) minerTemplate(w http.ResponseWriter, r *http.Request) {
