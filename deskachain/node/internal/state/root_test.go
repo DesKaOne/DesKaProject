@@ -5,7 +5,6 @@ import (
 
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
-	"deskachain/internal/staking"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -29,29 +28,6 @@ func TestStateRootDeterministicAcrossMapInsertionOrder(t *testing.T) {
 	if err := first.ApplyCoinbaseAtHeight(types.NewCoinbaseTransaction(wb.Address, 20, 2), 2); err != nil {
 		t.Fatal(err)
 	}
-	firstStake := staking.Record{
-		StakeID: "stake-b",
-		OwnerAddress: wb.Address,
-		Amount: 7,
-		LockTxID: "tx-b",
-		LockHeight: 2,
-		Status: staking.StatusActive,
-	}
-	firstStakeA := firstStake
-	firstStakeA.StakeID = "stake-a"
-	firstStakeA.OwnerAddress = wa.Address
-	first.StateStakes()
-	// Build the same stake set in the opposite insertion order.
-	firstState := ledger.NewMatureWithProfile(params, profile)
-	if err := firstState.ApplyCoinbaseAtHeight(types.NewCoinbaseTransaction(wa.Address, 10, 1), 1); err != nil {
-		t.Fatal(err)
-	}
-	if err := firstState.ApplyCoinbaseAtHeight(types.NewCoinbaseTransaction(wb.Address, 20, 2), 2); err != nil {
-		t.Fatal(err)
-	}
-	firstStateStake := firstState.StateStakes()
-	_ = firstStateStake
-	// StateStakes is empty until explicit stake records are inserted below.
 	rootA, err := RootForLedger(first)
 	if err != nil {
 		t.Fatal(err)
