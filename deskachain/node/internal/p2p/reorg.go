@@ -312,6 +312,26 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 			droppedInvalid++
 		}
 	}
+	nextNonce := make(map[string]uint64)
+	for _, tx := range kept {
+		if _, ok := nextNonce[tx.From]; ok {
+			continue
+		}
+		nonce := l.Nonce(tx.From)
+		if nonce == ^uint64(0) {
+			continue
+		}
+		nextNonce[tx.From] = nonce + 1
+	}
+	selected, selectErr := mempool.SelectWithNonces(kept, profile, profile.Consensus.MaxGasPerBlock, nextNonce)
+	if selectErr != nil {
+		closeFn()
+		return ReorgResult{}, selectErr
+	}
+	if len(selected) < len(kept) {
+		droppedInvalid += len(kept) - len(selected)
+	}
+	kept = selected
 	if err := mp.Save(kept); err != nil {
 		closeFn()
 		return ReorgResult{}, err
