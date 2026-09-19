@@ -235,17 +235,17 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
 	case types.TxTypeStakeLock:
-		from.Nonce = tx.Nonce
-		l.accounts[tx.From] = from
 		if err := l.stakes.ApplyLock(tx, height); err != nil {
 			return err
 		}
-	case types.TxTypeStakeUnlock:
 		from.Nonce = tx.Nonce
 		l.accounts[tx.From] = from
+	case types.TxTypeStakeUnlock:
 		if err := l.stakes.ApplyUnlock(tx, height); err != nil {
 			return err
 		}
+		from.Nonce = tx.Nonce
+		l.accounts[tx.From] = from
 	default:
 		return fmt.Errorf("unknown transaction type: %s", tx.TxType())
 	}
