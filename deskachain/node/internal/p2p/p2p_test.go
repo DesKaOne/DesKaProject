@@ -881,12 +881,19 @@ func TestUpstreamForkSameWorkDoesNotForce(t *testing.T) {
 	}
 }
 
+func fundedP2PProfile() config.NetworkConfig {
+	profile := config.Localnet()
+	profile.Economic.BlockSubsidy = config.InitialBlockReward
+	profile.Economic.FeeOnlyBlocks = false
+	return profile
+}
+
 func newTestNode(t *testing.T) config.Paths {
 	t.Helper()
 	paths := config.NewPaths(t.TempDir())
 	bc, closeFn := openTestChain(t, paths)
 	defer closeFn()
-	if err := bc.Init(); err != nil {
+	if err := bc.InitWithProfile(fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	return paths
@@ -894,7 +901,7 @@ func newTestNode(t *testing.T) config.Paths {
 
 func newP2PTestServer(paths config.Paths) *httptest.Server {
 	mux := http.NewServeMux()
-	NewServer(paths).Register(mux)
+	NewServerWithProfile(paths, fundedP2PProfile()).Register(mux)
 	return httptest.NewServer(mux)
 }
 
@@ -1016,7 +1023,7 @@ func validateChain(t *testing.T, paths config.Paths) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := chain.ValidateChain(blocks); err != nil {
+	if _, err := chain.ValidateChainWithNetwork(blocks, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -1028,7 +1035,7 @@ func TestReorgPreviewSameWorkRejected(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 1)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	plan, _, err := BuildReorgPlan(local, server.URL, DefaultMaxReorgDepth)
+	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, DefaultMaxReorgDepth, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1060,7 +1067,7 @@ func TestReorgApplyRequiresYes(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	_, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, false)
+	_, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, false, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "without --yes") {
 		t.Fatalf("expected --yes error, got %v", err)
 	}
@@ -1073,7 +1080,7 @@ func TestReorgApplyPeerMoreWork(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1089,7 +1096,7 @@ func TestReorgDepthLimit(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 3)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	plan, _, err := BuildReorgPlan(local, server.URL, 1)
+	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, 1, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
