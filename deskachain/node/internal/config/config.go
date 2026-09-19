@@ -11,8 +11,15 @@ import (
 
 const (
 	CoinName = "DesKaChain"
+	// Ticker/Decimals/UnitsPerCoin are retained for legacy v1/v2 compatibility.
+	// v3 uses the explicit native asset model below.
 	Ticker   = "DKC"
 	Decimals = 8
+
+	NativeAssetID       = "IDR"
+	NativeAssetSymbol   = "IDR"
+	NativeAssetDecimals uint8 = 0
+	FeeAssetID          = NativeAssetID
 
 	UnitsPerCoin        uint64 = 100000000
 	InitialBlockReward  uint64 = 50 * UnitsPerCoin
@@ -200,6 +207,8 @@ type NetworkConfig struct {
 	TxVersion            uint32           `json:"tx_version"`
 	Difficulty           DifficultyParams `json:"difficulty"`
 	Consensus            ConsensusParams  `json:"consensus"`
+	Asset                AssetParams      `json:"asset"`
+	Economic             EconomicParams   `json:"economic"`
 	MaxPeers             int              `json:"max_peers"`
 	MaxReorgDepth        uint64           `json:"max_reorg_depth"`
 	MinMiningPeers       int              `json:"min_mining_peers"`
@@ -219,6 +228,21 @@ type DifficultyParams struct {
 	TargetBlockTimeSeconds int64  `json:"target_block_time_seconds"`
 	RetargetWindow         uint64 `json:"retarget_window"`
 	MaxFutureDriftSeconds  int64  `json:"max_future_drift_seconds"`
+}
+
+type AssetParams struct {
+	NativeAssetID           string `json:"native_asset_id"`
+	NativeAssetSymbol       string `json:"native_asset_symbol"`
+	NativeAssetDecimals     uint8  `json:"native_asset_decimals"`
+	FeeAssetID              string `json:"fee_asset_id"`
+	TokenTransfersEnabled   bool   `json:"token_transfers_enabled"`
+	UserIssuedTokensEnabled bool   `json:"user_issued_tokens_enabled"`
+	PaymasterEnabled        bool   `json:"paymaster_enabled"`
+}
+
+type EconomicParams struct {
+	BlockSubsidy  uint64 `json:"block_subsidy"`
+	FeeOnlyBlocks bool   `json:"fee_only_blocks"`
 }
 
 type ConsensusParams struct {
@@ -277,6 +301,19 @@ func Localnet() NetworkConfig {
 				RequireStakeForServiceRewards: true,
 			},
 		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
+		},
 		MaxPeers:            32,
 		MaxReorgDepth:       64,
 		MinMiningPeers:      0,
@@ -332,6 +369,19 @@ func Testnet() NetworkConfig {
 				RequireStakeForServiceRewards: true,
 			},
 		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
+		},
 		MaxPeers:            128,
 		MaxReorgDepth:       128,
 		MinMiningPeers:      1,
@@ -386,6 +436,19 @@ func Mainnet() NetworkConfig {
 				MaxActiveStakesPerAddress:     0,
 				RequireStakeForServiceRewards: true,
 			},
+		},
+		Asset: AssetParams{
+			NativeAssetID:           NativeAssetID,
+			NativeAssetSymbol:       NativeAssetSymbol,
+			NativeAssetDecimals:     NativeAssetDecimals,
+			FeeAssetID:              FeeAssetID,
+			TokenTransfersEnabled:   true,
+			UserIssuedTokensEnabled: true,
+			PaymasterEnabled:        true,
+		},
+		Economic: EconomicParams{
+			BlockSubsidy:  0,
+			FeeOnlyBlocks: true,
 		},
 		MaxPeers:            256,
 		MaxReorgDepth:       64,
