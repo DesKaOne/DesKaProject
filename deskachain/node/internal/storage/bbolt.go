@@ -413,6 +413,106 @@ func (s *BoltStore) GetStateStakesForAddress(address string) ([]staking.Record, 
 	return records, err
 }
 
+func (s *BoltStore) ValidateStateIndexes() error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		accounts := root.Bucket(stateAccountsBucket)
+		stakes := root.Bucket(stateStakesBucket)
+		ownerIndex := root.Bucket(stateStakesByOwnerBucket)
+		coinbases := root.Bucket(stateCoinbasesBucket)
+		if accounts == nil || stakes == nil || ownerIndex == nil || coinbases == nil {
+			return ErrStateNotInitialized
+		}
+
+		accountCount := 0
+		if err := accounts.ForEach(func(k, v []byte) error {
+			var account ledger.StateAccount
+			if err := json.Unmarshal(v, &account); err != nil {
+				return err
+			}
+			if account.Address != string(k) {
+				return errors.New("state account key mismatch")
+			}
+			accountCount++
+			return nil
+		}); err != nil {
+			return err
+		}
+		_ = accountCount
+
+		stakeCount := 0
+		if err := stakes.ForEach(func(k, v []byte) error {
+			var record staking.Record
+			if err := json.Unmarshal(v, &record); err != nil {
+				return err
+			}
+			if record.StakeID != string(k) {
+				return errors.New("state stake key mismatch")
+			}
+			indexKey := stateStakeOwnerKey(record.OwnerAddress, record.StakeID)
+			indexed := ownerIndex.Get(indexKey)
+			if indexed == nil || !bytes.Equal(indexed, v) {
+				return errors.New("state stake owner index mismatch")
+			}
+			stakeCount++
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		ownerCount := 0
+		if err := ownerIndex.ForEach(func(k, v []byte) error {
+			separator := bytes.IndexByte(k, 0)
+			if separator <= 0 || separator == len(k)-1 {
+				return errors.New("invalid state stake owner index key")
+			}
+			address := string(k[:separator])
+			stakeID := string(k[separator+1:])
+			raw := stakes.Get([]byte(stakeID))
+			if raw == nil || !bytes.Equal(raw, v) {
+				return errors.New("state stake owner index target mismatch")
+			}
+			var record staking.Record
+			if err := json.Unmarshal(raw, &record); err != nil {
+				return err
+			}
+			if record.OwnerAddress != address || record.StakeID != stakeID {
+				return errors.New("state stake owner index identity mismatch")
+			}
+			ownerCount++
+			return nil
+		}); err != nil {
+			return err
+		}
+		if stakeCount != ownerCount {
+			return errors.New("state stake owner index count mismatch")
+		}
+
+		if err := coinbases.ForEach(func(k, v []byte) error {
+			if len(k) != 8 {
+				return errors.New("state coinbase key length mismatch")
+			}
+			var credit ledger.StateCoinbase
+			if err := json.Unmarshal(v, &credit); err != nil {
+				return err
+			}
+			if binary.BigEndian.Uint64(k) != credit.Height {
+				return errors.New("state coinbase key mismatch")
+			}
+			if credit.Address == "" || credit.Amount == 0 {
+				return errors.New("invalid persisted coinbase state")
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (s *BoltStore) LoadState() (state.Snapshot, error) {
 	var snapshot state.Snapshot
 	err := s.db.View(func(tx *bolt.Tx) error {
