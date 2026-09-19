@@ -35,6 +35,7 @@ type StateStore interface {
 // current chain tip before treating the values as authoritative.
 type StateQueryStore interface {
 	StateStore
+	ValidateChainStateConsistency() error
 	GetStateMetadata() (version uint8, height uint64, stateRoot string, err error)
 	GetStateAccount(address string) (ledger.StateAccount, bool, error)
 	GetStateStake(stakeID string) (staking.Record, bool, error)
