@@ -86,7 +86,7 @@ func validateChain(blocks []types.Block, params config.DifficultyParams, consens
 	return ValidationResult{
 		Height:      blocks[len(blocks)-1].Height,
 		Blocks:      len(blocks),
-		TotalSupply: ledger.TotalSupply(blocks),
+		TotalSupply: ledger.TotalSupplyWithProfile(blocks, profile),
 	}, nil
 }
 
