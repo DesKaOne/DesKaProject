@@ -219,3 +219,9 @@ curl http://127.0.0.1:8811/chain/state/validate
 `/chain/state` is a lightweight status check. `/chain/state/validate` is an admin diagnostic and may replay the full chain.
 
 The node keeps its existing `node_id` file for the logical peer identifier and stores the Ed25519 authentication private key in `node_id.ed25519`. Keep that file private and include it in the operator backup set alongside other node identity material. The key file is created with restrictive permissions by the node.
+
+### P2P Message Authentication
+
+Phase 5.15 adds signed request/response authentication above the existing handshake. The node identity private key in `node_id.ed25519` is used for message signatures. Authenticated requests bind the method, URI, network, chain ID, timestamp, nonce, and body digest; authenticated responses bind the request nonce, status, timestamp, and body digest.
+
+`RequireAuthenticatedNode` remains disabled in the built-in network profiles during rollout. When enabled for a profile, P2P endpoints other than the bootstrap health/handshake paths require authenticated request headers and return signed responses. Keep `node_id.ed25519` private and do not copy it between independently operated nodes.
