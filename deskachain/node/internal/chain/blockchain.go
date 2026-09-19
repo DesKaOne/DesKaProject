@@ -231,11 +231,17 @@ func (bc *Blockchain) AddBlockWithNetwork(block types.Block, profile config.Netw
 		return err
 	}
 
-	nextBlocks := make([]types.Block, 0, len(blocks)+1)
-	nextBlocks = append(nextBlocks, blocks...)
-	nextBlocks = append(nextBlocks, block)
 	if ss, ok := bc.store.(storage.StateStore); ok {
-		snapshot, snapshotErr := state.SnapshotForBlocks(nextBlocks, profile.Consensus, profile)
+		var snapshot state.Snapshot
+		var snapshotErr error
+		if current, loadErr := ss.LoadState(); loadErr == nil && snapshotMatchesTip(current, tip) {
+			snapshot, snapshotErr = state.SnapshotAfterBlock(current, block, profile.Consensus, profile)
+		} else {
+			nextBlocks := make([]types.Block, 0, len(blocks)+1)
+			nextBlocks = append(nextBlocks, blocks...)
+			nextBlocks = append(nextBlocks, block)
+			snapshot, snapshotErr = state.SnapshotForBlocks(nextBlocks, profile.Consensus, profile)
+		}
 		if snapshotErr != nil {
 			return snapshotErr
 		}
