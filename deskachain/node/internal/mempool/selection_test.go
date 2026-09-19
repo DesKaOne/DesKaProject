@@ -3,7 +3,6 @@ package mempool
 import (
 	"testing"
 
-	"deskachain/internal/config"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -49,4 +48,3 @@ func TestSelectWithNoncesAllowsIndependentSenders(t *testing.T) {
 	}
 }
 
-var _ config.NetworkConfig
