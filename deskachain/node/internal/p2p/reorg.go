@@ -252,7 +252,7 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 			}
 		}
 	}
-	if err := bc.ReplaceFromHeight(plan.CommonAncestorHeight+1, branch); err != nil {
+	if err := bc.ReplaceFromHeightWithNetwork(plan.CommonAncestorHeight+1, branch, profile); err != nil {
 		return ReorgResult{}, err
 	}
 	newBlocks, err := bc.Blocks()
