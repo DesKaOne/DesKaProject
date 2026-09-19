@@ -47,8 +47,11 @@ func TestStateStorePersistsMetadataAndIndexes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.StateRoot != snapshot.StateRoot || len(got.Accounts) != 1 {
+	if got.StateRoot != snapshot.StateRoot || len(got.Accounts) != 2 || len(got.Coinbases) != 1 {
 		t.Fatalf("unexpected restored snapshot: %#v", got)
+	}
+	if got.Coinbases[0].Address != "DKC-alice" || got.Coinbases[0].Height != 11 || got.Coinbases[0].Amount != 50 {
+		t.Fatalf("unexpected pending coinbase state: %#v", got.Coinbases)
 	}
 	if got.Accounts[0].Address != "DKC-test" || got.Accounts[0].Confirmed != 10 {
 		t.Fatalf("unexpected account index contents: %#v", got.Accounts)
@@ -86,6 +89,7 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 		{StakeID: "stake-1", OwnerAddress: "DKC-alice", Amount: 30, Status: staking.StatusUnlocking, ReleaseHeight: 20},
 		{StakeID: "stake-3", OwnerAddress: "DKC-bob", Amount: 10, Status: staking.StatusActive},
 	}
+	snapshot.Coinbases = []ledger.StateCoinbase{{Address: "DKC-alice", Amount: 50, Height: 11}}
 	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
 	if err != nil {
 		t.Fatal(err)
