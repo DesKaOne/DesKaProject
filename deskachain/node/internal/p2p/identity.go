@@ -96,6 +96,7 @@ func handshakeSigningBytes(hs Handshake) []byte {
 	writeIdentityUint32(&buf, hs.IdentityVersion)
 	writeIdentityString(&buf, hs.NodeID)
 	writeIdentityString(&buf, hs.NodePublicKey)
+	writeIdentityString(&buf, hs.AuthChallenge)
 	writeIdentityString(&buf, hs.NetworkID)
 	writeIdentityUint64(&buf, hs.ChainID)
 	writeIdentityString(&buf, hs.GenesisHash)
