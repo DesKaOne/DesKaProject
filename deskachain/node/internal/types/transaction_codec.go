@@ -10,11 +10,25 @@ import (
 const (
 	canonicalTxCodecVersion uint8 = 1
 	maxCanonicalFieldBytes        = 1 << 20
+	canonicalSigningDomain         = "DesKaChain/tx-sign/v2"
 )
 
 var (
 	ErrInvalidCanonicalTx = errors.New("invalid canonical transaction")
 )
+
+func (tx Transaction) CanonicalSigningBytesWithChainID(chainID uint64) ([]byte, error) {
+	if tx.ProtocolVersion() != TxVersionCanonical {
+		return nil, fmt.Errorf("%w: chain-bound signing requires canonical transaction version", ErrInvalidCanonicalTx)
+	}
+	body := tx.CanonicalSigningBytes()
+	var buf bytes.Buffer
+	writeCanonicalString(&buf, canonicalSigningDomain)
+	writeCanonicalUint64(&buf, chainID)
+	writeCanonicalUint32(&buf, uint32(len(body)))
+	buf.Write(body)
+	return buf.Bytes(), nil
+}
 
 func (tx Transaction) CanonicalSigningBytes() []byte {
 	var buf bytes.Buffer
