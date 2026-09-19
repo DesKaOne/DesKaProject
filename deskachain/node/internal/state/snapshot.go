@@ -57,7 +57,18 @@ func (s Snapshot) Validate() error {
 	if s.StateRoot == "" {
 		return fmt.Errorf("%w: empty state root", ErrInvalidSnapshot)
 	}
-	root, err := RootForCollections(s.Accounts, s.Stakes)
+	accounts, stakes := StableDigestInputs(s.Accounts, s.Stakes)
+	for i := 1; i < len(accounts); i++ {
+		if accounts[i-1].Address == accounts[i].Address {
+			return fmt.Errorf("%w: duplicate account %q", ErrInvalidSnapshot, accounts[i].Address)
+		}
+	}
+	for i := 1; i < len(stakes); i++ {
+		if stakes[i-1].StakeID == stakes[i].StakeID {
+			return fmt.Errorf("%w: duplicate stake %q", ErrInvalidSnapshot, stakes[i].StakeID)
+		}
+	}
+	root, err := RootForCollections(accounts, stakes)
 	if err != nil {
 		return err
 	}
