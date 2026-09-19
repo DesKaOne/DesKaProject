@@ -88,7 +88,7 @@ func TestValidateBlockResourcesRejectsExcessGas(t *testing.T) {
 		Height: 0,
 		Transactions: []types.Transaction{
 			{Version: types.TxVersionAsset, ID: "a", From: "from", To: "to", Amount: 1, Fee: 1},
-			{ProtocolVersion: types.TxVersionAsset, ID: "b", From: "from", To: "to", Amount: 1, Fee: 1},
+			{Version: types.TxVersionAsset, ID: "b", From: "from", To: "to", Amount: 1, Fee: 1},
 		},
 	}
 	if err := ValidateBlockResourcesWithProfile(block, profile); err == nil || !strings.Contains(err.Error(), "max gas") {
