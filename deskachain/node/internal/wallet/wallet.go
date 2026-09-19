@@ -56,17 +56,29 @@ func (w Wallet) PrivateKey() (*btcec.PrivateKey, error) {
 }
 
 func (w Wallet) SignTransaction(tx *types.Transaction) error {
+	return w.SignTransactionWithProfile(tx, config.Localnet())
+}
+
+func (w Wallet) SignTransactionWithProfile(tx *types.Transaction, profile config.NetworkConfig) error {
+	if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), profile.TxVersion); err != nil {
+		return err
+	}
 	privateKey, err := w.PrivateKey()
 	if err != nil {
 		return err
 	}
 	tx.PublicKey = w.PublicKeyHex
-	tx.RefreshID()
-	sig, err := dkcrypto.SignHex(privateKey, tx.SigningBytes())
+	if err := tx.RefreshIDForChainID(profile.ChainID); err != nil {
+		return err
+	}
+	signingBytes, err := tx.SigningBytesWithChainID(profile.ChainID)
+	if err != nil {
+		return err
+	}
+	sig, err := dkcrypto.SignHex(privateKey, signingBytes)
 	if err != nil {
 		return err
 	}
 	tx.Signature = sig
-	tx.RefreshID()
-	return nil
+	return tx.RefreshIDForChainID(profile.ChainID)
 }
