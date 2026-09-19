@@ -51,6 +51,25 @@ func SnapshotForBlocks(blocks []types.Block, params config.ConsensusParams, prof
 	return SnapshotForLedger(l)
 }
 
+func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.ConsensusParams, profile config.NetworkConfig) (Snapshot, error) {
+	expectedHeight := snapshot.Height
+	if block.Height != expectedHeight+1 {
+		return Snapshot{}, fmt.Errorf("%w: block height %d does not follow state height %d", ErrInvalidSnapshot, block.Height, snapshot.Height)
+	}
+	l := ledger.NewMatureFromState(
+		params,
+		profile,
+		snapshot.Height,
+		snapshot.Accounts,
+		snapshot.Stakes,
+		snapshot.Coinbases,
+	)
+	if err := l.ApplyBlock(block); err != nil {
+		return Snapshot{}, err
+	}
+	return SnapshotForLedger(l)
+}
+
 func (s Snapshot) Validate() error {
 	if s.Version != SnapshotVersion {
 		return fmt.Errorf("%w: unsupported version %d", ErrInvalidSnapshot, s.Version)
