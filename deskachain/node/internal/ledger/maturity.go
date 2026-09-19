@@ -566,14 +566,17 @@ func BalanceDetailsFromState(
 			continue
 		}
 		if tx.TxType() == types.TxTypeTransfer {
-			if tx.From == address {
-				pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Amount)
+			// Only native IDR transfers change the native balance.
+			if asset.IsNative(tx.EffectiveAssetID()) {
+				if tx.From == address {
+					pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Amount)
+				}
+				if tx.To == address {
+					pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
+				}
 			}
 			if tx.EffectiveFeePayer() == address {
 				pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Fee)
-			}
-			if tx.To == address {
-				pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
 			}
 		}
 	}
