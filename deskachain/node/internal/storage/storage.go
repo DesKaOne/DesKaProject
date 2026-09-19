@@ -38,6 +38,7 @@ type StateQueryStore interface {
 	GetStateAccount(address string) (ledger.StateAccount, bool, error)
 	GetStateStake(stakeID string) (staking.Record, bool, error)
 	GetStateStakesForAddress(address string) ([]staking.Record, error)
+	ValidateStateIndexes() error
 }
 
 // BlockStateStore provides atomic chain + state commits for stores that can
