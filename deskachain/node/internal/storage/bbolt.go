@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -21,8 +22,9 @@ var (
 	tipKey              = []byte("tip")
 	stateBucket         = []byte("state")
 	stateMetaBucket     = []byte("meta")
-	stateAccountsBucket = []byte("accounts")
-	stateStakesBucket   = []byte("stakes")
+	stateAccountsBucket      = []byte("accounts")
+	stateStakesBucket        = []byte("stakes")
+	stateStakesByOwnerBucket = []byte("stakes_by_owner")
 	stateVersionKey     = []byte("version")
 	stateHeightKey      = []byte("height")
 	stateRootKey        = []byte("root")
@@ -65,7 +67,10 @@ func (s *BoltStore) Init() error {
 		if _, err := root.CreateBucketIfNotExists(stateAccountsBucket); err != nil {
 			return err
 		}
-		_, err = root.CreateBucketIfNotExists(stateStakesBucket)
+		if _, err := root.CreateBucketIfNotExists(stateStakesBucket); err != nil {
+			return err
+		}
+		_, err = root.CreateBucketIfNotExists(stateStakesByOwnerBucket)
 		return err
 	})
 }
@@ -288,6 +293,122 @@ func (s *BoltStore) SaveState(snapshot state.Snapshot) error {
 	})
 }
 
+func (s *BoltStore) GetStateMetadata() (version uint8, height uint64, stateRoot string, err error) {
+	err = s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil {
+			return ErrStateNotInitialized
+		}
+		rawVersion := meta.Get(stateVersionKey)
+		rawHeight := meta.Get(stateHeightKey)
+		rawRoot := meta.Get(stateRootKey)
+		if len(rawVersion) != 1 || len(rawHeight) != 8 || len(rawRoot) == 0 {
+			return ErrStateNotInitialized
+		}
+		version = rawVersion[0]
+		height = binary.BigEndian.Uint64(rawHeight)
+		stateRoot = string(rawRoot)
+		return nil
+	})
+	return version, height, stateRoot, err
+}
+
+func (s *BoltStore) GetStateAccount(address string) (ledger.StateAccount, bool, error) {
+	var account ledger.StateAccount
+	var found bool
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateAccountsBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		raw := bucket.Get([]byte(address))
+		if raw == nil {
+			return nil
+		}
+		if err := json.Unmarshal(raw, &account); err != nil {
+			return err
+		}
+		if account.Address != address {
+			return errors.New("state account key mismatch")
+		}
+		found = true
+		return nil
+	})
+	return account, found, err
+}
+
+func (s *BoltStore) GetStateStake(stakeID string) (staking.Record, bool, error) {
+	var record staking.Record
+	var found bool
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateStakesBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		raw := bucket.Get([]byte(stakeID))
+		if raw == nil {
+			return nil
+		}
+		if err := json.Unmarshal(raw, &record); err != nil {
+			return err
+		}
+		if record.StakeID != stakeID {
+			return errors.New("state stake key mismatch")
+		}
+		found = true
+		return nil
+	})
+	return record, found, err
+}
+
+func stateStakeOwnerPrefix(address string) []byte {
+	return append([]byte(address), 0)
+}
+
+func stateStakeOwnerKey(address, stakeID string) []byte {
+	return append(stateStakeOwnerPrefix(address), []byte(stakeID)...)
+}
+
+func (s *BoltStore) GetStateStakesForAddress(address string) ([]staking.Record, error) {
+	var records []staking.Record
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		bucket := root.Bucket(stateStakesByOwnerBucket)
+		if bucket == nil {
+			return ErrStateNotInitialized
+		}
+		prefix := stateStakeOwnerPrefix(address)
+		cursor := bucket.Cursor()
+		for key, value := cursor.Seek(prefix); key != nil && bytes.HasPrefix(key, prefix); key, value = cursor.Next() {
+			var record staking.Record
+			if err := json.Unmarshal(value, &record); err != nil {
+				return err
+			}
+			if record.OwnerAddress != address {
+				return errors.New("state owner stake index mismatch")
+			}
+			records = append(records, record)
+		}
+		return nil
+	})
+	return records, err
+}
+
 func (s *BoltStore) LoadState() (state.Snapshot, error) {
 	var snapshot state.Snapshot
 	err := s.db.View(func(tx *bolt.Tx) error {
@@ -356,7 +477,8 @@ func (s *BoltStore) DeleteState() error {
 		meta := root.Bucket(stateMetaBucket)
 		accounts := root.Bucket(stateAccountsBucket)
 		stakes := root.Bucket(stateStakesBucket)
-		if meta == nil || accounts == nil || stakes == nil {
+		stakesByOwner := root.Bucket(stateStakesByOwnerBucket)
+		if meta == nil || accounts == nil || stakes == nil || stakesByOwner == nil {
 			return ErrStateNotInitialized
 		}
 		if err := clearBucket(meta); err != nil {
