@@ -18,7 +18,7 @@ func admissionProfile() config.NetworkConfig {
 	return p
 }
 
-func signedTransfer(t *testing.T, p config.NetworkConfig, w *wallet.Wallet, fee, nonce uint64) types.Transaction {
+func signedTransfer(t *testing.T, p config.NetworkConfig, w wallet.Wallet, fee, nonce uint64) types.Transaction {
 	t.Helper()
 	tx := types.NewAssetTransferTransaction(w.Address, "recipient", p.Asset.NativeAssetID, 1, fee, nonce)
 	if err := w.SignTransactionWithProfile(&tx, p); err != nil {
