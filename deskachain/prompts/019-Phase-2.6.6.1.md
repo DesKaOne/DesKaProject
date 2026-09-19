@@ -2,9 +2,9 @@ Kamu sedang bekerja pada project Go monorepo DesKaChain.
 
 Status:
 
-* Phase 2.6.6 DKC Base58 Address Migration sudah diterapkan.
-* `wallet new` sekarang menghasilkan address baru dengan format `DKC...`.
-* Mining ke address `DKC...` berhasil.
+* Phase 2.6.6 IDR Base58 Address Migration sudah diterapkan.
+* `wallet new` sekarang menghasilkan address baru dengan format `IDR...`.
+* Mining ke address `IDR...` berhasil.
 * Saat node sedang berjalan, datadir lock mencegah command lokal `wallet new` menulis langsung ke datadir.
 * Error lock memberi saran:
   `go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new`
@@ -20,7 +20,7 @@ Memperbaiki UX wallet command saat datadir dikunci oleh running node.
 Aturan penting:
 
 * Jangan ubah address format.
-* Jangan rollback DKC Base58Check.
+* Jangan rollback IDR Base58Check.
 * Jangan ubah consensus.
 * Jangan implement difficulty adjustment.
 * Jangan implement coinbase maturity.
@@ -56,11 +56,11 @@ Behavior:
 * Simpan wallet ke wallet store runtime node.
 * Return address baru.
 * Jangan return private key kecuali ada endpoint/flag eksplisit untuk export.
-* Output address harus `DKC...`.
+* Output address harus `IDR...`.
 
 Response:
 {
-"address": "DKC...",
+"address": "IDR...",
 "format": "base58check",
 "network": "localnet",
 "key_curve": "secp256k1"
@@ -83,7 +83,7 @@ Command ini harus bekerja:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new
 
 Output:
-DKC...
+IDR...
 
 Jangan print private key.
 
@@ -101,7 +101,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet list
 Output:
 addresses:
 
-* DKC...
+* IDR...
 
 Jika terlalu besar, minimal `wallet new` dulu.
 
@@ -117,7 +117,7 @@ Remote:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet inspect <address>
 
 Output:
-address: DKC...
+address: IDR...
 format: base58check
 network: localnet
 key curve: secp256k1
@@ -163,7 +163,7 @@ Tambahkan/update tests:
 1. Remote wallet new handler:
 
 * POST /wallet/new returns address.
-* address starts with DKC.
+* address starts with IDR.
 * address validates.
 
 2. Remote wallet new persists:
@@ -183,7 +183,7 @@ Tambahkan/update tests:
 
 5. Wallet store concurrent create:
 
-* Multiple wallet new calls produce valid unique DKC addresses.
+* Multiple wallet new calls produce valid unique IDR addresses.
 * No file corruption.
 
 6. Security docs:
@@ -232,7 +232,7 @@ Remote wallet new:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new
 
 Expected:
-DKC...
+IDR...
 
 Then send test:
 
@@ -243,7 +243,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 balance <ADDR_B>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 chain info
 
 Expected:
-balance B: 10 DKC
+balance B: 10 IDR
 normal transactions: 1
 coinbase transactions: 4
 total transactions: 5

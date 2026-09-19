@@ -20,7 +20,7 @@ Observed failures:
    deskachain --datadir ./testdata/faucet_tn wallet new
 
    Address yang keluar:
-   DKC...
+   IDR...
 
    Tetapi saat digunakan pada node testnet, balance/replay error:
    invalid coinbase recipient: invalid address: wrong network version
@@ -41,7 +41,7 @@ Menutup blocker Phase 3.4 agar testnet wallet/faucet/miner memakai active networ
 Non-goals:
 
 * Jangan implement public faucet.
-* Jangan ubah address prefix DKC.
+* Jangan ubah address prefix IDR.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali benar-benar wajib.
 * Jangan disable network-version validation.
@@ -105,7 +105,7 @@ Add tests:
 ================================================
 
 Problem:
-`balance <DKC_ADDR>` on testnet returns:
+`balance <IDR_ADDR>` on testnet returns:
 invalid coinbase recipient: invalid address: wrong network version
 
 Need determine if:
@@ -140,7 +140,7 @@ Add tests:
 ==========================================================
 
 Problem:
-Dkcminer was able to mine/submit using address later rejected by balance as wrong network version.
+idrminer was able to mine/submit using address later rejected by balance as wrong network version.
 
 Expected:
 
@@ -295,10 +295,10 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_
 Expected before mining:
 
 * no wrong network version error.
-* balance valid with 0 DKC.
+* balance valid with 0 IDR.
 
 Mine enough:
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
@@ -317,14 +317,14 @@ Expected:
 * status pending.
 
 Mine confirmation:
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
 
 Check recipient:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 
 Expected:
 
-* confirmed balance 100 DKC.
+* confirmed balance 100 IDR.
 * no wrong network version error.
 
 ==================================================

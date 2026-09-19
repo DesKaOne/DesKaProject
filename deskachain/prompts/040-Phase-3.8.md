@@ -13,8 +13,8 @@ Status saat ini:
 * Version metadata valid:
 
   * deskachain version
-  * dkcminer --version
-  * dkcservice --version
+  * idrminer --version
+  * idrservice --version
 * Binary smoke test valid:
 
   * init testnet
@@ -32,7 +32,7 @@ Status saat ini:
 * Public RPC safety valid.
 * Seed peer bootstrap valid.
 * Faucet/staking/service-node testnet E2E valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 
 Patch name:
@@ -200,7 +200,7 @@ Package artifacts must not include:
 * wallets/
 * chain db files
 * faucet_state.json
-* dkcservice-state.json
+* idrservice-state.json
 * peer runtime store if generated
 * private keys
 * .env
@@ -212,8 +212,8 @@ Allowed in archive:
 * binaries:
 
   * deskachain / deskachain.exe
-  * dkcminer / dkcminer.exe
-  * dkcservice / dkcservice.exe
+  * idrminer / idrminer.exe
+  * idrservice / idrservice.exe
 * README.md or README-ID.md
 * LICENSE if present
 * docs/Release.md or QUICKSTART.md
@@ -253,8 +253,8 @@ Examples:
 After build, workflow should run:
 
 ./dist/linux-amd64/deskachain version
-./dist/linux-amd64/dkcminer --version
-./dist/linux-amd64/dkcservice --version
+./dist/linux-amd64/idrminer --version
+./dist/linux-amd64/idrservice --version
 
 For Windows binary on Linux runner, do not run `.exe` unless using Wine. Just build and package it.
 Linux amd64 binary can be smoke-tested on ubuntu runner.
@@ -272,7 +272,7 @@ Commands:
 * create separate miner wallet datadir.
 * start node in background with public RPC + miner RPC.
 * wait for /health.
-* mine once with dkcminer.
+* mine once with idrminer.
 * chain info.
 * chain validate.
 * stop node.
@@ -290,7 +290,7 @@ NODE_PID=$!
 wait until:
 ./dist/linux-amd64/deskachain --rpc-url http://127.0.0.1:9311 chain info
 
-./dist/linux-amd64/dkcminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
+./dist/linux-amd64/idrminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
 
 ./dist/linux-amd64/deskachain --rpc-url http://127.0.0.1:9311 chain validate
 
@@ -345,7 +345,7 @@ Add section:
 Make clear:
 
 * This is public testnet preparation.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
 * Do not expose wallet/admin RPC publicly.
 

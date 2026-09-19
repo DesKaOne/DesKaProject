@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -59,7 +59,7 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * DKC Base58Check address,
+  * IDR Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * dynamic difficulty,
@@ -91,7 +91,7 @@ Phase 2.9 harus menambahkan:
 
 Aturan penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -119,13 +119,13 @@ Aturan penting:
 
 Tambahkan endpoint RPC untuk miner mengambil template block:
 
-GET /miner/template?address=<DKC_ADDRESS>
+GET /miner/template?address=<IDR_ADDRESS>
 
 atau jika pattern RPC existing memakai POST, boleh:
 
 POST /miner/template
 {
-"address": "DKC..."
+"address": "IDR..."
 }
 
 Pilih style yang konsisten dengan RPC existing.
@@ -162,7 +162,7 @@ Template response minimal:
 "previous_hash": "...",
 "difficulty": 4,
 "target": "0000ffffffff...",
-"reward_address": "DKC...",
+"reward_address": "IDR...",
 "coinbase_reward": "50",
 "timestamp": 1781910000,
 "transactions": [...],
@@ -295,9 +295,9 @@ Tambahkan binary baru atau subcommand baru.
 Pilihan disarankan:
 
 * Tambahkan binary baru:
-  node/cmd/dkcminer/
+  node/cmd/idrminer/
   sehingga bisa build:
-  go build -o dkcminer ./node/cmd/dkcminer
+  go build -o idrminer ./node/cmd/idrminer
 
 Tetap boleh juga tambahkan:
 deskachain miner start
@@ -306,7 +306,7 @@ Tapi minimal wajib ada command standalone yang bisa dijalankan tanpa membuka dat
 
 Command target:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8391 --address <DKC_ADDR> --threads 4
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8391 --address <IDR_ADDR> --threads 4
 
 Flags:
 
@@ -318,14 +318,14 @@ Flags:
 * --once, mine one block then exit.
 * --max-blocks int, optional, 0 means unlimited.
 * --retry-interval duration, default 3s.
-* --user-agent string, default dkcminer/<version>.
+* --user-agent string, default idrminer/<version>.
 * --network optional, default inferred from node/template if possible.
 
 Output example:
 
 DesKaChain CPU Miner
 rpc: http://127.0.0.1:8391
-reward address: DKC...
+reward address: IDR...
 threads: 4
 
 new job height=12 difficulty=4 txs=1 prev=...
@@ -558,7 +558,7 @@ Tambahkan/update tests:
 
 1. Template endpoint at genesis:
 
-* GET /miner/template address DKC valid.
+* GET /miner/template address IDR valid.
 * returns height 1.
 * previous hash genesis.
 * difficulty initial 4.
@@ -676,15 +676,15 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 wallet new
 
 3. Start standalone miner:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4
 
 4. Mine one block:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
 
 5. Build binary:
 
-go build -o dkcminer ./node/cmd/dkcminer
+go build -o idrminer ./node/cmd/idrminer
 
 6. Notes:
 
@@ -717,7 +717,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 -
 
 Check template:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
 
 Expected:
 height: 1
@@ -727,7 +727,7 @@ tx_count: 1
 
 Run standalone miner once:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 new job height=1 difficulty=4
@@ -737,12 +737,12 @@ submit accepted height=1
 Check chain:
 
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain validate
 
 Expected:
 height: 1
-total supply: 50 DKC
+total supply: 50 IDR
 confirmed balance: 50
 mature balance: 0
 immature balance: 50
@@ -751,7 +751,7 @@ chain valid
 
 Mine 3 blocks:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --max-blocks 3
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --max-blocks 3
 
 Expected:
 accepted blocks 3
@@ -762,7 +762,7 @@ Mempool tx test:
 
 * mine enough blocks until maturity.
 * create receiver wallet.
-* send 10 DKC.
+* send 10 IDR.
 * run standalone miner --once.
 * expected tx confirmed and mempool count 0.
 

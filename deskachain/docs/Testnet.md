@@ -2,15 +2,15 @@
 
 Phase 3.6 prepares controlled/local and public-testnet bootstrap with seed peer support. This is not a public production mainnet launch.
 
-Testnet DKC has no monetary value. Staking remains collateral-only, has no APY, does not create validators, and does not mint staking rewards. Service points are simulation-only and are not spendable DKC.
+Testnet IDR has no monetary value. Staking remains collateral-only, has no APY, does not create validators, and does not mint staking rewards. Service points are simulation-only and are not spendable IDR.
 
 ## Network Profile
 
 - Network: `testnet`
-- Network ID: `dkc-testnet-1`
+- Network ID: `idr-testnet-1`
 - Chain ID: `777101`
 - Genesis hash: `db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4`
-- Address format: `DKC...` Base58Check
+- Address format: `IDR...` Base58Check
 - Default RPC: `:18331`
 - Default P2P: `:19331`
 
@@ -31,7 +31,7 @@ Public mode disables wallet/admin/miner/faucet/service write RPC by default. Add
 
 ```powershell
 go run ./node/cmd/deskachain --datadir ./data/testnet-public node start --rpc :8811 --p2p :9811 --advertise-p2p http://<PUBLIC_HOST>:9811 --public-rpc --enable-miner-rpc
-go run ./node/cmd/dkcminer --rpc-url http://<PUBLIC_HOST>:8811 --address <TESTNET_DKC_ADDR> --threads 4
+go run ./node/cmd/idrminer --rpc-url http://<PUBLIC_HOST>:8811 --address <TESTNET_IDR_ADDR> --threads 4
 ```
 
 See `docs/Operator.md` for Linux systemd examples, Windows PowerShell examples, firewall notes, and preflight checks.
@@ -53,7 +53,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 chain info
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 stake info
 ```
 
-Expected: `network=testnet`, `network_id=dkc-testnet-1`, `chain_id=777101`, and a testnet genesis hash.
+Expected: `network=testnet`, `network_id=idr-testnet-1`, `chain_id=777101`, and a testnet genesis hash.
 
 ## Node B With Bootnode
 
@@ -75,7 +75,7 @@ Expected: the bootnode is stored in `peers.json` as a normalized URL without a t
 
 ## Node C With Seed Peers
 
-Seed peers are equivalent startup hints for reusable public-testnet bootstrap lists. They can come from the testnet network profile, `DKC_SEED_PEERS`, config `p2p.seed_peers`, `--seed-peer`, `--seed-peers`, or `--seed-file`.
+Seed peers are equivalent startup hints for reusable public-testnet bootstrap lists. They can come from the testnet network profile, `IDR_SEED_PEERS`, config `p2p.seed_peers`, `--seed-peer`, `--seed-peers`, or `--seed-file`.
 
 Create a seed file:
 
@@ -109,7 +109,7 @@ Expected: the seed peer is normalized, stored with source `seed`, not duplicated
 Mine on Node A:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8611 --address <NODE_A_DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --threads 4 --once
 ```
 
 Sync Node B:
@@ -134,10 +134,10 @@ go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn --network testnet in
 go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
 go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
 go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet info
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 ```
 
@@ -147,7 +147,7 @@ Expected: faucet request returns `status: pending`, recipient confirmed balance 
 
 Use this controlled end-to-end flow when testing a service owner that needs the current testnet service collateral threshold.
 
-Start a faucet node with a 1000 DKC request amount:
+Start a faucet node with a 1000 IDR request amount:
 
 ```powershell
 go run ./node/cmd/deskachain --datadir ./testdata/e2e_service dev reset --yes
@@ -160,9 +160,9 @@ go run ./node/cmd/deskachain --datadir ./testdata/e2e_service node start --rpc :
 Mine enough mature faucet balance, request funds, and mine one confirmation:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
 ```
 
@@ -170,7 +170,7 @@ Lock the service collateral and mine the stake transaction:
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake list --address <OWNER_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
 ```
@@ -179,18 +179,18 @@ Register and run the service simulation once:
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
 ```
 
 Expected:
 
-- required stake: `1000 DKC`
-- active stake: `1000 DKC`
+- required stake: `1000 IDR`
+- active stake: `1000 IDR`
 - stake eligible: `true`
 - collateral status: `eligible`
 - eligible simulated points: greater than `0`
-- service points are simulation-only and are not spendable DKC
+- service points are simulation-only and are not spendable IDR
 - total supply changes only when blocks are mined and only by normal coinbase rewards
 
 ## Network Mismatch Check
@@ -213,9 +213,9 @@ An offline peer check records the peer as `offline` with `last_error`; a later s
 Service RPC is for controlled testnet simulation. Do not expose it publicly without rate limits and abuse controls.
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_DKC_ADDR> --endpoint http://127.0.0.1:9701
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_DKC_ADDR> --endpoint http://127.0.0.1:9701 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701 --once
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_IDR_ADDR>
 ```
 
 Expected: service score uses testnet collateral parameters. Service points remain simulation-only.

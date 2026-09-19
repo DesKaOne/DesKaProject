@@ -279,7 +279,7 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"faucet_rpc":                h.info.EnableFaucetRPC,
 		"service_rpc":               h.info.EnableServiceRPC,
 		"mainnet_available":         false,
-		"testnet_value_warning":     "testnet DKC has no monetary value",
+		"testnet_value_warning":     "testnet IDR has no monetary value",
 		"indexer_mode":              "simple_scan",
 	})
 }
@@ -332,7 +332,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-	} else if strings.HasPrefix(query, "DKC") {
+	} else if strings.HasPrefix(query, "IDR") {
 		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
 			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
 			return
@@ -364,7 +364,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or DKC address")
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
 		return
 	}
 
@@ -528,7 +528,7 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		"service_collateral_eligible": score.StakeEligible,
 		"service_points":              score.SimulatedPoints,
 		"simulation_only":             true,
-		"service_points_warning":      "service points are simulation-only and are not spendable DKC",
+		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
 	})
 }
 
@@ -1756,7 +1756,7 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"coinbase_maturity":              net.Consensus.CoinbaseMaturity,
 		"pending_tx_count":               pendingCount,
 		"peer_count":                     peerCount,
-		"note":                           "testnet mining is for testing only; testnet DKC has no monetary value",
+		"note":                           "testnet mining is for testing only; testnet IDR has no monetary value",
 	}
 }
 
@@ -2075,21 +2075,21 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
 	p := h.profile()
 	writeJSON(w, http.StatusOK, map[string]any{
-		"enabled":       p.Fee.Enabled,
-		"fee_asset_id":  config.FeeAssetID,
-		"fee_asset":     config.NativeAssetID,
-		"gas_price":     p.Fee.MinGasPrice,
-		"min_fee":       p.Fee.MinFee,
-		"bytes_per_gas": p.Fee.BytesPerGas,
+		"enabled":        p.Fee.Enabled,
+		"fee_asset_id":   config.FeeAssetID,
+		"fee_asset":      config.NativeAssetID,
+		"gas_price":      p.Fee.MinGasPrice,
+		"min_fee":        p.Fee.MinFee,
+		"bytes_per_gas":  p.Fee.BytesPerGas,
 		"max_gas_per_tx": p.Fee.MaxGasPerTx,
 		"base_gas": map[string]uint64{
-			"transfer_idr":  p.Fee.BaseGasTransfer,
+			"transfer_idr":   p.Fee.BaseGasTransfer,
 			"transfer_token": p.Fee.BaseGasAssetTransfer,
-			"stake_lock":    p.Fee.BaseGasStakeLock,
-			"stake_unlock":  p.Fee.BaseGasStakeUnlock,
-			"asset_create":  p.Fee.BaseGasAssetCreate,
-			"asset_mint":    p.Fee.BaseGasAssetMint,
-			"asset_burn":    p.Fee.BaseGasAssetBurn,
+			"stake_lock":     p.Fee.BaseGasStakeLock,
+			"stake_unlock":   p.Fee.BaseGasStakeUnlock,
+			"asset_create":   p.Fee.BaseGasAssetCreate,
+			"asset_mint":     p.Fee.BaseGasAssetMint,
+			"asset_burn":     p.Fee.BaseGasAssetBurn,
 		},
 		"paymaster_enabled": p.Asset.PaymasterEnabled,
 	})
@@ -2153,11 +2153,11 @@ func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":           true,
-		"asset":        def,
-		"native":       def.ID == config.NativeAssetID,
-		"fee_asset":    def.ID == config.FeeAssetID,
-		"network":      h.profile().Name,
+		"ok":        true,
+		"asset":     def,
+		"native":    def.ID == config.NativeAssetID,
+		"fee_asset": def.ID == config.FeeAssetID,
+		"network":   h.profile().Name,
 	})
 }
 
@@ -2349,7 +2349,7 @@ func (h handler) faucetInfo(w http.ResponseWriter, _ *http.Request) {
 		"max_per_address":      amount.Format(h.faucetMaxPerAddress()),
 		"min_interval_seconds": int64(h.faucetMinInterval().Seconds()),
 		"mempool_pending":      len(pending),
-		"note":                 "testnet faucet only; testnet DKC has no monetary value",
+		"note":                 "testnet faucet only; testnet IDR has no monetary value",
 	})
 }
 
@@ -3736,7 +3736,7 @@ func (h handler) explorerServiceSummary(address string, node *servicenode.Node) 
 		"status":                      eligibleStatus,
 		"simulation_only":             true,
 		"scope":                       "local_node_service_store",
-		"service_points_warning":      "service points are simulation-only and are not spendable DKC",
+		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
 		"service_registry_consensus":  false,
 		"stake_collateral_consensus":  true,
 		"local_service_state_warning": "service registration and score samples are local to this RPC node",

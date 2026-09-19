@@ -14,7 +14,7 @@ Status saat ini:
 * testnet:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * Multi-node controlled local testnet sudah jalan:
@@ -32,8 +32,8 @@ Status saat ini:
 * Service node testnet valid.
 * Testnet staking/service params sudah profile-aware:
 
-  * min stake amount: 100 DKC
-  * min service stake: 1000 DKC
+  * min stake amount: 100 IDR
+  * min service stake: 1000 IDR
   * unbonding period: 100
 * Staking tetap collateral-only.
 * Service points tetap simulation-only.
@@ -69,7 +69,7 @@ Non-goals:
 * Jangan implement validator set.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali bug fatal.
@@ -462,7 +462,7 @@ Expected:
 
 Mine A:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8711 --address <A_DKC_ADDR> --threads 4 --max-blocks 2
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8711 --address <A_IDR_ADDR> --threads 4 --max-blocks 2
 
 Sync B:
 
@@ -477,7 +477,7 @@ Expected:
 Stop B.
 Mine A again:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8711 --address <A_DKC_ADDR> --threads 4 --max-blocks 2
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8711 --address <A_IDR_ADDR> --threads 4 --max-blocks 2
 
 Restart B WITHOUT bootnode flag:
 

@@ -13,25 +13,25 @@ const (
 	CoinName = "DesKaChain"
 	// Ticker/Decimals/UnitsPerCoin are retained for legacy v1/v2 compatibility.
 	// v3 uses the explicit native asset model below.
-	Ticker   = "DKC"
+	Ticker   = "IDR"
 	Decimals = 8
 
-	NativeAssetID       = "IDR"
-	NativeAssetSymbol   = "IDR"
+	NativeAssetID             = "IDR"
+	NativeAssetSymbol         = "IDR"
 	NativeAssetDecimals uint8 = 0
-	FeeAssetID          = NativeAssetID
+	FeeAssetID                = NativeAssetID
 
-	UnitsPerCoin        uint64 = 100000000
-	InitialBlockReward  uint64 = 50 * UnitsPerCoin
+	UnitsPerCoin         uint64 = 100000000
+	InitialBlockReward   uint64 = 50 * UnitsPerCoin
 	DefaultMaxBlockBytes uint64 = 1 << 20
 	DefaultMaxTxBytes    uint64 = 128 << 10
 	DefaultMaxTxCount    uint64 = 2000
-	DefaultDataDir             = "data"
-	DefaultDBPath              = "data/chain.db"
-	DefaultWalletPath          = "data/wallets.json"
-	DefaultMempoolPath         = "data/mempool.json"
-	InitialDifficulty   uint32 = 4
-	BlockTimeTargetSecs int64  = 10
+	DefaultDataDir              = "data"
+	DefaultDBPath               = "data/chain.db"
+	DefaultWalletPath           = "data/wallets.json"
+	DefaultMempoolPath          = "data/mempool.json"
+	InitialDifficulty    uint32 = 4
+	BlockTimeTargetSecs  int64  = 10
 
 	GenesisTimestamp int64 = 1717200000
 	GenesisMessage         = "DesKaChain Genesis - fair CPU mining starts here"
@@ -190,36 +190,36 @@ type NetworkLimits struct {
 }
 
 type NetworkConfig struct {
-	NetworkName          string           `json:"network_name"`
-	Name                 string           `json:"name"`
-	NetworkID            string           `json:"network_id"`
-	ChainID              uint64           `json:"chain_id"`
-	AddressPrefix        string           `json:"address_prefix"`
-	AddressVersion       byte             `json:"address_version"`
-	LegacyAddressAllowed bool             `json:"legacy_address_allowed"`
-	DefaultRPCPort       int              `json:"default_rpc_port"`
-	DefaultP2PPort       int              `json:"default_p2p_port"`
-	ProtocolVersion      uint32           `json:"protocol_version"`
-	MinProtocolVersion   uint32           `json:"min_protocol_version"`
-	RPCAPIVersion        string           `json:"rpc_api_version"`
-	P2PProtocolVersion   string           `json:"p2p_protocol_version"`
-	BlockVersion         uint32           `json:"block_version"`
-	TxVersion            uint32           `json:"tx_version"`
-	Difficulty           DifficultyParams `json:"difficulty"`
-	Consensus            ConsensusParams  `json:"consensus"`
-	Asset                AssetParams      `json:"asset"`
-	Fee                  FeeParams        `json:"fee"`
-	Economic             EconomicParams   `json:"economic"`
-	MaxPeers             int              `json:"max_peers"`
-	MaxReorgDepth        uint64           `json:"max_reorg_depth"`
-	MinMiningPeers       int              `json:"min_mining_peers"`
-	AllowIsolatedMining  bool             `json:"allow_isolated_mining"`
-	MinWritePeers        int              `json:"min_write_peers"`
+	NetworkName              string           `json:"network_name"`
+	Name                     string           `json:"name"`
+	NetworkID                string           `json:"network_id"`
+	ChainID                  uint64           `json:"chain_id"`
+	AddressPrefix            string           `json:"address_prefix"`
+	AddressVersion           byte             `json:"address_version"`
+	LegacyAddressAllowed     bool             `json:"legacy_address_allowed"`
+	DefaultRPCPort           int              `json:"default_rpc_port"`
+	DefaultP2PPort           int              `json:"default_p2p_port"`
+	ProtocolVersion          uint32           `json:"protocol_version"`
+	MinProtocolVersion       uint32           `json:"min_protocol_version"`
+	RPCAPIVersion            string           `json:"rpc_api_version"`
+	P2PProtocolVersion       string           `json:"p2p_protocol_version"`
+	BlockVersion             uint32           `json:"block_version"`
+	TxVersion                uint32           `json:"tx_version"`
+	Difficulty               DifficultyParams `json:"difficulty"`
+	Consensus                ConsensusParams  `json:"consensus"`
+	Asset                    AssetParams      `json:"asset"`
+	Fee                      FeeParams        `json:"fee"`
+	Economic                 EconomicParams   `json:"economic"`
+	MaxPeers                 int              `json:"max_peers"`
+	MaxReorgDepth            uint64           `json:"max_reorg_depth"`
+	MinMiningPeers           int              `json:"min_mining_peers"`
+	AllowIsolatedMining      bool             `json:"allow_isolated_mining"`
+	MinWritePeers            int              `json:"min_write_peers"`
 	AllowIsolatedWrites      bool             `json:"allow_isolated_writes"`
-	RequireAuthenticatedNode bool            `json:"require_authenticated_node"`
+	RequireAuthenticatedNode bool             `json:"require_authenticated_node"`
 	SeedPeers                []string         `json:"seed_peers"`
-	GenesisHash          string           `json:"genesis_hash"`
-	NetworkLimits        NetworkLimits    `json:"network_limits"`
+	GenesisHash              string           `json:"genesis_hash"`
+	NetworkLimits            NetworkLimits    `json:"network_limits"`
 }
 
 type DifficultyParams struct {
@@ -242,18 +242,18 @@ type AssetParams struct {
 }
 
 type FeeParams struct {
-	Enabled             bool   `json:"enabled"`
-	MinFee              uint64 `json:"min_fee"`
-	MinGasPrice         uint64 `json:"min_gas_price"`
-	BytesPerGas         uint64 `json:"bytes_per_gas"`
-	MaxGasPerTx         uint64 `json:"max_gas_per_tx"`
-	BaseGasTransfer     uint64 `json:"base_gas_transfer"`
+	Enabled              bool   `json:"enabled"`
+	MinFee               uint64 `json:"min_fee"`
+	MinGasPrice          uint64 `json:"min_gas_price"`
+	BytesPerGas          uint64 `json:"bytes_per_gas"`
+	MaxGasPerTx          uint64 `json:"max_gas_per_tx"`
+	BaseGasTransfer      uint64 `json:"base_gas_transfer"`
 	BaseGasAssetTransfer uint64 `json:"base_gas_asset_transfer"`
-	BaseGasStakeLock    uint64 `json:"base_gas_stake_lock"`
-	BaseGasStakeUnlock  uint64 `json:"base_gas_stake_unlock"`
-	BaseGasAssetCreate  uint64 `json:"base_gas_asset_create"`
-	BaseGasAssetMint    uint64 `json:"base_gas_asset_mint"`
-	BaseGasAssetBurn    uint64 `json:"base_gas_asset_burn"`
+	BaseGasStakeLock     uint64 `json:"base_gas_stake_lock"`
+	BaseGasStakeUnlock   uint64 `json:"base_gas_stake_unlock"`
+	BaseGasAssetCreate   uint64 `json:"base_gas_asset_create"`
+	BaseGasAssetMint     uint64 `json:"base_gas_asset_mint"`
+	BaseGasAssetBurn     uint64 `json:"base_gas_asset_burn"`
 }
 
 type EconomicParams struct {
@@ -283,9 +283,9 @@ func Localnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "localnet",
 		Name:                 "localnet",
-		NetworkID:            "dkc-local-1",
+		NetworkID:            "idr-local-1",
 		ChainID:              777001,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x1E,
 		LegacyAddressAllowed: true,
 		DefaultRPCPort:       8331,
@@ -293,7 +293,7 @@ func Localnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -366,9 +366,9 @@ func Testnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "testnet",
 		Name:                 "testnet",
-		NetworkID:            "dkc-testnet-1",
+		NetworkID:            "idr-testnet-1",
 		ChainID:              777101,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x1F,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       18331,
@@ -376,7 +376,7 @@ func Testnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -449,9 +449,9 @@ func Mainnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "mainnet",
 		Name:                 "mainnet",
-		NetworkID:            "dkc-main-1",
+		NetworkID:            "idr-main-1",
 		ChainID:              777000,
-		AddressPrefix:        "DKC",
+		AddressPrefix:        "IDR",
 		AddressVersion:       0x20,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       8333,
@@ -459,7 +459,7 @@ func Mainnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "dkc-p2p/1",
+		P2PProtocolVersion:   "idr-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -554,31 +554,31 @@ func DefaultMaxReorgDepth(profile NetworkConfig) uint64 {
 }
 
 func MaxReorgDepthFromEnv(profile NetworkConfig) (uint64, error) {
-	value := strings.TrimSpace(os.Getenv("DKC_MAX_REORG_DEPTH"))
+	value := strings.TrimSpace(os.Getenv("IDR_MAX_REORG_DEPTH"))
 	if value == "" {
 		return DefaultMaxReorgDepth(profile), nil
 	}
 	parsed, err := strconv.ParseUint(value, 10, 64)
 	if err != nil || parsed == 0 {
-		return 0, fmt.Errorf("invalid DKC_MAX_REORG_DEPTH: %q", value)
+		return 0, fmt.Errorf("invalid IDR_MAX_REORG_DEPTH: %q", value)
 	}
 	return parsed, nil
 }
 
 func MinMiningPeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("DKC_MIN_MINING_PEERS", profile.MinMiningPeers)
+	return intFromEnv("IDR_MIN_MINING_PEERS", profile.MinMiningPeers)
 }
 
 func AllowIsolatedMiningFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("DKC_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
+	return boolFromEnv("IDR_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
 }
 
 func MinWritePeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("DKC_MIN_WRITE_PEERS", profile.MinWritePeers)
+	return intFromEnv("IDR_MIN_WRITE_PEERS", profile.MinWritePeers)
 }
 
 func AllowIsolatedWritesFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("DKC_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
+	return boolFromEnv("IDR_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
 }
 
 func intFromEnv(name string, fallback int) (int, error) {

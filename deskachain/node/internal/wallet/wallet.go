@@ -4,8 +4,9 @@ import (
 	"errors"
 
 	"deskachain/internal/config"
-	dkcrypto "deskachain/internal/crypto"
+	idrrypto "deskachain/internal/crypto"
 	"deskachain/internal/types"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 )
 
@@ -20,41 +21,41 @@ func New() (Wallet, error) {
 }
 
 func NewWithProfile(profile config.NetworkConfig) (Wallet, error) {
-	privateKey, err := dkcrypto.GeneratePrivateKey()
+	privateKey, err := idrrypto.GeneratePrivateKey()
 	if err != nil {
 		return Wallet{}, err
 	}
-	publicKey := dkcrypto.PublicKeyToHex(privateKey.PubKey())
-	address, err := dkcrypto.AddressFromPublicKeyForNetwork(publicKey, profile)
+	publicKey := idrrypto.PublicKeyToHex(privateKey.PubKey())
+	address, err := idrrypto.AddressFromPublicKeyForNetwork(publicKey, profile)
 	if err != nil {
 		return Wallet{}, err
 	}
 	return Wallet{
 		Address:       address,
-		PrivateKeyHex: dkcrypto.PrivateKeyToHex(privateKey),
+		PrivateKeyHex: idrrypto.PrivateKeyToHex(privateKey),
 		PublicKeyHex:  publicKey,
 	}, nil
 }
 
 func FromPrivateKeyHex(privateKeyHex string, profile config.NetworkConfig) (Wallet, error) {
-	privateKey, err := dkcrypto.PrivateKeyFromHex(privateKeyHex)
+	privateKey, err := idrrypto.PrivateKeyFromHex(privateKeyHex)
 	if err != nil {
 		return Wallet{}, err
 	}
-	publicKey := dkcrypto.PublicKeyToHex(privateKey.PubKey())
-	address, err := dkcrypto.AddressFromPublicKeyForNetwork(publicKey, profile)
+	publicKey := idrrypto.PublicKeyToHex(privateKey.PubKey())
+	address, err := idrrypto.AddressFromPublicKeyForNetwork(publicKey, profile)
 	if err != nil {
 		return Wallet{}, err
 	}
 	return Wallet{
 		Address:       address,
-		PrivateKeyHex: dkcrypto.PrivateKeyToHex(privateKey),
+		PrivateKeyHex: idrrypto.PrivateKeyToHex(privateKey),
 		PublicKeyHex:  publicKey,
 	}, nil
 }
 
 func (w Wallet) PrivateKey() (*btcec.PrivateKey, error) {
-	return dkcrypto.PrivateKeyFromHex(w.PrivateKeyHex)
+	return idrrypto.PrivateKeyFromHex(w.PrivateKeyHex)
 }
 
 func (w Wallet) SignTransaction(tx *types.Transaction) error {
@@ -82,14 +83,13 @@ func (w Wallet) SignTransactionWithProfile(tx *types.Transaction, profile config
 	if err != nil {
 		return err
 	}
-	sig, err := dkcrypto.SignHex(privateKey, signingBytes)
+	sig, err := idrrypto.SignHex(privateKey, signingBytes)
 	if err != nil {
 		return err
 	}
 	tx.Signature = sig
 	return tx.RefreshIDForChainID(profile.ChainID)
 }
-
 
 // SignFeePayerAuthorization signs the native-IDR fee sponsorship authorization.
 // It deliberately does not recalculate tx.ID because the sender transaction
@@ -116,7 +116,7 @@ func (w Wallet) SignFeePayerAuthorization(tx *types.Transaction, profile config.
 	if err != nil {
 		return err
 	}
-	sig, err := dkcrypto.SignHex(privateKey, signingBytes)
+	sig, err := idrrypto.SignHex(privateKey, signingBytes)
 	if err != nil {
 		return err
 	}

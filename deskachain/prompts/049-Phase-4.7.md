@@ -34,7 +34,7 @@ Status saat ini:
 * Public RPC safety tetap aman.
 * Explorer API/UI read-only.
 * Faucet/stake/service multi-host sudah valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -65,7 +65,7 @@ Do not change consensus or testnet genesis.
 Non-goals:
 
 * Do not launch mainnet.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not promise price/profit/rewards.
 * Do not add staking APY.
 * Do not make service points spendable.
@@ -145,12 +145,12 @@ Public testnet release candidate for limited testing.
 
 ## Important warnings
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
-* Do not treat testnet DKC as investment.
+* Do not treat testnet IDR as investment.
 * No mining income/profit promise.
 * Staking is collateral-only.
-* Service points are simulation-only and not spendable DKC.
+* Service points are simulation-only and not spendable IDR.
 * Testnet may reset.
 * Back up wallet files.
 * Do not expose wallet/admin RPC publicly.
@@ -158,8 +158,8 @@ Public testnet release candidate for limited testing.
 ## What is included
 
 * deskachain node/CLI.
-* dkcminer CPU miner.
-* dkcservice service-node simulation agent.
+* idrminer CPU miner.
+* idrservice service-node simulation agent.
 * Public testnet profile.
 * P2P seed peer sync.
 * Public read-only RPC mode.
@@ -249,7 +249,7 @@ A. What you need
 B. What this is
 
 * Public testnet RC.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet unavailable.
 
 C. Download and verify
@@ -387,7 +387,7 @@ Service:
 
 * Stake lock works.
 * Service register works.
-* dkcservice --once works.
+* idrservice --once works.
 * Service eligible shown.
 * Points clearly simulation-only.
 

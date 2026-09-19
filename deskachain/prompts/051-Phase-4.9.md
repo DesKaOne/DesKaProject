@@ -15,7 +15,7 @@ Status saat ini:
 
   * RPC: http://100.86.152.39:9311
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * height: 1049
   * public_rpc: true
@@ -24,7 +24,7 @@ Status saat ini:
   * explorer_ok: true
 * Explorer API/UI read-only sudah valid.
 * Public RPC safety valid.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -61,7 +61,7 @@ Non-goals:
 * Do not accept blocks without network/genesis validation.
 * Do not expose wallet/admin RPC publicly.
 * Do not promise price/profit/rewards.
-* Do not give testnet DKC monetary value.
+* Do not give testnet IDR monetary value.
 * Do not add staking APY.
 * Do not make service points spendable.
 
@@ -367,7 +367,7 @@ Add optional peer checks:
 PowerShell examples:
 
 powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcUrl http://100.86.152.39:9311`
--ExpectedNetwork testnet `    -ExpectedNetworkID dkc-testnet-1`
+-ExpectedNetwork testnet `    -ExpectedNetworkID idr-testnet-1`
 -ExpectedChainID 777101
 
 powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcUrl http://100.86.152.39:9311`

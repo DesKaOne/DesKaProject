@@ -7,7 +7,7 @@ Usage: bash ./scripts/testnet-health.sh http://127.0.0.1:9311 [options]
 
 Options:
   --expected-network testnet
-  --expected-network-id dkc-testnet-1
+  --expected-network-id idr-testnet-1
   --expected-chain-id 777101
   --allow-wallet-rpc
   --allow-admin-rpc

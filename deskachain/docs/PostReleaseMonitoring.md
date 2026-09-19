@@ -1,6 +1,6 @@
 # DesKaChain RC1 Post-Release Monitoring
 
-Testnet DKC has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC on public nodes.
+Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC on public nodes.
 
 ## Purpose
 
@@ -41,13 +41,13 @@ The goal is to answer:
 PowerShell health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID dkc-testnet-1 -ExpectedChainID 777101
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101
 ```
 
 Bash health check:
 
 ```sh
-bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id dkc-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
+bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id idr-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
 ```
 
 Peer diagnostics:
@@ -64,7 +64,7 @@ Peer diagnostics:
 
 - Financial value.
 - Mining profitability.
-- Any claim that testnet DKC has monetary value.
+- Any claim that testnet IDR has monetary value.
 - Staking yield.
 - Service point value.
 

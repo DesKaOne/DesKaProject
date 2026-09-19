@@ -4,12 +4,12 @@ This runbook covers public testnet mining stability. It does not change consensu
 
 ## Miner Runtime
 
-`dkcminer` survives temporary RPC failures in continuous mode. It logs RPC unreachable, retry delay, new jobs, found blocks, accepted submits, rejected submits, stale jobs, and clean shutdown.
+`idrminer` survives temporary RPC failures in continuous mode. It logs RPC unreachable, retry delay, new jobs, found blocks, accepted submits, rejected submits, stale jobs, and clean shutdown.
 
 Useful flags:
 
 ```sh
-./dkcminer --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> \
+./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> \
   --threads 2 \
   --retry \
   --retry-delay 3s \
@@ -30,13 +30,13 @@ Stale submit or duplicate submit is expected when two miners race. The node shou
 One miner to a local Windows node:
 
 ```powershell
-.\dkcminer.exe --rpc-url http://127.0.0.1:9312 --address <DKC_ADDRESS> --threads 2 --max-blocks 3
+.\idrminer.exe --rpc-url http://127.0.0.1:9312 --address <IDR_ADDRESS> --threads 2 --max-blocks 3
 ```
 
 One miner to the VPS seed:
 
 ```powershell
-.\dkcminer.exe --rpc-url http://100.86.152.39:9311 --address <DKC_ADDRESS_2> --threads 2 --max-blocks 3
+.\idrminer.exe --rpc-url http://100.86.152.39:9311 --address <IDR_ADDRESS_2> --threads 2 --max-blocks 3
 ```
 
 After racing miners, check:

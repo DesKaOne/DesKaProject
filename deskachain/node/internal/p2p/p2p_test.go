@@ -223,7 +223,7 @@ func TestPeerStoreMetadataAndLegacyMigration(t *testing.T) {
 	if len(meta) != 1 || meta[0].URL != "http://127.0.0.1:9331" {
 		t.Fatalf("legacy migration failed: %#v", meta)
 	}
-	hs := Handshake{NodeID: "n1", NetworkID: "dkc-local-1", ChainID: 777001, Height: 3, TipHash: "abc"}
+	hs := Handshake{NodeID: "n1", NetworkID: "idr-local-1", ChainID: 777001, Height: 3, TipHash: "abc"}
 	if err := store.Upsert(MetadataFromHandshake(meta[0].URL, hs, 1)); err != nil {
 		t.Fatal(err)
 	}

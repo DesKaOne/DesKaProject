@@ -1,6 +1,6 @@
 # DesKaChain RC2 Planning
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 
 ## RC2 Goal
 

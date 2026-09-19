@@ -15,7 +15,7 @@ if (Test-Path $ReleaseDir) {
 }
 New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
-$Forbidden = @("wallets.json", "chain.db", "mempool.json", "peers.json", "node.lock", "node_id", "faucet_state.json", "dkcservice-state.json", "dkcservice-states.json", "*.key", "*.pem")
+$Forbidden = @("wallets.json", "chain.db", "mempool.json", "peers.json", "node.lock", "node_id", "faucet_state.json", "idrservice-state.json", "idrservice-states.json", "*.key", "*.pem")
 $ForbiddenDirs = @("testdata", "data", "wallets", ".git", "dist")
 $Targets = @("windows-amd64", "linux-amd64", "linux-arm64")
 
@@ -114,7 +114,7 @@ foreach ($Target in $Targets) {
     foreach ($Entry in $ArchiveEntries) {
         $Normalized = $Entry -replace "\\", "/"
         if ($Normalized -match "(^|/)(testdata|data|wallets|\.git|dist)(/|$)" -or
-            $Normalized -match "(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|dkcservice-state\.json|dkcservice-states\.json)$" -or
+            $Normalized -match "(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|idrservice-state\.json|idrservice-states\.json)$" -or
             ($Normalized -match "\.env$" -and $Normalized -notmatch "^(\./)?examples/(systemd|testnet)/") -or
             $Normalized -match "\.(key|pem)$") {
             throw "refusing archive with runtime/private contents: $Entry"

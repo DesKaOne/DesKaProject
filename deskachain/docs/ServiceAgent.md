@@ -1,30 +1,30 @@
 # DesKaChain Service Node Agent
 
-`dkcservice` is the Phase 3.1 service node agent for DesKaChain service simulation.
+`idrservice` is the Phase 3.1 service node agent for DesKaChain service simulation.
 
 It automates the Phase 3.0 service-node RPC workflow:
 
-- register a DKC address as a service node,
+- register a IDR address as a service node,
 - send heartbeats,
 - create simulated verification challenges,
 - submit safe simulated measurements,
 - fetch service score and simulated points,
 - save local agent state.
 
-It is not a public exit proxy. It does not open a VPN, relay, or public listener. It does not sell bandwidth. It does not mine PoW blocks. It does not earn spendable DKC. Service points are simulation-only research/testnet accounting.
+It is not a public exit proxy. It does not open a VPN, relay, or public listener. It does not sell bandwidth. It does not mine PoW blocks. It does not earn spendable IDR. Service points are simulation-only research/testnet accounting.
 
 Since Phase 3.2, the node may mark service reward simulation as stake-eligible when the configured owner address has enough active staking collateral. The agent reports that score metadata from RPC, but it does not lock or unlock stake by itself.
 
 ## Requirements
 
 - A running DesKaChain node with service RPC enabled.
-- A `DKC...` address.
+- A `IDR...` address.
 - No private key is required by the agent.
 
 ## Run Once
 
 ```powershell
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
 ```
 
 Expected output includes:
@@ -42,7 +42,7 @@ state saved
 ## Run Loop
 
 ```powershell
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
 ```
 
 Stop with `Ctrl+C`. The agent saves state before exit.
@@ -52,13 +52,13 @@ Stop with `Ctrl+C`. The agent saves state before exit.
 The default state file is:
 
 ```text
-./dkcservice-state.json
+./idrservice-state.json
 ```
 
 Inspect it:
 
 ```powershell
-go run ./node/cmd/dkcservice status --state ./dkcservice-state.json
+go run ./node/cmd/idrservice status --state ./idrservice-state.json
 ```
 
 The state stores service metadata and counters only. It does not store private keys.

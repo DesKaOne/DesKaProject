@@ -37,8 +37,8 @@ build_target() {
   outdir="$DIST/$dir"
   mkdir -p "$outdir"
   (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/deskachain$ext" ./node/cmd/deskachain)
-  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/dkcminer$ext" ./node/cmd/dkcminer)
-  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/dkcservice$ext" ./node/cmd/dkcservice)
+  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/idrminer$ext" ./node/cmd/idrminer)
+  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/idrservice$ext" ./node/cmd/idrservice)
   printf 'built %s\n' "$outdir"
 }
 

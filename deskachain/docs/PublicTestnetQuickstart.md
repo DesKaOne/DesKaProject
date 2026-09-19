@@ -1,6 +1,6 @@
 # DesKaChain Public Testnet Quickstart
 
-This guide is for external public-testnet testers and operators. Testnet DKC has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
+This guide is for external public-testnet testers and operators. Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
 
 ## 1. Download
 
@@ -135,16 +135,16 @@ Peer diagnostics:
 Run the health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID dkc-testnet-1 -ExpectedChainID 777101 -CheckMining
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101 -CheckMining
 ```
 
 Linux:
 
 ```sh
-bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id dkc-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
+bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id idr-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
 ```
 
-Then verify the explorer, report issues using `.github/ISSUE_TEMPLATE/testnet-bug-report.md`, do not expose wallet/admin RPC, and remember testnet DKC has no monetary value.
+Then verify the explorer, report issues using `.github/ISSUE_TEMPLATE/testnet-bug-report.md`, do not expose wallet/admin RPC, and remember testnet IDR has no monetary value.
 
 Monitoring and feedback docs:
 
@@ -168,7 +168,7 @@ Linux:
 ```sh
 ./deskachain --datadir ./data/miner-wallet --network testnet init
 ADDR="$(./deskachain --datadir ./data/miner-wallet wallet new)"
-./dkcminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
 ```
 
 Windows PowerShell:
@@ -176,7 +176,7 @@ Windows PowerShell:
 ```powershell
 .\deskachain.exe --datadir .\data\miner-wallet --network testnet init
 $addr = .\deskachain.exe --datadir .\data\miner-wallet wallet new
-.\dkcminer.exe --rpc-url http://127.0.0.1:9311 --address $addr --threads 2 --once
+.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address $addr --threads 2 --once
 ```
 
 ## 9. Optional Faucet
@@ -186,7 +186,7 @@ Use faucet only if an operator provides a faucet RPC URL. Faucet funds are testn
 ## 10. Safety
 
 - Testnet only.
-- Testnet DKC has no monetary value.
+- Testnet IDR has no monetary value.
 - Mainnet is unavailable.
 - No mining income, staking APY, profit, or reward promise.
 - Staking is collateral-only.

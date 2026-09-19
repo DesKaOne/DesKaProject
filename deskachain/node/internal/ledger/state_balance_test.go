@@ -10,7 +10,7 @@ import (
 
 func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 	account := StateAccount{
-		Address:   "DKC-alice",
+		Address:   "IDR-alice",
 		Confirmed: 100,
 		Mature:    100,
 		Nonce:     7,
@@ -18,33 +18,33 @@ func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 	stakes := []staking.Record{
 		{
 			StakeID:      "stake-active",
-			OwnerAddress: "DKC-alice",
+			OwnerAddress: "IDR-alice",
 			Amount:       20,
 			Status:       staking.StatusActive,
 		},
 		{
 			StakeID:       "stake-unlocking",
-			OwnerAddress:  "DKC-alice",
+			OwnerAddress:  "IDR-alice",
 			Amount:        10,
 			Status:        staking.StatusUnlocking,
 			ReleaseHeight: 20,
 		},
 		{
 			StakeID:      "stake-released",
-			OwnerAddress: "DKC-alice",
+			OwnerAddress: "IDR-alice",
 			Amount:       5,
 			Status:       staking.StatusReleased,
 		},
 	}
 	pending := []types.Transaction{
-		{From: "DKC-alice", To: "DKC-bob", Amount: 11, Fee: 2, Type: types.TxTypeTransfer},
-		{From: "DKC-bob", To: "DKC-alice", Amount: 7, Type: types.TxTypeTransfer},
-		{From: "DKC-alice", To: "DKC-alice", Amount: 15, Type: types.TxTypeStakeLock},
-		{From: "COINBASE", To: "DKC-alice", Amount: 999, Coinbase: true},
+		{From: "IDR-alice", To: "IDR-bob", Amount: 11, Fee: 2, Type: types.TxTypeTransfer},
+		{From: "IDR-bob", To: "IDR-alice", Amount: 7, Type: types.TxTypeTransfer},
+		{From: "IDR-alice", To: "IDR-alice", Amount: 15, Type: types.TxTypeStakeLock},
+		{From: "COINBASE", To: "IDR-alice", Amount: 999, Coinbase: true},
 	}
 
 	details := BalanceDetailsFromState(
-		"DKC-alice",
+		"IDR-alice",
 		account,
 		stakes,
 		pending,
@@ -72,13 +72,13 @@ func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 
 func TestBalanceDetailsFromStateNeverUnderflowsSpendable(t *testing.T) {
 	details := BalanceDetailsFromState(
-		"DKC-alice",
-		StateAccount{Address: "DKC-alice", Mature: 10},
+		"IDR-alice",
+		StateAccount{Address: "IDR-alice", Mature: 10},
 		[]staking.Record{
-			{StakeID: "stake", OwnerAddress: "DKC-alice", Amount: 10, Status: staking.StatusActive},
+			{StakeID: "stake", OwnerAddress: "IDR-alice", Amount: 10, Status: staking.StatusActive},
 		},
 		[]types.Transaction{
-			{From: "DKC-alice", To: "DKC-bob", Amount: 100, Fee: 1, Type: types.TxTypeTransfer},
+			{From: "IDR-alice", To: "IDR-bob", Amount: 100, Fee: 1, Type: types.TxTypeTransfer},
 		},
 		100,
 		1,

@@ -22,12 +22,12 @@ Status saat ini:
 * testnet params:
 
   * network: testnet
-  * network_id: dkc-testnet-1
+  * network_id: idr-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * coinbase maturity: 100
-  * min stake amount: 100 DKC
-  * min service stake: 1000 DKC
+  * min stake amount: 100 IDR
+  * min service stake: 1000 IDR
   * unbonding period: 100 blocks
 * Staking tetap collateral-only.
 * Service points tetap simulation-only.
@@ -38,7 +38,7 @@ DesKaChain Phase 3.4.1 — Faucet → Stake 1000 → Service Eligible E2E Scenar
 
 Tujuan:
 Menambahkan skenario end-to-end testnet:
-faucet funding -> recipient receives testnet DKC -> stake lock 1000 DKC -> mine stake tx -> service register -> dkcservice once -> service score eligible.
+faucet funding -> recipient receives testnet IDR -> stake lock 1000 IDR -> mine stake tx -> service register -> idrservice once -> service score eligible.
 
 Fokus:
 
@@ -64,7 +64,7 @@ Non-goals:
 * Jangan bypass mempool/chain validation.
 * Jangan membuat faucet auto-mint.
 * Jangan membuat service points spendable.
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 
 ==================================================
 
@@ -81,30 +81,30 @@ Buat skenario resmi:
 6. Request faucet funds to service owner.
 7. Mine one block to confirm faucet tx.
 8. Verify service owner balance.
-9. Repeat faucet request or use configured amount until owner has at least 1000 DKC spendable.
-10. Stake lock 1000 DKC from service owner.
+9. Repeat faucet request or use configured amount until owner has at least 1000 IDR spendable.
+10. Stake lock 1000 IDR from service owner.
 11. Mine one block to confirm stake tx.
 12. Verify stake status active.
 13. Verify balance shows active stake 1000 and spendable reduced.
 14. Register service node for service owner.
-15. Run dkcservice --once or equivalent service agent flow.
+15. Run idrservice --once or equivalent service agent flow.
 16. Check service score.
 17. Expected:
 
-    * required stake: 1000 DKC
-    * active stake: 1000 DKC
+    * required stake: 1000 IDR
+    * active stake: 1000 IDR
     * stake eligible: true
     * collateral status: eligible
     * eligible simulated points > 0
-    * service points are simulation only and are not spendable DKC
+    * service points are simulation only and are not spendable IDR
 18. Verify total supply changed only from mined coinbase blocks, not from faucet/stake/service.
 
 ==================================================
 2. Faucet funding amount UX
 ===========================
 
-Current faucet default amount may be 100 DKC.
-Testnet min service stake is 1000 DKC.
+Current faucet default amount may be 100 IDR.
+Testnet min service stake is 1000 IDR.
 
 Options:
 A. Keep faucet amount 100 and request 10 times with test helper/time control.
@@ -149,7 +149,7 @@ Required tests:
 * create testnet node/runtime in test.
 * create faucet address and owner address using testnet profile.
 * fund faucet with mature balance using helper or mined blocks.
-* call faucet request to owner for 1000 DKC.
+* call faucet request to owner for 1000 IDR.
 * mine/commit block containing faucet tx.
 * assert owner confirmed/spendable >= 1000.
 * call stake lock 1000.
@@ -159,8 +159,8 @@ Required tests:
 * run service challenge/score path or service agent once equivalent.
 * assert service score response:
 
-  * required stake = 1000 DKC
-  * active stake = 1000 DKC
+  * required stake = 1000 IDR
+  * active stake = 1000 IDR
   * stake_eligible = true
   * collateral_status = eligible
   * eligible_simulated_points > 0
@@ -180,7 +180,7 @@ Required tests:
 
 3. TestServiceNotEligibleWithInsufficientStakeE2E
 
-* owner stakes 100 DKC only.
+* owner stakes 100 IDR only.
 * service score:
 
   * active stake 100
@@ -242,8 +242,8 @@ Output assertions:
 * stake list status active.
 * service score shows:
 
-  * required stake: 1000 DKC
-  * active stake: 1000 DKC
+  * required stake: 1000 IDR
+  * active stake: 1000 IDR
   * stake eligible: true
   * collateral status: eligible
   * eligible simulated points.
@@ -286,17 +286,17 @@ But if this adds too much complexity, skip. Tests + docs are enough.
 Update docs/Faucet.md:
 
 * Add section: “Using faucet funds for service-node collateral”.
-* Explain testnet min service stake = 1000 DKC.
+* Explain testnet min service stake = 1000 IDR.
 * Example start faucet with amount 1000.
-* Example request 1000 DKC.
+* Example request 1000 IDR.
 * Mine confirmation.
-* Stake 1000 DKC.
+* Stake 1000 IDR.
 * Register service node.
-* Run dkcservice.
+* Run idrservice.
 * Check eligible simulated points.
 * Note:
 
-  * testnet DKC has no monetary value.
+  * testnet IDR has no monetary value.
   * service points are simulation only.
   * staking is collateral only, not APY.
 
@@ -305,14 +305,14 @@ Update docs/ServiceNode.md:
 * Add testnet collateral flow using faucet.
 * Add expected output:
 
-  * required stake: 1000 DKC
-  * active stake: 1000 DKC
+  * required stake: 1000 IDR
+  * active stake: 1000 IDR
   * stake eligible: true
   * collateral status: eligible.
 
 Update docs/Staking.md:
 
-* Add note that faucet-funded testnet DKC can be used for testing stake lock.
+* Add note that faucet-funded testnet IDR can be used for testing stake lock.
 * No staking rewards.
 
 Update docs/Testnet.md:
@@ -380,7 +380,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/e2e_service node start --rpc :
 
 Fund faucet:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check faucet:
 
@@ -397,12 +397,12 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 faucet request --ad
 Expected:
 
 * faucet tx created
-* amount 1000 DKC
+* amount 1000 IDR
 * status pending
 
 Mine faucet confirmation:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 
 Check owner:
 
@@ -421,12 +421,12 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake lock --addres
 Expected:
 
 * stake lock tx created
-* amount 1000 DKC
+* amount 1000 IDR
 * status pending
 
 Mine stake confirmation:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 
 Check stake:
 
@@ -445,7 +445,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service register --
 
 Run service agent:
 
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
 
 Check score:
 
@@ -453,12 +453,12 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service score --add
 
 Expected:
 
-* required stake: 1000 DKC
-* active stake: 1000 DKC
+* required stake: 1000 IDR
+* active stake: 1000 IDR
 * stake eligible: true
 * collateral status: eligible
 * eligible simulated points > 0
-* note: service points are simulation only and are not spendable DKC
+* note: service points are simulation only and are not spendable IDR
 
 Check chain:
 
@@ -499,7 +499,7 @@ After stake:
 
 Phase 3.4.1 valid if:
 
-* faucet-funded wallet can stake 1000 DKC on testnet.
+* faucet-funded wallet can stake 1000 IDR on testnet.
 * stake tx mines normally.
 * service score sees active stake 1000.
 * service eligibility true.

@@ -264,7 +264,7 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	}
 }
 
-func TestServicePointsStillNotDKC(t *testing.T) {
+func TestServicePointsStillNotIDR(t *testing.T) {
 	now := time.Unix(7000, 0)
 	paths := config.NewPaths(t.TempDir())
 	store := NewStore(paths, config.Localnet()).WithNow(func() time.Time { return now })
@@ -286,7 +286,7 @@ func TestServicePointsStillNotDKC(t *testing.T) {
 	}
 	after := serviceBlocks(t, paths)
 	if afterSupply := ledger.TotalSupply(after); afterSupply != beforeSupply {
-		t.Fatalf("service rewards changed DKC supply: before=%d after=%d", beforeSupply, afterSupply)
+		t.Fatalf("service rewards changed IDR supply: before=%d after=%d", beforeSupply, afterSupply)
 	}
 }
 

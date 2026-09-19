@@ -4,7 +4,7 @@ DesKaChain Public Testnet RC1 (`v0.4.6-testnet-rc1`) is ready for limited techni
 
 DesKaChain is a small experimental CPU-mined blockchain written in Go. This RC includes the node/CLI, standalone CPU miner, service-node simulation agent, public testnet profile, read-only Explorer API, embedded Explorer Web UI, faucet operator mode, staking collateral, and service-node simulation.
 
-This is testnet only. Testnet DKC has no monetary value. Mainnet is not available. There is no mining income, staking APY, profit, or reward promise. Service points are simulation-only and are not spendable DKC.
+This is testnet only. Testnet IDR has no monetary value. Mainnet is not available. There is no mining income, staking APY, profit, or reward promise. Service points are simulation-only and are not spendable IDR.
 
 ## Downloads
 

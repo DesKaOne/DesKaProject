@@ -15,7 +15,7 @@ On Node B:
 chain info:
 height: 0
 tip hash: genesis
-total supply: 50 DKC
+total supply: 50 IDR
 blocks: 2
 coinbase blocks: 1
 
@@ -23,16 +23,16 @@ chain validate:
 chain valid
 height: 1
 blocks: 2
-total supply: 50 DKC
+total supply: 50 IDR
 
 This is inconsistent.
 
 Expected:
-If blocks=2 and total supply=50 DKC after importing height 1, then chain info must report:
+If blocks=2 and total supply=50 IDR after importing height 1, then chain info must report:
 height: 1
 tip hash: imported block hash
 tip difficulty: 4
-total supply: 50 DKC
+total supply: 50 IDR
 blocks: 2
 chain validate agrees with chain info
 
@@ -139,7 +139,7 @@ Required tests:
   * height == 1
   * tip hash == imported block hash
   * blocks == 2
-  * total supply == 50 DKC
+  * total supply == 50 IDR
   * coinbase blocks == 1
 * call B chain validate.
 * assert validate height == chain info height.
@@ -214,7 +214,7 @@ Create miner wallet:
 go run ./node/cmd/deskachain --datadir ./testdata/seed_miner wallet new
 
 Mine on A:
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
 
 Check B:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain info
@@ -223,7 +223,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain validate
 Expected B:
 height: 1
 tip hash: mined block hash
-total supply: 50 DKC
+total supply: 50 IDR
 blocks: 2
 coinbase blocks: 1
 chain valid height: 1

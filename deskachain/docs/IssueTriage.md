@@ -1,6 +1,6 @@
 # DesKaChain RC1 Issue Triage
 
-Testnet DKC has no monetary value. Mainnet is not available. Never ask testers to paste private keys, wallet files, or secrets.
+Testnet IDR has no monetary value. Mainnet is not available. Never ask testers to paste private keys, wallet files, or secrets.
 
 ## Severity
 
@@ -43,7 +43,7 @@ Testnet DKC has no monetary value. Mainnet is not available. Never ask testers t
 - Do not request secrets, tokens, systemd private env files, or SSH keys.
 - Ask testers to redact IPs if needed.
 - Keep public RPC advice read-only by default.
-- Do not imply testnet DKC has price, profit, APY, or guaranteed future value.
+- Do not imply testnet IDR has price, profit, APY, or guaranteed future value.
 
 ## Close Rules
 

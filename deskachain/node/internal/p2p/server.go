@@ -153,24 +153,24 @@ func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	handshake := Handshake{
-		NetworkName:         net.NetworkName,
-		NetworkID:           net.NetworkID,
-		AuthChallenge:       challenge,
-		ChainID:             net.ChainID,
-		ProtocolVersion:     net.ProtocolVersion,
-		P2PProtocolVersion:  net.P2PProtocolVersion,
-		MinProtocolVersion:  net.MinProtocolVersion,
-		GenesisHash:         net.GenesisHash,
-		Height:              status.Height,
-		TipHash:             status.TipHash,
-		CumulativeWork:      status.CumulativeWork,
-		NodeID:              identity.NodeID,
-		IdentityVersion:     NodeIdentityVersion,
-		NodePublicKey:       hex.EncodeToString(identity.PublicKey),
-		P2PListen:            s.p2pListen,
-		P2PAdvertise:         s.p2pAdvertise,
-		Services:            []string{"p2p"},
-		KnownPeers:          PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
+		NetworkName:        net.NetworkName,
+		NetworkID:          net.NetworkID,
+		AuthChallenge:      challenge,
+		ChainID:            net.ChainID,
+		ProtocolVersion:    net.ProtocolVersion,
+		P2PProtocolVersion: net.P2PProtocolVersion,
+		MinProtocolVersion: net.MinProtocolVersion,
+		GenesisHash:        net.GenesisHash,
+		Height:             status.Height,
+		TipHash:            status.TipHash,
+		CumulativeWork:     status.CumulativeWork,
+		NodeID:             identity.NodeID,
+		IdentityVersion:    NodeIdentityVersion,
+		NodePublicKey:      hex.EncodeToString(identity.PublicKey),
+		P2PListen:          s.p2pListen,
+		P2PAdvertise:       s.p2pAdvertise,
+		Services:           []string{"p2p"},
+		KnownPeers:         PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
 	}
 	handshake.NodeSignature, err = SignHandshake(identity, handshake)
 	if err != nil {
@@ -455,9 +455,9 @@ func (s Server) acceptPeerIntroduction(intro PeerIntroduction) error {
 
 func (s Server) learnInboundPeer(r *http.Request) {
 	intro := PeerIntroduction{
-		URL:       r.Header.Get("X-DKC-P2P-URL"),
-		NodeID:    r.Header.Get("X-DKC-Node-ID"),
-		NetworkID: r.Header.Get("X-DKC-Network-ID"),
+		URL:       r.Header.Get("X-IDR-P2P-URL"),
+		NodeID:    r.Header.Get("X-IDR-Node-ID"),
+		NetworkID: r.Header.Get("X-IDR-Network-ID"),
 		ChainID:   s.network().ChainID,
 		Version:   s.network().NetworkName,
 		Protocol:  s.network().P2PProtocolVersion,

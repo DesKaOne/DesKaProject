@@ -2,7 +2,7 @@
 
 Phase 3.2 adds staking as collateral for service-node eligibility.
 
-This is not Proof-of-Stake. It does not create validators, does not select block proposers, does not mint DKC rewards, and does not affect PoW consensus. PoW remains the only canonical block production mechanism.
+This is not Proof-of-Stake. It does not create validators, does not select block proposers, does not mint IDR rewards, and does not affect PoW consensus. PoW remains the only canonical block production mechanism.
 
 Phase 3.2.1 adds regression tests and consensus safety checks for staking lifecycle, spendable balance accounting, chain validation, RPC safety, and service-node collateral eligibility. It does not add new staking economics.
 
@@ -12,7 +12,7 @@ TODO: add stake-specific reorg regression coverage when the reorg helper can exe
 
 ## What Staking Does
 
-- Locks mature DKC so it cannot be spent while active.
+- Locks mature IDR so it cannot be spent while active.
 - Lets service nodes prove collateral eligibility.
 - Starts an unbonding period when unlocked.
 - Releases stake automatically after the unbonding period.
@@ -24,25 +24,25 @@ TODO: add stake-specific reorg regression coverage when the reorg helper can exe
 - No validator set.
 - No delegation.
 - No slashing in Phase 3.2.
-- No staking reward DKC.
+- No staking reward IDR.
 - No coinbase reward change.
 
 ## Localnet Parameters
 
 - staking enabled: true
-- minimum stake amount: 10 DKC
-- minimum service stake: 100 DKC
+- minimum stake amount: 10 IDR
+- minimum service stake: 100 IDR
 - unbonding period: 10 blocks
 - max active stakes per address: 10
 
 ## Testnet Parameters
 
 - staking enabled: true
-- minimum stake amount: 100 DKC
-- minimum service stake: 1000 DKC
+- minimum stake amount: 100 IDR
+- minimum service stake: 1000 IDR
 - unbonding period: 100 blocks
 
-Faucet-funded testnet DKC can be used to test stake lock and service-node collateral eligibility. The dev faucet still creates normal pending transfer transactions and those funds must be mined before they can be staked.
+Faucet-funded testnet IDR can be used to test stake lock and service-node collateral eligibility. The dev faucet still creates normal pending transfer transactions and those funds must be mined before they can be staked.
 
 Mainnet staking parameters are not final.
 
@@ -50,9 +50,9 @@ Mainnet staking parameters are not final.
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <DKC_ADDR> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake status --stake-id <STAKE_ID>
 ```
 
@@ -72,9 +72,9 @@ Immature coinbase rewards cannot be staked. Released stake automatically becomes
 
 ## Service Node Eligibility
 
-Service nodes are stake-eligible when active stake is at least the network `min_service_stake`. Service points are still simulation-only and are not spendable DKC.
+Service nodes are stake-eligible when active stake is at least the network `min_service_stake`. Service points are still simulation-only and are not spendable IDR.
 
-On testnet, the current service threshold is `1000 DKC`. Locking less than that can create an active stake record, but service score remains `stake_eligible: false` and eligible simulated points stay at `0`. Unlocking a previously eligible stake moves it out of active collateral during the unbonding period.
+On testnet, the current service threshold is `1000 IDR`. Locking less than that can create an active stake record, but service score remains `stake_eligible: false` and eligible simulated points stay at `0`. Unlocking a previously eligible stake moves it out of active collateral during the unbonding period.
 
 ## Multi-Host Notes
 

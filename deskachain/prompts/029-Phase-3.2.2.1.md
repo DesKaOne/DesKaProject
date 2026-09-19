@@ -10,13 +10,13 @@ Status saat ini:
   * config.Testnet()
   * localnet chain_id 777001
   * testnet chain_id 777101
-  * localnet network_id dkc-local-1
-  * testnet network_id dkc-testnet-1
+  * localnet network_id idr-local-1
+  * testnet network_id idr-testnet-1
   * network metadata network.json
   * RPC/P2P/profile tests sebagian sudah ada.
 * Namun sebelum lanjut Phase 3.3, masih ada blocker kecil:
 
-  1. file runtime `dkcservice-state.json` masih ikut root repo/zip.
+  1. file runtime `idrservice-state.json` masih ikut root repo/zip.
   2. file typo `docs/Arsitecture.md` masih ada.
   3. `node/internal/p2p/reorg.go` masih hardcode `config.Localnet()` pada runtime path.
   4. RPC built-in `/mine` masih perlu validasi address memakai active profile.
@@ -37,7 +37,7 @@ Non-goals:
 * Jangan implement validator set.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis hash.
 * Jangan ubah staking behavior.
@@ -50,7 +50,7 @@ Non-goals:
 
 Pastikan file ini tidak ada di repo root:
 
-dkcservice-state.json
+idrservice-state.json
 
 Jika ada:
 
@@ -59,16 +59,16 @@ Jika ada:
 
 Command manual referensi:
 
-git rm --cached dkcservice-state.json
+git rm --cached idrservice-state.json
 
 atau jika belum tracked:
 
-rm dkcservice-state.json
+rm idrservice-state.json
 
 Pastikan .gitignore tetap punya:
 
-dkcservice-state.json
-**/dkcservice-state.json
+idrservice-state.json
+**/idrservice-state.json
 service_nodes.json
 service_challenges.json
 service_rewards.json
@@ -227,7 +227,7 @@ Rules:
 
 * localnet address tetap valid.
 * testnet address validation pakai active profile.
-* Jika testnet masih pakai prefix/version DKC yang sama, hasil tetap sama, tapi path sudah future-proof.
+* Jika testnet masih pakai prefix/version IDR yang sama, hasil tetap sama, tapi path sudah future-proof.
 * Error jelas jika address invalid untuk network aktif.
 
 Endpoint yang harus dicek:
@@ -238,7 +238,7 @@ Endpoint yang harus dicek:
 * service register jika address validation network-aware tersedia
 * stake lock/unlock jika address validation network-aware tersedia
 
-Jangan breaking existing DKC address.
+Jangan breaking existing IDR address.
 
 ==================================================
 7. Search hardcode runtime Localnet
@@ -301,7 +301,7 @@ Tambahkan/update tests:
 5. TestNoRuntimeStateFilesInRepo
 
 * optional lightweight test/script.
-* fail jika root `dkcservice-state.json` ada.
+* fail jika root `idrservice-state.json` ada.
 * Jika tidak cocok sebagai Go test, dokumentasikan manual check.
 
 6. Existing tests tetap pass:
@@ -323,7 +323,7 @@ Search cleanup:
 
 PowerShell:
 
-Test-Path .\dkcservice-state.json
+Test-Path .\idrservice-state.json
 
 Expected:
 False
@@ -360,7 +360,7 @@ Invoke-RestMethod http://127.0.0.1:8511/health
 Expected:
 
 * network localnet
-* network_id dkc-local-1
+* network_id idr-local-1
 * chain_id 777001
 
 Testnet check:
@@ -378,7 +378,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 stake info
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain_id 777101
 * stake params testnet, not localnet
 
@@ -386,17 +386,17 @@ Miner template testnet:
 
 go run ./node/cmd/deskachain --datadir ./testdata/final_test wallet new
 
-Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IDR_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain_id 777101
 
-Optional dkcminer testnet:
+Optional idrminer testnet:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8521 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8521 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 
@@ -430,7 +430,7 @@ Update README/Roadmap/docs to mention:
 
 Patch valid jika:
 
-* root dkcservice-state.json hilang.
+* root idrservice-state.json hilang.
 * docs/Arsitecture.md hilang.
 * no stale Arsitecture links.
 * p2p reorg runtime path no longer hardcodes localnet.

@@ -1,6 +1,6 @@
 # DesKaChain Public Testnet Topology
 
-Testnet DKC has no monetary value. Mainnet is not available. Seeds are bootstrap helpers only; nodes still validate network ID, chain ID, genesis hash, headers, and blocks.
+Testnet IDR has no monetary value. Mainnet is not available. Seeds are bootstrap helpers only; nodes still validate network ID, chain ID, genesis hash, headers, and blocks.
 
 ## Recommended Topology
 
@@ -68,16 +68,16 @@ Testnet DKC has no monetary value. Mainnet is not available. Seeds are bootstrap
 ## Miner Node
 
 ```powershell
-.\dkcminer.exe --rpc-url http://127.0.0.1:9312 --address <DKC_ADDRESS> --threads 2
+.\idrminer.exe --rpc-url http://127.0.0.1:9312 --address <IDR_ADDRESS> --threads 2
 ```
 
 ## Service Node Simulation
 
 ```sh
-./dkcservice --rpc-url http://127.0.0.1:9311 --address <DKC_ADDRESS> --once
+./idrservice --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --once
 ```
 
-Service points are simulation-only and are not spendable DKC.
+Service points are simulation-only and are not spendable IDR.
 
 ## Diagnostics
 
@@ -96,12 +96,12 @@ Service points are simulation-only and are not spendable DKC.
 Health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9312 -ExpectedNetwork testnet -ExpectedNetworkID dkc-testnet-1 -ExpectedChainID 777101 -CheckPeerList
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9312 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101 -CheckPeerList
 ```
 
 ## Troubleshooting
 
-- Wrong network: confirm `network_id=dkc-testnet-1`.
+- Wrong network: confirm `network_id=idr-testnet-1`.
 - Genesis mismatch: confirm genesis hash `db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4`.
 - Peer offline: check firewall and P2P port `10311`.
 - Firewall blocked: test from another host, not only localhost.

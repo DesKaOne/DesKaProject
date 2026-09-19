@@ -232,12 +232,12 @@ func (c Client) NodeIdentityValidation() error {
 
 func (c Client) addHeaders(req *http.Request) {
 	if c.NodeID != "" {
-		req.Header.Set("X-DKC-Node-ID", c.NodeID)
+		req.Header.Set("X-IDR-Node-ID", c.NodeID)
 	}
 	if c.P2PURL != "" {
-		req.Header.Set("X-DKC-P2P-URL", c.P2PURL)
+		req.Header.Set("X-IDR-P2P-URL", c.P2PURL)
 	}
 	if c.NetworkID != "" {
-		req.Header.Set("X-DKC-Network-ID", c.NetworkID)
+		req.Header.Set("X-IDR-Network-ID", c.NetworkID)
 	}
 }

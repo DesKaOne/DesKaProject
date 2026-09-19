@@ -5,8 +5,8 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
-  * cmd/dkcservice/
+  * cmd/idrminer/
+  * cmd/idrservice/
   * internal/
 
     * address/
@@ -48,12 +48,12 @@ Status saat ini:
 * go test ./node/... pass.
 * go test -count=1 ./node/... pass.
 * Staking regression tests sudah ada dan pass.
-* Service node simulation + dkcservice agent sudah pass.
+* Service node simulation + idrservice agent sudah pass.
 * Public RPC hardening sudah pass.
 * Standalone miner sudah pass.
-* Address final sudah `DKC...`.
+* Address final sudah `IDR...`.
 * Staking tetap collateral-only, bukan PoS.
-* Service points tetap simulation only, bukan spendable DKC.
+* Service points tetap simulation only, bukan spendable IDR.
 
 Nama patch:
 DesKaChain Phase 3.2.2 — Pre-Testnet Cleanup & Network Profile Plumbing
@@ -65,7 +65,7 @@ Phase ini fokus pada:
 
 * hapus runtime state file yang tidak seharusnya masuk repo,
 * rapikan .gitignore,
-* bersihkan docs dari address lama `dkc1...`,
+* bersihkan docs dari address lama `idr1...`,
 * sinkronkan Roadmap phase agar tidak mengarah ke PoS dulu,
 * rename typo docs/Arsitecture.md menjadi docs/Architecture.md,
 * hilangkan hardcode `config.Localnet()` di runtime path penting,
@@ -74,7 +74,7 @@ Phase ini fokus pada:
 
 Prinsip penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan ubah private key format.
 * Jangan ubah PoW consensus.
 * Jangan ubah difficulty formula.
@@ -102,7 +102,7 @@ Prinsip penting:
 
 Cek root repo apakah ada file runtime lokal seperti:
 
-* dkcservice-state.json
+* idrservice-state.json
 * service_nodes.json
 * service_challenges.json
 * service_rewards.json
@@ -118,8 +118,8 @@ Jika ada di root repo atau folder non-test fixture:
 
 Tambahkan ke .gitignore:
 
-dkcservice-state.json
-**/dkcservice-state.json
+idrservice-state.json
+**/idrservice-state.json
 service_nodes.json
 service_challenges.json
 service_rewards.json
@@ -155,36 +155,36 @@ Namun karena project punya folder prompts/ untuk roadmap patch, rekomendasi:
 * ignore hanya runtime/cache.
 
 ==================================================
-3. Bersihkan docs dari address lama dkc1...
+3. Bersihkan docs dari address lama idr1...
 ===========================================
 
 Cari semua kemunculan:
 
-* dkc1
-* dkc1...
-* "address": "dkc1..."
-* "from": "dkc1..."
-* "to": "dkc1..."
+* idr1
+* idr1...
+* "address": "idr1..."
+* "from": "idr1..."
+* "to": "idr1..."
 
 Command referensi:
 
-grep -R "dkc1" -n README.md README-ID.md Roadmap.md docs node 2>/dev/null
+grep -R "idr1" -n README.md README-ID.md Roadmap.md docs node 2>/dev/null
 
 Atau Windows PowerShell:
 
-Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "dkc1" -Recurse
+Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "idr1" -Recurse
 
 Ganti contoh address lama menjadi format final:
 
-DKC...
+IDR...
 
 Contoh aman untuk docs:
 
-DKCDExampleAddressReplaceWithRealWalletOutput
+IDRDExampleAddressReplaceWithRealWalletOutput
 
 Atau lebih baik:
 
-<DKC_ADDR>
+<IDR_ADDR>
 
 Rules:
 
@@ -320,30 +320,30 @@ Minimal harus ada:
 Localnet expected:
 
 * network: localnet
-* network_id: dkc-local-1
+* network_id: idr-local-1
 * chain_id: 777001
-* address prefix: DKC
+* address prefix: IDR
 * target block time: 10s
 * retarget window: 10
 * min difficulty: 1
 * max difficulty: 8
 * coinbase maturity: 10
 * staking enabled: true
-* min stake amount: 10 DKC
-* min service stake: 100 DKC
+* min stake amount: 10 IDR
+* min service stake: 100 IDR
 * unbonding period: 10
 
 Testnet expected placeholder:
 
 * network: testnet
-* network_id: dkc-testnet-1
+* network_id: idr-testnet-1
 * chain_id: pilih existing kalau sudah ada; kalau belum, gunakan angka berbeda dari localnet, contoh 777101
-* address prefix tetap DKC untuk Phase ini, kecuali project sudah punya versi address network-specific.
+* address prefix tetap IDR untuk Phase ini, kecuali project sudah punya versi address network-specific.
 * target block time boleh lebih realistis, contoh 30s atau tetap sesuai existing config.
 * retarget window lebih besar dari localnet jika sudah disiapkan.
 * coinbase maturity lebih besar dari localnet, contoh 20/50/100 sesuai existing.
 * staking enabled true
-* min service stake lebih besar dari localnet, contoh 1000 DKC jika sudah ada.
+* min service stake lebih besar dari localnet, contoh 1000 IDR jika sudah ada.
 * unbonding period lebih besar dari localnet.
 
 Rules:
@@ -400,7 +400,7 @@ atau metadata storage existing.
 Isi minimal:
 {
 "network": "localnet",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001,
 "genesis_hash": "..."
 }
@@ -408,7 +408,7 @@ Isi minimal:
 Untuk testnet:
 {
 "network": "testnet",
-"network_id": "dkc-testnet-1",
+"network_id": "idr-testnet-1",
 "chain_id": 777101,
 "genesis_hash": "..."
 }
@@ -462,14 +462,14 @@ Endpoints yang harus mencerminkan active profile:
 Expected localnet /health:
 {
 "network": "localnet",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001
 }
 
 Expected testnet /health:
 {
 "network": "testnet",
-"network_id": "dkc-testnet-1",
+"network_id": "idr-testnet-1",
 "chain_id": 777101
 }
 
@@ -532,11 +532,11 @@ Miner template harus pakai active profile:
 * coinbase reward/maturity if applicable
 * target from active difficulty params
 
-dkcminer harus tetap compatible:
+idrminer harus tetap compatible:
 
 * localnet works.
 * testnet works if RPC target is testnet.
-* dkcminer tidak perlu tahu config selain dari template response.
+* idrminer tidak perlu tahu config selain dari template response.
 
 ==================================================
 15. Staking/service harus pakai active profile
@@ -660,7 +660,7 @@ go test -count=1 ./node/...
 Search cleanup:
 
 PowerShell:
-Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "dkc1" -Recurse
+Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "idr1" -Recurse
 
 Expected:
 
@@ -691,9 +691,9 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8511 stake info
 Expected:
 
 * network localnet
-* network_id dkc-local-1
+* network_id idr-local-1
 * chain id 777001
-* min service stake 100 DKC
+* min service stake 100 IDR
 
 Testnet init:
 
@@ -710,7 +710,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 stake info
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain id different from 777001
 * min service stake testnet value, not 100 localnet if configured differently
 
@@ -726,17 +726,17 @@ Expected:
 Miner template testnet:
 
 go run ./node/cmd/deskachain --datadir ./testdata/profile_test wallet new
-Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<DKC_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IDR_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id dkc-testnet-1
+* network_id idr-testnet-1
 * chain_id testnet
 
 Optional miner testnet:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8521 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8521 --address <IDR_ADDR> --threads 4 --once
 
 Expected:
 

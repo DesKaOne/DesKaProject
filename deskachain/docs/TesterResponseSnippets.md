@@ -1,6 +1,6 @@
 # DesKaChain Tester Response Snippets
 
-Testnet DKC has no monetary value. Mainnet is not available. Do not paste private keys, wallet files, or secrets into issues.
+Testnet IDR has no monetary value. Mainnet is not available. Do not paste private keys, wallet files, or secrets into issues.
 
 ## Ask For Version
 
@@ -72,7 +72,7 @@ Please do not paste private keys, `wallets.json`, full datadirs, `.env` files wi
 
 ## No Monetary Value
 
-Testnet DKC has no monetary value. It is only for testing network, wallet, explorer, faucet, mining, staking-collateral, and service-node simulation workflows. Mainnet is not available.
+Testnet IDR has no monetary value. It is only for testing network, wallet, explorer, faucet, mining, staking-collateral, and service-node simulation workflows. Mainnet is not available.
 
 ## Coinbase Maturity
 
@@ -84,7 +84,7 @@ Please confirm the node reports:
 
 ```text
 network: testnet
-network_id: dkc-testnet-1
+network_id: idr-testnet-1
 chain_id: 777101
 ```
 

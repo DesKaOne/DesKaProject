@@ -5,8 +5,8 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
-  * cmd/dkcservice/
+  * cmd/idrminer/
+  * cmd/idrservice/
   * internal/
   * go.mod
   * go.sum
@@ -26,14 +26,14 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif:
 
-  * dkcminer bisa mine via /miner/template dan /miner/submit.
+  * idrminer bisa mine via /miner/template dan /miner/submit.
 * Node hardening sudah aktif:
 
   * /health
@@ -47,8 +47,8 @@ Status saat ini:
   * service challenge create/submit
   * service score
   * service rewards
-  * dkcservice agent
-  * service points tidak mengubah DKC balance
+  * idrservice agent
+  * service points tidak mengubah IDR balance
   * service points tidak mengubah total supply
   * public RPC default service_rpc=false
 
@@ -56,7 +56,7 @@ Nama patch:
 DesKaChain Phase 3.2 — Staking Module & Service Node Collateral
 
 Tujuan:
-Menambahkan staking/collateral module untuk mengunci DKC sebagai syarat/eligibility service node.
+Menambahkan staking/collateral module untuk mengunci IDR sebagai syarat/eligibility service node.
 
 Prinsip penting:
 
@@ -64,18 +64,18 @@ Prinsip penting:
 * Ini BUKAN validator set.
 * Ini BUKAN block proposer selection.
 * Ini BUKAN APY.
-* Ini BUKAN reward DKC otomatis.
+* Ini BUKAN reward IDR otomatis.
 * Ini tidak mengubah PoW sebagai consensus utama.
 * PoW tetap satu-satunya pembuat block canonical.
-* Staking hanya mengunci DKC agar tidak bisa dibelanjakan selama aktif/unbonding.
+* Staking hanya mengunci IDR agar tidak bisa dibelanjakan selama aktif/unbonding.
 * Service node boleh memakai active stake sebagai collateral/eligibility.
-* Tidak ada slashing DKC pada Phase ini.
-* Tidak ada staking reward DKC pada Phase ini.
-* Tidak ada mint DKC dari staking.
+* Tidak ada slashing IDR pada Phase ini.
+* Tidak ada staking reward IDR pada Phase ini.
+* Tidak ada mint IDR dari staking.
 
 Aturan penting:
 
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah cumulative work formula.
@@ -115,16 +115,16 @@ MaxActiveStakesPerAddress int
 Default localnet:
 
 * Enabled: true
-* MinServiceStake: 100 DKC
-* MinStakeAmount: 10 DKC
+* MinServiceStake: 100 IDR
+* MinStakeAmount: 10 IDR
 * UnbondingPeriodBlocks: 10
 * MaxActiveStakesPerAddress: 10
 
 Default testnet placeholder:
 
 * Enabled: true
-* MinServiceStake: 1000 DKC
-* MinStakeAmount: 100 DKC
+* MinServiceStake: 1000 IDR
+* MinStakeAmount: 100 IDR
 * UnbondingPeriodBlocks: 100
 * MaxActiveStakesPerAddress: 20
 
@@ -191,11 +191,11 @@ Jika project belum siap menambah TxType besar:
 
 Command:
 
-stake lock --address <DKC_ADDR> --amount <AMOUNT>
+stake lock --address <IDR_ADDR> --amount <AMOUNT>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake lock --address <DKC_ADDR> --amount 100
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake lock --address <IDR_ADDR> --amount 100
 
 Behavior:
 
@@ -213,8 +213,8 @@ Behavior:
 Output:
 stake lock tx created
 tx id: ...
-address: DKC...
-amount: 100 DKC
+address: IDR...
+amount: 100 IDR
 status: pending
 note: stake becomes active after tx is mined
 
@@ -241,11 +241,11 @@ Stake ID:
 
 Command:
 
-stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 
 Behavior:
 
@@ -329,15 +329,15 @@ Update balance details to include staking.
 
 Balance command should show:
 
-confirmed balance: 550 DKC
-mature balance: 250 DKC
-immature balance: 300 DKC
-active stake: 100 DKC
-unlocking stake: 0 DKC
-released stake: 0 DKC
-pending stake lock: 0 DKC
-pending outgoing: 0 DKC
-spendable balance: 150 DKC
+confirmed balance: 550 IDR
+mature balance: 250 IDR
+immature balance: 300 IDR
+active stake: 100 IDR
+unlocking stake: 0 IDR
+released stake: 0 IDR
+pending stake lock: 0 IDR
+pending outgoing: 0 IDR
+spendable balance: 150 IDR
 
 Rules:
 
@@ -367,14 +367,14 @@ Clamp at 0 if needed, but validation logic should prevent negative.
 
 Update send validation:
 
-* A user cannot send DKC locked in active/unbonding stake.
+* A user cannot send IDR locked in active/unbonding stake.
 * If mature balance 150 and active stake 100:
 
   * spendable 50.
   * send 60 fails.
   * send 50 succeeds.
 * Error:
-  insufficient spendable balance: spendable X DKC, required Y DKC, active stake Z DKC, unlocking stake U DKC
+  insufficient spendable balance: spendable X IDR, required Y IDR, active stake Z IDR, unlocking stake U IDR
 
 ==================================================
 8. Stake validation in chain validation
@@ -487,18 +487,18 @@ Service score should display collateral info.
 
 Command:
 
-service score --address <DKC_ADDR>
+service score --address <IDR_ADDR>
 
 Output includes:
-required stake: 100 DKC
-active stake: 100 DKC
+required stake: 100 IDR
+active stake: 100 IDR
 stake eligible: true
 collateral status: eligible
 
 Rules:
 
 * Phase 3.2 should not slash stake.
-* Phase 3.2 should not pay DKC staking rewards.
+* Phase 3.2 should not pay IDR staking rewards.
 * Service points may still be simulation only.
 * If active stake < required:
 
@@ -521,7 +521,7 @@ true
 If true:
 
 * rewards command should show points as ineligible if stake below required.
-* Do not mutate DKC.
+* Do not mutate IDR.
 
 ==================================================
 12. Stake commands
@@ -544,13 +544,13 @@ Commands:
    active stake records
 
 2. stake lock
-   stake lock --address <DKC_ADDR> --amount <AMOUNT>
+   stake lock --address <IDR_ADDR> --amount <AMOUNT>
 
 3. stake unlock
-   stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+   stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 
 4. stake list
-   stake list --address <DKC_ADDR>
+   stake list --address <IDR_ADDR>
    stake list
    Shows stake records:
    stake id
@@ -578,20 +578,20 @@ Add RPC endpoints:
 
 GET /stake/info
 GET /stake/list
-GET /stake/list?address=<DKC_ADDR>
+GET /stake/list?address=<IDR_ADDR>
 GET /stake/status?id=<STAKE_ID>
 POST /stake/lock
 POST /stake/unlock
 
 Request lock:
 {
-"address": "DKC...",
+"address": "IDR...",
 "amount": "100"
 }
 
 Request unlock:
 {
-"address": "DKC...",
+"address": "IDR...",
 "stake_id": "..."
 }
 
@@ -678,7 +678,7 @@ Content:
 * Staking in Phase 3.2 is collateral only.
 * It is not PoS.
 * It does not create validators.
-* It does not create DKC rewards.
+* It does not create IDR rewards.
 * It does not affect block production.
 * Locked stake reduces spendable balance.
 * Unlock starts unbonding period.
@@ -707,8 +707,8 @@ Add/update tests:
 1. Stake params:
 
 * localnet params enabled.
-* min stake amount 10 DKC.
-* min service stake 100 DKC.
+* min stake amount 10 IDR.
+* min service stake 100 IDR.
 * unbonding period 10.
 
 2. Stake lock immature rejected:
@@ -805,10 +805,10 @@ Add/update tests:
 * below required stake => ineligible note or eligible_points 0.
 * above required stake => eligible simulated points.
 
-21. No DKC reward from staking:
+21. No IDR reward from staking:
 
 * stake lock/unlock does not change total supply.
-* no staking reward DKC minted.
+* no staking reward IDR minted.
 
 22. Balance fields:
 
@@ -841,7 +841,7 @@ Add/update tests:
 * wallet
 * chain
 * cli
-* dkcminer
+* idrminer
 
 ==================================================
 19. Expected final commands
@@ -865,11 +865,11 @@ go run ./node/cmd/deskachain --datadir ./testdata/stake node start --rpc :8471 -
 
 Mine until mature:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8471 --address <DKC_ADDR> --threads 4 --max-blocks 11
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --max-blocks 11
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <IDR_ADDR>
 
 Expected:
 confirmed balance: 550
@@ -882,13 +882,13 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
 
 Expected:
 staking enabled: true
-min stake amount: 10 DKC
-min service stake: 100 DKC
+min stake amount: 10 IDR
+min service stake: 100 IDR
 unbonding period: 10 blocks
 
 Stake lock 10:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <DKC_ADDR> --amount 10
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
 
 Expected:
 stake lock tx created
@@ -896,39 +896,39 @@ status: pending
 
 Mine 1 block:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8471 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --once
 
 Stake list:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
 
 Expected:
-amount: 10 DKC
+amount: 10 IDR
 status: active
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <IDR_ADDR>
 
 Expected:
-active stake: 10 DKC
+active stake: 10 IDR
 spendable balance reduced by 10
 
 Try send over spendable:
 
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 wallet new
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 send --from <DKC_ADDR> --to <ADDR_B> --amount 45
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 send --from <IDR_ADDR> --to <ADDR_B> --amount 45
 
 Expected:
 fail if spendable below 45 after active stake
 
 Unlock:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 
 Mine 1 block:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8471 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --once
 
 Stake list:
 Expected:
@@ -942,9 +942,9 @@ spendable balance increases
 
 Service collateral test:
 
-* Stake 100 DKC after enough maturity.
+* Stake 100 IDR after enough maturity.
 * Register service.
-* Run dkcservice once.
+* Run idrservice once.
 * service score should show stake eligible true.
 
 Consensus check:
@@ -955,7 +955,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 chain validate
 Expected:
 chain valid
 total supply unchanged by staking
-no staking reward DKC minted
+no staking reward IDR minted
 
 Public RPC check:
 
@@ -975,5 +975,5 @@ Fokus Phase 3.2 hanya:
 * service node collateral eligibility,
 * docs/tests,
 * no PoS,
-* no staking reward DKC,
+* no staking reward IDR,
 * no slashing yet.

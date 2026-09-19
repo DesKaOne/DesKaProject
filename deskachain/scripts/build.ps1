@@ -36,8 +36,8 @@ $Targets = @(
 
 $Apps = @(
     @{ Name = "deskachain"; Path = "./node/cmd/deskachain" },
-    @{ Name = "dkcminer"; Path = "./node/cmd/dkcminer" },
-    @{ Name = "dkcservice"; Path = "./node/cmd/dkcservice" }
+    @{ Name = "idrminer"; Path = "./node/cmd/idrminer" },
+    @{ Name = "idrservice"; Path = "./node/cmd/idrservice" }
 )
 
 $OldGOOS = $env:GOOS

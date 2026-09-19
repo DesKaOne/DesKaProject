@@ -154,7 +154,7 @@ func syntheticBlock(height uint64, timestamp int64, difficulty uint32) types.Blo
 }
 
 func validShapeBlock(parent types.Block, height uint64, difficulty uint32) types.Block {
-	tx := types.NewCoinbaseTransaction("dkc10000000000000000000000000000000000000000", config.InitialBlockReward, height)
+	tx := types.NewCoinbaseTransaction("idr10000000000000000000000000000000000000000", config.InitialBlockReward, height)
 	block := types.NewBlock(height, parent.Hash, tx.To, difficulty, []types.Transaction{tx})
 	block.Timestamp = parent.Timestamp + 1
 	block.Hash = block.CalculateHash()

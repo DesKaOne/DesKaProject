@@ -18,20 +18,20 @@ import (
 )
 
 const (
-	p2pMessageAuthVersion uint32 = 1
-	p2pMessageAuthDomain         = "DesKaChain/p2p-message/v1"
-	p2pMessageAuthTimeSkew       = 5 * time.Minute
-	p2pMessageAuthBodyLimit      = 8 << 20
-	p2pMessageAuthResponseLimit  = 16 << 20
+	p2pMessageAuthVersion       uint32 = 1
+	p2pMessageAuthDomain               = "DesKaChain/p2p-message/v1"
+	p2pMessageAuthTimeSkew             = 5 * time.Minute
+	p2pMessageAuthBodyLimit            = 8 << 20
+	p2pMessageAuthResponseLimit        = 16 << 20
 
-	authHeaderVersion    = "X-DKC-Auth-Version"
-	authHeaderNodeID     = "X-DKC-Node-ID"
-	authHeaderNodePubKey = "X-DKC-Node-PubKey"
-	authHeaderNetworkID  = "X-DKC-Network-ID"
-	authHeaderChainID    = "X-DKC-Chain-ID"
-	authHeaderTimestamp  = "X-DKC-Auth-Timestamp"
-	authHeaderNonce      = "X-DKC-Auth-Nonce"
-	authHeaderSignature  = "X-DKC-Auth-Signature"
+	authHeaderVersion    = "X-IDR-Auth-Version"
+	authHeaderNodeID     = "X-IDR-Node-ID"
+	authHeaderNodePubKey = "X-IDR-Node-PubKey"
+	authHeaderNetworkID  = "X-IDR-Network-ID"
+	authHeaderChainID    = "X-IDR-Chain-ID"
+	authHeaderTimestamp  = "X-IDR-Auth-Timestamp"
+	authHeaderNonce      = "X-IDR-Auth-Nonce"
+	authHeaderSignature  = "X-IDR-Auth-Signature"
 )
 
 type p2pRequestAuth struct {

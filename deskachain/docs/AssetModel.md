@@ -11,7 +11,7 @@ The DesKaChain v3 asset model defines **IDR** as the native asset:
 
 IDR is the native unit used by DesKaBank, DesKaWallet, DesKaPay, DesKaBusiness, and other DesKa services for protocol fees and internal settlement.
 
-Legacy v1/v2 transactions remain available during the migration. Their historical DKC amount representation is kept so existing chain-hardening tests and old blocks remain compatible.
+Legacy v1/v2 transactions remain available during the migration. Their historical IDR amount representation is kept so existing chain-hardening tests and old blocks remain compatible.
 
 ## Issued tokens
 

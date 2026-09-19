@@ -5,8 +5,8 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
-  * cmd/dkcservice/
+  * cmd/idrminer/
+  * cmd/idrservice/
   * internal/
 
     * staking/
@@ -34,15 +34,15 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif.
 * Node public hardening sudah aktif.
 * Service node simulation sudah aktif.
-* dkcservice agent sudah aktif.
+* idrservice agent sudah aktif.
 * Staking collateral sudah aktif:
 
   * stake lock
@@ -75,12 +75,12 @@ Phase ini fokus pada:
 * staking + public RPC safety,
 * no consensus mutation,
 * no PoS,
-* no staking reward DKC.
+* no staking reward IDR.
 
 Prinsip penting:
 
 * Jangan ubah consensus behavior yang sudah valid.
-* Jangan ubah address format DKC.
+* Jangan ubah address format IDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -89,7 +89,7 @@ Prinsip penting:
 * Jangan implement validator.
 * Jangan implement slashing.
 * Jangan implement delegation.
-* Jangan implement staking reward DKC.
+* Jangan implement staking reward IDR.
 * Jangan rewrite besar.
 * Patch ini mayoritas test dan safety fix kecil saja.
 * Semua command lama harus tetap bekerja.
@@ -114,8 +114,8 @@ Minimal test coverage:
 1. TestLocalnetStakingParams
 
 * staking enabled true.
-* min stake amount = 10 DKC.
-* min service stake = 100 DKC.
+* min stake amount = 10 IDR.
+* min service stake = 100 IDR.
 * unbonding period = 10 blocks.
 * max active stakes per address sesuai config.
 
@@ -190,9 +190,9 @@ Tests:
 2. TestStakeLockAfterMaturityAccepted
 
 * mine sampai height minimal 11.
-* mature 50 DKC.
-* stake lock 10 DKC accepted.
-* after mined, active stake 10 DKC.
+* mature 50 IDR.
+* stake lock 10 IDR accepted.
+* after mined, active stake 10 IDR.
 
 3. TestActiveStakeReducesSpendable
 
@@ -415,8 +415,8 @@ Tests:
 * active stake 100.
 * service score shows:
 
-  * required stake 100 DKC
-  * active stake 100 DKC
+  * required stake 100 IDR
+  * active stake 100 IDR
   * stake_eligible true
   * collateral_status eligible
   * eligible simulated points equals simulated points.
@@ -437,9 +437,9 @@ Tests:
 * released stake does not count as active collateral.
 * stake_eligible false.
 
-5. TestServicePointsStillNotDKC
+5. TestServicePointsStillNotIDR
 
-* service score/rewards do not change DKC balance.
+* service score/rewards do not change IDR balance.
 * total supply unchanged.
 
 ==================================================
@@ -558,7 +558,7 @@ Tambahkan note:
 * No PoS.
 * No validator set.
 * No staking APY.
-* No DKC staking reward.
+* No IDR staking reward.
 * No slashing in this phase.
 
 ==================================================
@@ -598,17 +598,17 @@ go run ./node/cmd/deskachain --datadir ./testdata/stake_reg node start --rpc :84
 
 Mine:
 
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8491 --address <DKC_ADDR> --threads 4 --max-blocks 12
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --threads 4 --max-blocks 12
 
 Stake:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake lock --address <DKC_ADDR> --amount 100
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8491 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake lock --address <IDR_ADDR> --amount 100
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --threads 4 --once
 
 Check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 balance <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake list --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 balance <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake list --address <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 chain validate
 
 Expected:
@@ -619,14 +619,14 @@ Expected:
 
 Service eligibility quick:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8491 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service score --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service score --address <IDR_ADDR>
 
 Expected:
 
-* required stake: 100 DKC
-* active stake: 100 DKC
+* required stake: 100 IDR
+* active stake: 100 IDR
 * stake eligible: true
 * collateral status: eligible
 
@@ -642,7 +642,7 @@ Expected:
 
 * works
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8501 stake lock --address <DKC_ADDR> --amount 10
+  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8501 stake lock --address <IDR_ADDR> --amount 10
 
 Expected:
 

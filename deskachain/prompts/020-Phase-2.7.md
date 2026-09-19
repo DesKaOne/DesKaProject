@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... harus pass.
 * Address migration sudah selesai:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address final: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address final: `IDR` + Base58Check
   * private key tetap raw 32-byte hex
   * secp256k1 sudah dipakai jika Phase 2.6.6 menerapkannya
   * remote wallet new sudah valid
@@ -48,7 +48,7 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * DKC Base58Check address,
+  * IDR Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * remote wallet command UX fix.
@@ -77,7 +77,7 @@ Phase 2.7 harus menambahkan:
 
 Aturan penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan implement coinbase maturity.
@@ -409,7 +409,7 @@ next difficulty: 4
 target block time: 10s
 retarget window: 10
 blocks until retarget: 7
-total supply: 150 DKC
+total supply: 150 IDR
 cumulative work: 196609
 
 Catatan:
@@ -617,10 +617,10 @@ Tambahkan/update tests:
 
 19. Existing tests still pass:
 
-* send DKC -> DKC.
+* send IDR -> IDR.
 * mempool stats.
 * reorg tx scenarios.
-* wallet DKC address generation.
+* wallet IDR address generation.
 
 ==================================================
 14. README / docs update
@@ -669,7 +669,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/diff init
 go run ./node/cmd/deskachain --datadir ./testdata/diff wallet new
 
 Expected:
-DKC...
+IDR...
 
 Start node:
 
@@ -692,7 +692,7 @@ max difficulty: 8
 
 Mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <DKC_ADDR> --blocks 3
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <IDR_ADDR> --blocks 3
 
 Then:
 
@@ -709,7 +709,7 @@ cumulative work: 196609
 
 Mine 12 blocks:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <DKC_ADDR> --blocks 12
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <IDR_ADDR> --blocks 12
 
 Then:
 

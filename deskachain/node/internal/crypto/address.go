@@ -4,11 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	dkcaddress "deskachain/internal/address"
+	idraddress "deskachain/internal/address"
 	"deskachain/internal/config"
 )
 
-const AddressPrefix = "DKC"
+const AddressPrefix = "IDR"
 
 func AddressFromPublicKey(publicKeyHex string) string {
 	addr, err := AddressFromPublicKeyForNetwork(publicKeyHex, config.Localnet())
@@ -23,7 +23,7 @@ func AddressFromPublicKeyForNetwork(publicKeyHex string, profile config.NetworkC
 	if err != nil {
 		return "", err
 	}
-	return dkcaddress.EncodeAddress(raw, profile)
+	return idraddress.EncodeAddress(raw, profile)
 }
 
 func ValidateAddress(address string) error {
@@ -31,12 +31,12 @@ func ValidateAddress(address string) error {
 }
 
 func ValidateAddressForNetwork(address string, profile config.NetworkConfig) error {
-	if _, err := dkcaddress.DecodeAddress(address, profile); err != nil {
+	if _, err := idraddress.DecodeAddress(address, profile); err != nil {
 		return fmt.Errorf("invalid address: %w", err)
 	}
 	return nil
 }
 
 func IsLegacyDevAddress(address string) bool {
-	return dkcaddress.IsLegacyDevAddress(address)
+	return idraddress.IsLegacyDevAddress(address)
 }

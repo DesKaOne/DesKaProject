@@ -5,7 +5,7 @@ Struktur project:
 * node/
 
   * cmd/deskachain/
-  * cmd/dkcminer/
+  * cmd/idrminer/
   * internal/
   * go.mod
   * go.sum
@@ -27,8 +27,8 @@ Status saat ini:
 * Node bisa restart ulang tanpa stale lock.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `DKC...`
-  * format address: `DKC` + Base58Check
+  * wallet baru menghasilkan address `IDR...`
+  * format address: `IDR` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -47,7 +47,7 @@ Status saat ini:
 
   * node punya `/miner/template`
   * node punya `/miner/submit`
-  * `dkcminer` bisa mine block via RPC
+  * `idrminer` bisa mine block via RPC
   * standalone miner bisa include mempool tx
 * Node hardening sudah aktif:
 
@@ -78,7 +78,7 @@ Prinsip penting:
 
 Aturan penting:
 
-* Jangan ubah address format `DKC...`.
+* Jangan ubah address format `IDR...`.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah cumulative work formula.
@@ -129,7 +129,7 @@ Phase ini hanya menyimpan dan menghitung:
 * simulated reward points,
 * anti-abuse flags.
 
-Reward hasil simulasi tidak boleh langsung menjadi DKC spendable balance.
+Reward hasil simulasi tidak boleh langsung menjadi IDR spendable balance.
 
 Gunakan istilah:
 
@@ -148,7 +148,7 @@ Jangan gunakan istilah:
 2. Service node identity
 ========================
 
-Service node harus terikat ke address DKC.
+Service node harus terikat ke address IDR.
 
 Registration minimal:
 
@@ -176,15 +176,15 @@ Registration minimal:
 
 Command:
 
-service register --address <DKC_ADDR> --endpoint <URL>
+service register --address <IDR_ADDR> --endpoint <URL>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
 
 Rules:
 
-* Validate DKC address.
+* Validate IDR address.
 * Endpoint optional for local simulation.
 * Duplicate registration for same address updates existing record, not duplicate.
 * Do not require private key yet.
@@ -197,7 +197,7 @@ Response:
 {
 "ok": true,
 "service_node_id": "...",
-"owner_address": "DKC...",
+"owner_address": "IDR...",
 "status": "registered"
 }
 
@@ -209,14 +209,14 @@ Tambahkan heartbeat untuk service node.
 
 Command:
 
-service heartbeat --address <DKC_ADDR>
+service heartbeat --address <IDR_ADDR>
 
 RPC:
 POST /service/heartbeat
 
 Request:
 {
-"address": "DKC...",
+"address": "IDR...",
 "endpoint": "http://127.0.0.1:9501",
 "client_version": "dev",
 "platform": "windows"
@@ -251,7 +251,7 @@ Cukup buat model challenge yang bisa dites local.
 
 Commands:
 
-service challenge create --address <DKC_ADDR>
+service challenge create --address <IDR_ADDR>
 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 1000000 --bytes-down 2000000
 
 RPC:
@@ -287,7 +287,7 @@ Rules:
 * Too large unrealistic values flagged.
 * Challenge can only be submitted once.
 * Challenge result creates measurement sample.
-* No DKC balance mutation.
+* No IDR balance mutation.
 
 ==================================================
 5. Scoring model
@@ -364,7 +364,7 @@ Keep penalty simple.
 6. Simulated reward points
 ==========================
 
-Tambahkan reward simulation, bukan DKC balance.
+Tambahkan reward simulation, bukan IDR balance.
 
 Fields:
 
@@ -394,25 +394,25 @@ Example:
 
 Important:
 
-* simulated_points are not DKC.
+* simulated_points are not IDR.
 * simulated_points are not spendable.
 * simulated_points do not affect chain consensus.
 * simulated_points are for leaderboard/research only.
 
 Command:
 
-service score --address <DKC_ADDR>
-service rewards --address <DKC_ADDR>
+service score --address <IDR_ADDR>
+service rewards --address <IDR_ADDR>
 
 Output:
-address: DKC...
+address: IDR...
 service score: 80
 simulated points: 800
-note: service points are simulation only and are not spendable DKC
+note: service points are simulation only and are not spendable IDR
 
 RPC:
-GET /service/score?address=<DKC_ADDR>
-GET /service/rewards?address=<DKC_ADDR>
+GET /service/score?address=<IDR_ADDR>
+GET /service/rewards?address=<IDR_ADDR>
 
 ==================================================
 7. Storage
@@ -495,22 +495,22 @@ service
 Commands:
 
 1. Register:
-   service register --address <DKC_ADDR> --endpoint <URL>
+   service register --address <IDR_ADDR> --endpoint <URL>
 
 2. Heartbeat:
-   service heartbeat --address <DKC_ADDR> --endpoint <URL>
+   service heartbeat --address <IDR_ADDR> --endpoint <URL>
 
 3. Challenge create:
-   service challenge create --address <DKC_ADDR>
+   service challenge create --address <IDR_ADDR>
 
 4. Challenge submit:
    service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 1000000 --bytes-down 2000000 --success true
 
 5. Score:
-   service score --address <DKC_ADDR>
+   service score --address <IDR_ADDR>
 
 6. Rewards:
-   service rewards --address <DKC_ADDR>
+   service rewards --address <IDR_ADDR>
 
 7. List:
    service list
@@ -561,7 +561,7 @@ Service node score/reward simulation must NOT:
 
 * modify total supply,
 * modify circulating supply,
-* add DKC balance,
+* add IDR balance,
 * create block tx,
 * affect PoW difficulty,
 * affect cumulative work,
@@ -613,7 +613,7 @@ Content:
 
 * What is service node simulation.
 * It is not consensus mining.
-* It is not spendable DKC.
+* It is not spendable IDR.
 * It is not real payout.
 * PoW still creates blocks.
 * Service points are research/testnet-only.
@@ -642,7 +642,7 @@ Add/update tests:
 
 1. Service register valid:
 
-* DKC address accepted.
+* IDR address accepted.
 * service_node_id created.
 * status registered.
 
@@ -698,7 +698,7 @@ Add/update tests:
 12. Simulated rewards:
 
 * score creates points.
-* points are not DKC.
+* points are not IDR.
 * reward list returns points.
 
 13. No consensus mutation:
@@ -790,7 +790,7 @@ service_nodes 0
 
 Register:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 service node registered
@@ -798,7 +798,7 @@ service node id: ...
 
 Heartbeat:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 status: active
@@ -806,7 +806,7 @@ service score shown
 
 Challenge:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <IDR_ADDR>
 
 Expected:
 challenge id: ...
@@ -817,30 +817,30 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge s
 
 Score:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <IDR_ADDR>
 
 Expected:
 service score: > 0
 simulated points: maybe > 0
-note: simulation only, not spendable DKC
+note: simulation only, not spendable IDR
 
 Rewards:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <IDR_ADDR>
 
 Expected:
 service points listed
-not DKC
+not IDR
 
 Consensus check:
 
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 balance <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 balance <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 chain validate
 
 Expected:
 total supply unchanged by service rewards
-DKC balance unchanged by service rewards
+IDR balance unchanged by service rewards
 chain valid
 
 Public RPC service disabled:
@@ -849,7 +849,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/service_pub node start --rpc :
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8441 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8441 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 error: service RPC disabled

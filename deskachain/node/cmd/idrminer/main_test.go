@@ -64,7 +64,7 @@ func TestVersionAndHelpDoNotRequireRPC(t *testing.T) {
 	if err := run([]string{"--version"}, &out, &errOut); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"dkcminer", "version:", "commit:", "built:", "networks: localnet,testnet", "mainnet: not available"} {
+	for _, want := range []string{"idrminer", "version:", "commit:", "built:", "networks: localnet,testnet", "mainnet: not available"} {
 		if !strings.Contains(out.String(), want) {
 			t.Fatalf("version output missing %q:\n%s", want, out.String())
 		}
@@ -73,7 +73,7 @@ func TestVersionAndHelpDoNotRequireRPC(t *testing.T) {
 	if err := run([]string{"--help"}, &out, &errOut); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "usage: dkcminer") {
+	if !strings.Contains(out.String(), "usage: idrminer") {
 		t.Fatalf("help output missing usage:\n%s", out.String())
 	}
 }

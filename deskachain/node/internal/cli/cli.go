@@ -685,7 +685,7 @@ func (a App) wallet(args []string) error {
 		fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 		fmt.Fprintln(a.out, "key curve: secp256k1")
 		if crypto.IsLegacyDevAddress(w.Address) {
-			fmt.Fprintln(a.out, "warning: legacy dkc1 dev address; localnet compatibility only")
+			fmt.Fprintln(a.out, "warning: legacy idr1 dev address; localnet compatibility only")
 		}
 		fmt.Fprintf(a.out, "private_key: %s\n", w.PrivateKeyHex)
 		return nil
@@ -1461,11 +1461,11 @@ func (a App) node(args []string) error {
 	bootnodesText := fs.String("bootnodes", "", "comma-separated bootstrap peer URLs")
 	var seedPeer multiStringFlag
 	fs.Var(&seedPeer, "seed-peer", "seed peer URL; may be repeated")
-	seedPeersText := fs.String("seed-peers", os.Getenv("DKC_SEED_PEERS"), "comma-separated seed peer URLs")
+	seedPeersText := fs.String("seed-peers", os.Getenv("IDR_SEED_PEERS"), "comma-separated seed peer URLs")
 	seedFile := fs.String("seed-file", "", "seed peer file, one URL per line")
 	var upstreamPeer multiStringFlag
 	fs.Var(&upstreamPeer, "upstream-peer", "upstream peer URL; may be repeated")
-	upstreamPeersText := fs.String("upstream-peers", os.Getenv("DKC_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
+	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IDR_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
 	upstreamFile := fs.String("upstream-file", "", "upstream peer file, one URL per line")
 	configPath := fs.String("config", "", "optional JSON config file")
 	publicRPC := fs.Bool("public-rpc", false, "enable public RPC safety mode")
@@ -1478,7 +1478,7 @@ func (a App) node(args []string) error {
 	faucetAmount := fs.String("faucet-amount", "100", "faucet amount per request")
 	faucetMinInterval := fs.Duration("faucet-min-interval", time.Minute, "minimum interval per faucet recipient")
 	faucetMaxPerAddress := fs.String("faucet-max-per-address", "1000", "maximum faucet amount per address per day")
-	corsOrigins := fs.String("cors-origins", os.Getenv("DKC_CORS_ORIGINS"), "comma-separated allowed CORS origins")
+	corsOrigins := fs.String("cors-origins", os.Getenv("IDR_CORS_ORIGINS"), "comma-separated allowed CORS origins")
 	rateLimitPerMinute := 300
 	maxPeers := a.profile.MaxPeers
 	defaultMaxReorgDepth, err := config.MaxReorgDepthFromEnv(a.profile)
@@ -2070,7 +2070,7 @@ func (a App) upstream(args []string) error {
 	fs := flag.NewFlagSet("upstream "+args[0], flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.Var(&upstreamPeer, "upstream-peer", "upstream peer URL; may be repeated")
-	upstreamPeersText := fs.String("upstream-peers", os.Getenv("DKC_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
+	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IDR_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
 	upstreamFile := fs.String("upstream-file", "", "upstream peer file")
 	defaultMaxDepth, err := config.MaxReorgDepthFromEnv(a.profile)
 	if err != nil {
@@ -2426,7 +2426,7 @@ func (a App) printAddressInspection(address string) error {
 	fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 	fmt.Fprintln(a.out, "key curve: secp256k1")
 	if crypto.IsLegacyDevAddress(info.address) {
-		fmt.Fprintln(a.out, "warning: legacy dkc1 dev address; localnet compatibility only")
+		fmt.Fprintln(a.out, "warning: legacy idr1 dev address; localnet compatibility only")
 	}
 	fmt.Fprintf(a.out, "exists: %t\n", info.exists)
 	fmt.Fprintf(a.out, "confirmed balance: %s %s\n", amount.Format(info.confirmedBalance), config.Ticker)
@@ -4310,7 +4310,7 @@ func miningObservationInfo(blocks []types.Block, profile config.NetworkConfig, p
 		"peer_count":                     peerCount,
 		"total_supply":                   amount.Format(stats.TotalSupply) + " " + config.Ticker,
 		"coinbase_maturity":              consensusParams(profile).CoinbaseMaturity,
-		"note":                           "difficulty observation is informational only; testnet DKC has no monetary value",
+		"note":                           "difficulty observation is informational only; testnet IDR has no monetary value",
 	}
 }
 

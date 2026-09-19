@@ -1,6 +1,6 @@
 # DesKaChain Multi-Host Public Testnet Runbook
 
-Phase 4.2 prepares public testnet rehearsal across multiple real hosts, with restart recovery, long-running checks, controlled faucet funding, staking collateral, and service-node simulation. This is not mainnet. Testnet DKC has no monetary value, staking remains collateral-only, service points are simulation-only, and PoW remains the only block-production consensus.
+Phase 4.2 prepares public testnet rehearsal across multiple real hosts, with restart recovery, long-running checks, controlled faucet funding, staking collateral, and service-node simulation. This is not mainnet. Testnet IDR has no monetary value, staking remains collateral-only, service points are simulation-only, and PoW remains the only block-production consensus.
 
 ## Deployment Modes
 
@@ -172,7 +172,7 @@ Direct seed options:
 
 ```sh
 --seed-peer http://100.101.251.7:10311/
-DKC_SEED_PEERS=http://host1:10311,http://host2:10311
+IDR_SEED_PEERS=http://host1:10311,http://host2:10311
 ```
 
 For public testnet RC sharing, publish only operator-controlled seed URLs and checksums. Keep placeholder seeds commented in `config/testnet-seeds.example.txt` until an operator intentionally publishes them.
@@ -185,7 +185,7 @@ Install:
 sudo useradd --system --home /var/lib/deskachain --shell /usr/sbin/nologin deskachain || true
 sudo mkdir -p /opt/deskachain /var/lib/deskachain/testnet /etc/deskachain
 sudo chown -R deskachain:deskachain /var/lib/deskachain
-sudo install -m 0755 deskachain dkcminer dkcservice /opt/deskachain/
+sudo install -m 0755 deskachain idrminer idrservice /opt/deskachain/
 sudo install -m 0644 examples/systemd/deskachain-testnet.env /etc/deskachain/testnet.env
 sudo install -m 0644 examples/systemd/deskachain-testnet.service /etc/systemd/system/deskachain-testnet.service
 sudo systemctl daemon-reload
@@ -193,7 +193,7 @@ sudo systemctl enable --now deskachain-testnet
 journalctl -u deskachain-testnet -f
 ```
 
-Edit `/etc/deskachain/testnet.env` before starting. Set `DKC_ADVERTISE_P2P` to a reachable LAN, Tailscale, or VPS address.
+Edit `/etc/deskachain/testnet.env` before starting. Set `IDR_ADVERTISE_P2P` to a reachable LAN, Tailscale, or VPS address.
 
 For restart recovery, journald diagnostics, duplicate-lock checks, and failure recovery, see `docs/Systemd.md`.
 
@@ -237,7 +237,7 @@ Host B service owner flow:
   --seed-peer http://<HOST_A_REACHABLE_IP>:10311/
 ```
 
-Then create a testnet owner wallet, request faucet funds from Host A, mine a confirmation block, lock `1000 DKC`, mine the stake transaction, register the service endpoint, and run `dkcservice --once`. Full command sequences and safety warnings are in `docs/Faucet.md`, `docs/ServiceNode.md`, and `docs/Staking.md`.
+Then create a testnet owner wallet, request faucet funds from Host A, mine a confirmation block, lock `1000 IDR`, mine the stake transaction, register the service endpoint, and run `idrservice --once`. Full command sequences and safety warnings are in `docs/Faucet.md`, `docs/ServiceNode.md`, and `docs/Staking.md`.
 
 Important architecture note: stake collateral is chain-backed and should be visible on both hosts after sync. Service registration, challenge samples, and simulated rewards are local service-node state on the RPC node that receives service requests.
 
@@ -259,7 +259,7 @@ http://127.0.0.1:9311/explorer-ui/
 http://100.101.251.7:9311/explorer-ui/
 ```
 
-The UI is read-only and uses `/explorer/*` for dashboard, blocks, transactions, addresses, stake records, and service-node summaries. Search is available through `/explorer/search?q=<height|hash|txid|address>`. List endpoints use `limit` and `offset`, default to `20`, and cap at `100`. Explorer service endpoints reflect the local RPC node's service simulation store. Service points are simulation-only and are not spendable DKC. Testnet DKC has no monetary value and mainnet is not available. See `docs/Explorer.md`.
+The UI is read-only and uses `/explorer/*` for dashboard, blocks, transactions, addresses, stake records, and service-node summaries. Search is available through `/explorer/search?q=<height|hash|txid|address>`. List endpoints use `limit` and `offset`, default to `20`, and cap at `100`. Explorer service endpoints reflect the local RPC node's service simulation store. Service points are simulation-only and are not spendable IDR. Testnet IDR has no monetary value and mainnet is not available. See `docs/Explorer.md`.
 
 ## Multi-Host Validation Plan
 
@@ -298,7 +298,7 @@ Mine from Host B:
 ```sh
 ./deskachain --datadir ./data/miner --network testnet init
 ADDR="$(./deskachain --datadir ./data/miner wallet new)"
-./dkcminer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
+./idrminer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
 ```
 
 Check Host A:

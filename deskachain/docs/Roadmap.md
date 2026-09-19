@@ -76,14 +76,14 @@ Delivered:
 * Initial HTTP request body limits and server timeout groundwork.
 * Runtime safety TODO notes in `docs/RuntimeSafety.md`.
 
-## Phase 2.6.6 — Protocol Spec Freeze & DKC Base58 Address Migration
+## Phase 2.6.6 — Protocol Spec Freeze & IDR Base58 Address Migration
 
 Status: Done
 
 Goals:
 
 * Freeze core protocol before wallet, explorer, miner, and SDK grow bigger.
-* Replace dev address format with final DKC Base58 address.
+* Replace dev address format with final IDR Base58 address.
 * Keep private key as raw 32-byte hex.
 * Decide key curve direction.
 * Add protocol versioning.
@@ -95,15 +95,15 @@ DesKaChain now uses secp256k1 for new wallet keys, compressed public keys, and t
 
 Recommended final address format:
 
-* Prefix: `DKC`
+* Prefix: `IDR`
 * Encoding: Base58Check
 * Payload: version byte + public key hash + checksum
 * Private key export: raw 32-byte hex
 
 Tasks:
 
-* Add DKC Base58Check address encoder.
-* Add DKC Base58Check address decoder.
+* Add IDR Base58Check address encoder.
+* Add IDR Base58Check address decoder.
 * Add checksum validation.
 * Add address version byte.
 * Add network-specific address version.
@@ -139,7 +139,7 @@ Tasks:
 
 Delivered:
 
-* Final `DKC...` Base58Check address encoder/decoder with checksum and leading-zero safe Base58.
+* Final `IDR...` Base58Check address encoder/decoder with checksum and leading-zero safe Base58.
 * HASH160 address payload from compressed secp256k1 public keys.
 * secp256k1 private key generation/import/export using raw 32-byte hex.
 * secp256k1 DER transaction signing and verification.
@@ -310,14 +310,14 @@ Goals:
 
 Tasks:
 
-* Add service node identity tied to `DKC...` owner address.
+* Add service node identity tied to `IDR...` owner address.
 * Add service heartbeat and uptime sample tracking.
 * Add local challenge verifier simulation.
 * Add latency and bandwidth sample scoring.
 * Add anti-abuse flags and penalties.
 * Add simulated daily service points.
 * Add service RPC and CLI commands.
-* Keep service points outside DKC balances and consensus.
+* Keep service points outside IDR balances and consensus.
 * Do not pay real/mainnet rewards yet.
 
 ## Phase 3.1 — Service Node Agent MVP
@@ -327,11 +327,11 @@ Status: Completed
 Goals:
 
 * Run service-node simulation as a standalone safe-mode process.
-* Keep service agent behavior outside consensus and DKC balances.
+* Keep service agent behavior outside consensus and IDR balances.
 
 Tasks:
 
-* Add `dkcservice` binary.
+* Add `idrservice` binary.
 * Add local agent state JSON.
 * Add RPC client for Phase 3.0 service endpoints.
 * Add safe-mode simulated measurement generator.
@@ -347,7 +347,7 @@ Status: Completed
 
 Goals:
 
-* Add DKC lock/unlock staking collateral without changing PoW consensus.
+* Add IDR lock/unlock staking collateral without changing PoW consensus.
 * Make active stake available as service-node eligibility metadata.
 * Keep staking outside coinbase rewards, block production, and total supply changes.
 
@@ -370,7 +370,7 @@ Goals:
 
 * Add permanent regression tests for staking lifecycle and collateral behavior.
 * Verify staking balance accounting, chain validation, RPC safety, and service-node eligibility.
-* Keep staking collateral-only with no PoS, no validators, no APY, no DKC staking rewards, and no slashing.
+* Keep staking collateral-only with no PoS, no validators, no APY, no IDR staking rewards, and no slashing.
 
 ## Phase 3.2.2 — Pre-Testnet Cleanup & Network Profile Plumbing
 
@@ -469,7 +469,7 @@ Status: Completed
 Goals:
 
 * Add seed peer support to network profiles and startup config.
-* Load seeds from flags, config, `DKC_SEED_PEERS`, and seed files.
+* Load seeds from flags, config, `IDR_SEED_PEERS`, and seed files.
 * Persist normalized seed peers with source metadata while keeping bootnode behavior intact.
 * Keep wrong network/genesis rejection in the existing peer validation and sync paths.
 
@@ -479,7 +479,7 @@ Status: Completed
 
 Goals:
 
-* Add version metadata to `deskachain`, `dkcminer`, and `dkcservice`.
+* Add version metadata to `deskachain`, `idrminer`, and `idrservice`.
 * Build Windows/Linux testnet binaries with ldflags.
 * Package release archives with quickstart docs and checksums.
 * Exclude runtime/private state from release artifacts.
@@ -514,7 +514,7 @@ Goals:
 * Prepare seed-node deployment profiles and editable seed registry examples.
 * Add VPS/Windows deployment runbooks and preflight checklist.
 * Document faucet and service-node operator preparation without changing consensus.
-* Keep testnet DKC valueless and mainnet unavailable.
+* Keep testnet IDR valueless and mainnet unavailable.
 
 Tasks:
 
@@ -555,7 +555,7 @@ Goals:
 Tasks:
 
 * Pool server.
-* Stratum-like protocol or simple DKC pool protocol.
+* Stratum-like protocol or simple IDR pool protocol.
 * Worker registration.
 * Share difficulty.
 * Share validation.
@@ -727,7 +727,7 @@ Tasks:
 * Add known issues, issue triage, feedback summary, RC2 planning, and response snippets.
 * Add PowerShell and Bash testnet health-check scripts.
 * Link monitoring docs from README, quickstart, and operator checklist.
-* Keep testnet DKC no-monetary-value language explicit.
+* Keep testnet IDR no-monetary-value language explicit.
 
 ## Phase 4.9 - Public Testnet Multi-Seed & Peer Discovery Hardening
 
@@ -755,7 +755,7 @@ Status: completed.
 
 Goals:
 
-* Harden `dkcminer` retry/backoff, stale job detection, submit timeout behavior, and stats output.
+* Harden `idrminer` retry/backoff, stale job detection, submit timeout behavior, and stats output.
 * Add read-only mining observation endpoints and CLI commands.
 * Improve miner submit diagnostics for stale and duplicate blocks.
 * Add health-check mining options and operator mining runbooks.
@@ -780,7 +780,7 @@ Tasks:
 
 Requirements before this phase:
 
-* Final DKC address format.
+* Final IDR address format.
 * Coinbase maturity.
 * Difficulty adjustment.
 * Stable node RPC.
@@ -823,13 +823,13 @@ Tasks:
 
 ## Phase 5.1 — Testnet Mining Claim Program
 
-## Phase 6 — Swap / Wrapped DKC Research
+## Phase 6 — Swap / Wrapped IDR Research
 
 Status: Planned after stable testnet
 
 Goals:
 
-* Let users eventually swap DKC value without rushing exchange listing.
+* Let users eventually swap IDR value without rushing exchange listing.
 * Keep early swap testnet/simulation first.
 * Avoid real-money promises.
 
@@ -837,7 +837,7 @@ Tasks:
 
 * Swap simulation.
 * Testnet mock assets.
-* Wrapped DKC research.
+* Wrapped IDR research.
 * EVM contract research.
 * Bridge relayer design.
 * Reserve/liquidity model.

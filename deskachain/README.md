@@ -9,9 +9,9 @@ Warning: DesKaChain is experimental local blockchain software. Do not use Phase 
 Coin details:
 
 - Name: DesKaChain
-- Ticker: DKC
+- Ticker: IDR
 - Decimals: 8
-- Smallest unit: 1 DKC = 100000000 units
+- Smallest unit: 1 IDR = 100000000 units
 
 ## Scope
 
@@ -39,19 +39,19 @@ Included:
 - Runtime status cache, P2P latency debug, and guarded auto-sync loop
 - Synchronous RPC mining job state, cancellable PoW, and bounded block broadcast timeout
 - Canonical chain-info transaction stats, atomic mempool writes, duplicate mempool guard, and initial HTTP body/timeout safety
-- Final `DKC...` Base58Check wallet address format, secp256k1 keys/signatures, network profiles, and initial protocol version metadata
+- Final `IDR...` Base58Check wallet address format, secp256k1 keys/signatures, network profiles, and initial protocol version metadata
 - Dynamic localnet difficulty adjustment, timestamp sanity checks, `chain difficulty`, and cumulative work based on `16^difficulty`
 - Coinbase maturity, mature/immature/spendable balance, and circulating supply based on mature rewards
-- Standalone CPU miner CLI (`dkcminer`) using node RPC block templates and submit validation
+- Standalone CPU miner CLI (`idrminer`) using node RPC block templates and submit validation
 - Public RPC safety mode, basic rate limiting, CORS configuration, health/readiness endpoints, graceful shutdown, and JSON config foundation
 - Service node / bandwidth contribution research layer with registration, heartbeat, local challenge simulation, scoring, and simulated service points
-- Standalone `dkcservice` agent for safe-mode service-node simulation cycles
-- Staking collateral module for locking mature DKC and service-node eligibility
+- Standalone `idrservice` agent for safe-mode service-node simulation cycles
+- Staking collateral module for locking mature IDR and service-node eligibility
 - Dev/testnet faucet RPC for normal signed funding transactions from a mature faucet wallet
 - Public-testnet seed peer bootstrap through flags, config, environment, and seed files
 - Public-testnet upstream peer backfill for miner-to-head-node block push without trusting the head node
 - Testnet isolated mining and faucet/write guards with explicit local override flags
-- Release build and packaging scripts for `deskachain`, `dkcminer`, and `dkcservice`
+- Release build and packaging scripts for `deskachain`, `idrminer`, and `idrservice`
 - GitHub Actions CI and release artifact workflows for public-testnet binaries
 - Public-testnet genesis candidate, seed-node deployment profiles, and VPS deployment runbook
 - Multi-host LAN, Tailscale, and VPS public-testnet deployment runbook
@@ -74,13 +74,13 @@ DesKaChain Phase 2.6.6 froze the address/key/protocol metadata foundation. Phase
 
 Phase 2.10 hardens the node for public testnet preparation without changing consensus rules.
 
-Phase 3.0 introduces service-node contribution research as simulation only. PoW still creates canonical blocks; service points are not DKC, are not spendable, and do not affect supply, difficulty, cumulative work, coinbase rewards, balances, or chain validation.
+Phase 3.0 introduces service-node contribution research as simulation only. PoW still creates canonical blocks; service points are not IDR, are not spendable, and do not affect supply, difficulty, cumulative work, coinbase rewards, balances, or chain validation.
 
-Phase 3.1 adds `dkcservice`, a standalone safe-mode service node agent that registers to node RPC, sends heartbeats, creates/submits simulated challenges, fetches scores, and saves local agent state without opening a proxy, relay, or public listener.
+Phase 3.1 adds `idrservice`, a standalone safe-mode service node agent that registers to node RPC, sends heartbeats, creates/submits simulated challenges, fetches scores, and saves local agent state without opening a proxy, relay, or public listener.
 
 Phase 3.2 adds staking as collateral only. It is not PoS, does not create validators, does not mint staking rewards, and does not affect PoW block production.
 
-Phase 3.2.1 adds staking regression tests and consensus safety checks. Staking remains collateral only: no PoS, no validator set, no APY, no DKC staking reward, and no slashing in this phase.
+Phase 3.2.1 adds staking regression tests and consensus safety checks. Staking remains collateral only: no PoS, no validator set, no APY, no IDR staking reward, and no slashing in this phase.
 
 Phase 3.2.2 separates localnet and testnet runtime profile plumbing before multi-node bootstrap. RPC, P2P, miner templates, staking info, and service collateral metadata now report the active network profile.
 
@@ -94,11 +94,11 @@ Phase 3.3.2 hardens controlled multi-node sync by normalizing peer URLs, persist
 
 Phase 3.4 adds a dev/testnet faucet flow. The faucet is disabled by default, testnet-only when enabled, uses a configured wallet as the source, creates normal signed transactions in the mempool, requires mining for confirmation, and does not mint supply directly.
 
-Phase 3.4.1 adds an end-to-end faucet-funded service collateral scenario: request 1000 testnet DKC, mine the faucet transaction, lock 1000 DKC as collateral, mine the stake transaction, run the service simulation, and verify service score eligibility. See `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, and `docs/Testnet.md`.
+Phase 3.4.1 adds an end-to-end faucet-funded service collateral scenario: request 1000 testnet IDR, mine the faucet transaction, lock 1000 IDR as collateral, mine the stake transaction, run the service simulation, and verify service score eligibility. See `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, and `docs/Testnet.md`.
 
 Phase 3.5 adds public-testnet operator packaging: safe public RPC defaults, explicit miner RPC enablement, clearer startup/status summaries, operator docs, systemd and environment examples, and circulating supply regression tests. See `docs/Operator.md`.
 
-Phase 3.6 adds public-testnet seed peer bootstrap. Nodes can load normalized seed peers from network profiles, `--seed-peer`, `--seed-peers`, `DKC_SEED_PEERS`, config `p2p.seed_peers`, or `--seed-file`; seeds are stored in the peer store with source `seed`, and normal peer validation still rejects wrong network or genesis peers. See `docs/Operator.md` and `docs/Testnet.md`.
+Phase 3.6 adds public-testnet seed peer bootstrap. Nodes can load normalized seed peers from network profiles, `--seed-peer`, `--seed-peers`, `IDR_SEED_PEERS`, config `p2p.seed_peers`, or `--seed-file`; seeds are stored in the peer store with source `seed`, and normal peer validation still rejects wrong network or genesis peers. See `docs/Operator.md` and `docs/Testnet.md`.
 
 Phase 3.7 adds public-testnet release build packaging: version metadata for all binaries, Windows/Linux build scripts, release archives, checksums, and quickstart docs. See `docs/Release.md`.
 
@@ -114,7 +114,7 @@ Phase 4.2 documents the controlled public-testnet faucet, staking collateral, an
 
 Phase 4.3 adds a read-only explorer API under `/explorer/*` for public-testnet chain summary, blocks, transactions, addresses, stake records, and local service simulation data.
 
-Phase 4.4 adds an embedded read-only explorer web UI at `/explorer-ui/`. It provides dashboard, blocks, block detail, transaction detail, address history, stake records, service-node simulation summaries, and search without wallet/admin/write actions. Testnet DKC has no monetary value, mainnet is not available, and service points are simulation-only. See `docs/Explorer.md`.
+Phase 4.4 adds an embedded read-only explorer web UI at `/explorer-ui/`. It provides dashboard, blocks, block detail, transaction detail, address history, stake records, service-node simulation summaries, and search without wallet/admin/write actions. Testnet IDR has no monetary value, mainnet is not available, and service points are simulation-only. See `docs/Explorer.md`.
 
 Phase 4.5 hardens explorer search and pagination. The read-only API now includes `/explorer/search?q=<query>`, pagination metadata for list endpoints, capped limits, stable JSON explorer errors, and UI polish for search, copy buttons, empty states, and paging. See `docs/Explorer.md`.
 
@@ -126,7 +126,7 @@ Phase 4.8 adds post-release monitoring and RC2 planning workflows for RC1. It in
 
 Phase 4.9 hardens public-testnet peer connectivity with repeated `--seed-peer` support, multi-seed bootstrap, peer discovery hints, peer health metadata, read-only peer diagnostics, and upgraded health-check peer options. See `docs/TestnetTopology.md`, `docs/SeedMonitoringChecklist.md`, `docs/PostReleaseMonitoring.md`, and `docs/PublicTestnetQuickstart.md`.
 
-Phase 4.10 hardens public-testnet mining runtime and observation without changing consensus. `dkcminer` now has bounded retry/backoff, stale job detection, submit timeout controls, miner stats, and clearer submit handling; nodes expose read-only `/mining/*` metrics and CLI `mining status|difficulty|blocks`. See `docs/Mining.md`, `docs/MiningStability.md`, and `docs/DifficultyObservation.md`.
+Phase 4.10 hardens public-testnet mining runtime and observation without changing consensus. `idrminer` now has bounded retry/backoff, stale job detection, submit timeout controls, miner stats, and clearer submit handling; nodes expose read-only `/mining/*` metrics and CLI `mining status|difficulty|blocks`. See `docs/Mining.md`, `docs/MiningStability.md`, and `docs/DifficultyObservation.md`.
 
 Phase 4.10.3 adds upstream seed backfill and isolated mining/write guards. Mining nodes can use `--upstream-peer` to push/backfill accepted blocks to a VPS head/explorer node while `--seed-peer` remains pull/discovery only. Testnet miner templates and faucet writes are blocked when isolated by default. PoW cumulative work remains consensus; no mainnet is available.
 
@@ -136,11 +136,11 @@ Phase 4.12 adds automatic peer discovery and bootstrap maintenance. Nodes period
 
 Address format:
 
-- New wallet addresses use `DKC` + Base58Check payload.
+- New wallet addresses use `IDR` + Base58Check payload.
 - Payload is `version byte + HASH160(compressed secp256k1 public key)`.
 - Checksum is the first 4 bytes of double SHA256 over the payload.
 - Public key hash is `RIPEMD160(SHA256(compressed_public_key))`.
-- The old dev address format is legacy localnet-only. New wallets always generate `DKC...` Base58Check addresses, and legacy dev addresses are not valid for public testnet/mainnet.
+- The old dev address format is legacy localnet-only. New wallets always generate `IDR...` Base58Check addresses, and legacy dev addresses are not valid for public testnet/mainnet.
 
 Keys and signatures:
 
@@ -150,19 +150,19 @@ Keys and signatures:
 
 Network profiles:
 
-- `localnet`: chain id `777001`, network id `dkc-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev addresses allowed.
-- `testnet`: chain id `777101`, network id `dkc-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev addresses disabled.
-- `mainnet`: chain id `777000`, network id `dkc-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev addresses disabled.
+- `localnet`: chain id `777001`, network id `idr-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev addresses allowed.
+- `testnet`: chain id `777101`, network id `idr-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev addresses disabled.
+- `mainnet`: chain id `777000`, network id `idr-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev addresses disabled.
 
 Protocol versions:
 
 - protocol version: `1`
 - block version: `1`
 - tx version: `1`
-- P2P protocol version: `dkc-p2p/1`
+- P2P protocol version: `idr-p2p/1`
 - RPC API version: `v1`
 
-Public network note: testnet DKC has no monetary value. No price, APY, or profit is promised. Any future mainnet claim process, if implemented, must be capped and time-limited.
+Public network note: testnet IDR has no monetary value. No price, APY, or profit is promised. Any future mainnet claim process, if implemented, must be capped and time-limited.
 
 ## Difficulty
 
@@ -195,13 +195,13 @@ Mining rewards are confirmed immediately but are not spendable until they mature
 - `immature balance`: confirmed mining rewards that are still locked by coinbase maturity.
 - `spendable balance`: mature balance minus pending outgoing mempool transactions.
 
-`send` uses spendable balance. A miner that has mined 3 localnet blocks has `150 DKC` confirmed, `0 DKC` mature, `150 DKC` immature, and `0 DKC` spendable. At height 11, the reward from height 1 matures, so the same miner has `550 DKC` confirmed, `50 DKC` mature, `500 DKC` immature, and `50 DKC` spendable.
+`send` uses spendable balance. A miner that has mined 3 localnet blocks has `150 IDR` confirmed, `0 IDR` mature, `150 IDR` immature, and `0 IDR` spendable. At height 11, the reward from height 1 matures, so the same miner has `550 IDR` confirmed, `50 IDR` mature, `500 IDR` immature, and `50 IDR` spendable.
 
 `chain info` reports total supply as all confirmed coinbase rewards, while circulating supply is mature coinbase supply. Circulating supply includes mature coins locked as active/unlocking/released stake because they are owner-controlled collateral. Spendable balance is separate and excludes active/unlocking stake plus pending outgoing transactions.
 
 ## Standalone CPU Miner
 
-Phase 2.9 adds `dkcminer`, a separate CPU miner process. The miner only needs a node RPC URL and a reward address. It does not read wallet files, private keys, or node datadirs; the node builds block templates, validates submitted blocks, stores accepted blocks, clears confirmed mempool transactions, and broadcasts accepted blocks to peers.
+Phase 2.9 adds `idrminer`, a separate CPU miner process. The miner only needs a node RPC URL and a reward address. It does not read wallet files, private keys, or node datadirs; the node builds block templates, validates submitted blocks, stores accepted blocks, clears confirmed mempool transactions, and broadcasts accepted blocks to peers.
 
 Start a node:
 
@@ -218,17 +218,17 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 wallet new
 Mine one block:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4 --once
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
 ```
 
 Mine continuously or build the binary:
 
 ```powershell
-go run ./node/cmd/dkcminer --rpc-url http://127.0.0.1:8401 --address <DKC_ADDR> --threads 4
-go build -o dkcminer ./node/cmd/dkcminer
+go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4
+go build -o idrminer ./node/cmd/idrminer
 ```
 
-`dkcminer` reports new jobs, hashrate, found blocks, stale templates, retry attempts, and accepted submits. Coinbase maturity still applies to standalone miner rewards.
+`idrminer` reports new jobs, hashrate, found blocks, stale templates, retry attempts, and accepted submits. Coinbase maturity still applies to standalone miner rewards.
 
 ## Public RPC Hardening
 
@@ -277,8 +277,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1 -Version v0.4.10-
 Binary names:
 
 - `deskachain`
-- `dkcminer`
-- `dkcservice`
+- `idrminer`
+- `idrservice`
 
 Linux/macOS equivalents:
 
@@ -297,53 +297,53 @@ Release docs live in `docs/Release.md`; deployment docs live in `docs/DeployTest
 
 ## Service Node Simulation
 
-Phase 3.0 adds a research-only service-node layer. It records service node registration, heartbeat uptime, simulated verification challenges, score components, anti-abuse flags, and daily simulated service points. These points are for local/testnet research and leaderboards only; they are not DKC and are not spendable.
+Phase 3.0 adds a research-only service-node layer. It records service node registration, heartbeat uptime, simulated verification challenges, score components, anti-abuse flags, and daily simulated service points. These points are for local/testnet research and leaderboards only; they are not IDR and are not spendable.
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <DKC_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <IDR_ADDR>
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <DKC_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <IDR_ADDR>
 ```
 
 In public RPC mode, service write endpoints are disabled by default. Use `--enable-service-rpc=true` only for controlled verifier/test setups.
 
 ## Service Node Agent
 
-`dkcservice` automates the Phase 3.0 service simulation workflow. It needs only a node RPC URL and a DKC address. It does not read private keys, does not mine PoW blocks, does not create spendable DKC, and stays in safe simulation mode.
+`idrservice` automates the Phase 3.0 service simulation workflow. It needs only a node RPC URL and a IDR address. It does not read private keys, does not mine PoW blocks, does not create spendable IDR, and stays in safe simulation mode.
 
 ```powershell
 go run ./node/cmd/deskachain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 wallet new
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --once
-go run ./node/cmd/dkcservice --rpc-url http://127.0.0.1:8431 --address <DKC_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
-go build -o dkcservice ./node/cmd/dkcservice
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go build -o idrservice ./node/cmd/idrservice
 ```
 
-Agent state defaults to `./dkcservice-state.json`. Inspect it with:
+Agent state defaults to `./idrservice-state.json`. Inspect it with:
 
 ```powershell
-go run ./node/cmd/dkcservice status --state ./dkcservice-state.json
+go run ./node/cmd/idrservice status --state ./idrservice-state.json
 ```
 
 Do not enable service RPC publicly without rate limits and abuse protection. Phase 3.1 service RPC is for controlled testnet/verifier simulation.
 
 ## Staking Collateral
 
-Phase 3.2 staking locks mature DKC as service-node collateral. Locked and unbonding stake reduce spendable balance, but confirmed balance, mature balance, total supply, coinbase rewards, difficulty, and PoW consensus are unchanged.
+Phase 3.2 staking locks mature IDR as service-node collateral. Locked and unbonding stake reduce spendable balance, but confirmed balance, mature balance, total supply, coinbase rewards, difficulty, and PoW consensus are unchanged.
 
 ```powershell
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <DKC_ADDR> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <DKC_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <DKC_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
 ```
 
-Localnet requires 10 DKC minimum stake and 100 DKC active stake for service reward simulation eligibility. There is no slashing and no staking APY in Phase 3.2.
+Localnet requires 10 IDR minimum stake and 100 IDR active stake for service reward simulation eligibility. There is no slashing and no staking APY in Phase 3.2.
 
-For testnet service-node collateral, the current threshold is 1000 DKC. A faucet-funded runbook is documented in `docs/Testnet.md`.
+For testnet service-node collateral, the current threshold is 1000 IDR. A faucet-funded runbook is documented in `docs/Testnet.md`.
 
 ## Data Directories
 
@@ -371,7 +371,7 @@ Total supply may be higher than one wallet balance because previous mined blocks
 
 ## Transfer Example
 
-Pending transactions do not change confirmed balances until they are mined into a block. Miners receive 50 DKC per block. Transaction fees are still 0 DKC in Phase 1.6.
+Pending transactions do not change confirmed balances until they are mined into a block. Miners receive 50 IDR per block. Transaction fees are still 0 IDR in Phase 1.6.
 
 ```powershell
 go run ./node/cmd/deskachain dev reset --yes
@@ -390,7 +390,7 @@ go run ./node/cmd/deskachain chain validate
 go run ./node/cmd/deskachain tx get <txid>
 ```
 
-In that flow, wallet A ends with 190 DKC, wallet B ends with 10 DKC, and total supply is 200 DKC.
+In that flow, wallet A ends with 190 IDR, wallet B ends with 10 IDR, and total supply is 200 IDR.
 
 ## Local P2P Example
 
@@ -473,7 +473,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
 ```
 
-Expected: node 2 receives the tx broadcast, receives the block broadcast, wallet B balance becomes 10 DKC, both chains validate, and `node compare` reports `nodes in sync`.
+Expected: node 2 receives the tx broadcast, receives the block broadcast, wallet B balance becomes 10 IDR, both chains validate, and `node compare` reports `nodes in sync`.
 
 Phase 2.3 broadcast debug command:
 
@@ -825,14 +825,14 @@ Running `peer sync` repeatedly should not duplicate blocks: height, total supply
 - `POST /fork/check`
 - `GET /faucet/info`
 - `POST /faucet/request`
-- `GET /miner/template?address=<DKC_ADDR>`
+- `GET /miner/template?address=<IDR_ADDR>`
 - `POST /miner/submit`
 - `POST /service/register`
 - `POST /service/heartbeat`
 - `POST /service/challenge/create`
 - `POST /service/challenge/submit`
-- `GET /service/score?address=<DKC_ADDR>`
-- `GET /service/rewards?address=<DKC_ADDR>`
+- `GET /service/score?address=<IDR_ADDR>`
+- `GET /service/rewards?address=<IDR_ADDR>`
 - `GET /service/list`
 - `GET /stake/info`
 - `GET /stake/list`
@@ -881,8 +881,8 @@ Example send body:
 
 ```json
 {
-  "from": "<DKC_ADDR>",
-  "to": "<DKC_ADDR>",
+  "from": "<IDR_ADDR>",
+  "to": "<IDR_ADDR>",
   "amount": "1.25"
 }
 ```
@@ -891,7 +891,7 @@ Example mine body:
 
 ```json
 {
-  "address": "<DKC_ADDR>",
+  "address": "<IDR_ADDR>",
   "blocks": 1
 }
 ```

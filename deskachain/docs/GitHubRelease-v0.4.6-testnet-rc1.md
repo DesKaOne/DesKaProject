@@ -6,12 +6,12 @@ Public testnet release candidate for limited testing.
 
 ## Important Warnings
 
-- Testnet DKC has no monetary value.
+- Testnet IDR has no monetary value.
 - Mainnet is not available.
-- Do not treat testnet DKC as investment.
+- Do not treat testnet IDR as investment.
 - There is no mining income or profit promise.
 - Staking is collateral-only.
-- Service points are simulation-only and not spendable DKC.
+- Service points are simulation-only and not spendable IDR.
 - Testnet may reset.
 - Back up wallet files.
 - Do not expose wallet/admin RPC publicly.
@@ -19,8 +19,8 @@ Public testnet release candidate for limited testing.
 ## What Is Included
 
 - `deskachain` node and CLI.
-- `dkcminer` CPU miner.
-- `dkcservice` service-node simulation agent.
+- `idrminer` CPU miner.
+- `idrservice` service-node simulation agent.
 - Public testnet profile.
 - P2P seed peer sync.
 - Public read-only RPC mode.

@@ -40,7 +40,7 @@ func TestStateStorePersistsMetadataAndIndexes(t *testing.T) {
 
 	snapshot := emptySnapshot(t)
 	snapshot.Accounts = append(snapshot.Accounts, ledger.StateAccount{
-		Address:   "DKC-test",
+		Address:   "IDR-test",
 		Confirmed: 10,
 		Mature:    10,
 	})
@@ -59,7 +59,7 @@ func TestStateStorePersistsMetadataAndIndexes(t *testing.T) {
 	if got.StateRoot != snapshot.StateRoot || len(got.Accounts) != 1 || len(got.Coinbases) != 0 {
 		t.Fatalf("unexpected restored snapshot: %#v", got)
 	}
-	if got.Accounts[0].Address != "DKC-test" || got.Accounts[0].Confirmed != 10 {
+	if got.Accounts[0].Address != "IDR-test" || got.Accounts[0].Confirmed != 10 {
 		t.Fatalf("unexpected account index contents: %#v", got.Accounts)
 	}
 }
@@ -87,15 +87,15 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 	snapshot := emptySnapshot(t)
 	snapshot.Height = 12
 	snapshot.Accounts = []ledger.StateAccount{
-		{Address: "DKC-alice", Confirmed: 100, Mature: 90, Nonce: 4},
-		{Address: "DKC-bob", Confirmed: 25, Mature: 25, Nonce: 2},
+		{Address: "IDR-alice", Confirmed: 100, Mature: 90, Nonce: 4},
+		{Address: "IDR-bob", Confirmed: 25, Mature: 25, Nonce: 2},
 	}
 	snapshot.Stakes = []staking.Record{
-		{StakeID: "stake-2", OwnerAddress: "DKC-alice", Amount: 20, Status: staking.StatusActive},
-		{StakeID: "stake-1", OwnerAddress: "DKC-alice", Amount: 30, Status: staking.StatusUnlocking, ReleaseHeight: 20},
-		{StakeID: "stake-3", OwnerAddress: "DKC-bob", Amount: 10, Status: staking.StatusActive},
+		{StakeID: "stake-2", OwnerAddress: "IDR-alice", Amount: 20, Status: staking.StatusActive},
+		{StakeID: "stake-1", OwnerAddress: "IDR-alice", Amount: 30, Status: staking.StatusUnlocking, ReleaseHeight: 20},
+		{StakeID: "stake-3", OwnerAddress: "IDR-bob", Amount: 10, Status: staking.StatusActive},
 	}
-	snapshot.Coinbases = []ledger.StateCoinbase{{Address: "DKC-alice", Amount: 50, Height: 11}}
+	snapshot.Coinbases = []ledger.StateCoinbase{{Address: "IDR-alice", Amount: 50, Height: 11}}
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
@@ -112,14 +112,14 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 		t.Fatalf("unexpected state metadata: version=%d height=%d root=%s", version, height, root)
 	}
 
-	account, found, err := store.GetStateAccount("DKC-alice")
+	account, found, err := store.GetStateAccount("IDR-alice")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !found || account.Confirmed != 100 || account.Nonce != 4 {
 		t.Fatalf("unexpected account query: found=%v account=%#v", found, account)
 	}
-	if _, found, err := store.GetStateAccount("DKC-missing"); err != nil || found {
+	if _, found, err := store.GetStateAccount("IDR-missing"); err != nil || found {
 		t.Fatalf("unexpected missing account query: found=%v err=%v", found, err)
 	}
 
@@ -127,11 +127,11 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !found || record.OwnerAddress != "DKC-alice" || record.Amount != 20 {
+	if !found || record.OwnerAddress != "IDR-alice" || record.Amount != 20 {
 		t.Fatalf("unexpected stake query: found=%v record=%#v", found, record)
 	}
 
-	aliceStakes, err := store.GetStateStakesForAddress("DKC-alice")
+	aliceStakes, err := store.GetStateStakesForAddress("IDR-alice")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +142,7 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 		t.Fatalf("unexpected owner stake ordering: %#v", aliceStakes)
 	}
 	for _, stake := range aliceStakes {
-		if !strings.HasPrefix(stake.OwnerAddress, "DKC-") {
+		if !strings.HasPrefix(stake.OwnerAddress, "IDR-") {
 			t.Fatalf("unexpected owner in index: %#v", stake)
 		}
 	}
@@ -156,8 +156,8 @@ func TestStateQueryIndexesDisappearWithStateReset(t *testing.T) {
 	defer store.Close()
 
 	snapshot := emptySnapshot(t)
-	snapshot.Accounts = []ledger.StateAccount{{Address: "DKC-alice", Confirmed: 1, Mature: 1}}
-	snapshot.Stakes = []staking.Record{{StakeID: "stake-1", OwnerAddress: "DKC-alice", Amount: 1, Status: staking.StatusActive}}
+	snapshot.Accounts = []ledger.StateAccount{{Address: "IDR-alice", Confirmed: 1, Mature: 1}}
+	snapshot.Stakes = []staking.Record{{StakeID: "stake-1", OwnerAddress: "IDR-alice", Amount: 1, Status: staking.StatusActive}}
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
@@ -168,10 +168,10 @@ func TestStateQueryIndexesDisappearWithStateReset(t *testing.T) {
 	if err := store.DeleteState(); err != nil {
 		t.Fatal(err)
 	}
-	if _, found, err := store.GetStateAccount("DKC-alice"); !errors.Is(err, ErrStateNotInitialized) || found {
+	if _, found, err := store.GetStateAccount("IDR-alice"); !errors.Is(err, ErrStateNotInitialized) || found {
 		t.Fatalf("expected cleared account index, found=%v err=%v", found, err)
 	}
-	if _, err := store.GetStateStakesForAddress("DKC-alice"); !errors.Is(err, ErrStateNotInitialized) {
+	if _, err := store.GetStateStakesForAddress("IDR-alice"); !errors.Is(err, ErrStateNotInitialized) {
 		t.Fatalf("expected cleared owner index, got %v", err)
 	}
 }
@@ -216,7 +216,7 @@ func TestValidateStateIndexesDetectsOwnerIndexCorruption(t *testing.T) {
 	snapshot.Stakes = []staking.Record{
 		{
 			StakeID:      "stake-1",
-			OwnerAddress: "DKC-alice",
+			OwnerAddress: "IDR-alice",
 			Amount:       25,
 			Status:       staking.StatusActive,
 		},
@@ -235,7 +235,7 @@ func TestValidateStateIndexesDetectsOwnerIndexCorruption(t *testing.T) {
 	err = store.db.Update(func(tx *bolt.Tx) error {
 		root := tx.Bucket(stateBucket)
 		return root.Bucket(stateStakesByOwnerBucket).Delete(
-			stateStakeOwnerKey("DKC-alice", "stake-1"),
+			stateStakeOwnerKey("IDR-alice", "stake-1"),
 		)
 	})
 	if err != nil {
@@ -256,7 +256,7 @@ func TestValidateStateIndexesDetectsCoinbaseKeyCorruption(t *testing.T) {
 	snapshot := emptySnapshot(t)
 	snapshot.Height = 2
 	snapshot.Coinbases = []ledger.StateCoinbase{
-		{Address: "DKC-alice", Amount: 10, Height: 2},
+		{Address: "IDR-alice", Amount: 10, Height: 2},
 	}
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {

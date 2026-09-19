@@ -17,7 +17,7 @@ Status saat ini:
   * admin_rpc=false
   * faucet_rpc=false by default
   * service_rpc=false by default
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -72,8 +72,8 @@ v0.4.6-testnet-rc1
 Ensure version output can show RC version from build script:
 
 deskachain version
-dkcminer --version
-dkcservice --version
+idrminer --version
+idrservice --version
 
 Expected:
 
@@ -109,8 +109,8 @@ A. Summary
 B. Included binaries
 
 * deskachain
-* dkcminer
-* dkcservice
+* idrminer
+* idrservice
 
 C. Supported platforms
 
@@ -133,7 +133,7 @@ D. Features included
 
 E. Safety warnings
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
 * No profit/reward promises.
 * Do not expose wallet/admin RPC publicly.
@@ -225,11 +225,11 @@ E. Faucet operator
 
 F. Service node
 
-* Confirm owner has 1000 DKC.
+* Confirm owner has 1000 IDR.
 * Lock stake.
 * Confirm active stake.
 * Enable service RPC deliberately.
-* Run dkcservice --once.
+* Run idrservice --once.
 * Confirm service eligible.
 * Confirm service points simulation-only.
 
@@ -302,7 +302,7 @@ Expand archive.
 Warnings:
 
 * Testnet only.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet unavailable.
 * No wallet/admin public exposure.
 
@@ -327,7 +327,7 @@ Smoke script should:
 * start node in background
 * wait for `/health`
 * create miner wallet/datadir
-* mine one block with `dkcminer --once`
+* mine one block with `idrminer --once`
 * call:
 
   * chain info
@@ -439,7 +439,7 @@ Ensure package scripts exclude:
 * private keys
 * faucet state
 * service state
-* dkcservice-state.json
+* idrservice-state.json
 * peers runtime store
 * .env with secrets
 * .git
@@ -457,7 +457,7 @@ Check:
 * no runtime datadir in archive.
 * no wallet files in archive.
 * no faucet_state.json.
-* no dkcservice-state.json.
+* no idrservice-state.json.
 * no private keys.
 * no `.env` containing secrets.
 * no wallet/admin public enablement in examples.
@@ -468,7 +468,7 @@ If feasible, package script should scan archive contents and fail on forbidden p
 * private_key
 * wallet
 * faucet_state.json
-* dkcservice-state.json
+* idrservice-state.json
 * testdata/
 * data/
 * .env if not explicitly examples with safe placeholders
@@ -511,9 +511,9 @@ Do not require secrets.
 
 Ensure all public-facing docs say:
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet is not available.
-* Do not treat testnet DKC as investment.
+* Do not treat testnet IDR as investment.
 * No mining income/profit promise.
 * Staking is collateral-only.
 * Service points are simulation-only and not spendable.

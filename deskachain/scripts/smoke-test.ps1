@@ -18,15 +18,15 @@ if (-not $ResolvedBinDir) {
 }
 $BinDirPath = $ResolvedBinDir.Path
 $Deskachain = Join-Path $BinDirPath "deskachain.exe"
-$Miner = Join-Path $BinDirPath "dkcminer.exe"
+$Miner = Join-Path $BinDirPath "idrminer.exe"
 if (-not (Test-Path $Deskachain)) {
     $Deskachain = Join-Path $BinDirPath "deskachain"
 }
 if (-not (Test-Path $Miner)) {
-    $Miner = Join-Path $BinDirPath "dkcminer"
+    $Miner = Join-Path $BinDirPath "idrminer"
 }
 if (-not (Test-Path $Deskachain) -or -not (Test-Path $Miner)) {
-    throw "deskachain and dkcminer binaries are required in $BinDirPath"
+    throw "deskachain and idrminer binaries are required in $BinDirPath"
 }
 
 $TempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("deskachain-smoke-" + [guid]::NewGuid().ToString("N"))

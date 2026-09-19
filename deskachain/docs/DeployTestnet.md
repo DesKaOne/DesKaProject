@@ -1,6 +1,6 @@
 # DesKaChain Public Testnet Deployment Runbook
 
-This runbook prepares a public testnet seed or miner-enabled node from release artifacts. It does not launch mainnet. Testnet DKC has no monetary value.
+This runbook prepares a public testnet seed or miner-enabled node from release artifacts. It does not launch mainnet. Testnet IDR has no monetary value.
 
 For LAN, Tailscale, and public VPS multi-host setup, see `docs/MultiHostTestnet.md`. For systemd restart recovery, see `docs/Systemd.md`. For long-running two-host validation, see `docs/LongRunTestnet.md`. For read-only explorer UI/API usage, see `docs/Explorer.md`.
 
@@ -32,8 +32,8 @@ Install binaries:
 sudo mkdir -p /opt/deskachain /etc/deskachain /var/lib/deskachain/testnet
 sudo tar -xzf deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz -C /opt/deskachain
 sudo install -m 0755 /opt/deskachain/deskachain /usr/local/bin/deskachain
-sudo install -m 0755 /opt/deskachain/dkcminer /usr/local/bin/dkcminer
-sudo install -m 0755 /opt/deskachain/dkcservice /usr/local/bin/dkcservice
+sudo install -m 0755 /opt/deskachain/idrminer /usr/local/bin/idrminer
+sudo install -m 0755 /opt/deskachain/idrservice /usr/local/bin/idrservice
 deskachain version
 ```
 
@@ -99,7 +99,7 @@ http://127.0.0.1:9311/explorer-ui/
 http://100.101.251.7:9311/explorer-ui/
 ```
 
-The UI is read-only. It does not expose wallet, admin, faucet, staking, mining, or service write actions. Testnet DKC has no monetary value, mainnet is not available, and service points are simulation-only.
+The UI is read-only. It does not expose wallet, admin, faucet, staking, mining, or service write actions. Testnet IDR has no monetary value, mainnet is not available, and service points are simulation-only.
 
 Explorer list endpoints use `limit` and `offset`; the default limit is `20` and the maximum is `100`. Invalid pagination returns JSON errors with `ok: false`, `error`, and `message` fields.
 
@@ -110,7 +110,7 @@ Use a separate wallet datadir:
 ```sh
 deskachain --datadir /var/lib/deskachain/miner-wallet --network testnet init
 ADDR="$(deskachain --datadir /var/lib/deskachain/miner-wallet wallet new)"
-dkcminer --rpc-url http://127.0.0.1:9011 --address "$ADDR" --threads 2 --once
+idrminer --rpc-url http://127.0.0.1:9011 --address "$ADDR" --threads 2 --once
 deskachain --rpc-url http://127.0.0.1:9011 chain validate
 ```
 
@@ -124,7 +124,7 @@ Use one of:
 deskachain --datadir /var/lib/deskachain/node-b --network testnet init
 deskachain --datadir /var/lib/deskachain/node-b node start --rpc :9012 --p2p :10012 --advertise-p2p http://<PUBLIC_HOST_B>:10012 --public-rpc --seed-peer http://<SEED_HOST>:10011
 deskachain --datadir /var/lib/deskachain/node-b node start --rpc :9012 --p2p :10012 --advertise-p2p http://<PUBLIC_HOST_B>:10012 --public-rpc --seed-file config/testnet-seeds.txt
-DKC_SEED_PEERS=http://host1:10011,http://host2:10011 deskachain --datadir /var/lib/deskachain/node-b node start --rpc :9012 --p2p :10012 --advertise-p2p http://<PUBLIC_HOST_B>:10012 --public-rpc
+IDR_SEED_PEERS=http://host1:10011,http://host2:10011 deskachain --datadir /var/lib/deskachain/node-b node start --rpc :9012 --p2p :10012 --advertise-p2p http://<PUBLIC_HOST_B>:10012 --public-rpc
 ```
 
 Seed peers are not trusted authorities. Offline seeds should not crash startup, and wrong network/genesis peers are rejected by normal peer validation.
@@ -142,9 +142,9 @@ Faucet RPC is disabled by default. Enable it only deliberately on controlled tes
 
 Recommended controlled service-collateral testing amount:
 
-- `DKC_FAUCET_AMOUNT=1000`
-- `DKC_FAUCET_MAX_PER_ADDRESS=2000`
-- `DKC_FAUCET_MIN_INTERVAL=1m` or stricter for public tests
+- `IDR_FAUCET_AMOUNT=1000`
+- `IDR_FAUCET_MAX_PER_ADDRESS=2000`
+- `IDR_FAUCET_MIN_INTERVAL=1m` or stricter for public tests
 
 Back up `wallets.json`. Back up `faucet_state.json` if you want rate-limit continuity.
 
@@ -152,17 +152,17 @@ For the multi-host faucet request and service-collateral flow, see `docs/Faucet.
 
 ## Optional Service Node Agent
 
-Service-node eligibility on testnet currently requires `1000 DKC` active collateral. Staking is collateral-only, has no APY, no slashing, no validators, and does not change PoW block production.
+Service-node eligibility on testnet currently requires `1000 IDR` active collateral. Staking is collateral-only, has no APY, no slashing, no validators, and does not change PoW block production.
 
 Run the service agent with its own state file:
 
 ```sh
-dkcservice --rpc-url http://127.0.0.1:9011 --address <OWNER_ADDR> --endpoint http://<SERVICE_HOST>:9971 --state /var/lib/deskachain/service-agent-state.json
+idrservice --rpc-url http://127.0.0.1:9011 --address <OWNER_ADDR> --endpoint http://<SERVICE_HOST>:9971 --state /var/lib/deskachain/service-agent-state.json
 ```
 
-Service points are simulation-only and are not spendable DKC. Back up the owner wallet.
+Service points are simulation-only and are not spendable IDR. Back up the owner wallet.
 
-Service registration and challenge data are local simulation state on the RPC node used by `dkcservice`; stake collateral itself is chain-backed and syncs between peers.
+Service registration and challenge data are local simulation state on the RPC node used by `idrservice`; stake collateral itself is chain-backed and syncs between peers.
 
 ## Windows Notes
 
@@ -179,6 +179,6 @@ Create a separate miner wallet:
 ```powershell
 .\deskachain.exe --datadir .\data\miner --network testnet init
 $addr = .\deskachain.exe --datadir .\data\miner wallet new
-.\dkcminer.exe --rpc-url http://127.0.0.1:9011 --address $addr --threads 2 --once
+.\idrminer.exe --rpc-url http://127.0.0.1:9011 --address $addr --threads 2 --once
 .\deskachain.exe --rpc-url http://127.0.0.1:9011 chain validate
 ```

@@ -1,11 +1,11 @@
 # DesKaChain RC1 Known Issues
 
-Testnet DKC has no monetary value. Mainnet is not available.
+Testnet IDR has no monetary value. Mainnet is not available.
 
 ## RC1 Known Limitations
 
 - Mainnet is not available.
-- Testnet DKC has no monetary value.
+- Testnet IDR has no monetary value.
 - Explorer uses simple scan mode.
 - There is no persistent explorer database yet.
 - There is no wallet web UI.
@@ -25,7 +25,7 @@ Use the template below for confirmed reports.
 ## Workarounds
 
 - Wrong datadir: restart with a dedicated testnet datadir and run `init`.
-- Localnet/testnet mismatch: confirm `network_id` is `dkc-testnet-1` and chain ID is `777101`.
+- Localnet/testnet mismatch: confirm `network_id` is `idr-testnet-1` and chain ID is `777101`.
 - RPC bind/firewall issue: test from localhost first, then from another host.
 - Explorer unavailable: verify `/health`, `/explorer/status`, and `/explorer-ui/`.
 - Coinbase maturity confusion: mining rewards are confirmed immediately but not mature until 100 blocks on testnet.
@@ -37,9 +37,9 @@ No fixes have been assigned to RC2 yet.
 ## Not A Bug / Expected Behavior
 
 - Mainnet commands or mainnet availability are not expected in RC1.
-- Testnet DKC has no monetary value and should not be priced.
+- Testnet IDR has no monetary value and should not be priced.
 - Public RPC mode disables wallet/admin/miner/faucet/service write endpoints unless explicitly re-enabled.
-- Service points are not DKC and are not spendable.
+- Service points are not IDR and are not spendable.
 - Staking does not create PoS validators, APY, or staking rewards.
 - Faucet requests require an operator-run faucet and later mining for confirmation.
 

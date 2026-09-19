@@ -44,7 +44,7 @@ Status saat ini:
   * mempool atomic write/duplicate guard/basic safety cleanup.
 
 Nama patch:
-DesKaChain Phase 2.6.6 — Protocol Spec Freeze & DKC Base58 Address Migration
+DesKaChain Phase 2.6.6 — Protocol Spec Freeze & IDR Base58 Address Migration
 
 Tujuan:
 Memfinalkan fondasi protokol sebelum project makin besar, terutama:
@@ -54,10 +54,10 @@ Memfinalkan fondasi protokol sebelum project makin besar, terutama:
 * crypto key/signature direction,
 * network profile foundation,
 * protocol versioning,
-* backward compatibility lokal untuk address lama `dkc1...`.
+* backward compatibility lokal untuk address lama `idr1...`.
 
 Setelah phase ini, wallet baru harus memakai address format baru:
-DKC + Base58Check(...)
+IDR + Base58Check(...)
 
 Aturan penting:
 
@@ -84,15 +84,15 @@ Aturan penting:
 
 Ganti format address baru dari format dev lama:
 
-dkc1 + sha256(publicKeyHex)[:40]
+idr1 + sha256(publicKeyHex)[:40]
 
 menjadi format final:
 
-DKC + Base58Check(payload)
+IDR + Base58Check(payload)
 
 Format:
 
-* Human prefix literal: `DKC`
+* Human prefix literal: `IDR`
 * Encoding body: Bitcoin-style Base58 alphabet
 * Payload sebelum checksum:
   version byte      1 byte
@@ -102,18 +102,18 @@ Format:
 * Base58Check body:
   base58(payload + checksum)
 * Final address:
-  "DKC" + base58(payload + checksum)
+  "IDR" + base58(payload + checksum)
 
 Contoh bentuk:
-DKCxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+IDRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Catatan:
 
 * Jangan mengurangi ukuran public key hash hanya demi membuat panjang address sama persis dengan Bitcoin/Dogecoin.
 * Panjang address boleh sedikit berbeda, yang penting aman dan konsisten.
 * Address harus case-sensitive.
-* Prefix `DKC` harus uppercase.
-* Lowercase `dkc...` untuk format baru harus invalid, kecuali legacy `dkc1...` dev address dalam mode compatibility.
+* Prefix `IDR` harus uppercase.
+* Lowercase `idr...` untuk format baru harus invalid, kecuali legacy `idr1...` dev address dalam mode compatibility.
 
 Tambahkan package/helper address, misalnya:
 internal/address
@@ -223,19 +223,19 @@ Pastikan semua transaksi baru memakai key/signature secp256k1.
 ==================================================
 
 Address lama:
-dkc1...
+idr1...
 
 harus dianggap legacy dev address.
 
 Aturan:
 
-* wallet baru harus selalu generate address baru `DKC...`.
+* wallet baru harus selalu generate address baru `IDR...`.
 * address validation default menerima address baru.
-* legacy `dkc1...` boleh diterima hanya untuk localnet/dev compatibility jika existing tests/data masih butuh.
+* legacy `idr1...` boleh diterima hanya untuk localnet/dev compatibility jika existing tests/data masih butuh.
 * Jangan jadikan legacy address sebagai format utama.
 * Tambahkan warning di wallet inspect/export jika wallet masih memakai legacy address.
 * README harus menjelaskan:
-  `dkc1...` adalah legacy dev address dan tidak untuk public testnet/mainnet.
+  `idr1...` adalah legacy dev address dan tidak untuk public testnet/mainnet.
 
 Jika terlalu rumit migrasi otomatis, cukup:
 
@@ -274,8 +274,8 @@ Profiles minimal:
 1. localnet
    Name: localnet
    ChainID: 777001
-   NetworkID: dkc-local-1
-   AddressPrefix: DKC
+   NetworkID: idr-local-1
+   AddressPrefix: IDR
    AddressVersion: 0x1E
    LegacyAddressAllowed: true
    DefaultRPCPort: 8331
@@ -284,8 +284,8 @@ Profiles minimal:
 2. testnet
    Name: testnet
    ChainID: 777002
-   NetworkID: dkc-test-1
-   AddressPrefix: DKC
+   NetworkID: idr-test-1
+   AddressPrefix: IDR
    AddressVersion: 0x1F
    LegacyAddressAllowed: false
    DefaultRPCPort: 18331
@@ -294,8 +294,8 @@ Profiles minimal:
 3. mainnet
    Name: mainnet
    ChainID: 777000
-   NetworkID: dkc-main-1
-   AddressPrefix: DKC
+   NetworkID: idr-main-1
+   AddressPrefix: IDR
    AddressVersion: 0x20
    LegacyAddressAllowed: false
    DefaultRPCPort: 8333
@@ -303,7 +303,7 @@ Profiles minimal:
 
 Catatan:
 
-* Untuk Phase ini boleh semua tetap memakai prefix visual `DKC`.
+* Untuk Phase ini boleh semua tetap memakai prefix visual `IDR`.
 * Perbedaan network minimal ada di address version dan network id.
 * Later phase bisa mempertimbangkan prefix visual berbeda untuk testnet/localnet jika perlu.
 * Jangan biarkan config tersebar hardcode `config.Localnet()` di banyak tempat tanpa alasan.
@@ -356,7 +356,7 @@ wallet new
 
 Expected:
 
-* output address baru `DKC...`
+* output address baru `IDR...`
 * private key tetap bisa diexport hex 64 chars jika command export ada.
 * wallet file menyimpan cukup data untuk recover address.
 * public key compressed bytes atau hex disimpan jika existing wallet model butuh.
@@ -374,7 +374,7 @@ Expected:
 * legacy wallet diberi label/warning jika ada.
 
 Output contoh:
-address: DKC...
+address: IDR...
 format: base58check
 network: localnet
 key curve: secp256k1
@@ -397,11 +397,11 @@ Semua command yang menerima address harus memakai ValidateAddress:
 
 Rules:
 
-* New address DKC Base58Check valid.
+* New address IDR Base58Check valid.
 * Wrong checksum invalid.
 * Wrong version invalid untuk selected network.
 * Wrong prefix invalid.
-* Legacy dkc1 accepted only if profile.LegacyAddressAllowed == true.
+* Legacy idr1 accepted only if profile.LegacyAddressAllowed == true.
 * Invalid address error harus jelas:
   invalid address: checksum mismatch
   invalid address: wrong network version
@@ -445,11 +445,11 @@ Commands yang membuat wallet/address otomatis harus memakai format baru:
 * tests mining
 
 Expected output:
-miner: DKC...
-user1: DKC...
-user2: DKC...
+miner: IDR...
+user1: IDR...
+user2: IDR...
 
-Jangan biarkan test helper generate `dkc1...` lagi kecuali explicit legacy test.
+Jangan biarkan test helper generate `idr1...` lagi kecuali explicit legacy test.
 
 ==================================================
 12. Docs update
@@ -468,13 +468,13 @@ Tambahkan section:
 Address format:
 
 * New format:
-  DKC + Base58Check(version + pubkey_hash + checksum)
+  IDR + Base58Check(version + pubkey_hash + checksum)
 * PubKeyHash:
   RIPEMD160(SHA256(compressed secp256k1 public key))
 * Private key:
   raw 32-byte hex
 * Legacy:
-  dkc1... is localnet/dev legacy only
+  idr1... is localnet/dev legacy only
 
 Network profiles:
 
@@ -491,7 +491,7 @@ Protocol versions:
 
 Catatan publik:
 
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet claim, if implemented, will be capped and time-limited.
 * No price promise.
 * No APY promise.
@@ -516,7 +516,7 @@ Tambahkan/update tests:
 
 4. Address encode:
 
-* generated address starts with DKC.
+* generated address starts with IDR.
 * address validates.
 
 5. Address wrong prefix:
@@ -533,7 +533,7 @@ Tambahkan/update tests:
 
 8. Legacy address:
 
-* `dkc1...` valid hanya di localnet if LegacyAddressAllowed true.
+* `idr1...` valid hanya di localnet if LegacyAddressAllowed true.
 * invalid di testnet/mainnet.
 
 9. Private key hex:
@@ -552,7 +552,7 @@ Tambahkan/update tests:
 
 11. Wallet new:
 
-* generated wallet address starts DKC.
+* generated wallet address starts IDR.
 * wallet inspect shows base58check/secp256k1.
 
 12. Wallet import/export:
@@ -563,13 +563,13 @@ Tambahkan/update tests:
 
 13. Send tx:
 
-* send from DKC address to DKC address.
+* send from IDR address to IDR address.
 * signature validates.
 * balance changes after mining.
 
 14. Mining address validation:
 
-* mine to DKC address success.
+* mine to IDR address success.
 * mine to invalid checksum address fails.
 
 15. RPC address validation:
@@ -578,11 +578,11 @@ Tambahkan/update tests:
 
 16. Dev fork-sim:
 
-* generated miner addresses start DKC.
+* generated miner addresses start IDR.
 
 17. Reorg tx sim:
 
-* miner/user addresses start DKC.
+* miner/user addresses start IDR.
 * scenarios still pass.
 
 18. P2P handshake:
@@ -614,7 +614,7 @@ go run ./node/cmd/deskachain --datadir ./testdata/address init
 go run ./node/cmd/deskachain --datadir ./testdata/address wallet new
 
 Expected:
-DKC...
+IDR...
 
 Start node:
 
@@ -622,11 +622,11 @@ go run ./node/cmd/deskachain --datadir ./testdata/address node start --rpc :8381
 
 Mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <DKC_ADDRESS> --blocks 3
+go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <IDR_ADDRESS> --blocks 3
 
 Expected:
 mined block height=1 ...
-miner balance: 150 DKC
+miner balance: 150 IDR
 
 Chain info:
 
@@ -634,7 +634,7 @@ go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 chain info
 
 Expected:
 height: 3
-total supply: 150 DKC
+total supply: 150 IDR
 network: localnet
 chain id: 777001
 protocol version: ...
@@ -649,7 +649,7 @@ Then mine 1 block:
 go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <ADDR_A> --blocks 1
 
 Expected:
-balance B: 10 DKC
+balance B: 10 IDR
 normal transactions: 1
 
 Dev reorg tx sim:
@@ -657,14 +657,14 @@ Dev reorg tx sim:
 go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
 
 Expected output addresses:
-miner common: DKC...
-user1: DKC...
-user2: DKC...
+miner common: IDR...
+user1: IDR...
+user2: IDR...
 
 Do not over-engineer.
 Focus Phase 2.6.6 only on:
 
-* DKC Base58Check address,
+* IDR Base58Check address,
 * secp256k1 key/signature migration,
 * raw 32-byte private key hex,
 * network profile foundation,

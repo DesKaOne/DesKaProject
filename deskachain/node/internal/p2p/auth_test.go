@@ -39,16 +39,16 @@ func TestP2PMessageAuthRequestRoundTripAndReplay(t *testing.T) {
 	identity := testNodeIdentity(t, "node-a")
 	now := time.Unix(1_800_000_000, 0)
 	body := []byte("{\"hello\":\"world\"}")
-	req, _ := signedTestRequest(t, identity, "dkc-testnet-1", 777101, http.MethodPost, "/p2p/tx?x=1", body, now)
+	req, _ := signedTestRequest(t, identity, "idr-testnet-1", 777101, http.MethodPost, "/p2p/tx?x=1", body, now)
 
-	got, err := VerifyP2PRequest("dkc-testnet-1", 777101, req, body, now)
+	got, err := VerifyP2PRequest("idr-testnet-1", 777101, req, body, now)
 	if err != nil {
 		t.Fatalf("verify request: %v", err)
 	}
 	if got.NodeID != identity.NodeID || hex.EncodeToString(got.PublicKey) != hex.EncodeToString(identity.PublicKey) {
 		t.Fatalf("verified identity mismatch")
 	}
-	if _, err := VerifyP2PRequest("dkc-testnet-1", 777101, req, body, now); err == nil || !strings.Contains(err.Error(), "replay") {
+	if _, err := VerifyP2PRequest("idr-testnet-1", 777101, req, body, now); err == nil || !strings.Contains(err.Error(), "replay") {
 		t.Fatalf("expected replay rejection, got %v", err)
 	}
 }
@@ -59,7 +59,7 @@ func TestP2PMessageAuthRequestRejectsTampering(t *testing.T) {
 	body := []byte("payload")
 
 	tests := []struct {
-		name string
+		name   string
 		mutate func(*http.Request)
 	}{
 		{
@@ -83,13 +83,13 @@ func TestP2PMessageAuthRequestRejectsTampering(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req, _ := signedTestRequest(t, identity, "dkc-testnet-1", 777101, http.MethodPost, "/p2p/tx", body, now)
+			req, _ := signedTestRequest(t, identity, "idr-testnet-1", 777101, http.MethodPost, "/p2p/tx", body, now)
 			tt.mutate(req)
 			verifyBody := body
 			if tt.name == "body" {
 				verifyBody = []byte("tampered")
 			}
-			if _, err := VerifyP2PRequest("dkc-testnet-1", 777101, req, verifyBody, now); err == nil {
+			if _, err := VerifyP2PRequest("idr-testnet-1", 777101, req, verifyBody, now); err == nil {
 				t.Fatalf("expected tampering rejection")
 			}
 		})
@@ -109,16 +109,16 @@ func TestP2PMessageAuthResponseRoundTripAndTampering(t *testing.T) {
 	}
 	now := time.Unix(1_800_000_200, 0)
 	body := []byte("{\"ok\":true}")
-	headers, err := SignP2PResponse(serverIdentity, "dkc-testnet-1", 777101, requestNonce, http.StatusOK, body, now)
+	headers, err := SignP2PResponse(serverIdentity, "idr-testnet-1", 777101, requestNonce, http.StatusOK, body, now)
 	if err != nil {
 		t.Fatalf("sign response: %v", err)
 	}
-	if err := VerifyP2PResponse(handshake, "dkc-testnet-1", 777101, requestNonce, http.StatusOK, body, headers, now); err != nil {
+	if err := VerifyP2PResponse(handshake, "idr-testnet-1", 777101, requestNonce, http.StatusOK, body, headers, now); err != nil {
 		t.Fatalf("verify response: %v", err)
 	}
 	tampered := append([]byte(nil), body...)
 	tampered[0] ^= 0x01
-	if err := VerifyP2PResponse(handshake, "dkc-testnet-1", 777101, requestNonce, http.StatusOK, tampered, headers, now); err == nil {
+	if err := VerifyP2PResponse(handshake, "idr-testnet-1", 777101, requestNonce, http.StatusOK, tampered, headers, now); err == nil {
 		t.Fatalf("expected response body tampering rejection")
 	}
 }

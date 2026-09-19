@@ -76,7 +76,7 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 		t.Fatal(err)
 	}
 	snapshot.Accounts = append(snapshot.Accounts, ledger.StateAccount{
-		Address:   "DKC-tampered",
+		Address:   "IDR-tampered",
 		Confirmed: 1,
 		Mature:    1,
 	})
@@ -96,7 +96,6 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 		t.Fatalf("tampered state reported valid: %#v", result)
 	}
 }
-
 
 func TestStateStatusReportsCurrentPersistedState(t *testing.T) {
 	profile := config.Localnet()

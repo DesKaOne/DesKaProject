@@ -56,7 +56,7 @@ Field wajib:
 
 Default localnet:
 NetworkName: "deskachain-local"
-NetworkID: "dkc-local-1"
+NetworkID: "idr-local-1"
 ChainID: 777001
 ProtocolVersion: 1
 MinProtocolVersion: 1
@@ -66,7 +66,7 @@ network info
 
 Output:
 network name: deskachain-local
-network id: dkc-local-1
+network id: idr-local-1
 chain id: 777001
 protocol version: 1
 min protocol version: 1
@@ -95,7 +95,7 @@ GET /p2p/handshake
 Response:
 {
 "network_name": "deskachain-local",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001,
 "protocol_version": 1,
 "min_protocol_version": 1,
@@ -147,7 +147,7 @@ Format baru:
 {
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "dkc-local-1",
+"network_id": "idr-local-1",
 "chain_id": 777001,
 "last_height": 6,
 "last_tip_hash": "...",
@@ -202,7 +202,7 @@ Response:
 "difficulty": 4,
 "merkle_root": "...",
 "tx_count": 1,
-"miner_address": "dkc1..."
+"miner_address": "idr1..."
 }
 ]
 }
@@ -330,7 +330,7 @@ Output sukses:
 peer ok
 url: http://127.0.0.1:9331
 node id: <id>
-network id: dkc-local-1
+network id: idr-local-1
 chain id: 777001
 height: 6
 tip hash: ...
@@ -384,7 +384,7 @@ Agar juga membandingkan:
 
 Output jika sama:
 nodes in sync
-network id: dkc-local-1
+network id: idr-local-1
 chain id: 777001
 height: 6
 tip hash: ...

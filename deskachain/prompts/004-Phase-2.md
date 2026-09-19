@@ -9,12 +9,12 @@ Status saat ini:
 * init, dev reset, wallet, mine, send, mempool, balance, chain info, chain validate sudah berjalan.
 * Transfer antar wallet sudah terbukti:
 
-  * Wallet A mining 3 block = 150 DKC.
-  * Wallet A kirim 10 DKC ke Wallet B.
+  * Wallet A mining 3 block = 150 IDR.
+  * Wallet A kirim 10 IDR ke Wallet B.
   * Wallet A mining 1 block lagi.
-  * Wallet A akhir = 190 DKC.
-  * Wallet B akhir = 10 DKC.
-  * Total supply = 200 DKC.
+  * Wallet A akhir = 190 IDR.
+  * Wallet B akhir = 10 IDR.
+  * Total supply = 200 IDR.
   * Chain valid.
 
 Nama patch:
@@ -208,7 +208,7 @@ Response:
 "height": 4,
 "tip_hash": "...",
 "difficulty": 4,
-"total_supply": "200 DKC",
+"total_supply": "200 IDR",
 "mempool_count": 0
 }
 

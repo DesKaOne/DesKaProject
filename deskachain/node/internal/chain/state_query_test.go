@@ -6,8 +6,8 @@ import (
 
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
-	"deskachain/internal/state"
 	"deskachain/internal/staking"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
 
@@ -19,22 +19,22 @@ type queryOnlyStore struct {
 	stakes  []staking.Record
 }
 
-func (s *queryOnlyStore) Init() error { return nil }
-func (s *queryOnlyStore) Close() error { return nil }
-func (s *queryOnlyStore) HasChain() (bool, error) { return true, nil }
-func (s *queryOnlyStore) SaveBlock(types.Block) error { return nil }
-func (s *queryOnlyStore) Blocks() ([]types.Block, error) { return nil, errReplayMustNotRun }
-func (s *queryOnlyStore) Tip() (types.Block, error) { return s.tip, nil }
-func (s *queryOnlyStore) GetBlockByHeight(uint64) (types.Block, error) { return s.tip, nil }
-func (s *queryOnlyStore) DeleteBlockByHeight(uint64) error { return nil }
+func (s *queryOnlyStore) Init() error                                   { return nil }
+func (s *queryOnlyStore) Close() error                                  { return nil }
+func (s *queryOnlyStore) HasChain() (bool, error)                       { return true, nil }
+func (s *queryOnlyStore) SaveBlock(types.Block) error                   { return nil }
+func (s *queryOnlyStore) Blocks() ([]types.Block, error)                { return nil, errReplayMustNotRun }
+func (s *queryOnlyStore) Tip() (types.Block, error)                     { return s.tip, nil }
+func (s *queryOnlyStore) GetBlockByHeight(uint64) (types.Block, error)  { return s.tip, nil }
+func (s *queryOnlyStore) DeleteBlockByHeight(uint64) error              { return nil }
 func (s *queryOnlyStore) ReplaceFromHeight(uint64, []types.Block) error { return nil }
-func (s *queryOnlyStore) SetTip(uint64, string) error { return nil }
-func (s *queryOnlyStore) GetHeight() (uint64, error) { return s.tip.Height, nil }
-func (s *queryOnlyStore) GetTip() (uint64, string, error) { return s.tip.Height, s.tip.Hash, nil }
+func (s *queryOnlyStore) SetTip(uint64, string) error                   { return nil }
+func (s *queryOnlyStore) GetHeight() (uint64, error)                    { return s.tip.Height, nil }
+func (s *queryOnlyStore) GetTip() (uint64, string, error)               { return s.tip.Height, s.tip.Hash, nil }
 
-func (s *queryOnlyStore) SaveState(state.Snapshot) error { return nil }
+func (s *queryOnlyStore) SaveState(state.Snapshot) error     { return nil }
 func (s *queryOnlyStore) LoadState() (state.Snapshot, error) { return state.Snapshot{}, nil }
-func (s *queryOnlyStore) DeleteState() error { return nil }
+func (s *queryOnlyStore) DeleteState() error                 { return nil }
 func (s *queryOnlyStore) GetStateMetadata() (uint8, uint64, string, error) {
 	return state.SnapshotVersion, s.tip.Height, "legacy-state-root", nil
 }
@@ -54,7 +54,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
 		tip: types.Block{Height: 5, Hash: "tip"},
 		account: ledger.StateAccount{
-			Address:   "DKC-alice",
+			Address:   "IDR-alice",
 			Confirmed: 100,
 			Mature:    80,
 			Nonce:     9,
@@ -62,7 +62,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 		stakes: []staking.Record{
 			{
 				StakeID:      "stake-1",
-				OwnerAddress: "DKC-alice",
+				OwnerAddress: "IDR-alice",
 				Amount:       20,
 				Status:       staking.StatusActive,
 			},
@@ -70,7 +70,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	}
 	bc := New(store)
 
-	got, err := bc.BalanceDetailsForWithProfile("DKC-alice", nil, config.Localnet())
+	got, err := bc.BalanceDetailsForWithProfile("IDR-alice", nil, config.Localnet())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,11 +82,11 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 func TestAccountNoncePrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
 		tip:     types.Block{Height: 5, Hash: "tip"},
-		account: ledger.StateAccount{Address: "DKC-alice", Nonce: 11},
+		account: ledger.StateAccount{Address: "IDR-alice", Nonce: 11},
 	}
 	bc := New(store)
 
-	got, err := bc.AccountNonceWithProfile("DKC-alice", config.Localnet())
+	got, err := bc.AccountNonceWithProfile("IDR-alice", config.Localnet())
 	if err != nil {
 		t.Fatal(err)
 	}

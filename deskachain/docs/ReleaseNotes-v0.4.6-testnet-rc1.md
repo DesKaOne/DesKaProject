@@ -4,13 +4,13 @@
 
 `v0.4.6-testnet-rc1` is a public testnet release candidate for external testers and operators. Multi-host testnet flows have been validated, including restart recovery, peer catch-up, faucet-funded staking collateral, service-node simulation, and the read-only Explorer API/Web UI.
 
-This is not mainnet. Testnet DKC has no monetary value.
+This is not mainnet. Testnet IDR has no monetary value.
 
 ## Included Binaries
 
 - `deskachain`
-- `dkcminer`
-- `dkcservice`
+- `idrminer`
+- `idrservice`
 
 ## Supported Platforms
 
@@ -26,16 +26,16 @@ This is not mainnet. Testnet DKC has no monetary value.
 - P2P seed peer sync with network/genesis checks.
 - Faucet operator mode for controlled testnet funding.
 - Staking collateral for service-node eligibility.
-- Service-node simulation and `dkcservice` agent.
+- Service-node simulation and `idrservice` agent.
 - Explorer API under `/explorer/*`.
 - Explorer Web UI under `/explorer-ui/`.
 - Release archives and `SHA256SUMS.txt`.
 
 ## Safety Warnings
 
-- Testnet DKC has no monetary value.
+- Testnet IDR has no monetary value.
 - Mainnet is not available.
-- Do not treat testnet DKC as an investment.
+- Do not treat testnet IDR as an investment.
 - There are no mining income, staking APY, profit, or reward promises.
 - Do not expose wallet/admin RPC publicly.
 - Back up wallet files before deleting or moving datadirs.
@@ -49,7 +49,7 @@ This is not mainnet. Testnet DKC has no monetary value.
 - No mainnet.
 - No Stratum or mining pool protocol.
 - No mobile, desktop, or web wallet app yet.
-- Service points are simulation-only and are not spendable DKC.
+- Service points are simulation-only and are not spendable IDR.
 - Staking is collateral-only, with no APY, no validators, and no staking rewards.
 - Public seed lists are operator-supplied.
 - Faucet must be enabled deliberately and funded manually.

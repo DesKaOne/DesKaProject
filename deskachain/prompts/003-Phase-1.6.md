@@ -39,12 +39,12 @@ Pastikan command berikut benar-benar bekerja:
 
 Perilaku wajib:
 - Wallet pengirim harus ditemukan di wallet store lokal.
-- Address tujuan harus valid prefix dkc1.
+- Address tujuan harus valid prefix idr1.
 - Amount wajib > 0.
 - Amount tidak boleh melebihi confirmed balance dikurangi pending outgoing amount.
 - Nonce transaksi harus:
   confirmed nonce pengirim + jumlah pending tx dari pengirim + 1
-- Fee default tetap 0 DKC untuk Phase 1.6.
+- Fee default tetap 0 IDR untuk Phase 1.6.
 - Transaksi harus ditandatangani.
 - Public key harus tersimpan di transaksi.
 - Tx ID harus deterministic berdasarkan isi transaksi.
@@ -55,8 +55,8 @@ Perilaku wajib:
   id: <txid>
   from: <from>
   to: <to>
-  amount: 10 DKC
-  fee: 0 DKC
+  amount: 10 IDR
+  fee: 0 IDR
   nonce: 1
   status: pending
 
@@ -87,8 +87,8 @@ Output jika kosong:
 Output jika ada tx:
 
   pending tx count: 2
-  id=<txid> from=<from> to=<to> amount=10 DKC fee=0 DKC nonce=1
-  id=<txid> from=<from> to=<to> amount=5 DKC fee=0 DKC nonce=2
+  id=<txid> from=<from> to=<to> amount=10 IDR fee=0 IDR nonce=1
+  id=<txid> from=<from> to=<to> amount=5 IDR fee=0 IDR nonce=2
 
 Aturan:
 - Jangan tampilkan private key.
@@ -114,7 +114,7 @@ Block baru harus:
 
 Output mining harus menampilkan jumlah tx:
 
-  mined block height=4 hash=<hash> txs=2 reward=50 DKC difficulty=4 nonce=<nonce>
+  mined block height=4 hash=<hash> txs=2 reward=50 IDR difficulty=4 nonce=<nonce>
 
 Catatan:
 - txs termasuk coinbase.
@@ -126,17 +126,17 @@ Catatan:
 
 Contoh alur:
 
-  wallet A mining 3 block = 150 DKC
-  wallet A kirim 10 DKC ke wallet B
+  wallet A mining 3 block = 150 IDR
+  wallet A kirim 10 IDR ke wallet B
   mine 1 block oleh wallet A
 
 Hasil:
 - Wallet A:
-  150 - 10 + 50 = 190 DKC
+  150 - 10 + 50 = 190 IDR
 - Wallet B:
-  10 DKC
+  10 IDR
 - Total supply:
-  200 DKC
+  200 IDR
 
 Fee masih 0, jadi tidak ada fee tambahan.
 
@@ -197,7 +197,7 @@ Output jika invalid:
   address invalid
 
 Aturan validasi minimal:
-- Harus prefix dkc1.
+- Harus prefix idr1.
 - Panjang sesuai format address project saat ini.
 - Karakter hex/hash suffix valid sesuai implementasi saat ini.
 - Jangan terlalu over-engineer, cukup untuk Phase 1.6.
@@ -249,8 +249,8 @@ Response jika confirmed:
   "block_height": 4,
   "from": "...",
   "to": "...",
-  "amount": "10 DKC",
-  "fee": "0 DKC",
+  "amount": "10 IDR",
+  "fee": "0 IDR",
   "nonce": 1,
   "coinbase": false
 }
@@ -261,8 +261,8 @@ Response jika pending:
   "status": "pending",
   "from": "...",
   "to": "...",
-  "amount": "10 DKC",
-  "fee": "0 DKC",
+  "amount": "10 IDR",
+  "fee": "0 IDR",
   "nonce": 1,
   "coinbase": false
 }
@@ -280,12 +280,12 @@ Response:
 {
   "address": "...",
   "valid": true,
-  "confirmed_balance": "190 DKC",
+  "confirmed_balance": "190 IDR",
   "confirmed_nonce": 1,
   "pending_outgoing_count": 0,
-  "pending_outgoing_amount": "0 DKC",
+  "pending_outgoing_amount": "0 IDR",
   "pending_incoming_count": 0,
-  "pending_incoming_amount": "0 DKC"
+  "pending_incoming_amount": "0 IDR"
 }
 
 ==================================================
@@ -321,14 +321,14 @@ Tambahkan test yang mensimulasikan alur ini di datadir temporary:
 2. Buat wallet A.
 3. Buat wallet B.
 4. Mine 3 block ke wallet A.
-5. Pastikan balance A = 150 DKC.
-6. Send 10 DKC dari A ke B.
+5. Pastikan balance A = 150 IDR.
+6. Send 10 IDR dari A ke B.
 7. Pastikan mempool count = 1.
 8. Mine 1 block ke wallet A.
 9. Pastikan mempool count = 0.
-10. Pastikan balance A = 190 DKC.
-11. Pastikan balance B = 10 DKC.
-12. Pastikan total supply = 200 DKC.
+10. Pastikan balance A = 190 IDR.
+11. Pastikan balance B = 10 IDR.
+12. Pastikan total supply = 200 IDR.
 13. Pastikan chain validate pass.
 14. Pastikan tx get mengembalikan status confirmed.
 
@@ -370,8 +370,8 @@ Tambahkan bagian:
 
 Tambahkan penjelasan:
 - Pending tx belum mengubah confirmed balance sampai block ditambang.
-- Miner mendapat reward 50 DKC per block.
-- Fee masih 0 DKC di Phase 1.6.
+- Miner mendapat reward 50 IDR per block.
+- Fee masih 0 IDR di Phase 1.6.
 - Wallet storage masih dev-only dan belum aman untuk production.
 
 ==================================================
@@ -402,9 +402,9 @@ Lalu manual test:
   go run ./node/cmd/deskachain tx get <txid>
 
 Expected:
-- Wallet A balance akhir: 190 DKC
-- Wallet B balance akhir: 10 DKC
-- Total supply: 200 DKC
+- Wallet A balance akhir: 190 IDR
+- Wallet B balance akhir: 10 IDR
+- Total supply: 200 IDR
 - Mempool kosong setelah mining
 - Chain valid
 

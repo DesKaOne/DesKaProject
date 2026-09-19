@@ -1,6 +1,6 @@
 # DesKaChain Public Testnet Operator Checklist
 
-Testnet DKC has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
+Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
 
 ## Before Running
 
@@ -39,7 +39,7 @@ Testnet DKC has no monetary value. Mainnet is not available. Do not expose walle
 ## Mining
 
 - Create a separate miner wallet datadir.
-- Mine once with `dkcminer --once`.
+- Mine once with `idrminer --once`.
 - Confirm testnet miner RPC is not isolated: active peers meet `--min-mining-peers` or an upstream peer is reachable.
 - Confirm chain height increases.
 - Confirm Explorer block list updates.
@@ -58,13 +58,13 @@ Testnet DKC has no monetary value. Mainnet is not available. Do not expose walle
 
 ## Service Node
 
-- Confirm owner has `1000 DKC` testnet collateral.
+- Confirm owner has `1000 IDR` testnet collateral.
 - Lock stake.
 - Confirm active stake.
 - Enable service RPC deliberately.
-- Run `dkcservice --once`.
+- Run `idrservice --once`.
 - Confirm service eligibility.
-- Confirm service points are simulation-only and are not spendable DKC.
+- Confirm service points are simulation-only and are not spendable IDR.
 
 ## Explorer
 
@@ -97,18 +97,18 @@ Testnet DKC has no monetary value. Mainnet is not available. Do not expose walle
 - Run the health check against the intended public RPC URL.
 - Verify `/explorer-ui/` in a browser.
 - Confirm `wallet_rpc=false` and `admin_rpc=false` on public nodes.
-- Confirm network ID `dkc-testnet-1` and chain ID `777101`.
+- Confirm network ID `idr-testnet-1` and chain ID `777101`.
 - Confirm multi-seed failover is configured with at least two operator seeds where available.
 - Report or triage issues using `docs/IssueTriage.md`.
 - Track common problems in `docs/KnownIssues.md`.
-- Remember testnet DKC has no monetary value.
+- Remember testnet IDR has no monetary value.
 
 ## Release Safety Audit
 
 - Archive has no runtime datadir.
 - Archive has no wallet files.
 - Archive has no `faucet_state.json`.
-- Archive has no `dkcservice-state.json`.
+- Archive has no `idrservice-state.json`.
 - Archive has no private keys.
 - Archive has no `.env` files outside safe examples.
 - Example env files contain placeholders only.

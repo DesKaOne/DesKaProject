@@ -23,7 +23,7 @@ Status saat ini:
   * admin_rpc=false
   * faucet_rpc=false by default
   * service_rpc=false by default
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
@@ -83,14 +83,14 @@ Search should detect:
 * block height integer,
 * block hash,
 * txid,
-* DKC address.
+* IDR address.
 
 Behavior:
 
 * Numeric query:
 
   * search block by height.
-* DKC address:
+* IDR address:
 
   * validate active network.
   * return address result.
@@ -229,7 +229,7 @@ Requirements:
 * Search by block height.
 * Search by block hash.
 * Search by txid.
-* Search by DKC address.
+* Search by IDR address.
 * Enter key submits.
 * Search button submits.
 * Loading state while searching.
@@ -242,7 +242,7 @@ If `/explorer/search` exists, use it.
 If not, implement frontend fallback:
 
 * numeric -> block page.
-* DKC address -> address page.
+* IDR address -> address page.
 * hash -> try tx then block.
 
 No write actions.
@@ -401,7 +401,7 @@ Document:
   * max limit
 * Error format.
 * Read-only safety.
-* Testnet DKC has no monetary value.
+* Testnet IDR has no monetary value.
 * Mainnet not available.
 * Service points simulation-only.
 * Staking collateral-only.
@@ -472,7 +472,7 @@ Manual checks:
   * height
   * block hash
   * txid
-  * DKC address
+  * IDR address
 * Invalid search shows friendly error.
 * Not found shows friendly error.
 * Copy buttons work.
