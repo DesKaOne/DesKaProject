@@ -141,6 +141,13 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		MaxDepth:             maxDepth,
 		MaxReorgDepth:        maxDepth,
 	}
+	plan.ReorgDepth = localTip.Height - ancestor.Height
+	if plan.ReorgDepth > maxDepth {
+		plan.Allowed = false
+		plan.Decision = "reorg_depth_exceeds_max"
+		plan.Reason = "reorg depth exceeds max depth"
+		return plan, nil, nil
+	}
 	for i := len(localBlocks) - 1; i >= 0; i-- {
 		b := localBlocks[i]
 		if b.Height <= ancestor.Height {
@@ -148,8 +155,18 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		}
 		plan.DisconnectBlocks = append(plan.DisconnectBlocks, summarizeBlock(b))
 	}
-	plan.ReorgDepth = uint64(len(plan.DisconnectBlocks))
-	peerBranch := make([]types.Block, 0)
+	maxReorgFetch := profile.NetworkLimits.MaxReorgFetchBlocks
+	if maxReorgFetch == 0 {
+		maxReorgFetch = 512
+	}
+	peerBranchDepth := st.Height - ancestor.Height
+	if peerBranchDepth > maxReorgFetch {
+		plan.Allowed = false
+		plan.Decision = "reorg_fetch_exceeds_max"
+		plan.Reason = "peer reorg branch exceeds max remote fetch"
+		return plan, nil, nil
+	}
+	peerBranch := make([]types.Block, 0, int(peerBranchDepth))
 	for h := ancestor.Height + 1; h <= st.Height; h++ {
 		b, err := client.Block(peer, h)
 		if err != nil {
@@ -172,11 +189,7 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		plan.Allowed = false
 		plan.Decision = "local_ahead_more_work"
 		plan.Reason = "local chain has higher cumulative work"
-	case plan.ReorgDepth > maxDepth:
-		plan.Allowed = false
-		plan.Decision = "reorg_depth_exceeds_max"
-		plan.Reason = "reorg depth exceeds max depth"
-	default:
+default:
 		if _, err := chain.ValidateChainWithNetwork(peerFull, profile); err != nil {
 			plan.Allowed = false
 			plan.Decision = "peer_branch_invalid"
