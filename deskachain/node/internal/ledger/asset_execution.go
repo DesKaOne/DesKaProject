@@ -268,6 +268,9 @@ func (l *MatureLedger) settleFees(miner string) error {
 		if miner == "" {
 			return errors.New("miner address is required to settle fees")
 		}
+		if err := crypto.ValidateAddressForNetwork(miner, l.profile); err != nil {
+			return fmt.Errorf("invalid fee recipient: %w", err)
+		}
 		if err := l.assets.Debit(asset.FeeCollectorAddress, asset.NativeAssetID, fee); err != nil {
 			return err
 		}
