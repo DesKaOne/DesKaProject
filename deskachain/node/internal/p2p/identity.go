@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"deskachain/internal/chain"
 	"deskachain/internal/config"
 	"deskachain/internal/types"
 )
@@ -147,7 +148,11 @@ func ValidateHandshake(local config.NetworkConfig, peer Handshake) error {
 	if peer.ChainID != local.ChainID {
 		return errors.New("peer rejected: chain id mismatch")
 	}
-	if peer.GenesisHash != local.GenesisHash {
+	expectedGenesis := local.GenesisHash
+	if expectedGenesis == "" {
+		expectedGenesis = chain.GenesisBlockForNetwork(local).Hash
+	}
+	if peer.GenesisHash != expectedGenesis {
 		return errors.New("peer rejected: genesis hash mismatch")
 	}
 	if peer.ProtocolVersion < local.MinProtocolVersion || local.ProtocolVersion < peer.MinProtocolVersion {
