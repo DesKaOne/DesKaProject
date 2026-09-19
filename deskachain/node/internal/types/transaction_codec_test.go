@@ -7,6 +7,26 @@ import (
 	"testing"
 )
 
+func TestLegacyTransactionVersionDoesNotChangeSigningBytes(t *testing.T) {
+	withoutVersion := Transaction{
+		From:      "from",
+		To:        "to",
+		Amount:    123,
+		Fee:       7,
+		Nonce:     9,
+		Timestamp: 1700000000,
+		PublicKey: "pub",
+	}
+	withVersion := withoutVersion
+	withVersion.Version = TxVersionLegacy
+	if !bytes.Equal(withoutVersion.SigningBytes(), withVersion.SigningBytes()) {
+		t.Fatal("explicit legacy version changed signing bytes")
+	}
+	if withoutVersion.CalculateID() != withVersion.CalculateID() {
+		t.Fatal("explicit legacy version changed transaction id")
+	}
+}
+
 func TestLegacyTransactionSigningBytesRemainVersionCompatible(t *testing.T) {
 	tx := Transaction{
 		From:      "from",
