@@ -131,6 +131,9 @@ func ValidateBlockWithNetwork(block types.Block, prior []types.Block, profile co
 }
 
 func validateBlock(block types.Block, prior []types.Block, params config.DifficultyParams, consensus config.ConsensusParams, profile config.NetworkConfig) error {
+	if err := types.ValidateBlockVersion(block.ProtocolVersion(), profile.BlockVersion); err != nil {
+		return err
+	}
 	if block.Hash != block.CalculateHash() {
 		return errors.New("block hash mismatch")
 	}
