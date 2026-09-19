@@ -114,6 +114,7 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 		{StakeID: "stake-3", OwnerAddress: "IDR-bob", Amount: 10, Status: staking.StatusActive},
 	}
 	snapshot.Coinbases = []ledger.StateCoinbase{{Address: "IDR-alice", Amount: 50, Height: 11}}
+	syncNativeBalances(&snapshot)
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
@@ -176,6 +177,7 @@ func TestStateQueryIndexesDisappearWithStateReset(t *testing.T) {
 	snapshot := emptySnapshot(t)
 	snapshot.Accounts = []ledger.StateAccount{{Address: "IDR-alice", Confirmed: 1, Mature: 1}}
 	snapshot.Stakes = []staking.Record{{StakeID: "stake-1", OwnerAddress: "IDR-alice", Amount: 1, Status: staking.StatusActive}}
+	syncNativeBalances(&snapshot)
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
