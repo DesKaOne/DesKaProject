@@ -167,6 +167,9 @@ func readCanonicalString(r *bytes.Reader) (string, error) {
 	if length > maxCanonicalFieldBytes {
 		return "", fmt.Errorf("%w: field too large", ErrInvalidCanonicalTx)
 	}
+	if length == 0 {
+		return "", nil
+	}
 	if uint64(length) > uint64(r.Len()) {
 		return "", fmt.Errorf("%w: truncated field", ErrInvalidCanonicalTx)
 	}
