@@ -152,6 +152,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /address/", h.wrap("generic", h.address))
 	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
 	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
+	mux.HandleFunc("GET /asset/balances", h.assetBalances))
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
 	mux.HandleFunc("GET /mempool", h.wrap("generic", h.mempoolList))
 	mux.HandleFunc("GET /mempool/list", h.wrap("generic", h.mempoolList))
@@ -2083,6 +2084,48 @@ func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
 		"native":       def.ID == config.NativeAssetID,
 		"fee_asset":    def.ID == config.FeeAssetID,
 		"network":      h.profile().Name,
+	})
+}
+
+func (h handler) assetBalances(w http.ResponseWriter, r *http.Request) {
+	address := strings.TrimSpace(r.URL.Query().Get("address"))
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		writeError(w, err)
+		return
+	}
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	defer closeFn()
+	entries, err := bc.AssetBalancesForAddressWithProfile(address, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	out := make([]map[string]any, 0, len(entries))
+	for _, entry := range entries {
+		def, found, err := bc.AssetDefinitionWithProfile(entry.AssetID, h.profile())
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if !found {
+			continue
+		}
+		out = append(out, map[string]any{
+			"asset_id": entry.AssetID,
+			"symbol":   def.Symbol,
+			"decimals": def.Decimals,
+			"amount":   amount.FormatUnits(entry.Amount, def.Decimals),
+			"units":    entry.Amount,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"address":  address,
+		"balances": out,
 	})
 }
 
