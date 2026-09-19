@@ -7,7 +7,8 @@ func TestNativeAssetAndFeePolicy(t *testing.T) {
 		if profile.Asset.NativeAssetID != "IDR" || profile.Asset.NativeAssetSymbol != "IDR" {
 			t.Fatalf("%s native asset = %#v", profile.Name, profile.Asset)
 		}
-		if profile.Asset.NativeAssetDecimals != 0 || profile.Asset.FeeAssetID != "IDR" {
+		const expectedDecimals = 8
+		if profile.Asset.NativeAssetDecimals != expectedDecimals || profile.Asset.FeeAssetID != "IDR" {
 			t.Fatalf("%s native decimals/fee asset = %#v", profile.Name, profile.Asset)
 		}
 		if !profile.Fee.Enabled || profile.Fee.MinFee == 0 || profile.Fee.BytesPerGas == 0 || profile.Fee.MaxGasPerTx == 0 {
