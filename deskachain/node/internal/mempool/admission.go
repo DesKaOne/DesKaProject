@@ -37,6 +37,14 @@ func (m Mempool) Admit(tx types.Transaction, policy AdmissionPolicy) error {
 	if err := fees.Validate(tx, policy.Profile); err != nil {
 		return err
 	}
+	if tx.ProtocolVersion() == types.TxVersionAsset {
+		if err := tx.ValidateAssetEnvelope(); err != nil {
+			return err
+		}
+		if err := tx.ValidateFeePayerAuthorization(policy.Profile); err != nil {
+			return err
+		}
+	}
 	txs, err := m.Load()
 	if err != nil {
 		return err
