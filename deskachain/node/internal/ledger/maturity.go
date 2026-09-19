@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/config"
+	"deskachain/internal/arith"\n\t"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/staking"
 	"deskachain/internal/types"
@@ -128,7 +128,7 @@ func (l *MatureLedger) Nonce(address string) uint64 {
 func (l *MatureLedger) TotalMature() uint64 {
 	var total uint64
 	for _, account := range l.accounts {
-		total += account.Mature
+		total = arith.AddCap(total, account.Mature)
 	}
 	return total
 }
@@ -186,7 +186,7 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 		return fmt.Errorf("invalid coinbase recipient: %w", err)
 	}
 	acct := l.accounts[tx.To]
-	acct.Confirmed += tx.Amount
+	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)\n\tif err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }\n\tacct.Confirmed = confirmed
 	l.accounts[tx.To] = acct
 	l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
 	return nil
@@ -334,16 +334,16 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 			continue
 		}
 		if tx.From == address && tx.TxType() == types.TxTypeTransfer {
-			pendingOutgoing += tx.Amount + tx.Fee
+			pendingOutgoing = arith.AddCap(pendingOutgoing, arith.AddCap(tx.Amount, tx.Fee))
 		}
 		if tx.To == address && tx.TxType() == types.TxTypeTransfer {
-			pendingIncoming += tx.Amount
+			pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
 		}
 	}
 	activeStake, unlockingStake, releasedStake := l.stakes.AddressSummary(address, currentHeight)
 	pendingStakeLock := staking.PendingStakeLock(pending, address)
 	spendable := uint64(0)
-	locked := activeStake + unlockingStake + pendingStakeLock + pendingOutgoing
+	locked := arith.AddCap(arith.AddCap(activeStake, unlockingStake), arith.AddCap(pendingStakeLock, pendingOutgoing))
 	if account.Mature > locked {
 		spendable = account.Mature - locked
 	}
@@ -374,11 +374,11 @@ func (l *MatureLedger) matureCoinbases(currentHeight uint64) {
 		if credit.Matured {
 			continue
 		}
-		if currentHeight < credit.Height+l.maturity {
+		maturityHeight := arith.AddCap(credit.Height, l.maturity)\n\t\tif currentHeight < maturityHeight {
 			continue
 		}
 		acct := l.accounts[credit.Address]
-		acct.Mature += credit.Amount
+		mature, err := arith.Add(acct.Mature, credit.Amount)\n\t\tif err != nil { continue }\n\t\tacct.Mature = mature
 		l.accounts[credit.Address] = acct
 		credit.Matured = true
 	}
