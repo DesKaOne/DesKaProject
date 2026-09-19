@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"deskachain/internal/config"
 	"deskachain/internal/types"
 )
 
@@ -29,6 +30,18 @@ func NewClient() Client {
 
 func NewClientWithTimeout(timeout time.Duration) Client {
 	return Client{http: &http.Client{Timeout: timeout}}
+}
+
+func NewClientForProfile(paths config.Paths, profile config.NetworkConfig, timeout time.Duration) (Client, error) {
+	client := NewClientWithTimeout(timeout)
+	if !profile.RequireAuthenticatedNode {
+		return client, nil
+	}
+	identity, err := LoadOrCreateNodeIdentity(paths.NodeID)
+	if err != nil {
+		return Client{}, err
+	}
+	return client.WithNodeIdentity(identity), nil
 }
 
 func (c Client) WithIdentity(nodeID, p2pURL, networkID string) Client {
