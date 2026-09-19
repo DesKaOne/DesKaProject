@@ -379,8 +379,41 @@ func (s *BoltStore) SaveState(snapshot state.Snapshot) error {
 	if err := snapshot.Validate(); err != nil {
 		return err
 	}
+	if err := s.validateStateAgainstCanonicalTip(snapshot); err != nil {
+		return err
+	}
 	return s.db.Update(func(tx *bolt.Tx) error {
 		return saveStateTx(tx, snapshot)
+	})
+}
+
+func (s *BoltStore) validateStateAgainstCanonicalTip(snapshot state.Snapshot) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		if meta == nil || blocks == nil {
+			return errors.New("chain storage is not initialized")
+		}
+		tipKey := meta.Get(tipKey)
+		if tipKey == nil {
+			// State may be initialized before the first block is committed.
+			return nil
+		}
+		raw := blocks.Get(tipKey)
+		if raw == nil {
+			return errors.New("chain tip block is missing")
+		}
+		var tip types.Block
+		if err := json.Unmarshal(raw, &tip); err != nil {
+			return err
+		}
+		if snapshot.Height != tip.Height {
+			return errors.New("state height does not match canonical tip")
+		}
+		if tip.StateRoot != "" && snapshot.StateRoot != tip.StateRoot {
+			return errors.New("state root does not match canonical tip")
+		}
+		return nil
 	})
 }
 
