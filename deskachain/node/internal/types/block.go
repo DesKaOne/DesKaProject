@@ -26,6 +26,7 @@ type Block struct {
 	MinerAddress  string        `json:"miner_address"`
 	Transactions  []Transaction `json:"transactions"`
 	MerkleRoot    string        `json:"merkle_root"`
+	StateRoot     string        `json:"state_root,omitempty"`
 	Hash          string        `json:"hash"`
 	GenesisMarker string        `json:"genesis_marker,omitempty"`
 }
