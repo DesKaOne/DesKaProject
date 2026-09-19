@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"deskachain/internal/asset"
+	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 )
 
@@ -348,6 +349,41 @@ func (tx *Transaction) RefreshID() {
 // FeePayerSigningBytesWithChainID returns the payload a paymaster signs.
 // Sponsor signature material is intentionally excluded so it can be added
 // after the sender has signed without changing tx.ID.
+// ValidateFeePayerAuthorization verifies a v3 paymaster authorization.
+// The sender transaction signature and transaction ID are validated separately.
+func (tx Transaction) ValidateFeePayerAuthorization(profile config.NetworkConfig) error {
+	if tx.ProtocolVersion() != TxVersionAsset {
+		return fmt.Errorf("fee payer authorization requires transaction version 3")
+	}
+	if !profile.Asset.PaymasterEnabled && tx.EffectiveFeePayer() != tx.From {
+		return fmt.Errorf("paymaster is disabled")
+	}
+	if tx.EffectiveFeePayer() == tx.From {
+		if tx.FeePayerPublicKey != "" || tx.FeePayerSignature != "" {
+			return fmt.Errorf("self-paid transaction cannot carry paymaster authorization")
+		}
+		return nil
+	}
+	if err := crypto.ValidateAddressForNetwork(tx.EffectiveFeePayer(), profile); err != nil {
+		return fmt.Errorf("invalid fee payer address: %w", err)
+	}
+	if tx.FeePayerPublicKey == "" || tx.FeePayerSignature == "" {
+		return fmt.Errorf("paymaster authorization is incomplete")
+	}
+	address, err := crypto.AddressFromPublicKeyForNetwork(tx.FeePayerPublicKey, profile)
+	if err != nil || address != tx.EffectiveFeePayer() {
+		return fmt.Errorf("paymaster public key does not match fee payer")
+	}
+	signingBytes, err := tx.FeePayerSigningBytesWithChainID(profile.ChainID)
+	if err != nil {
+		return err
+	}
+	if !crypto.VerifyHex(tx.FeePayerPublicKey, tx.FeePayerSignature, signingBytes) {
+		return fmt.Errorf("invalid paymaster signature")
+	}
+	return nil
+}
+
 func (tx Transaction) FeePayerSigningBytesWithChainID(chainID uint64) ([]byte, error) {
 	if tx.ProtocolVersion() != TxVersionAsset {
 		return nil, fmt.Errorf("fee payer authorization requires transaction version 3")
