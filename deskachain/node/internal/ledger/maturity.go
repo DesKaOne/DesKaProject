@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"\n\t"deskachain/internal/config"
+	"deskachain/internal/arith"
+	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/staking"
 	"deskachain/internal/types"
@@ -186,7 +187,9 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 		return fmt.Errorf("invalid coinbase recipient: %w", err)
 	}
 	acct := l.accounts[tx.To]
-	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)\n\tif err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }\n\tacct.Confirmed = confirmed
+	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)
+	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	acct.Confirmed = confirmed
 	l.accounts[tx.To] = acct
 	l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
 	return nil
@@ -374,11 +377,14 @@ func (l *MatureLedger) matureCoinbases(currentHeight uint64) {
 		if credit.Matured {
 			continue
 		}
-		maturityHeight := arith.AddCap(credit.Height, l.maturity)\n\t\tif currentHeight < maturityHeight {
+		maturityHeight := arith.AddCap(credit.Height, l.maturity)
+		if currentHeight < maturityHeight {
 			continue
 		}
 		acct := l.accounts[credit.Address]
-		mature, err := arith.Add(acct.Mature, credit.Amount)\n\t\tif err != nil { continue }\n\t\tacct.Mature = mature
+		mature, err := arith.Add(acct.Mature, credit.Amount)
+		if err != nil { continue }
+		acct.Mature = mature
 		l.accounts[credit.Address] = acct
 		credit.Matured = true
 	}
