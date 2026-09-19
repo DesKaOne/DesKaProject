@@ -56,3 +56,15 @@ func TestValidateAssetEnvelope(t *testing.T) {
 		t.Fatal("native IDR mint accepted as issued asset operation")
 	}
 }
+
+
+func TestActivatedV3NetworkAcceptsLegacyAndAssetTransactions(t *testing.T) {
+	for _, version := range []uint32{TxVersionLegacy, TxVersionCanonical, TxVersionAsset} {
+		if err := ValidateTransactionVersion(version, TxVersionAsset); err != nil {
+			t.Fatalf("version %d rejected after v3 activation: %v", version, err)
+		}
+	}
+	if err := ValidateTransactionVersion(MaxSupportedTxVersion+1, TxVersionAsset); err == nil {
+		t.Fatal("unsupported transaction version accepted")
+	}
+}
