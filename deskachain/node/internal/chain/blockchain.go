@@ -396,7 +396,7 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 			continue
 		}
 		validPending = append(validPending, tx)
-		if tx.TxType() == types.TxTypeTransfer {
+		if profile.TxVersion >= types.TxVersionAsset || tx.TxType() == types.TxTypeTransfer {
 			nextFees, feeErr := arith.Add(totalFees, tx.Fee)
 			if feeErr != nil {
 				return types.Block{}, errors.New("transaction fees overflow")
@@ -410,7 +410,7 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		return types.Block{}, errors.New("block reward overflow")
 	}
 	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, profile.TxVersion)
-	if coinbase.ProtocolVersion() == types.TxVersionCanonical {
+	if coinbase.ProtocolVersion() >= types.TxVersionCanonical {
 		if err := coinbase.RefreshIDForChainID(profile.ChainID); err != nil {
 			return types.Block{}, err
 		}
