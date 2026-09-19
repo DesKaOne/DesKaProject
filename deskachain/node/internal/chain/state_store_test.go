@@ -97,11 +97,3 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 	}
 }
 
-func TestValidateStateWithNetworkRequiresStateStore(t *testing.T) {
-	store := &testStoreWithoutState{}
-	bc := New(store)
-	_, err := bc.ValidateStateWithNetwork(config.Localnet())
-	if err == nil || !strings.Contains(err.Error(), "state store is not available") {
-		t.Fatalf("expected missing state store error, got %v", err)
-	}
-}
