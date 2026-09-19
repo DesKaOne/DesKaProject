@@ -25,6 +25,7 @@ var (
 	stateAccountsBucket      = []byte("accounts")
 	stateStakesBucket        = []byte("stakes")
 	stateStakesByOwnerBucket = []byte("stakes_by_owner")
+	stateCoinbasesBucket     = []byte("coinbases")
 	stateVersionKey     = []byte("version")
 	stateHeightKey      = []byte("height")
 	stateRootKey        = []byte("root")
@@ -70,7 +71,10 @@ func (s *BoltStore) Init() error {
 		if _, err := root.CreateBucketIfNotExists(stateStakesBucket); err != nil {
 			return err
 		}
-		_, err = root.CreateBucketIfNotExists(stateStakesByOwnerBucket)
+		if _, err := root.CreateBucketIfNotExists(stateStakesByOwnerBucket); err != nil {
+			return err
+		}
+		_, err = root.CreateBucketIfNotExists(stateCoinbasesBucket)
 		return err
 	})
 }
@@ -419,7 +423,8 @@ func (s *BoltStore) LoadState() (state.Snapshot, error) {
 		meta := root.Bucket(stateMetaBucket)
 		accountsBucket := root.Bucket(stateAccountsBucket)
 		stakesBucket := root.Bucket(stateStakesBucket)
-		if meta == nil || accountsBucket == nil || stakesBucket == nil {
+		coinbasesBucket := root.Bucket(stateCoinbasesBucket)
+		if meta == nil || accountsBucket == nil || stakesBucket == nil || coinbasesBucket == nil {
 			return ErrStateNotInitialized
 		}
 		version := meta.Get(stateVersionKey)
@@ -457,6 +462,22 @@ func (s *BoltStore) LoadState() (state.Snapshot, error) {
 		}); err != nil {
 			return err
 		}
+		if err := coinbasesBucket.ForEach(func(k, v []byte) error {
+			if len(k) != 8 {
+				return errors.New("state coinbase key length mismatch")
+			}
+			var credit ledger.StateCoinbase
+			if err := json.Unmarshal(v, &credit); err != nil {
+				return err
+			}
+			if binary.BigEndian.Uint64(k) != credit.Height {
+				return errors.New("state coinbase key mismatch")
+			}
+			snapshot.Coinbases = append(snapshot.Coinbases, credit)
+			return nil
+		}); err != nil {
+			return err
+		}
 		return nil
 	})
 	if err != nil {
@@ -478,7 +499,8 @@ func (s *BoltStore) DeleteState() error {
 		accounts := root.Bucket(stateAccountsBucket)
 		stakes := root.Bucket(stateStakesBucket)
 		stakesByOwner := root.Bucket(stateStakesByOwnerBucket)
-		if meta == nil || accounts == nil || stakes == nil || stakesByOwner == nil {
+		coinbases := root.Bucket(stateCoinbasesBucket)
+		if meta == nil || accounts == nil || stakes == nil || stakesByOwner == nil || coinbases == nil {
 			return ErrStateNotInitialized
 		}
 		if err := clearBucket(meta); err != nil {
@@ -490,7 +512,10 @@ func (s *BoltStore) DeleteState() error {
 		if err := clearBucket(stakes); err != nil {
 			return err
 		}
-		return clearBucket(stakesByOwner)
+		if err := clearBucket(stakesByOwner); err != nil {
+			return err
+		}
+		return clearBucket(coinbases)
 	})
 }
 
@@ -555,6 +580,10 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 	if err != nil {
 		return err
 	}
+	coinbasesBucket, err := root.CreateBucketIfNotExists(stateCoinbasesBucket)
+	if err != nil {
+		return err
+	}
 
 	if err := clearBucket(meta); err != nil {
 		return err
@@ -566,6 +595,9 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 		return err
 	}
 	if err := clearBucket(stakesByOwnerBucket); err != nil {
+		return err
+	}
+	if err := clearBucket(coinbasesBucket); err != nil {
 		return err
 	}
 
@@ -597,6 +629,19 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 			return err
 		}
 		if err := stakesByOwnerBucket.Put(stateStakeOwnerKey(record.OwnerAddress, record.StakeID), raw); err != nil {
+			return err
+		}
+	}
+	for _, credit := range snapshot.Coinbases {
+		key := heightKey(credit.Height)
+		if coinbasesBucket.Get(key) != nil {
+			return errors.New("duplicate pending coinbase height")
+		}
+		raw, err := json.Marshal(credit)
+		if err != nil {
+			return err
+		}
+		if err := coinbasesBucket.Put(key, raw); err != nil {
 			return err
 		}
 	}
