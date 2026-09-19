@@ -3385,12 +3385,31 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 	if err != nil {
 		return types.Transaction{}, err
 	}
-	details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
-	if details.Spendable < txAmount {
-		return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), config.Ticker, amount.Format(details.UnlockingStake), config.Ticker)
+	nonce := matureLedger.Nonce(from) + pendingFromCount(pending, from) + 1
+	var tx types.Transaction
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		tx = types.NewAssetTransferTransaction(from, to, h.profile().Asset.NativeAssetID, txAmount, 0, nonce)
+		minFee, feeErr := fees.MinimumFee(tx, h.profile())
+		if feeErr != nil {
+			return types.Transaction{}, feeErr
+		}
+		tx.Fee = minFee
+	} else {
+		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
+		if details.Spendable < txAmount {
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), amount.Format(details.UnlockingStake))
+		}
+		tx = types.NewUnsignedTransaction(from, to, txAmount, 0, nonce)
 	}
-	tx := types.NewUnsignedTransaction(from, to, txAmount, 0, matureLedger.Nonce(from)+pendingFromCount(pending, from)+1)
-	if err := fromWallet.SignTransaction(&tx); err != nil {
+	if h.profile().TxVersion >= types.TxVersionAsset {
+		fee := tx.Fee
+		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
+		required := txAmount + fee
+		if details.Spendable < required {
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol)
+		}
+	}
+	if err := fromWallet.SignTransactionWithProfile(&tx, h.profile()); err != nil {
 		return types.Transaction{}, err
 	}
 	return tx, nil
