@@ -133,7 +133,13 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 	if rewardErr != nil {
 		return types.Block{}, errors.New("block reward overflow")
 	}
-	txs := append([]types.Transaction{types.NewCoinbaseTransactionWithVersion(miner, reward, height, profile.TxVersion)}, validPending...)
+	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, profile.TxVersion)
+	if coinbase.ProtocolVersion() == types.TxVersionCanonical {
+		if err := coinbase.RefreshIDForChainID(profile.ChainID); err != nil {
+			return types.Block{}, err
+		}
+	}
+	txs := append([]types.Transaction{coinbase}, validPending...)
 	block := types.NewBlockWithVersion(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs, profile.BlockVersion)
 	if block.ProtocolVersion() == types.BlockVersionCanonical {
 		candidate := l.Clone()
