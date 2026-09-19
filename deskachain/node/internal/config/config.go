@@ -392,6 +392,7 @@ func Testnet() NetworkConfig {
 			MaxBlockBytes:    DefaultMaxBlockBytes,
 			MaxTxBytes:       DefaultMaxTxBytes,
 			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               1000 * UnitsPerCoin,
@@ -474,6 +475,7 @@ func Mainnet() NetworkConfig {
 			MaxBlockBytes:    DefaultMaxBlockBytes,
 			MaxTxBytes:       DefaultMaxTxBytes,
 			MaxTxCount:       DefaultMaxTxCount,
+			MaxGasPerBlock:   200000,
 			Staking: StakingParams{
 				Enabled:                       false,
 				MinServiceStake:               0,
