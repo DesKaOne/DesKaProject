@@ -339,3 +339,40 @@ func TestOpenBoltRejectsPersistedStateRootMismatch(t *testing.T) {
 		t.Fatalf("expected startup state-root rejection, got %v", err)
 	}
 }
+
+
+func TestSaveBlockAndStateRejectsNonCanonicalCommitWithoutMutation(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	genesis := types.Block{Height: 0, Hash: "genesis", StateRoot: snapshot.StateRoot}
+	if err := store.SaveBlockAndState(genesis, snapshot); err != nil {
+		t.Fatal(err)
+	}
+
+	next := snapshot
+	next.Height = 2
+	bad := types.Block{Height: 2, Hash: "bad", PreviousHash: genesis.Hash, StateRoot: snapshot.StateRoot}
+	if err := store.SaveBlockAndState(bad, next); err == nil || !strings.Contains(err.Error(), "next canonical height") {
+		t.Fatalf("expected canonical height rejection, got %v", err)
+	}
+
+	tip, err := store.Tip()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tip.Height != genesis.Height || tip.Hash != genesis.Hash {
+		t.Fatalf("canonical tip mutated after rejected commit: %#v", tip)
+	}
+	got, err := store.LoadState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Height != snapshot.Height || got.StateRoot != snapshot.StateRoot {
+		t.Fatalf("state mutated after rejected commit: %#v", got)
+	}
+}
