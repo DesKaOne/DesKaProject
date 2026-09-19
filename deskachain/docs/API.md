@@ -1577,3 +1577,14 @@ Returns state database metadata without replaying the blockchain:
 Admin diagnostic endpoint. Replays the canonical chain and compares the result with the persisted state database, including secondary indexes and pending coinbase maturity state.
 
 The endpoint returns HTTP 200 when the state database matches the canonical chain and HTTP 400 with `valid: false` when a mismatch or index corruption is detected.
+
+
+## Multi-asset RPC
+
+For the v3 asset model:
+
+`GET /asset/info?asset_id=<id>` returns the persisted asset definition.
+
+`GET /asset/balance?address=<address>&asset_id=<id>` returns an address's balance with the asset's decimals plus raw integer units.
+
+The v3 fee asset is native `IDR`. A token transfer therefore has an asset amount plus an IDR protocol fee. A non-sender fee payer is represented by the paymaster fields in the transaction envelope and must provide a valid authorization signature.
