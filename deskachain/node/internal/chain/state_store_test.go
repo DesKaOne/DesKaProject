@@ -97,3 +97,54 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 	}
 }
 
+
+func TestStateStatusReportsCurrentPersistedState(t *testing.T) {
+	profile := config.Localnet()
+	store, err := storage.OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	bc := New(store)
+	if err := bc.InitWithProfile(profile); err != nil {
+		t.Fatal(err)
+	}
+	result, err := bc.StateStatusWithNetwork(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Available || !result.Current {
+		t.Fatalf("expected current state, got %#v", result)
+	}
+	if result.Height != result.TipHeight {
+		t.Fatalf("state height=%d tip height=%d", result.Height, result.TipHeight)
+	}
+	if result.StateRoot == "" {
+		t.Fatal("state root is empty")
+	}
+}
+
+func TestStateStatusReportsStaleStateAfterReset(t *testing.T) {
+	profile := config.Localnet()
+	store, err := storage.OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	bc := New(store)
+	if err := bc.InitWithProfile(profile); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.DeleteState(); err != nil {
+		t.Fatal(err)
+	}
+	result, err := bc.StateStatusWithNetwork(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Available || result.Current {
+		t.Fatalf("expected unavailable/stale state, got %#v", result)
+	}
+}
