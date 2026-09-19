@@ -19,16 +19,15 @@ func TestV3SnapshotRoundTripKeepsAssets(t *testing.T) {
 	w, err := wallet.NewWithProfile(profile)
 	if err != nil { t.Fatal(err) }
 
-	if err := l.ApplyCoinbaseAtHeight(types.NewCoinbaseTransactionWithVersion(w.Address, 100, 1, types.TxVersionAsset), 1); err != nil {
-		t.Fatal(err)
-	}
+	coinbase := types.NewCoinbaseTransactionWithVersion(w.Address, 100, 1, types.TxVersionAsset)
+	if err := l.ApplyBlock(types.Block{Height: 1, Transactions: []types.Transaction{coinbase}}); err != nil { t.Fatal(err) }
 	create := types.NewAssetCreateTransaction(w.Address, "Example", "EXT", 6, 1000, true, true, false, false, 1, 1)
 	if err := w.SignTransactionWithProfile(&create, profile); err != nil { t.Fatal(err) }
-	if err := l.ApplyTransactionAtHeight(create, 2); err != nil { t.Fatal(err) }
+	if err := l.ApplyBlock(types.Block{Height: 2, Transactions: []types.Transaction{create}}); err != nil { t.Fatal(err) }
 
 	mint := types.NewAssetMintTransaction(w.Address, create.AssetID, w.Address, 10, 1, 2)
 	if err := w.SignTransactionWithProfile(&mint, profile); err != nil { t.Fatal(err) }
-	if err := l.ApplyTransactionAtHeight(mint, 3); err != nil { t.Fatal(err) }
+	if err := l.ApplyBlock(types.Block{Height: 3, Transactions: []types.Transaction{mint}}); err != nil { t.Fatal(err) }
 
 	snapshot, err := SnapshotForLedger(l)
 	if err != nil { t.Fatal(err) }
