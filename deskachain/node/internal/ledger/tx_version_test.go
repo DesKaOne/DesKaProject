@@ -6,19 +6,28 @@ import (
 
 	"deskachain/internal/config"
 	"deskachain/internal/types"
+	"deskachain/internal/wallet"
 )
 
 func TestCanonicalTransactionVersionWaitsForNetworkActivation(t *testing.T) {
 	profile := config.Localnet()
+	from, err := wallet.NewWithProfile(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	to, err := wallet.NewWithProfile(profile)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tx := types.Transaction{
 		Version: types.TxVersionCanonical,
-		From:    "from",
-		To:      "to",
+		From:    from.Address,
+		To:      to.Address,
 		Amount:  1,
 	}
 
 	l := New()
-	err := l.ValidateTransaction(tx)
+	err = l.ValidateTransaction(tx)
 	if err == nil || !strings.Contains(err.Error(), "not active") {
 		t.Fatalf("expected inactive version error from ledger, got %v", err)
 	}
