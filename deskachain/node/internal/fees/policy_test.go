@@ -5,6 +5,7 @@ import (
 
 	"deskachain/internal/config"
 	"deskachain/internal/types"
+	"deskachain/internal/wallet"
 )
 
 func testProfile() config.NetworkConfig {
@@ -69,5 +70,28 @@ func TestLegacyTransactionsAreOutsideV3FeePolicy(t *testing.T) {
 	tx := types.NewUnsignedTransaction("from", "to", 1, 0, 1)
 	if got, err := MinimumFee(tx, p); err != nil || got != 0 {
 		t.Fatalf("legacy minimum fee=%d err=%v", got, err)
+	}
+}
+
+func TestGasQuoteStableAfterSenderSigning(t *testing.T) {
+	p := testProfile()
+	w, err := wallet.NewWithProfile(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tx := types.NewAssetTransferTransaction(w.Address, "recipient", p.Asset.NativeAssetID, 10, 1, 1)
+	before, err := GasUsed(tx, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := w.SignTransactionWithProfile(&tx, p); err != nil {
+		t.Fatal(err)
+	}
+	after, err := GasUsed(tx, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before != after {
+		t.Fatalf("gas changed after signing: before=%v after=%v", before, after)
 	}
 }
