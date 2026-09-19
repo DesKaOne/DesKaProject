@@ -67,12 +67,14 @@ func ValidateStatus(local config.NetworkConfig, peer Status) error {
 
 func HeaderFromBlock(block types.Block) BlockHeader {
 	return BlockHeader{
+		Version:      block.Version,
 		Height:       block.Height,
 		Hash:         block.Hash,
 		PreviousHash: block.PreviousHash,
 		Timestamp:    block.Timestamp,
 		Difficulty:   block.Difficulty,
 		MerkleRoot:   block.MerkleRoot,
+		StateRoot:    block.StateRoot,
 		TxCount:      len(block.Transactions),
 		MinerAddress: block.MinerAddress,
 	}
