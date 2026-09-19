@@ -84,8 +84,14 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 	if err := ValidatePeerURL(peer); err != nil {
 		return ReorgPlan{}, nil, err
 	}
-	client := NewClientWithTimeout(10 * time.Second)
-	statusClient := NewClientWithTimeout(2 * time.Second)
+	client, err := NewClientForProfile(paths, profile, 10*time.Second)
+	if err != nil {
+		return ReorgPlan{}, nil, err
+	}
+	statusClient, err := NewClientForProfile(paths, profile, 2*time.Second)
+	if err != nil {
+		return ReorgPlan{}, nil, err
+	}
 	hs, err := statusClient.Handshake(peer)
 	if err != nil {
 		return ReorgPlan{}, nil, err
