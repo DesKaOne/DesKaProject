@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"errors"
+
 	"deskachain/internal/config"
 	dkcrypto "deskachain/internal/crypto"
 	"deskachain/internal/types"
@@ -81,4 +83,38 @@ func (w Wallet) SignTransactionWithProfile(tx *types.Transaction, profile config
 	}
 	tx.Signature = sig
 	return tx.RefreshIDForChainID(profile.ChainID)
+}
+
+
+// SignFeePayerAuthorization signs the native-IDR fee sponsorship authorization.
+// It deliberately does not recalculate tx.ID because the sender transaction
+// identity must remain stable when a paymaster adds its authorization.
+func (w Wallet) SignFeePayerAuthorization(tx *types.Transaction, profile config.NetworkConfig) error {
+	if tx == nil {
+		return errors.New("transaction is required")
+	}
+	if tx.ProtocolVersion() != types.TxVersionAsset {
+		return errors.New("fee payer authorization requires transaction version 3")
+	}
+	if tx.FeePayer == "" {
+		tx.FeePayer = w.Address
+	}
+	if tx.EffectiveFeePayer() != w.Address {
+		return errors.New("wallet is not the transaction fee payer")
+	}
+	privateKey, err := w.PrivateKey()
+	if err != nil {
+		return err
+	}
+	tx.FeePayerPublicKey = w.PublicKeyHex
+	signingBytes, err := tx.FeePayerSigningBytesWithChainID(profile.ChainID)
+	if err != nil {
+		return err
+	}
+	sig, err := dkcrypto.SignHex(privateKey, signingBytes)
+	if err != nil {
+		return err
+	}
+	tx.FeePayerSignature = sig
+	return nil
 }
