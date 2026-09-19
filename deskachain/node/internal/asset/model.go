@@ -4,12 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"deskachain/internal/config"
 )
 
 const (
-	NativeAssetID = "IDR"
-	NativeSymbol = "IDR"
-	NativeDecimals uint8 = 0
+	NativeAssetID = config.NativeAssetID
+	NativeSymbol = config.NativeAssetSymbol
+	NativeDecimals uint8 = config.NativeAssetDecimals
 	KindFungible = "fungible"
 	StatusActive = "active"
 	StatusFrozen = "frozen"
