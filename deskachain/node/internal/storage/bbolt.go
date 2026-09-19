@@ -166,8 +166,48 @@ func (s *BoltStore) validateCanonicalCommitPreconditions(block types.Block) erro
 		if tipBlock.Height == ^uint64(0) || tipBlock.Height+1 != block.Height {
 			return errors.New("block height is not the next canonical height")
 		}
-		if tipBlock.Hash == "" || block.PrevHash != tipBlock.Hash {
+		if tipBlock.Hash == "" || block.PreviousHash != tipBlock.Hash {
 			return errors.New("block predecessor does not match canonical tip")
+		}
+		return nil
+	})
+}
+
+func (s *BoltStore) ValidateChainStateConsistency() error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		root := tx.Bucket(stateBucket)
+		if meta == nil || blocks == nil || root == nil {
+			return errors.New("chain/state storage is not initialized")
+		}
+		tipKey := meta.Get(tipKey)
+		if tipKey == nil {
+			return errors.New("chain tip is not initialized")
+		}
+		rawBlock := blocks.Get(tipKey)
+		if rawBlock == nil {
+			return errors.New("chain tip block is missing")
+		}
+		var tip types.Block
+		if err := json.Unmarshal(rawBlock, &tip); err != nil {
+			return err
+		}
+		stateMeta := root.Bucket(stateMetaBucket)
+		if stateMeta == nil {
+			return ErrStateNotInitialized
+		}
+		rawHeight := stateMeta.Get(stateHeightKey)
+		rawRoot := stateMeta.Get(stateRootKey)
+		if len(rawHeight) != 8 || len(rawRoot) == 0 {
+			return ErrStateNotInitialized
+		}
+		stateHeight := binary.BigEndian.Uint64(rawHeight)
+		if stateHeight != tip.Height {
+			return errors.New("chain tip/state height mismatch")
+		}
+		if tip.StateRoot != "" && string(rawRoot) != tip.StateRoot {
+			return errors.New("chain tip/state root mismatch")
 		}
 		return nil
 	})
