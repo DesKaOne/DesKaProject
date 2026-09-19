@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"deskachain/internal/arith"
+	"deskachain/internal/asset"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/staking"
@@ -41,6 +42,7 @@ type MatureLedger struct {
 	maturity      uint64
 	currentHeight uint64
 	stakes        *staking.State
+	assets        *asset.State
 	params        config.ConsensusParams
 	profile       config.NetworkConfig
 }
@@ -64,6 +66,7 @@ func NewMatureWithProfile(params config.ConsensusParams, profile config.NetworkC
 		accounts: make(map[string]MatureAccount),
 		maturity: params.CoinbaseMaturity,
 		stakes:   staking.NewState(params.Staking),
+		assets:   asset.NewState(),
 		params:   params,
 		profile:  profile,
 	}
@@ -97,6 +100,26 @@ func NewMatureFromState(
 			Matured: false,
 		})
 	}
+	return l
+}
+
+func NewMatureFromStateWithAssets(
+	params config.ConsensusParams,
+	profile config.NetworkConfig,
+	height uint64,
+	accounts []StateAccount,
+	stakes []staking.Record,
+	coinbases []StateCoinbase,
+	assetDefinitions []asset.Definition,
+	assetBalances []asset.BalanceEntry,
+) *MatureLedger {
+	l := NewMatureFromState(params, profile, height, accounts, stakes, coinbases)
+	if err := l.assets.Restore(assetDefinitions, assetBalances); err != nil {
+		// Snapshot validation should reject malformed asset state before this
+		// constructor is called. Keep an empty state on defensive failure.
+		l.assets = asset.NewState()
+	}
+	l.syncNativeAssetsFromAccounts()
 	return l
 }
 
@@ -175,6 +198,36 @@ func (l *MatureLedger) StateStakes() []staking.Record {
 	return l.stakes.Records(l.currentHeight)
 }
 
+func (l *MatureLedger) StateAssetDefinitions() []asset.Definition {
+	if l.profile.TxVersion < types.TxVersionAsset {
+		return nil
+	}
+	return l.assets.Definitions()
+}
+
+func (l *MatureLedger) StateAssetBalances() []asset.BalanceEntry {
+	if l.profile.TxVersion < types.TxVersionAsset {
+		return nil
+	}
+	return l.assets.Balances()
+}
+
+func (l *MatureLedger) AssetBalance(address, assetID string) uint64 {
+	return l.assets.Balance(address, assetID)
+}
+
+func (l *MatureLedger) AssetDefinition(assetID string) (asset.Definition, bool) {
+	return l.assets.Definition(assetID)
+}
+
+func (l *MatureLedger) AssetState() *asset.State {
+	return l.assets
+}
+
+func (l *MatureLedger) AssetModelEnabled() bool {
+	return l.profile.TxVersion >= types.TxVersionAsset
+}
+
 func (l *MatureLedger) StateCoinbases() []StateCoinbase {
 	out := make([]StateCoinbase, 0, len(l.coinbases))
 	for _, credit := range l.coinbases {
@@ -221,6 +274,7 @@ func (l *MatureLedger) Clone() *MatureLedger {
 		maturity:      l.maturity,
 		currentHeight: l.currentHeight,
 		stakes:        staking.NewState(l.params.Staking),
+		assets:        l.assets.Clone(),
 		params:        l.params,
 		profile:       l.profile,
 	}
