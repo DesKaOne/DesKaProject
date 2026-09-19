@@ -265,6 +265,15 @@ func bodyDigest(body []byte) []byte {
 	return sum[:]
 }
 
+func hasP2PAuthHeaders(header http.Header) bool {
+	for _, key := range []string{authHeaderVersion, authHeaderNodePubKey, authHeaderTimestamp, authHeaderNonce, authHeaderSignature} {
+		if strings.TrimSpace(header.Get(key)) != "" {
+			return true
+		}
+	}
+	return false
+}
+
 func parseAuthVersion(value string) (uint32, error) {
 	parsed, err := strconv.ParseUint(strings.TrimSpace(value), 10, 32)
 	if err != nil {
