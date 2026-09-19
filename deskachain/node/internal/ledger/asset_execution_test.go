@@ -111,3 +111,52 @@ func TestV3NativeIDRTransferSeparatesFeePayer(t *testing.T) {
 	}
 }
 
+
+
+func TestV3PaymasterAuthorizationBindsChainAndTransaction(t *testing.T) {
+	profile := assetProfile()
+	owner, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+	paymaster, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+	receiver, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+
+	tx := types.NewAssetTransferTransaction(owner.Address, receiver.Address, "asset:security", 10, 2, 1)
+	tx.FeePayer = paymaster.Address
+	signAssetTx(t, owner, &tx, profile)
+	if err := paymaster.SignFeePayerAuthorization(&tx, profile); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.ValidateFeePayerAuthorization(profile); err != nil {
+		t.Fatalf("valid paymaster authorization rejected: %v", err)
+	}
+
+	other := profile
+	other.ChainID++
+	if err := tx.ValidateFeePayerAuthorization(other); err == nil {
+		t.Fatal("expected paymaster authorization to be chain-bound")
+	}
+
+	tampered := tx
+	tampered.Fee = tx.Fee + 1
+	if err := tampered.ValidateFeePayerAuthorization(profile); err == nil {
+		t.Fatal("expected paymaster authorization to reject fee tampering")
+	}
+}
+
+func TestV3SelfPaidTransactionRejectsSponsorMaterial(t *testing.T) {
+	profile := assetProfile()
+	owner, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+	receiver, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+
+	tx := types.NewAssetTransferTransaction(owner.Address, receiver.Address, asset.NativeAssetID, 1, 1, 1)
+	signAssetTx(t, owner, &tx, profile)
+	tx.FeePayerPublicKey = owner.PublicKey
+	tx.FeePayerSignature = tx.Signature
+	if err := tx.ValidateFeePayerAuthorization(profile); err == nil {
+		t.Fatal("expected self-paid transaction with sponsor material to be rejected")
+	}
+}
