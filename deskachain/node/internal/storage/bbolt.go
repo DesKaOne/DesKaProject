@@ -578,6 +578,27 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			return err
 		}
 
+		nativeBalances := make(map[string]uint64)
+		if err := assetBalances.ForEach(func(k, v []byte) error {
+			separator := bytes.IndexByte(k, 0)
+			if separator <= 0 || separator == len(k)-1 {
+				return errors.New("invalid state asset balance key")
+			}
+			assetID := string(k[separator+1:])
+			if _, ok := assetIDs[assetID]; !ok {
+				return errors.New("state asset balance references unknown asset")
+			}
+			if len(v) != 8 || binary.BigEndian.Uint64(v) == 0 {
+				return errors.New("invalid persisted asset balance")
+			}
+			if asset.IsNative(assetID) {
+				nativeBalances[string(k[:separator])] = binary.BigEndian.Uint64(v)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
 		if err := accounts.ForEach(func(k, v []byte) error {
 			var account ledger.StateAccount
 			if err := json.Unmarshal(v, &account); err != nil {
@@ -585,6 +606,9 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			}
 			if account.Address != string(k) {
 				return errors.New("state account key mismatch")
+			}
+			if nativeBalances[account.Address] != account.Confirmed {
+				return errors.New("persisted native IDR/account balance mismatch")
 			}
 			return nil
 		}); err != nil {
@@ -637,23 +661,6 @@ func (s *BoltStore) ValidateStateIndexes() error {
 		}
 		if stakeCount != ownerCount {
 			return errors.New("state stake owner index count mismatch")
-		}
-
-		if err := assetBalances.ForEach(func(k, v []byte) error {
-			separator := bytes.IndexByte(k, 0)
-			if separator <= 0 || separator == len(k)-1 {
-				return errors.New("invalid state asset balance key")
-			}
-			assetID := string(k[separator+1:])
-			if _, ok := assetIDs[assetID]; !ok {
-				return errors.New("state asset balance references unknown asset")
-			}
-			if len(v) != 8 || binary.BigEndian.Uint64(v) == 0 {
-				return errors.New("invalid persisted asset balance")
-			}
-			return nil
-		}); err != nil {
-			return err
 		}
 
 		if err := coinbases.ForEach(func(k, v []byte) error {
