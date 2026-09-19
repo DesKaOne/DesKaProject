@@ -115,8 +115,9 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 }
 
 func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
-	if tx.ProtocolVersion() > types.MaxSupportedTxVersion {
-		return fmt.Errorf("unsupported transaction version: %d", tx.ProtocolVersion())
+	profile := config.Localnet()
+	if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), profile.TxVersion); err != nil {
+		return err
 	}
 	if tx.Coinbase {
 		return nil
@@ -144,13 +145,21 @@ func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
 	if crypto.AddressFromPublicKey(tx.PublicKey) != tx.From {
 		return errors.New("public key does not match sender address")
 	}
-	if tx.ID != tx.CalculateID() {
+	expectedID, idErr := tx.CalculateIDForChainID(profile.ChainID)
+	if idErr != nil {
+		return idErr
+	}
+	if tx.ID != expectedID {
 		return errors.New("transaction id mismatch")
 	}
 	if tx.TxType() == types.TxTypeStakeLock && tx.StakeID != "" && tx.StakeID != tx.ID {
 		return errors.New("invalid stake lock: stake id mismatch")
 	}
-	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, tx.SigningBytes()) {
+	signingBytes, signingErr := tx.SigningBytesWithChainID(profile.ChainID)
+	if signingErr != nil {
+		return signingErr
+	}
+	if !crypto.VerifyHex(tx.PublicKey, tx.Signature, signingBytes) {
 		return errors.New("invalid transaction signature")
 	}
 	account := l.accounts[tx.From]
