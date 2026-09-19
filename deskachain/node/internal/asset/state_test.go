@@ -46,8 +46,8 @@ func TestAssetStateFeeFailureRollsBackTransfer(t *testing.T) {
 	_ = s.Create(Definition{ID:"asset:usd", Name:"Example USD", Symbol:"EUSD", Decimals:6, Issuer:"issuer", Mintable:true, Burnable:true, Status:StatusActive})
 	_ = s.Mint("asset:usd", "issuer", "alice", 100)
 	err := s.ExecuteTokenTransfer("asset:usd", "alice", "merchant", "paymaster", 40, 1)
-	if !errors.Is(err, ErrInsufficientBalance) && err == nil {
-		t.Fatal("expected fee payer failure")
+	if err == nil || !errors.Is(err, ErrInsufficientBalance) {
+		t.Fatalf("expected fee payer failure, got %v", err)
 	}
 	if s.Balance("alice", "asset:usd") != 100 || s.Balance("merchant", "asset:usd") != 0 {
 		t.Fatalf("token transfer was not rolled back")
