@@ -135,6 +135,77 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 	return bc.store.ReplaceFromHeight(from, blocks)
 }
 
+// BalanceDetailsForWithProfile prefers the persistent state indexes and
+// falls back to deterministic replay when the state DB is unavailable or stale.
+func (bc *Blockchain) BalanceDetailsForWithProfile(address string, pending []types.Transaction, profile config.NetworkConfig) (ledger.BalanceDetails, error) {
+	tip, err := bc.Tip()
+	if err != nil {
+		return ledger.BalanceDetails{}, err
+	}
+
+	if q, ok := bc.store.(storage.StateQueryStore); ok {
+		version, height, stateRoot, metaErr := q.GetStateMetadata()
+		stateCurrent := metaErr == nil &&
+			version == state.SnapshotVersion &&
+			height == tip.Height
+		if stateCurrent && tip.ProtocolVersion() == types.BlockVersionCanonical {
+			stateCurrent = tip.StateRoot != "" && tip.StateRoot == stateRoot
+		}
+		if stateCurrent {
+			account, _, accountErr := q.GetStateAccount(address)
+			if accountErr != nil {
+				return ledger.BalanceDetails{}, accountErr
+			}
+			stakes, stakesErr := q.GetStateStakesForAddress(address)
+			if stakesErr != nil {
+				return ledger.BalanceDetails{}, stakesErr
+			}
+			return ledger.BalanceDetailsFromState(
+				address,
+				account,
+				stakes,
+				pending,
+				profile.Consensus.CoinbaseMaturity,
+				tip.Height,
+			), nil
+		}
+	}
+
+	blocks, err := bc.Blocks()
+	if err != nil {
+		return ledger.BalanceDetails{}, err
+	}
+	return ledger.BalanceDetailsForWithProfile(address, blocks, pending, profile.Consensus, profile)
+}
+
+func (bc *Blockchain) AccountNonceWithProfile(address string, profile config.NetworkConfig) (uint64, error) {
+	tip, err := bc.Tip()
+	if err != nil {
+		return 0, err
+	}
+	if q, ok := bc.store.(storage.StateQueryStore); ok {
+		version, height, stateRoot, metaErr := q.GetStateMetadata()
+		stateCurrent := metaErr == nil &&
+			version == state.SnapshotVersion &&
+			height == tip.Height
+		if stateCurrent && tip.ProtocolVersion() == types.BlockVersionCanonical {
+			stateCurrent = tip.StateRoot != "" && tip.StateRoot == stateRoot
+		}
+		if stateCurrent {
+			account, _, accountErr := q.GetStateAccount(address)
+			if accountErr != nil {
+				return 0, accountErr
+			}
+			return account.Nonce, nil
+		}
+	}
+	l, err := bc.Ledger()
+	if err != nil {
+		return 0, err
+	}
+	return l.Nonce(address), nil
+}
+
 func (bc *Blockchain) Ledger() (*ledger.Ledger, error) {
 	blocks, err := bc.Blocks()
 	if err != nil {
