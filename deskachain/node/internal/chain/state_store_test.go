@@ -80,7 +80,7 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 		Confirmed: 1,
 		Mature:    1,
 	})
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = state.RootForCollectionsWithAssets(snapshot.Accounts, snapshot.Stakes, snapshot.Assets, snapshot.AssetBalances)
 	if err != nil {
 		t.Fatal(err)
 	}
