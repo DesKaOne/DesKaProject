@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"deskachain/internal/arith"\n\t"deskachain/internal/config"
+	"deskachain/internal/arith"
+	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
 	"deskachain/internal/types"
@@ -126,11 +127,19 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		}
 		validPending = append(validPending, tx)
 		if tx.TxType() == types.TxTypeTransfer {
-			nextFees, feeErr := arith.Add(totalFees, tx.Fee)\n\t\tif feeErr != nil { return types.Block{}, errors.New("transaction fees overflow") }\n\t\ttotalFees = nextFees
+			nextFees, feeErr := arith.Add(totalFees, tx.Fee)
+			if feeErr != nil {
+				return types.Block{}, errors.New("transaction fees overflow")
+			}
+			totalFees = nextFees
 		}
 	}
 	tip := blocks[len(blocks)-1]
-	txs := append([]types.Transaction{reward, rewardErr := arith.Add(config.InitialBlockReward, totalFees)\n\tif rewardErr != nil { return types.Block{}, errors.New("block reward overflow") }\n\ttxs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, reward, height)}, validPending...)}, validPending...)
+	reward, rewardErr := arith.Add(config.InitialBlockReward, totalFees)
+	if rewardErr != nil {
+		return types.Block{}, errors.New("block reward overflow")
+	}
+	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, reward, height)}, validPending...)
 	block := types.NewBlock(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs)
 	return MineWithContext(ctx, block, opts)
 }
