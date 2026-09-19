@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"deskachain/internal/crypto"
@@ -13,8 +14,8 @@ const (
 )
 
 const (
-	CoinbaseSender = "COINBASE"
-	MaxSupportedTxVersion uint32 = TxVersionLegacy
+	CoinbaseSender        = "COINBASE"
+	MaxSupportedTxVersion uint32 = TxVersionCanonical
 )
 
 const (
@@ -101,6 +102,50 @@ func (tx Transaction) ProtocolVersion() uint32 {
 		return TxVersionLegacy
 	}
 	return tx.Version
+}
+
+func ValidateTransactionVersion(version, activeVersion uint32) error {
+	if version == 0 {
+		version = TxVersionLegacy
+	}
+	if activeVersion == 0 {
+		activeVersion = TxVersionLegacy
+	}
+	if version > MaxSupportedTxVersion {
+		return fmt.Errorf("unsupported transaction version: %d", version)
+	}
+	if version != activeVersion {
+		return fmt.Errorf("transaction version %d is not active on this network (active version %d)", version, activeVersion)
+	}
+	return nil
+}
+
+func (tx Transaction) SigningBytesWithChainID(chainID uint64) ([]byte, error) {
+	switch tx.ProtocolVersion() {
+	case TxVersionLegacy:
+		return tx.SigningBytes(), nil
+	case TxVersionCanonical:
+		return tx.CanonicalSigningBytesWithChainID(chainID)
+	default:
+		return nil, fmt.Errorf("unsupported transaction version: %d", tx.ProtocolVersion())
+	}
+}
+
+func (tx Transaction) CalculateIDForChainID(chainID uint64) (string, error) {
+	raw, err := tx.SigningBytesWithChainID(chainID)
+	if err != nil {
+		return "", err
+	}
+	return crypto.DoubleSHA256Hex(raw), nil
+}
+
+func (tx *Transaction) RefreshIDForChainID(chainID uint64) error {
+	id, err := tx.CalculateIDForChainID(chainID)
+	if err != nil {
+		return err
+	}
+	tx.ID = id
+	return nil
 }
 
 func (tx Transaction) TxType() string {
