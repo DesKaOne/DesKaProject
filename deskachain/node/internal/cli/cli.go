@@ -158,6 +158,12 @@ func (a App) Run(args []string) error {
 			}
 		}
 	}
+	// Keep an explicitly injected profile (used by integration tests) when the
+	// selected network identity matches it. CLI flags and persisted metadata still
+	// control the network identity; the injected profile only overrides economics.
+	if !networkFlagProvided && a.profile.Name == network.Name {
+		network = a.profile
+	}
 	network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
 	a.profile = network
 	a.rpcURL = strings.TrimRight(*rpcURL, "/")
