@@ -169,14 +169,14 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			return fmt.Errorf("tx %d sender and recipient must differ", i)
 		}
 		if tx.TxType() == types.TxTypeTransfer {
-			totalFees = arith.AddCap(totalFees, tx.Fee)
+			nextFees, feeErr := arith.Add(totalFees, tx.Fee)\n\t\t\tif feeErr != nil { return errors.New("transaction fees overflow") }\n\t\t\ttotalFees = nextFees
 		}
 	}
 	if block.Height > 0 {
 		if coinbaseCount != 1 {
 			return errors.New("block must include exactly one coinbase transaction")
 		}
-		want := arith.AddCap(config.InitialBlockReward, totalFees)
+		want, rewardErr := arith.Add(config.InitialBlockReward, totalFees)\n\t\tif rewardErr != nil { return errors.New("block reward overflow") }
 		for _, tx := range block.Transactions {
 			if tx.Coinbase && tx.Amount != want {
 				return fmt.Errorf("invalid coinbase amount: got %d want %d", tx.Amount, want)
