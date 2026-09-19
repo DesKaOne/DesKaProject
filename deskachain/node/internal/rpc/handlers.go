@@ -3016,7 +3016,7 @@ func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
@@ -3048,7 +3048,7 @@ func (h handler) stakeUnlock(w http.ResponseWriter, r *http.Request) {
 		writeError(w, err)
 		return
 	}
-	if err := mempool.New(h.paths.Mempool).Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		writeError(w, err)
 		return
 	}
