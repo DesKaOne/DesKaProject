@@ -809,7 +809,7 @@ func TestUpstreamBackfillPushesMissingBlocks(t *testing.T) {
 	server := newP2PTestServer(upstream)
 	defer server.Close()
 
-	result, err := BackfillToPeer(local, server.URL, config.Localnet(), config.DefaultMaxReorgDepth(config.Localnet()))
+	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -835,7 +835,7 @@ func TestUpstreamBackfillAlreadyUpToDate(t *testing.T) {
 	upstreamServer := newP2PTestServer(upstream)
 	defer upstreamServer.Close()
 
-	result, err := BackfillToPeer(local, upstreamServer.URL, config.Localnet(), config.DefaultMaxReorgDepth(config.Localnet()))
+	result, err := BackfillToPeer(local, upstreamServer.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -853,7 +853,7 @@ func TestUpstreamHigherWorkSyncsLocal(t *testing.T) {
 	server := newP2PTestServer(upstream)
 	defer server.Close()
 
-	result, err := BackfillToPeer(local, server.URL, config.Localnet(), config.DefaultMaxReorgDepth(config.Localnet()))
+	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -873,7 +873,7 @@ func TestUpstreamForkSameWorkDoesNotForce(t *testing.T) {
 	server := newP2PTestServer(upstream)
 	defer server.Close()
 
-	result, err := BackfillToPeer(local, server.URL, config.Localnet(), config.DefaultMaxReorgDepth(config.Localnet()))
+	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1138,7 +1138,7 @@ func TestReorgDoesNotRequeueTxConfirmedOnPeer(t *testing.T) {
 	mineBlocks(t, peer, peerMiner.Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1161,7 +1161,7 @@ func TestReorgDropsInvalidOrphanTxDueInsufficientBalance(t *testing.T) {
 	mineBlocks(t, peer, peerMiner.Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1183,7 +1183,7 @@ func TestReorgRemovesMempoolTxConfirmedByNewBranchAndDeduplicates(t *testing.T) 
 	mineBlocks(t, peer, peerMiner.Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1199,7 +1199,7 @@ func TestReorgCoinbaseNeverRequeued(t *testing.T) {
 	mineBlocks(t, peer, peerMiner.Address, 3)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
