@@ -150,8 +150,12 @@ func (l *Ledger) ValidateTransaction(tx types.Transaction) error {
 		return errors.New("invalid transaction signature")
 	}
 	account := l.accounts[tx.From]
-	if tx.Nonce != account.Nonce+1 {
-		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
+	expectedNonce, nonceErr := arith.Add(account.Nonce, 1)
+	if nonceErr != nil {
+		return errors.New("account nonce overflow")
+	}
+	if tx.Nonce != expectedNonce {
+		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, expectedNonce)
 	}
 	if tx.TxType() == types.TxTypeTransfer {
 		cost, err := arith.Add(tx.Amount, tx.Fee)
