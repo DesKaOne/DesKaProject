@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	BlockVersionLegacy    uint32 = 1
-	BlockVersionCanonical uint32 = 2
+	BlockVersionLegacy       uint32 = 1
+	BlockVersionCanonical    uint32 = 2
 	MaxSupportedBlockVersion uint32 = BlockVersionCanonical
 )
 
@@ -35,6 +35,9 @@ func NewBlock(height uint64, previousHash, minerAddress string, difficulty uint3
 }
 
 func NewBlockWithVersion(height uint64, previousHash, minerAddress string, difficulty uint32, transactions []Transaction, version uint32) Block {
+	if version == BlockVersionLegacy {
+		version = 0 // keep legacy JSON/hash representation byte-compatible
+	}
 	block := Block{
 		Version:      version,
 		Height:       height,
