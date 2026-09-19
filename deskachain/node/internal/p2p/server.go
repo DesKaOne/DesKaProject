@@ -524,7 +524,12 @@ func (s Server) acceptTx(tx types.Transaction) error {
 	if err := work.ValidateTransaction(tx); err != nil {
 		return fmt.Errorf("sender balance insufficient or chain not synced: %w", err)
 	}
-	if err := mp.Add(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
+	policy := mempool.AdmissionPolicy{
+		Profile: s.network(),
+		MaxTxs:  s.network().Consensus.MaxTxCount,
+		MaxGas:  s.network().Consensus.MaxGasPerBlock,
+	}
+	if err := mp.Admit(tx, policy); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
 		return err
 	}
 	return nil
