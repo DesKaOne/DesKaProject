@@ -142,7 +142,7 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	if block.MerkleRoot != types.CalculateMerkleRoot(block.Transactions) {
 		return errors.New("merkle root mismatch")
 	}
-	if err := ValidateBlockResources(block, consensus); err != nil {
+	if err := ValidateBlockResourcesWithProfile(block, profile); err != nil {
 		return err
 	}
 	if block.Height > 0 {
