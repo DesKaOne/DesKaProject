@@ -112,6 +112,9 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		if tx.Coinbase {
 			continue
 		}
+		if err := ValidateTransactionSize(tx, profile.Consensus); err != nil {
+			continue
+		}
 		if err := workLedger.ApplyTransactionAtHeight(tx, height); err != nil {
 			continue
 		}
