@@ -3422,7 +3422,7 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 			return types.Transaction{}, errors.New("transaction amount and fee overflow")
 		}
 		if details.Spendable < required {
-			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol)
+			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol, amount.Format(details.ActiveStake), h.profile().Asset.NativeAssetSymbol, amount.Format(details.UnlockingStake), h.profile().Asset.NativeAssetSymbol)
 		}
 	}
 	if err := fromWallet.SignTransactionWithProfile(&tx, h.profile()); err != nil {
