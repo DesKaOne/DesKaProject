@@ -117,7 +117,10 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 	workLedger := l.Clone()
 	validPending := make([]types.Transaction, 0, len(pending))
 	totalFees := uint64(0)
-	height := blocks[len(blocks)-1].Height + 1
+	height, heightErr := arith.Add(blocks[len(blocks)-1].Height, 1)
+	if heightErr != nil {
+		return types.Block{}, errors.New("block height overflow")
+	}
 	for _, tx := range pending {
 		if tx.Coinbase {
 			continue
