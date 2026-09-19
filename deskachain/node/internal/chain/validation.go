@@ -6,7 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/arith"\n\t"deskachain/internal/config"
+	"deskachain/internal/arith"
+	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/ledger"
 	"deskachain/internal/types"
@@ -169,14 +170,21 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			return fmt.Errorf("tx %d sender and recipient must differ", i)
 		}
 		if tx.TxType() == types.TxTypeTransfer {
-			nextFees, feeErr := arith.Add(totalFees, tx.Fee)\n\t\t\tif feeErr != nil { return errors.New("transaction fees overflow") }\n\t\t\ttotalFees = nextFees
+			nextFees, feeErr := arith.Add(totalFees, tx.Fee)
+			if feeErr != nil {
+				return errors.New("transaction fees overflow")
+			}
+			totalFees = nextFees
 		}
 	}
 	if block.Height > 0 {
 		if coinbaseCount != 1 {
 			return errors.New("block must include exactly one coinbase transaction")
 		}
-		want, rewardErr := arith.Add(config.InitialBlockReward, totalFees)\n\t\tif rewardErr != nil { return errors.New("block reward overflow") }
+		want, rewardErr := arith.Add(config.InitialBlockReward, totalFees)
+		if rewardErr != nil {
+			return errors.New("block reward overflow")
+		}
 		for _, tx := range block.Transactions {
 			if tx.Coinbase && tx.Amount != want {
 				return fmt.Errorf("invalid coinbase amount: got %d want %d", tx.Amount, want)
