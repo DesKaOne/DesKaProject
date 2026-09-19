@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"deskachain/internal/ledger"
+	"deskachain/internal/staking"
 	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
@@ -25,6 +27,17 @@ type StateStore interface {
 	SaveState(snapshot state.Snapshot) error
 	LoadState() (state.Snapshot, error)
 	DeleteState() error
+}
+
+// StateQueryStore exposes direct state indexes without loading the entire
+// state snapshot into memory. Callers should verify the metadata against the
+// current chain tip before treating the values as authoritative.
+type StateQueryStore interface {
+	StateStore
+	GetStateMetadata() (version uint8, height uint64, stateRoot string, err error)
+	GetStateAccount(address string) (ledger.StateAccount, bool, error)
+	GetStateStake(stakeID string) (staking.Record, bool, error)
+	GetStateStakesForAddress(address string) ([]staking.Record, error)
 }
 
 // BlockStateStore provides atomic chain + state commits for stores that can
