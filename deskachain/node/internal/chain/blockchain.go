@@ -137,6 +137,57 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 
 // BalanceDetailsForWithProfile prefers the persistent state indexes and
 // falls back to deterministic replay when the state DB is unavailable or stale.
+type StateValidationResult struct {
+	Valid            bool   `json:"valid"`
+	Height           uint64 `json:"height"`
+	StateRoot        string `json:"state_root"`
+	Accounts         int    `json:"accounts"`
+	Stakes           int    `json:"stakes"`
+	PendingCoinbases int    `json:"pending_coinbases"`
+}
+
+func (bc *Blockchain) ValidateStateWithNetwork(profile config.NetworkConfig) (StateValidationResult, error) {
+	if profile.Name == "" {
+		profile = config.Localnet()
+	}
+	ss, ok := bc.store.(storage.StateStore)
+	if !ok {
+		return StateValidationResult{}, errors.New("state store is not available")
+	}
+	tip, err := bc.Tip()
+	if err != nil {
+		return StateValidationResult{}, err
+	}
+	persisted, err := ss.LoadState()
+	if err != nil {
+		return StateValidationResult{}, err
+	}
+	blocks, err := bc.Blocks()
+	if err != nil {
+		return StateValidationResult{}, err
+	}
+	expected, err := state.SnapshotForBlocks(blocks, profile.Consensus, profile)
+	if err != nil {
+		return StateValidationResult{
+			Valid:     false,
+			Height:    tip.Height,
+			StateRoot: persisted.StateRoot,
+		}, err
+	}
+	result := StateValidationResult{
+		Valid:            state.Equivalent(persisted, expected),
+		Height:           persisted.Height,
+		StateRoot:        persisted.StateRoot,
+		Accounts:         len(persisted.Accounts),
+		Stakes:           len(persisted.Stakes),
+		PendingCoinbases: len(persisted.Coinbases),
+	}
+	if !result.Valid {
+		return result, errors.New("state snapshot does not match canonical chain")
+	}
+	return result, nil
+}
+
 func (bc *Blockchain) BalanceDetailsForWithProfile(address string, pending []types.Transaction, profile config.NetworkConfig) (ledger.BalanceDetails, error) {
 	tip, err := bc.Tip()
 	if err != nil {
