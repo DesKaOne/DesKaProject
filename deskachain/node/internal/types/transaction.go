@@ -7,6 +7,11 @@ import (
 	"deskachain/internal/crypto"
 )
 
+const (
+	TxVersionLegacy    uint32 = 1
+	TxVersionCanonical uint32 = 2
+)
+
 const CoinbaseSender = "COINBASE"
 
 const (
@@ -17,6 +22,7 @@ const (
 )
 
 type Transaction struct {
+	Version   uint32 `json:"version,omitempty"`
 	ID        string `json:"id"`
 	From      string `json:"from"`
 	To        string `json:"to"`
@@ -83,6 +89,13 @@ func NewCoinbaseTransaction(to string, amount uint64, height uint64) Transaction
 	return tx
 }
 
+func (tx Transaction) ProtocolVersion() uint32 {
+	if tx.Version == 0 {
+		return TxVersionLegacy
+	}
+	return tx.Version
+}
+
 func (tx Transaction) TxType() string {
 	if tx.Type != "" {
 		return tx.Type
@@ -94,9 +107,13 @@ func (tx Transaction) TxType() string {
 }
 
 func (tx Transaction) SigningBytes() []byte {
+	if tx.ProtocolVersion() >= TxVersionCanonical {
+		return tx.CanonicalSigningBytes()
+	}
 	copy := tx
 	copy.ID = ""
 	copy.Signature = ""
+	copy.Version = 0
 	if copy.TxType() == TxTypeStakeLock {
 		copy.StakeID = ""
 	}
