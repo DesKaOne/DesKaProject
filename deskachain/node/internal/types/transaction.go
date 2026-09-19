@@ -45,6 +45,18 @@ type Transaction struct {
 	Coinbase  bool   `json:"coinbase"`
 	Type      string `json:"type,omitempty"`
 	StakeID   string `json:"stake_id,omitempty"`
+	AssetID   string `json:"asset_id,omitempty"`
+	FeePayer  string `json:"fee_payer,omitempty"`
+	FeePayerPublicKey string `json:"fee_payer_public_key,omitempty"`
+	FeePayerSignature string `json:"fee_payer_signature,omitempty"`
+	AssetName string `json:"asset_name,omitempty"`
+	AssetSymbol string `json:"asset_symbol,omitempty"`
+	AssetDecimals uint8 `json:"asset_decimals,omitempty"`
+	AssetMaxSupply uint64 `json:"asset_max_supply,omitempty"`
+	AssetMintable bool `json:"asset_mintable,omitempty"`
+	AssetBurnable bool `json:"asset_burnable,omitempty"`
+	AssetPausable bool `json:"asset_pausable,omitempty"`
+	AssetPermissioned bool `json:"asset_permissioned,omitempty"`
 }
 
 func NewUnsignedTransaction(from, to string, amount, fee, nonce uint64) Transaction {
