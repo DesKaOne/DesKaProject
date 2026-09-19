@@ -207,12 +207,31 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
 		to := l.accounts[tx.To]
-		cost := tx.Amount + tx.Fee
-		from.Confirmed -= cost
-		from.Mature -= cost
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
+		confirmed, err := arith.Sub(from.Confirmed, cost)
+		if err != nil {
+			return errors.New("insufficient balance")
+		}
+		mature, err := arith.Sub(from.Mature, cost)
+		if err != nil {
+			return ErrImmatureBalance
+		}
+		toConfirmed, err := arith.Add(to.Confirmed, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient balance overflow: %w", err)
+		}
+		toMature, err := arith.Add(to.Mature, tx.Amount)
+		if err != nil {
+			return fmt.Errorf("recipient mature balance overflow: %w", err)
+		}
+		from.Confirmed = confirmed
+		from.Mature = mature
 		from.Nonce = tx.Nonce
-		to.Confirmed += tx.Amount
-		to.Mature += tx.Amount
+		to.Confirmed = toConfirmed
+		to.Mature = toMature
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
 	case types.TxTypeStakeLock:
@@ -287,12 +306,19 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 		return errors.New("invalid transaction signature")
 	}
 	account := l.accounts[tx.From]
-	if tx.Nonce != account.Nonce+1 {
-		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, account.Nonce+1)
+	expectedNonce, nonceErr := arith.Add(account.Nonce, 1)
+	if nonceErr != nil {
+		return errors.New("account nonce overflow")
+	}
+	if tx.Nonce != expectedNonce {
+		return fmt.Errorf("invalid account nonce: got %d want %d", tx.Nonce, expectedNonce)
 	}
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
-		cost := tx.Amount + tx.Fee
+		cost, err := arith.Add(tx.Amount, tx.Fee)
+		if err != nil {
+			return fmt.Errorf("transaction cost overflow: %w", err)
+		}
 		if account.Confirmed < cost {
 			return errors.New("insufficient balance")
 		}
@@ -300,13 +326,19 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 			return ErrImmatureBalance
 		}
 		active, unlocking, _ := l.stakes.AddressSummary(tx.From, l.currentHeight)
-		locked := active + unlocking
+		locked, lockErr := arith.Add(active, unlocking)
+		if lockErr != nil {
+			return errors.New("locked stake total overflow")
+		}
 		if account.Mature < locked || account.Mature-locked < cost {
 			return errors.New("invalid transaction: spends locked stake")
 		}
 	case types.TxTypeStakeLock:
 		active, unlocking, _ := l.stakes.AddressSummary(tx.From, l.currentHeight)
-		locked := active + unlocking
+		locked, lockErr := arith.Add(active, unlocking)
+		if lockErr != nil {
+			return errors.New("locked stake total overflow")
+		}
 		if account.Mature < locked || account.Mature-locked < tx.Amount {
 			return errors.New("invalid stake lock: insufficient mature spendable balance")
 		}
