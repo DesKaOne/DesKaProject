@@ -253,6 +253,9 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 }
 
 func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
+	if tx.ProtocolVersion() > types.MaxSupportedTxVersion {
+		return fmt.Errorf("unsupported transaction version: %d", tx.ProtocolVersion())
+	}
 	if tx.Coinbase {
 		return nil
 	}
