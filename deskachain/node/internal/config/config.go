@@ -176,6 +176,12 @@ func EnsureNetworkMatches(paths Paths, profile NetworkConfig) error {
 	return nil
 }
 
+type NetworkLimits struct {
+	MaxHeaderBatch      uint64 `json:"max_header_batch"`
+	MaxSyncBlocks       uint64 `json:"max_sync_blocks"`
+	MaxReorgFetchBlocks uint64 `json:"max_reorg_fetch_blocks"`
+}
+
 type NetworkConfig struct {
 	NetworkName          string           `json:"network_name"`
 	Name                 string           `json:"name"`
@@ -202,6 +208,7 @@ type NetworkConfig struct {
 	AllowIsolatedWrites  bool             `json:"allow_isolated_writes"`
 	SeedPeers            []string         `json:"seed_peers"`
 	GenesisHash          string           `json:"genesis_hash"`
+	NetworkLimits        NetworkLimits    `json:"network_limits"`
 }
 
 type DifficultyParams struct {
@@ -277,6 +284,11 @@ func Localnet() NetworkConfig {
 		AllowIsolatedWrites: true,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
@@ -327,6 +339,11 @@ func Testnet() NetworkConfig {
 		AllowIsolatedWrites: false,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
@@ -377,6 +394,11 @@ func Mainnet() NetworkConfig {
 		AllowIsolatedWrites: false,
 		SeedPeers:           nil,
 		GenesisHash:         "",
+		NetworkLimits: NetworkLimits{
+			MaxHeaderBatch:      500,
+			MaxSyncBlocks:       500,
+			MaxReorgFetchBlocks: 512,
+		},
 	}
 }
 
