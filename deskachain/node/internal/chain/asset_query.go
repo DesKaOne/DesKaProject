@@ -47,7 +47,7 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 	if profile.Name == "" {
 		profile = config.Localnet()
 	}
-	if q, ok := bc.store.(storageAssetQueryStore); ok {
+	if q, ok := bc.store.(storage.AssetStateQueryStore); ok {
 		version, height, root, metaErr := q.GetStateMetadata()
 		current := metaErr == nil && version == state.SnapshotVersion && height == tip.Height
 		if current && tip.ProtocolVersion() == types.BlockVersionCanonical {
