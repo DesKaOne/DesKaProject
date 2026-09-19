@@ -152,6 +152,12 @@ type StateAccount struct {
 	Nonce     uint64 `json:"nonce"`
 }
 
+type StateCoinbase struct {
+	Address string `json:"address"`
+	Amount  uint64 `json:"amount"`
+	Height  uint64 `json:"height"`
+}
+
 func (l *MatureLedger) StateAccounts() []StateAccount {
 	out := make([]StateAccount, 0, len(l.accounts))
 	for address, account := range l.accounts {
