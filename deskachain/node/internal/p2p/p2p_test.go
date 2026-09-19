@@ -91,7 +91,7 @@ func TestSyncBlocksFromPeer(t *testing.T) {
 	server := newP2PTestServer(a)
 	defer server.Close()
 	var out bytes.Buffer
-	if err := SyncFromPeer(b, server.URL, &out); err != nil {
+	if err := SyncFromPeerWithProfile(b, server.URL, &out, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	tipA := tip(t, a)
@@ -115,7 +115,7 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	defer serverB.Close()
 	serverA := newP2PTestServer(a)
 	defer serverA.Close()
-	if err := SyncFromPeer(b, serverA.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	tx := signedTx(t, a, miner, receiver.Address, 10*config.UnitsPerCoin)
@@ -579,7 +579,7 @@ func TestCommonAncestorSameChainAndGenesisFork(t *testing.T) {
 	mineBlocks(t, a, minerA.Address, 3)
 	serverA := newP2PTestServer(a)
 	defer serverA.Close()
-	if err := SyncFromPeer(b, serverA.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	locator, err := LocalLocator(a)
@@ -688,7 +688,7 @@ func TestSyncForkDetected(t *testing.T) {
 	beforeSupply := totalSupply(t, b)
 	serverA := newP2PTestServer(a)
 	defer serverA.Close()
-	err := SyncFromPeer(b, serverA.URL, nil)
+	err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "sync failed: fork detected") || !strings.Contains(err.Error(), "fork_tie_same_work") {
 		t.Fatalf("expected same-work fork rejection, got %v", err)
 	}
@@ -709,11 +709,11 @@ func TestSyncSameHeightSameTipUpToDate(t *testing.T) {
 	mineBlocks(t, a, miner.Address, 3)
 	serverA := newP2PTestServer(a)
 	defer serverA.Close()
-	if err := SyncFromPeer(b, serverA.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	var out bytes.Buffer
-	if err := SyncFromPeer(b, serverA.URL, &out); err != nil {
+	if err := SyncFromPeerWithProfile(b, serverA.URL, &out, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "local chain already up to date") {
@@ -728,13 +728,13 @@ func TestSyncLowerPeerMatchingAncestorIsLocalAhead(t *testing.T) {
 	mineBlocks(t, peer, miner.Address, 2)
 	serverPeer := newP2PTestServer(peer)
 	defer serverPeer.Close()
-	if err := SyncFromPeer(local, serverPeer.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(local, serverPeer.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	mineBlocks(t, local, miner.Address, 1)
 	before := tip(t, local)
 	var out bytes.Buffer
-	if err := SyncFromPeer(local, serverPeer.URL, &out); err != nil {
+	if err := SyncFromPeerWithProfile(local, serverPeer.URL, &out, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	after := tip(t, local)
@@ -750,7 +750,7 @@ func TestSyncLowerPeerDifferentTipForkDetected(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 2)
 	serverPeer := newP2PTestServer(peer)
 	defer serverPeer.Close()
-	err := SyncFromPeer(local, serverPeer.URL, nil)
+	err := SyncFromPeerWithProfile(local, serverPeer.URL, nil, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "sync failed: fork detected") || !strings.Contains(err.Error(), "local_ahead_more_work") {
 		t.Fatalf("expected lower-work fork rejection, got %v", err)
 	}
@@ -768,7 +768,7 @@ func TestSyncHigherPeerForkReorgsToMoreWork(t *testing.T) {
 	serverPeer := newP2PTestServer(peer)
 	defer serverPeer.Close()
 	var out bytes.Buffer
-	if err := SyncFromPeer(local, serverPeer.URL, &out); err != nil {
+	if err := SyncFromPeerWithProfile(local, serverPeer.URL, &out, fundedP2PProfile()); err != nil {
 		t.Fatalf("expected higher-work fork to reorg, got %v", err)
 	}
 	after := tip(t, local)
@@ -788,11 +788,11 @@ func TestSyncAgainDoesNotDuplicate(t *testing.T) {
 	mineBlocks(t, a, miner.Address, 2)
 	server := newP2PTestServer(a)
 	defer server.Close()
-	if err := SyncFromPeer(b, server.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(b, server.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	first := tip(t, b)
-	if err := SyncFromPeer(b, server.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(b, server.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	second := tip(t, b)
@@ -829,7 +829,7 @@ func TestUpstreamBackfillAlreadyUpToDate(t *testing.T) {
 	mineBlocks(t, local, miner.Address, 2)
 	localServer := newP2PTestServer(local)
 	defer localServer.Close()
-	if err := SyncFromPeer(upstream, localServer.URL, nil); err != nil {
+	if err := SyncFromPeerWithProfile(upstream, localServer.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	upstreamServer := newP2PTestServer(upstream)
