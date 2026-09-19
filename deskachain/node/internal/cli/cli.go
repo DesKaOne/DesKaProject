@@ -5327,9 +5327,14 @@ func (a App) openInitializedChain() (*chain.Blockchain, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := bc.InitWithProfile(a.profile); err != nil {
+	has, err := bc.HasChain()
+	if err != nil {
 		closeFn()
 		return nil, nil, err
+	}
+	if !has {
+		closeFn()
+		return nil, nil, errors.New("chain is not initialized")
 	}
 	if err := config.EnsureNetworkMatches(a.paths, a.profile); err != nil {
 		closeFn()
