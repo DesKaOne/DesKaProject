@@ -323,6 +323,11 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 	acct := l.accounts[tx.To]
 	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)
 	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	if l.AssetModelEnabled() {
+		if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
+			return fmt.Errorf("native IDR coinbase credit: %w", err)
+		}
+	}
 	acct.Confirmed = confirmed
 	l.accounts[tx.To] = acct
 	l.coinbases = append(l.coinbases, coinbaseCredit{Address: tx.To, Amount: tx.Amount, Height: height})
@@ -336,6 +341,9 @@ func (l *MatureLedger) ApplyTransaction(tx types.Transaction) error {
 func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uint64) error {
 	if err := l.ValidateTransaction(tx); err != nil {
 		return err
+	}
+	if tx.ProtocolVersion() == types.TxVersionAsset {
+		return l.applyAssetTransactionV3(tx, height)
 	}
 	from := l.accounts[tx.From]
 	switch tx.TxType() {
@@ -392,6 +400,9 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 	}
 	if tx.Coinbase {
 		return nil
+	}
+	if tx.ProtocolVersion() == types.TxVersionAsset {
+		return l.validateAssetTransactionV3(tx)
 	}
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
