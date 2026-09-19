@@ -395,6 +395,10 @@ func TestMinerTemplateIncludesMempoolTxAndSubmitClearsMempool(t *testing.T) {
 }
 
 func newMinerRPCServer(t *testing.T) (config.Paths, *httptest.Server) {
+	return newMinerRPCServerWithProfile(t, config.Localnet())
+}
+
+func newMinerRPCServerWithProfile(t *testing.T, profile config.NetworkConfig) (config.Paths, *httptest.Server) {
 	t.Helper()
 	paths := config.NewPaths(t.TempDir())
 	store, err := storage.OpenBolt(paths.DB)
@@ -402,12 +406,12 @@ func newMinerRPCServer(t *testing.T) (config.Paths, *httptest.Server) {
 		t.Fatal(err)
 	}
 	bc := chain.New(store)
-	if err := bc.Init(); err != nil {
+	if err := bc.InitWithProfile(profile); err != nil {
 		t.Fatal(err)
 	}
 	_ = store.Close()
 	mux := http.NewServeMux()
-	RegisterHandlers(mux, paths, NodeInfo{RPCListen: ":0", P2PListen: ":0"})
+	RegisterHandlers(mux, paths, NodeInfo{RPCListen: ":0", P2PListen: ":0", Profile: profile})
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 	return paths, server
