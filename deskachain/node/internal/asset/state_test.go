@@ -29,7 +29,7 @@ func TestAssetStateNativeIDRFeeAndPaymaster(t *testing.T) {
 	if err := s.Create(Definition{ID:"asset:usd", Name:"Example USD", Symbol:"EUSD", Decimals:6, Issuer:"issuer", Mintable:true, Burnable:true, Status:StatusActive}); err != nil { t.Fatal(err) }
 	if err := s.Mint("asset:usd", "issuer", "alice", 100); err != nil { t.Fatal(err) }
 
-	s.balances["alice"] = map[string]uint64{NativeAssetID: 10}
+	s.balances["alice"][NativeAssetID] = 10
 	s.balances["paymaster"] = map[string]uint64{NativeAssetID: 5}
 	if err := s.ExecuteTokenTransfer("asset:usd", "alice", "merchant", "paymaster", 40, 2); err != nil { t.Fatal(err) }
 
