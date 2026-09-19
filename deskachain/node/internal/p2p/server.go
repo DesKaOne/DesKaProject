@@ -141,10 +141,21 @@ func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 	}
 	net := s.network()
 	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+	challenge := strings.TrimSpace(r.URL.Query().Get("challenge"))
+	if challenge != "" {
+		if len(challenge) != 64 {
+			writeError(w, errors.New("invalid handshake challenge"))
+			return
+		}
+		if _, err := hex.DecodeString(challenge); err != nil {
+			writeError(w, errors.New("invalid handshake challenge"))
+			return
+		}
+	}
 	handshake := Handshake{
 		NetworkName:         net.NetworkName,
 		NetworkID:           net.NetworkID,
-		AuthChallenge:       strings.TrimSpace(r.URL.Query().Get("challenge")),
+		AuthChallenge:       challenge,
 		ChainID:             net.ChainID,
 		ProtocolVersion:     net.ProtocolVersion,
 		P2PProtocolVersion:  net.P2PProtocolVersion,
