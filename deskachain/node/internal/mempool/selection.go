@@ -1,7 +1,6 @@
 package mempool
 
 import (
-	"fmt"
 	"math/big"
 	"sort"
 
@@ -117,4 +116,3 @@ func samePriority(a, b struct{ tx types.Transaction; gas uint64 }) bool {
 	return a.tx.Fee == b.tx.Fee && a.gas == b.gas && new(big.Int).SetUint64(a.tx.Fee).Cmp(new(big.Int).SetUint64(b.tx.Fee)) == 0
 }
 
-var _ = fmt.Sprintf
