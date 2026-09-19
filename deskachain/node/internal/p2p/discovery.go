@@ -47,7 +47,11 @@ func DiscoverFromPeerLimited(paths config.Paths, peer string, profile config.Net
 	if err != nil {
 		return result, err
 	}
-	response, err := NewClientWithTimeout(3 * time.Second).Peers(peer)
+	client, err := NewClientForProfile(paths, profile, 3*time.Second)
+	if err != nil {
+		return result, err
+	}
+	response, err := client.Peers(peer)
 	if err != nil {
 		if len(hs.KnownPeers) == 0 {
 			return result, err
