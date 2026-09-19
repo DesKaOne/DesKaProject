@@ -958,7 +958,7 @@ func mineBlock(t *testing.T, paths config.Paths, miner string, pending []types.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := bc.AddBlock(block); err != nil {
+	if err := bc.AddBlockWithNetwork(block, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
 	ids := make(map[string]struct{})
