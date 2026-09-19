@@ -309,56 +309,60 @@ func (s *BoltStore) ReplaceFromHeightAndState(from uint64, blocks []types.Block,
 	if err := validateBlockStateBranch(blocks, snapshot); err != nil {
 		return err
 	}
-	if err := s.validateReplacementAgainstCanonicalTip(from, blocks, snapshot); err != nil {
-		return err
-	}
 	return s.replaceFromHeight(from, blocks, &snapshot)
 }
 
 func (s *BoltStore) validateReplacementAgainstCanonicalTip(from uint64, blocks []types.Block, snapshot state.Snapshot) error {
 	return s.db.View(func(tx *bolt.Tx) error {
-		meta := tx.Bucket(metaBucket)
-		chain := tx.Bucket(blocksBucket)
-		if meta == nil || chain == nil {
-			return errors.New("chain storage is not initialized")
+		return validateReplacementAgainstCanonicalTipTx(tx, from, blocks, snapshot)
+	})
+}
+
+func validateReplacementAgainstCanonicalTipTx(tx *bolt.Tx, from uint64, blocks []types.Block, snapshot state.Snapshot) error {
+	meta := tx.Bucket(metaBucket)
+	chain := tx.Bucket(blocksBucket)
+	if meta == nil || chain == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	tipKey := meta.Get(tipKey)
+	if tipKey == nil {
+		return errors.New("chain tip is not initialized")
+	}
+	var tip types.Block
+	rawTip := chain.Get(tipKey)
+	if rawTip == nil {
+		return errors.New("chain tip block is missing")
+	}
+	if err := json.Unmarshal(rawTip, &tip); err != nil {
+		return err
+	}
+	if from > tip.Height {
+		return errors.New("replacement height is beyond canonical tip")
+	}
+	if len(blocks) == 0 {
+		return errors.New("replacement branch is empty")
+	}
+	if from > 0 {
+		rawParent := chain.Get(heightKey(from - 1))
+		if rawParent == nil {
+			return errors.New("replacement branch predecessor not found")
 		}
-		tipKey := meta.Get(tipKey)
-		if tipKey == nil {
-			return errors.New("chain tip is not initialized")
-		}
-		var tip types.Block
-		rawTip := chain.Get(tipKey)
-		if rawTip == nil {
-			return errors.New("chain tip block is missing")
-		}
-		if err := json.Unmarshal(rawTip, &tip); err != nil {
+		var parent types.Block
+		if err := json.Unmarshal(rawParent, &parent); err != nil {
 			return err
 		}
-		if from > tip.Height {
-			return errors.New("replacement height is beyond canonical tip")
+		if parent.Hash == "" || blocks[0].PreviousHash != parent.Hash {
+			return errors.New("replacement branch predecessor mismatch")
 		}
-		if from > 0 {
-			rawParent := chain.Get(heightKey(from - 1))
-			if rawParent == nil {
-				return errors.New("replacement branch predecessor not found")
-			}
-			var parent types.Block
-			if err := json.Unmarshal(rawParent, &parent); err != nil {
-				return err
-			}
-			if parent.Hash == "" || blocks[0].PreviousHash != parent.Hash {
-				return errors.New("replacement branch predecessor mismatch")
-			}
-		}
-		replacementTip := blocks[len(blocks)-1]
-		if snapshot.Height != replacementTip.Height {
-			return errors.New("replacement state height does not match replacement tip")
-		}
-		if replacementTip.StateRoot != "" && snapshot.StateRoot != replacementTip.StateRoot {
-			return errors.New("replacement state root does not match replacement tip")
-		}
-		return nil
-	})
+	}
+	replacementTip := blocks[len(blocks)-1]
+	if snapshot.Height != replacementTip.Height {
+		return errors.New("replacement state height does not match replacement tip")
+	}
+	if replacementTip.StateRoot != "" && snapshot.StateRoot != replacementTip.StateRoot {
+		return errors.New("replacement state root does not match replacement tip")
+	}
+	return nil
 }
 
 func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
@@ -385,6 +389,13 @@ func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapsho
 	}
 
 	return s.db.Update(func(tx *bolt.Tx) error {
+		if snapshot != nil {
+			if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, *snapshot); err != nil {
+				return err
+			}
+		} else if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, state.Snapshot{}); err != nil {
+			return err
+		}
 		b := tx.Bucket(blocksBucket)
 		if from > 0 && b.Get(heightKey(from-1)) == nil {
 			return errors.New("replacement branch predecessor not found")
