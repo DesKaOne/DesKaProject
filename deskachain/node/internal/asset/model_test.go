@@ -1,9 +1,13 @@
 package asset
 
-import "testing"
+import (
+	"testing"
+
+	"deskachain/internal/config"
+)
 
 func TestNativeAssetDefinition(t *testing.T) {
-	if NativeAssetID != "IDR" || NativeSymbol != "IDR" || NativeDecimals != 0 { t.Fatal("native asset constants changed") }
+	if NativeAssetID != "IDR" || NativeSymbol != "IDR" || NativeDecimals != config.NativeAssetDecimals { t.Fatal("native asset constants changed") }
 }
 
 func TestDerivedAssetID(t *testing.T) {
