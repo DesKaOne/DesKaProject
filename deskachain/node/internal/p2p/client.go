@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -14,10 +15,12 @@ import (
 )
 
 type Client struct {
-	http      *http.Client
-	NodeID    string
-	P2PURL    string
-	NetworkID string
+	http                 *http.Client
+	NodeID               string
+	P2PURL               string
+	NetworkID            string
+	NodeIdentity         NodeIdentity
+	AuthenticateRequests bool
 }
 
 func NewClient() Client {
@@ -35,6 +38,13 @@ func (c Client) WithIdentity(nodeID, p2pURL, networkID string) Client {
 	return c
 }
 
+func (c Client) WithNodeIdentity(identity NodeIdentity) Client {
+	c.NodeIdentity = identity
+	c.NodeID = identity.NodeID
+	c.AuthenticateRequests = true
+	return c
+}
+
 func (c Client) Status(peer string) (Status, error) {
 	var status Status
 	err := c.getJSON(peer, "/p2p/status", &status)
@@ -48,7 +58,7 @@ func (c Client) Handshake(peer string) (Handshake, error) {
 	}
 	challenge := hex.EncodeToString(challengeBytes)
 	var handshake Handshake
-	err := c.getJSON(peer, "/p2p/handshake?challenge="+challenge, &handshake)
+	err := c.getJSONMode(peer, "/p2p/handshake?challenge="+challenge, nil, &handshake, false, true)
 	if err != nil {
 		return Handshake{}, err
 	}
@@ -112,20 +122,11 @@ func (c Client) IntroducePeer(peer string, intro PeerIntroduction) (map[string]a
 }
 
 func (c Client) getJSON(peer, path string, target any) error {
-	req, err := http.NewRequest(http.MethodGet, strings.TrimRight(peer, "/")+path, nil)
-	if err != nil {
-		return err
-	}
-	c.addHeaders(req)
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("peer returned %s", resp.Status)
-	}
-	return json.NewDecoder(resp.Body).Decode(target)
+	return c.getJSONMode(peer, path, nil, target, c.AuthenticateRequests, true)
+}
+
+func (c Client) getJSONMode(peer, path string, raw []byte, target any, authenticated bool, rejectClientError bool) error {
+	return c.doJSON(peer, http.MethodGet, path, raw, target, authenticated, rejectClientError)
 }
 
 func (c Client) postJSON(peer, path string, body, target any) error {
@@ -133,21 +134,87 @@ func (c Client) postJSON(peer, path string, body, target any) error {
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest(http.MethodPost, strings.TrimRight(peer, "/")+path, bytes.NewReader(raw))
+	return c.doJSON(peer, http.MethodPost, path, raw, target, c.AuthenticateRequests, false)
+}
+
+func (c Client) doJSON(peer, method, path string, raw []byte, target any, authenticated, rejectClientError bool) error {
+	var handshake Handshake
+	if authenticated {
+		handshake, err := c.Handshake(peer)
+		if err != nil {
+			return err
+		}
+		if err := c.NodeIdentityValidation(); err != nil {
+			return err
+		}
+		if c.NetworkID != "" && c.NetworkID != handshake.NetworkID {
+			return fmt.Errorf("peer handshake network id mismatch")
+		}
+	}
+	var bodyReader io.Reader
+	if raw != nil {
+		bodyReader = bytes.NewReader(raw)
+	}
+	req, err := http.NewRequest(method, strings.TrimRight(peer, "/")+path, bodyReader)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	if method == http.MethodPost {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	c.addHeaders(req)
+	var requestNonce string
+	if authenticated {
+		requestNonce, err = newP2PAuthNonce()
+		if err != nil {
+			return err
+		}
+		if err := SignP2PRequest(c.NodeIdentity, handshake.NetworkID, handshake.ChainID, req, raw, time.Now(), requestNonce); err != nil {
+			return err
+		}
+	}
 	resp, err := c.http.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 500 {
+
+	if authenticated {
+		responseBody, readErr := io.ReadAll(io.LimitReader(resp.Body, p2pMessageAuthResponseLimit+1))
+		if readErr != nil {
+			return readErr
+		}
+		if len(responseBody) > p2pMessageAuthResponseLimit {
+			return fmt.Errorf("peer authenticated response too large")
+		}
+		if err := VerifyP2PResponse(handshake, handshake.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+			return err
+		}
+		if rejectClientError {
+			if resp.StatusCode >= 400 {
+				return fmt.Errorf("peer returned %s", resp.Status)
+			}
+		} else if resp.StatusCode >= 500 {
+			return fmt.Errorf("peer returned %s", resp.Status)
+		}
+		return json.Unmarshal(responseBody, target)
+	}
+
+	if rejectClientError {
+		if resp.StatusCode >= 400 {
+			return fmt.Errorf("peer returned %s", resp.Status)
+		}
+	} else if resp.StatusCode >= 500 {
 		return fmt.Errorf("peer returned %s", resp.Status)
 	}
 	return json.NewDecoder(resp.Body).Decode(target)
+}
+
+func (c Client) NodeIdentityValidation() error {
+	if c.NodeIdentity.IdentityVersion() != NodeIdentityVersion {
+		return fmt.Errorf("authenticated client requires a valid node identity")
+	}
+	return nil
 }
 
 func (c Client) addHeaders(req *http.Request) {
