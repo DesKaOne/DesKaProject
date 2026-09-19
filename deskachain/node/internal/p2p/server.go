@@ -487,6 +487,12 @@ func (s Server) acceptTx(tx types.Transaction) error {
 	if tx.Coinbase {
 		return fmt.Errorf("coinbase tx is not accepted in mempool")
 	}
+	// Revalidate before opening the chain database. bbolt takes an exclusive
+	// file lock on Windows, so holding an open chain handle while revalidation
+	// opens the same database can deadlock.
+	if _, err := RevalidateMempoolAgainstLedgerWithProfile(s.paths, s.network()); err != nil {
+		return fmt.Errorf("mempool revalidation failed: %w", err)
+	}
 	bc, closeFn, err := s.openChain()
 	if err != nil {
 		return err
@@ -502,9 +508,6 @@ func (s Server) acceptTx(tx types.Transaction) error {
 				return fmt.Errorf("tx already confirmed")
 			}
 		}
-	}
-	if _, err := RevalidateMempoolAgainstLedgerWithProfile(s.paths, s.network()); err != nil {
-		return fmt.Errorf("mempool revalidation failed: %w", err)
 	}
 	mp := mempool.New(s.paths.Mempool)
 	pending, err := mp.Load()
