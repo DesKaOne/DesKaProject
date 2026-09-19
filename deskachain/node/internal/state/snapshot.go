@@ -3,6 +3,8 @@ package state
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"sort"
 
 	"deskachain/internal/arith"
 
@@ -79,6 +81,38 @@ func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.Cons
 	return SnapshotForLedger(l)
 }
 
+func Equivalent(a, b Snapshot) bool {
+	if a.Version != b.Version || a.Height != b.Height || a.StateRoot != b.StateRoot {
+		return false
+	}
+
+	aAccounts, aStakes := StableDigestInputs(a.Accounts, a.Stakes)
+	bAccounts, bStakes := StableDigestInputs(b.Accounts, b.Stakes)
+	a.Coinbases := append([]ledger.StateCoinbase(nil), a.Coinbases...)
+	b.Coinbases = append([]ledger.StateCoinbase(nil), b.Coinbases...)
+	sort.Slice(a.Coinbases, func(i, j int) bool {
+		if a.Coinbases[i].Height != a.Coinbases[j].Height {
+			return a.Coinbases[i].Height < a.Coinbases[j].Height
+		}
+		if a.Coinbases[i].Address != a.Coinbases[j].Address {
+			return a.Coinbases[i].Address < a.Coinbases[j].Address
+		}
+		return a.Coinbases[i].Amount < a.Coinbases[j].Amount
+	})
+	sort.Slice(b.Coinbases, func(i, j int) bool {
+		if b.Coinbases[i].Height != b.Coinbases[j].Height {
+			return b.Coinbases[i].Height < b.Coinbases[j].Height
+		}
+		if b.Coinbases[i].Address != b.Coinbases[j].Address {
+			return b.Coinbases[i].Address < b.Coinbases[j].Address
+		}
+		return b.Coinbases[i].Amount < b.Coinbases[j].Amount
+	})
+	a.Accounts, a.Stakes = aAccounts, aStakes
+	b.Accounts, b.Stakes = bAccounts, bStakes
+	return reflect.DeepEqual(a, b)
+}
+
 func (s Snapshot) Validate() error {
 	if s.Version != SnapshotVersion {
 		return fmt.Errorf("%w: unsupported version %d", ErrInvalidSnapshot, s.Version)
@@ -95,6 +129,27 @@ func (s Snapshot) Validate() error {
 	for i := 1; i < len(stakes); i++ {
 		if stakes[i-1].StakeID == stakes[i].StakeID {
 			return fmt.Errorf("%w: duplicate stake %q", ErrInvalidSnapshot, stakes[i].StakeID)
+		}
+	}
+	coinbases := append([]ledger.StateCoinbase(nil), s.Coinbases...)
+	sort.Slice(coinbases, func(i, j int) bool {
+		if coinbases[i].Height != coinbases[j].Height {
+			return coinbases[i].Height < coinbases[j].Height
+		}
+		if coinbases[i].Address != coinbases[j].Address {
+			return coinbases[i].Address < coinbases[j].Address
+		}
+		return coinbases[i].Amount < coinbases[j].Amount
+	})
+	for i := 1; i < len(coinbases); i++ {
+		if coinbases[i-1].Height == coinbases[i].Height &&
+			coinbases[i-1].Address == coinbases[i].Address {
+			return fmt.Errorf("%w: duplicate pending coinbase %d/%q", ErrInvalidSnapshot, coinbases[i].Height, coinbases[i].Address)
+		}
+	}
+	for _, coinbase := range coinbases {
+		if coinbase.Address == "" || coinbase.Amount == 0 {
+			return fmt.Errorf("%w: invalid pending coinbase", ErrInvalidSnapshot)
 		}
 	}
 	root, err := RootForCollections(accounts, stakes)
