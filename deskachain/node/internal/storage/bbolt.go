@@ -548,6 +548,10 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 	if err != nil {
 		return err
 	}
+	stakesByOwnerBucket, err := root.CreateBucketIfNotExists(stateStakesByOwnerBucket)
+	if err != nil {
+		return err
+	}
 
 	if err := clearBucket(meta); err != nil {
 		return err
@@ -556,6 +560,9 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 		return err
 	}
 	if err := clearBucket(stakesBucket); err != nil {
+		return err
+	}
+	if err := clearBucket(stakesByOwnerBucket); err != nil {
 		return err
 	}
 
@@ -584,6 +591,9 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 			return err
 		}
 		if err := stakesBucket.Put([]byte(record.StakeID), raw); err != nil {
+			return err
+		}
+		if err := stakesByOwnerBucket.Put(stateStakeOwnerKey(record.OwnerAddress, record.StakeID), raw); err != nil {
 			return err
 		}
 	}
