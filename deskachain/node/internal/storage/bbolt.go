@@ -163,7 +163,7 @@ func (s *BoltStore) validateCanonicalCommitPreconditions(block types.Block) erro
 		if err := json.Unmarshal(raw, &tipBlock); err != nil {
 			return err
 		}
-		if tipBlock.Height+1 != block.Height {
+		if tipBlock.Height == ^uint64(0) || tipBlock.Height+1 != block.Height {
 			return errors.New("block height is not the next canonical height")
 		}
 		if tipBlock.Hash == "" || block.PrevHash != tipBlock.Hash {
