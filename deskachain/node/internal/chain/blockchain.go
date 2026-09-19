@@ -196,6 +196,13 @@ func (bc *Blockchain) ValidateStateWithNetwork(profile config.NetworkConfig) (St
 	if err != nil {
 		return StateValidationResult{}, err
 	}
+	q, ok := bc.store.(storage.StateQueryStore)
+	if !ok {
+		return StateValidationResult{}, errors.New("state query store is not available")
+	}
+	if err := q.ValidateStateIndexes(); err != nil {
+		return StateValidationResult{}, err
+	}
 	persisted, err := ss.LoadState()
 	if err != nil {
 		return StateValidationResult{}, err
