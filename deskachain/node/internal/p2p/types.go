@@ -39,6 +39,9 @@ type Handshake struct {
 	TipHash            string     `json:"tip_hash"`
 	CumulativeWork     uint64     `json:"cumulative_work"`
 	NodeID             string     `json:"node_id"`
+	IdentityVersion    uint32     `json:"identity_version,omitempty"`
+	NodePublicKey      string     `json:"node_public_key,omitempty"`
+	NodeSignature      string     `json:"node_signature,omitempty"`
 	P2PListen          string     `json:"p2p_listen"`
 	P2PAdvertise       string     `json:"p2p_advertise"`
 	Services           []string   `json:"services,omitempty"`
