@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"deskachain/internal/asset"
 	"deskachain/internal/ledger"
 	"deskachain/internal/staking"
 	"deskachain/internal/state"
@@ -47,4 +48,14 @@ type BlockStateStore interface {
 	StateStore
 	SaveBlockAndState(block types.Block, snapshot state.Snapshot) error
 	ReplaceFromHeightAndState(from uint64, blocks []types.Block, snapshot state.Snapshot) error
+}
+
+
+// AssetStateQueryStore exposes direct persistent indexes for issued assets and
+// native/token balances without requiring the full state snapshot in memory.
+type AssetStateQueryStore interface {
+	StateQueryStore
+	GetStateAsset(assetID string) (asset.Definition, bool, error)
+	GetStateAssetBalance(address, assetID string) (uint64, bool, error)
+	GetStateAssetBalancesForAddress(address string) ([]asset.BalanceEntry, error)
 }
