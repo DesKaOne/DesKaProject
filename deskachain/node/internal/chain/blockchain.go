@@ -8,6 +8,7 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
 
@@ -134,5 +135,16 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 	}
 	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, reward, height)}, validPending...)
 	block := types.NewBlockWithVersion(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs, profile.BlockVersion)
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		candidate := l.Clone()
+		if err := candidate.ApplyBlock(block); err != nil {
+			return types.Block{}, err
+		}
+		root, err := state.RootForLedger(candidate)
+		if err != nil {
+			return types.Block{}, err
+		}
+		block.StateRoot = root
+	}
 	return MineWithContext(ctx, block, opts)
 }
