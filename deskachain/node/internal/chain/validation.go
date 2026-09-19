@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/config"
+	"deskachain/internal/arith"\n\t"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/ledger"
 	"deskachain/internal/types"
@@ -169,14 +169,14 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			return fmt.Errorf("tx %d sender and recipient must differ", i)
 		}
 		if tx.TxType() == types.TxTypeTransfer {
-			totalFees += tx.Fee
+			totalFees = arith.AddCap(totalFees, tx.Fee)
 		}
 	}
 	if block.Height > 0 {
 		if coinbaseCount != 1 {
 			return errors.New("block must include exactly one coinbase transaction")
 		}
-		want := config.InitialBlockReward + totalFees
+		want := arith.AddCap(config.InitialBlockReward, totalFees)
 		for _, tx := range block.Transactions {
 			if tx.Coinbase && tx.Amount != want {
 				return fmt.Errorf("invalid coinbase amount: got %d want %d", tx.Amount, want)
