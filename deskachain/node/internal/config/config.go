@@ -295,7 +295,7 @@ func Localnet() NetworkConfig {
 		RPCAPIVersion:        "v1",
 		P2PProtocolVersion:   "dkc-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            types.TxVersionAsset,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      4,
 			MinDifficulty:          1,
@@ -378,7 +378,7 @@ func Testnet() NetworkConfig {
 		RPCAPIVersion:        "v1",
 		P2PProtocolVersion:   "dkc-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            types.TxVersionAsset,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      4,
 			MinDifficulty:          1,
@@ -461,7 +461,7 @@ func Mainnet() NetworkConfig {
 		RPCAPIVersion:        "v1",
 		P2PProtocolVersion:   "dkc-p2p/1",
 		BlockVersion:         1,
-		TxVersion:            1,
+		TxVersion:            types.TxVersionAsset,
 		Difficulty: DifficultyParams{
 			InitialDifficulty:      6,
 			MinDifficulty:          1,
