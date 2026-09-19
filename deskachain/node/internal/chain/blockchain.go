@@ -405,9 +405,13 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		}
 	}
 	tip := blocks[len(blocks)-1]
-	reward, rewardErr := arith.Add(config.InitialBlockReward, totalFees)
-	if rewardErr != nil {
-		return types.Block{}, errors.New("block reward overflow")
+	reward := profile.Economic.BlockSubsidy
+	if profile.TxVersion < types.TxVersionAsset {
+		var rewardErr error
+		reward, rewardErr = arith.Add(config.InitialBlockReward, totalFees)
+		if rewardErr != nil {
+			return types.Block{}, errors.New("block reward overflow")
+		}
 	}
 	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, profile.TxVersion)
 	if coinbase.ProtocolVersion() >= types.TxVersionCanonical {
