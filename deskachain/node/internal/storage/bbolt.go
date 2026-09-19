@@ -125,6 +125,46 @@ func (s *BoltStore) DeleteBlockByHeight(height uint64) error {
 	return s.db.Update(func(tx *bolt.Tx) error { return tx.Bucket(blocksBucket).Delete(heightKey(height)) })
 }
 
+func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
+	if len(blocks) == 0 {
+		return errors.New("replacement branch is empty")
+	}
+	for i, block := range blocks {
+		expectedHeight := from + uint64(i)
+		if i > 0 && expectedHeight < from {
+			return errors.New("replacement branch height overflow")
+		}
+		if block.Height != expectedHeight {
+			return errors.New("replacement branch is not contiguous")
+		}
+	}
+
+	rawBlocks := make([][]byte, len(blocks))
+	for i, block := range blocks {
+		raw, err := json.Marshal(block)
+		if err != nil {
+			return err
+		}
+		rawBlocks[i] = raw
+	}
+
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(blocksBucket)
+		cursor := b.Cursor()
+		for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
+			if err := cursor.Delete(); err != nil {
+				return err
+			}
+		}
+		for i, block := range blocks {
+			if err := b.Put(heightKey(from+uint64(i)), rawBlocks[i]); err != nil {
+				return err
+			}
+		}
+		return tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height))
+	})
+}
+
 func (s *BoltStore) SetTip(height uint64, hash string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(blocksBucket)
