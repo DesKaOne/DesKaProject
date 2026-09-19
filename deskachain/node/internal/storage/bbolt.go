@@ -150,6 +150,9 @@ func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
 
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(blocksBucket)
+		if from > 0 && b.Get(heightKey(from-1)) == nil {
+			return errors.New("replacement branch predecessor not found")
+		}
 		cursor := b.Cursor()
 		for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
 			if err := cursor.Delete(); err != nil {
