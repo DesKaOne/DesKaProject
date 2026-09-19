@@ -374,6 +374,14 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 		to.Mature = toMature
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
+		if l.AssetModelEnabled() {
+			if err := l.assets.Debit(tx.From, asset.NativeAssetID, cost); err != nil {
+				return fmt.Errorf("legacy native IDR asset debit: %w", err)
+			}
+			if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
+				return fmt.Errorf("legacy native IDR asset credit: %w", err)
+			}
+		}
 	case types.TxTypeStakeLock:
 		if err := l.stakes.ApplyLock(tx, height); err != nil {
 			return err
