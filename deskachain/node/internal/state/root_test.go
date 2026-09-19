@@ -81,3 +81,19 @@ func TestStateRootRejectsNilLedger(t *testing.T) {
 		t.Fatal("expected nil ledger error")
 	}
 }
+
+func TestRootForBlockMatchesRootForBlocks(t *testing.T) {
+	profile := config.Localnet()
+	block := types.NewBlockWithVersion(1, "prev", "", 1, nil, types.BlockVersionLegacy)
+	rootA, err := RootForBlock(nil, block, profile.Consensus, profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rootB, err := RootForBlocks([]types.Block{block}, profile.Consensus, profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rootA != rootB {
+		t.Fatalf("root helper mismatch: %s != %s", rootA, rootB)
+	}
+}
