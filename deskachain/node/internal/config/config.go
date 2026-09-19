@@ -208,6 +208,7 @@ type NetworkConfig struct {
 	Difficulty           DifficultyParams `json:"difficulty"`
 	Consensus            ConsensusParams  `json:"consensus"`
 	Asset                AssetParams      `json:"asset"`
+	Fee                  FeeParams        `json:"fee"`
 	Economic             EconomicParams   `json:"economic"`
 	MaxPeers             int              `json:"max_peers"`
 	MaxReorgDepth        uint64           `json:"max_reorg_depth"`
@@ -238,6 +239,21 @@ type AssetParams struct {
 	TokenTransfersEnabled   bool   `json:"token_transfers_enabled"`
 	UserIssuedTokensEnabled bool   `json:"user_issued_tokens_enabled"`
 	PaymasterEnabled        bool   `json:"paymaster_enabled"`
+}
+
+type FeeParams struct {
+	Enabled             bool   `json:"enabled"`
+	MinFee              uint64 `json:"min_fee"`
+	MinGasPrice         uint64 `json:"min_gas_price"`
+	BytesPerGas         uint64 `json:"bytes_per_gas"`
+	MaxGasPerTx         uint64 `json:"max_gas_per_tx"`
+	BaseGasTransfer     uint64 `json:"base_gas_transfer"`
+	BaseGasAssetTransfer uint64 `json:"base_gas_asset_transfer"`
+	BaseGasStakeLock    uint64 `json:"base_gas_stake_lock"`
+	BaseGasStakeUnlock  uint64 `json:"base_gas_stake_unlock"`
+	BaseGasAssetCreate  uint64 `json:"base_gas_asset_create"`
+	BaseGasAssetMint    uint64 `json:"base_gas_asset_mint"`
+	BaseGasAssetBurn    uint64 `json:"base_gas_asset_burn"`
 }
 
 type EconomicParams struct {
@@ -310,6 +326,20 @@ func Localnet() NetworkConfig {
 			UserIssuedTokensEnabled: true,
 			PaymasterEnabled:        true,
 		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
+		},
 		Economic: EconomicParams{
 			BlockSubsidy:  0,
 			FeeOnlyBlocks: true,
@@ -378,6 +408,20 @@ func Testnet() NetworkConfig {
 			UserIssuedTokensEnabled: true,
 			PaymasterEnabled:        true,
 		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
+		},
 		Economic: EconomicParams{
 			BlockSubsidy:  0,
 			FeeOnlyBlocks: true,
@@ -445,6 +489,20 @@ func Mainnet() NetworkConfig {
 			TokenTransfersEnabled:   true,
 			UserIssuedTokensEnabled: true,
 			PaymasterEnabled:        true,
+		},
+		Fee: FeeParams{
+			Enabled:              true,
+			MinFee:               1,
+			MinGasPrice:          0,
+			BytesPerGas:          32,
+			MaxGasPerTx:          100000,
+			BaseGasTransfer:      10,
+			BaseGasAssetTransfer: 12,
+			BaseGasStakeLock:     12,
+			BaseGasStakeUnlock:   8,
+			BaseGasAssetCreate:   50,
+			BaseGasAssetMint:     30,
+			BaseGasAssetBurn:     25,
 		},
 		Economic: EconomicParams{
 			BlockSubsidy:  0,
