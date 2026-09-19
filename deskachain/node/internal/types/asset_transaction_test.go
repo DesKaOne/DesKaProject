@@ -35,3 +35,24 @@ func TestFeePayerAuthorizationDoesNotDependOnSponsorSignature(t *testing.T) {
 	b, err := tx.FeePayerSigningBytesWithChainID(777001); if err != nil { t.Fatal(err) }
 	if !bytes.Equal(a,b) { t.Fatal("paymaster signature fields changed authorization bytes") }
 }
+
+func TestValidateAssetEnvelope(t *testing.T) {
+	tx := NewAssetTransferTransaction("from", "to", "asset:usd", 100, 2, 1)
+	if err := tx.ValidateAssetEnvelope(); err != nil {
+		t.Fatal(err)
+	}
+	sponsored := tx
+	sponsored.FeePayer = "paymaster"
+	if err := sponsored.ValidateAssetEnvelope(); err == nil {
+		t.Fatal("incomplete paymaster authorization accepted")
+	}
+	sponsored.FeePayerPublicKey = "payer-pub"
+	sponsored.FeePayerSignature = "payer-sig"
+	if err := sponsored.ValidateAssetEnvelope(); err != nil {
+		t.Fatal(err)
+	}
+	badMint := NewAssetMintTransaction("issuer", "IDR", "alice", 10, 1, 1)
+	if err := badMint.ValidateAssetEnvelope(); err == nil {
+		t.Fatal("native IDR mint accepted as issued asset operation")
+	}
+}
