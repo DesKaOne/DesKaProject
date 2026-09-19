@@ -3,6 +3,7 @@ package p2p
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"deskachain/internal/chain"
@@ -288,7 +289,7 @@ func ApplyReorgWithProfile(paths config.Paths, peer string, maxDepth uint64, yes
 	if err != nil {
 		return ReorgResult{}, err
 	}
-	kept, reval := revalidateTransactions(pending, l, confirmed)
+	kept, reval := revalidateTransactions(pending, l, confirmed, profile)
 	work := l.Clone()
 	for _, tx := range kept {
 		_ = work.ApplyTransaction(tx)
@@ -349,7 +350,7 @@ func RevalidateMempoolAgainstLedgerWithProfile(paths config.Paths, profile confi
 	if err != nil {
 		return MempoolRevalidationSummary{}, err
 	}
-	kept, summary := revalidateTransactions(pending, l, confirmedTransactionIDs(blocks))
+	kept, summary := revalidateTransactions(pending, l, confirmedTransactionIDs(blocks), profile)
 	return summary, mp.Save(kept)
 }
 
@@ -365,12 +366,22 @@ func confirmedTransactionIDs(blocks []types.Block) map[string]struct{} {
 	return ids
 }
 
-func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, confirmed map[string]struct{}) ([]types.Transaction, MempoolRevalidationSummary) {
+func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, confirmed map[string]struct{}, profile config.NetworkConfig) ([]types.Transaction, MempoolRevalidationSummary) {
 	work := l.Clone()
 	seen := map[string]struct{}{}
 	kept := make([]types.Transaction, 0, len(txs))
 	summary := MempoolRevalidationSummary{}
-	for _, tx := range txs {
+	ordered := append([]types.Transaction(nil), txs...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if ordered[i].From != ordered[j].From {
+			return ordered[i].From < ordered[j].From
+		}
+		if ordered[i].Nonce != ordered[j].Nonce {
+			return ordered[i].Nonce < ordered[j].Nonce
+		}
+		return ordered[i].ID < ordered[j].ID
+	})
+	for _, tx := range ordered {
 		if tx.Coinbase {
 			summary.DroppedInvalid++
 			continue
@@ -381,6 +392,19 @@ func revalidateTransactions(txs []types.Transaction, l *ledger.MatureLedger, con
 		}
 		if _, ok := seen[tx.ID]; ok {
 			summary.DroppedDuplicate++
+			continue
+		}
+		policy := mempool.AdmissionPolicy{
+			Profile: profile,
+			MaxTxs:  profile.Consensus.MaxTxCount,
+			MaxGas:  profile.Consensus.MaxGasPerBlock,
+		}
+		if err := mempool.ValidateForRevalidation(tx, policy); err != nil {
+			summary.DroppedInvalid++
+			continue
+		}
+		if profile.Consensus.MaxTxCount > 0 && uint64(len(kept)) >= profile.Consensus.MaxTxCount {
+			summary.DroppedInvalid++
 			continue
 		}
 		if err := work.ApplyTransaction(tx); err != nil {
