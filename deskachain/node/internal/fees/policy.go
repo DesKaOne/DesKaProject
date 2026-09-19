@@ -32,7 +32,7 @@ func GasUsed(tx types.Transaction, profile config.NetworkConfig) (uint64, uint64
 	if !params.Enabled {
 		return 0, 0, nil
 	}
-	base, err := baseGas(tx)
+	base, err := baseGas(tx, params)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -114,23 +114,23 @@ func Validate(tx types.Transaction, profile config.NetworkConfig) error {
 	return nil
 }
 
-func baseGas(tx types.Transaction) (uint64, error) {
+func baseGas(tx types.Transaction, params config.FeeParams) (uint64, error) {
 	switch tx.TxType() {
 	case types.TxTypeTransfer:
 		if tx.EffectiveAssetID() == config.NativeAssetID {
-			return 10, nil
+			return params.BaseGasTransfer, nil
 		}
-		return 12, nil
+		return params.BaseGasAssetTransfer, nil
 	case types.TxTypeStakeLock:
-		return 12, nil
+		return params.BaseGasStakeLock, nil
 	case types.TxTypeStakeUnlock:
-		return 8, nil
+		return params.BaseGasStakeUnlock, nil
 	case types.TxTypeAssetCreate:
-		return 50, nil
+		return params.BaseGasAssetCreate, nil
 	case types.TxTypeAssetMint:
-		return 30, nil
+		return params.BaseGasAssetMint, nil
 	case types.TxTypeAssetBurn:
-		return 25, nil
+		return params.BaseGasAssetBurn, nil
 	default:
 		return 0, fmt.Errorf("unsupported fee transaction type: %s", tx.TxType())
 	}
