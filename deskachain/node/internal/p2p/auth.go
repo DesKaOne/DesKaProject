@@ -3,6 +3,7 @@ package p2p
 import (
 	"bytes"
 	"crypto/ed25519"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -306,20 +307,10 @@ func consumeRequestNonce(key string, nowUnix int64) bool {
 
 func newP2PAuthNonce() (string, error) {
 	raw := make([]byte, 32)
-	if _, err := io.ReadFull(randReader{}, raw); err != nil {
+	if _, err := rand.Read(raw); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(raw), nil
-}
-
-type randReader struct{}
-
-func (randReader) Read(p []byte) (int, error) {
-	return readCryptoRandom(p)
-}
-
-func readCryptoRandom(p []byte) (int, error) {
-	return cryptoRandRead(p)
 }
 
 func writeP2PAuthString(buf *bytes.Buffer, value string) {
