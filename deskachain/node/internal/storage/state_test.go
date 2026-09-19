@@ -297,3 +297,45 @@ func TestValidateStateIndexesDetectsCoinbaseKeyCorruption(t *testing.T) {
 		t.Fatalf("expected coinbase key corruption, got %v", err)
 	}
 }
+
+
+func TestOpenBoltRejectsPersistedStateRootMismatch(t *testing.T) {
+	path := t.TempDir() + "/chain.db"
+
+	store, err := OpenBolt(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot := emptySnapshot(t)
+	block := types.Block{
+		Height:    snapshot.Height,
+		Hash:      "genesis-hash",
+		StateRoot: snapshot.StateRoot,
+	}
+	if err := store.SaveBlockAndState(block, snapshot); err != nil {
+		_ = store.Close()
+		t.Fatal(err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := bolt.Open(path, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		meta := root.Bucket(stateMetaBucket)
+		return meta.Put(stateRootKey, []byte("tampered-state-root"))
+	})
+	if closeErr := db.Close(); err != nil {
+		t.Fatal(err)
+	} else if closeErr != nil {
+		t.Fatal(closeErr)
+	}
+
+	if _, err := OpenBolt(path); err == nil || !strings.Contains(err.Error(), "state root mismatch") {
+		t.Fatalf("expected startup state-root rejection, got %v", err)
+	}
+}
