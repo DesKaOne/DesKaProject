@@ -2,12 +2,11 @@ package chain
 
 import (
 	"encoding/json"
-	"fmt"
 	"errors"
-
-	"deskachain/internal/fees"
+	"fmt"
 
 	"deskachain/internal/config"
+	"deskachain/internal/fees"
 	"deskachain/internal/types"
 )
 
