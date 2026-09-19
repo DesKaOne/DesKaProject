@@ -69,6 +69,37 @@ func NewMatureWithProfile(params config.ConsensusParams, profile config.NetworkC
 	}
 }
 
+func NewMatureFromState(
+	params config.ConsensusParams,
+	profile config.NetworkConfig,
+	height uint64,
+	accounts []StateAccount,
+	stakes []staking.Record,
+	coinbases []StateCoinbase,
+) *MatureLedger {
+	l := NewMatureWithProfile(params, profile)
+	l.currentHeight = height
+	for _, account := range accounts {
+		l.accounts[account.Address] = MatureAccount{
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		}
+	}
+	for _, record := range stakes {
+		l.stakes.ApplyRecord(record)
+	}
+	for _, credit := range coinbases {
+		l.coinbases = append(l.coinbases, coinbaseCredit{
+			Address: credit.Address,
+			Amount:  credit.Amount,
+			Height:  credit.Height,
+			Matured: false,
+		})
+	}
+	return l
+}
+
 func ReplayMature(blocks []types.Block, params config.ConsensusParams) (*MatureLedger, error) {
 	return ReplayMatureWithProfile(blocks, params, config.Localnet())
 }
@@ -136,6 +167,21 @@ func (l *MatureLedger) StateAccounts() []StateAccount {
 
 func (l *MatureLedger) StateStakes() []staking.Record {
 	return l.stakes.Records(l.currentHeight)
+}
+
+func (l *MatureLedger) StateCoinbases() []StateCoinbase {
+	out := make([]StateCoinbase, 0, len(l.coinbases))
+	for _, credit := range l.coinbases {
+		if credit.Matured {
+			continue
+		}
+		out = append(out, StateCoinbase{
+			Address: credit.Address,
+			Amount:  credit.Amount,
+			Height:  credit.Height,
+		})
+	}
+	return out
 }
 
 func (l *MatureLedger) Height() uint64 {
@@ -479,25 +525,24 @@ func BalanceDetailsFromState(
 }
 
 func (l *MatureLedger) matureCoinbases(currentHeight uint64) {
-	for i := range l.coinbases {
-		credit := &l.coinbases[i]
+	pending := l.coinbases[:0]
+	for _, credit := range l.coinbases {
 		if credit.Matured {
 			continue
 		}
 		maturityHeight, err := arith.Add(credit.Height, l.maturity)
-		if err != nil {
-			continue
-		}
-		if currentHeight < maturityHeight {
+		if err != nil || currentHeight < maturityHeight {
+			pending = append(pending, credit)
 			continue
 		}
 		acct := l.accounts[credit.Address]
 		mature, err := arith.Add(acct.Mature, credit.Amount)
 		if err != nil {
+			pending = append(pending, credit)
 			continue
 		}
 		acct.Mature = mature
 		l.accounts[credit.Address] = acct
-		credit.Matured = true
 	}
+	l.coinbases = pending
 }
