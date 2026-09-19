@@ -80,18 +80,18 @@ func TestGasQuoteStableAfterSenderSigning(t *testing.T) {
 		t.Fatal(err)
 	}
 	tx := types.NewAssetTransferTransaction(w.Address, "recipient", p.Asset.NativeAssetID, 10, 1, 1)
-	before, err := GasUsed(tx, p)
+	beforeGas, beforeBytes, err := GasUsed(tx, p)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := w.SignTransactionWithProfile(&tx, p); err != nil {
 		t.Fatal(err)
 	}
-	after, err := GasUsed(tx, p)
+	afterGas, afterBytes, err := GasUsed(tx, p)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if before != after {
+	if beforeGas != afterGas || beforeBytes != afterBytes {
 		t.Fatalf("gas changed after signing: before=%v after=%v", before, after)
 	}
 }
