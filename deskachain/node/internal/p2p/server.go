@@ -128,7 +128,7 @@ func (s Server) health(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "network": status.Network, "network_id": status.NetworkID, "chain_id": status.ChainID, "genesis_hash": status.GenesisHash, "height": status.Height, "tip_hash": status.TipHash, "cumulative_work": status.CumulativeWork})
 }
 
-func (s Server) handshake(w http.ResponseWriter, _ *http.Request) {
+func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 	status, err := s.localStatus()
 	if err != nil {
 		writeError(w, err)
@@ -144,6 +144,7 @@ func (s Server) handshake(w http.ResponseWriter, _ *http.Request) {
 	handshake := Handshake{
 		NetworkName:         net.NetworkName,
 		NetworkID:           net.NetworkID,
+		AuthChallenge:       strings.TrimSpace(r.URL.Query().Get("challenge")),
 		ChainID:             net.ChainID,
 		ProtocolVersion:     net.ProtocolVersion,
 		P2PProtocolVersion:  net.P2PProtocolVersion,
