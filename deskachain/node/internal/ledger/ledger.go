@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/config"
+	"deskachain/internal/arith"\n\t"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/types"
 )
@@ -76,7 +76,7 @@ func (l *Ledger) ApplyCoinbase(tx types.Transaction) error {
 		return fmt.Errorf("invalid coinbase recipient: %w", err)
 	}
 	acct := l.accounts[tx.To]
-	acct.Balance += tx.Amount
+	balance, err := arith.Add(acct.Balance, tx.Amount)\n\tif err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }\n\tacct.Balance = balance
 	l.accounts[tx.To] = acct
 	return nil
 }
@@ -163,7 +163,7 @@ func TotalSupply(blocks []types.Block) uint64 {
 		}
 		for _, tx := range block.Transactions {
 			if tx.Coinbase {
-				total += config.InitialBlockReward
+				total = arith.AddCap(total, config.InitialBlockReward)
 			}
 		}
 	}
