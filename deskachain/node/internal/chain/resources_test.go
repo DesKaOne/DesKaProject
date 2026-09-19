@@ -74,3 +74,24 @@ func TestValidateBlockResourcesRejectsOversizedBlock(t *testing.T) {
 		t.Fatalf("expected oversized block rejection, got %v", err)
 	}
 }
+
+func TestValidateBlockResourcesRejectsExcessGas(t *testing.T) {
+	profile := config.Localnet()
+	profile.Fee.BaseGasTransfer = 10
+	profile.Fee.BaseGasAssetTransfer = 10
+	profile.Fee.BytesPerGas = 1
+	profile.Fee.MaxGasPerTx = 100000
+
+	profile.Consensus.MaxGasPerBlock = 15
+
+	block := types.Block{
+		Height: 0,
+		Transactions: []types.Transaction{
+			{ProtocolVersion: types.TxVersionAsset, ID: "a", From: "from", To: "to", Amount: 1, Fee: 1},
+			{ProtocolVersion: types.TxVersionAsset, ID: "b", From: "from", To: "to", Amount: 1, Fee: 1},
+		},
+	}
+	if err := ValidateBlockResourcesWithProfile(block, profile); err == nil || !strings.Contains(err.Error(), "max gas") {
+		t.Fatalf("expected block gas rejection, got %v", err)
+	}
+}
