@@ -146,6 +146,44 @@ type StateValidationResult struct {
 	PendingCoinbases int    `json:"pending_coinbases"`
 }
 
+type StateStatusResult struct {
+	Available  bool   `json:"available"`
+	Current    bool   `json:"current"`
+	Version    uint8  `json:"version"`
+	Height     uint64 `json:"height"`
+	StateRoot  string `json:"state_root"`
+	TipHeight  uint64 `json:"tip_height"`
+	TipHash    string `json:"tip_hash"`
+}
+
+func (bc *Blockchain) StateStatusWithNetwork(profile config.NetworkConfig) (StateStatusResult, error) {
+	if profile.Name == "" {
+		profile = config.Localnet()
+	}
+	tip, err := bc.Tip()
+	if err != nil {
+		return StateStatusResult{}, err
+	}
+	result := StateStatusResult{TipHeight: tip.Height, TipHash: tip.Hash}
+	q, ok := bc.store.(storage.StateQueryStore)
+	if !ok {
+		return result, nil
+	}
+	version, height, root, err := q.GetStateMetadata()
+	if err != nil {
+		return result, nil
+	}
+	result.Available = true
+	result.Version = version
+	result.Height = height
+	result.StateRoot = root
+	result.Current = version == state.SnapshotVersion && height == tip.Height
+	if result.Current && tip.ProtocolVersion() == types.BlockVersionCanonical {
+		result.Current = tip.StateRoot != "" && tip.StateRoot == root
+	}
+	return result, nil
+}
+
 func (bc *Blockchain) ValidateStateWithNetwork(profile config.NetworkConfig) (StateValidationResult, error) {
 	if profile.Name == "" {
 		profile = config.Localnet()
