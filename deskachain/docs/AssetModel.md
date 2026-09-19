@@ -87,4 +87,4 @@ Phase 5.16 introduces the protocol envelope and amount primitives for:
 - paymaster authorization
 - asset-specific decimal formatting/parsing
 
-The next step is the **multi-asset state/execution layer**, which will store balances per asset, enforce issuer mint/burn policy, and enforce the fee/payer rules at consensus time.
+Phase 5.17 now includes the multi-asset state/execution foundation: per-asset balances are part of the deterministic state snapshot and StateRoot, persisted in bbolt, queryable through the chain/RPC layer, and executed through the v3 ledger path. Consensus activation remains gated by the network transaction-version profile.
