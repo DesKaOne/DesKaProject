@@ -2,6 +2,7 @@ package state
 
 import (
 	"errors"
+	"deskachain/internal/arith"
 	"fmt"
 
 	"deskachain/internal/config"
@@ -52,8 +53,11 @@ func SnapshotForBlocks(blocks []types.Block, params config.ConsensusParams, prof
 }
 
 func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.ConsensusParams, profile config.NetworkConfig) (Snapshot, error) {
-	expectedHeight := snapshot.Height
-	if block.Height != expectedHeight+1 {
+	expectedHeight, err := arith.Add(snapshot.Height, 1)
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("%w: state height overflow", ErrInvalidSnapshot)
+	}
+	if block.Height != expectedHeight {
 		return Snapshot{}, fmt.Errorf("%w: block height %d does not follow state height %d", ErrInvalidSnapshot, block.Height, snapshot.Height)
 	}
 	l := ledger.NewMatureFromState(
