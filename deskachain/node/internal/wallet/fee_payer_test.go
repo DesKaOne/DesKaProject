@@ -15,4 +15,8 @@ func TestFeePayerAuthorization(t *testing.T) {
 	if err := owner.SignTransactionWithProfile(&tx, profile); err != nil { t.Fatal(err) }
 	if err := paymaster.SignFeePayerAuthorization(&tx, profile); err != nil { t.Fatal(err) }
 	if tx.FeePayer != paymaster.Address || tx.FeePayerPublicKey == "" || tx.FeePayerSignature == "" { t.Fatalf("missing paymaster authorization: %+v", tx) }
+	if err := tx.ValidateFeePayerAuthorization(profile); err != nil { t.Fatal(err) }
+	beforeID := tx.ID
+	if err := paymaster.SignFeePayerAuthorization(&tx, profile); err != nil { t.Fatal(err) }
+	if tx.ID != beforeID { t.Fatal("paymaster authorization changed transaction id") }
 }
