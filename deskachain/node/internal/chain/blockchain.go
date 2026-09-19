@@ -126,11 +126,11 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		}
 		validPending = append(validPending, tx)
 		if tx.TxType() == types.TxTypeTransfer {
-			totalFees = arith.AddCap(totalFees, tx.Fee)
+			nextFees, feeErr := arith.Add(totalFees, tx.Fee)\n\t\tif feeErr != nil { return types.Block{}, errors.New("transaction fees overflow") }\n\t\ttotalFees = nextFees
 		}
 	}
 	tip := blocks[len(blocks)-1]
-	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, arith.AddCap(config.InitialBlockReward, totalFees), height)}, validPending...)
+	txs := append([]types.Transaction{reward, rewardErr := arith.Add(config.InitialBlockReward, totalFees)\n\tif rewardErr != nil { return types.Block{}, errors.New("block reward overflow") }\n\ttxs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, reward, height)}, validPending...)}, validPending...)
 	block := types.NewBlock(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs)
 	return MineWithContext(ctx, block, opts)
 }
