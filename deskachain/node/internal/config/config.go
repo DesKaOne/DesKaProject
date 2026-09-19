@@ -16,6 +16,9 @@ const (
 
 	UnitsPerCoin        uint64 = 100000000
 	InitialBlockReward  uint64 = 50 * UnitsPerCoin
+	DefaultMaxBlockBytes uint64 = 1 << 20
+	DefaultMaxTxBytes    uint64 = 128 << 10
+	DefaultMaxTxCount    uint64 = 2000
 	DefaultDataDir             = "data"
 	DefaultDBPath              = "data/chain.db"
 	DefaultWalletPath          = "data/wallets.json"
@@ -212,6 +215,9 @@ type DifficultyParams struct {
 
 type ConsensusParams struct {
 	CoinbaseMaturity uint64        `json:"coinbase_maturity"`
+	MaxBlockBytes    uint64        `json:"max_block_bytes,omitempty"`
+	MaxTxBytes       uint64        `json:"max_tx_bytes,omitempty"`
+	MaxTxCount       uint64        `json:"max_tx_count,omitempty"`
 	Staking          StakingParams `json:"staking"`
 }
 
@@ -251,6 +257,9 @@ func Localnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 10,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               100 * UnitsPerCoin,
@@ -298,6 +307,12 @@ func Testnet() NetworkConfig {
 		},
 		Consensus: ConsensusParams{
 			CoinbaseMaturity: 100,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
+			MaxBlockBytes:    DefaultMaxBlockBytes,
+			MaxTxBytes:       DefaultMaxTxBytes,
+			MaxTxCount:       DefaultMaxTxCount,
 			Staking: StakingParams{
 				Enabled:                       true,
 				MinServiceStake:               1000 * UnitsPerCoin,
