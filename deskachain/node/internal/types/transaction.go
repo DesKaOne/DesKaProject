@@ -159,6 +159,23 @@ func NewCoinbaseTransactionWithVersion(to string, amount uint64, height uint64, 
 	return tx
 }
 
+// RefreshDerivedAssetID binds an asset-create transaction to its final
+// chain-bound transaction ID. AssetID is deliberately absent from the create
+// signing preimage because the ID is what deterministically derives the asset.
+func (tx *Transaction) RefreshDerivedAssetID() error {
+	if tx == nil {
+		return fmt.Errorf("transaction is required")
+	}
+	if tx.ProtocolVersion() != TxVersionAsset || tx.TxType() != TxTypeAssetCreate {
+		return fmt.Errorf("derived asset id requires asset-create transaction version 3")
+	}
+	if tx.ID == "" {
+		return fmt.Errorf("transaction id is required")
+	}
+	tx.AssetID = asset.DerivedID(tx.ID)
+	return nil
+}
+
 func (tx Transaction) EffectiveAssetID() string {
 	if tx.AssetID == "" {
 		return asset.NativeAssetID
