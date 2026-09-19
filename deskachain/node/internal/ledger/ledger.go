@@ -89,8 +89,6 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 		return err
 	}
 	from := l.accounts[tx.From]
-	from.Nonce = tx.Nonce
-	l.accounts[tx.From] = from
 	if tx.TxType() == types.TxTypeTransfer {
 		to := l.accounts[tx.To]
 		cost, err := arith.Add(tx.Amount, tx.Fee)
@@ -109,7 +107,10 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 		to.Balance = toBalance
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
+		return nil
 	}
+	from.Nonce = tx.Nonce
+	l.accounts[tx.From] = from
 	return nil
 }
 
