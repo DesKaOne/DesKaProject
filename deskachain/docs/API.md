@@ -1588,3 +1588,6 @@ For the v3 asset model:
 `GET /asset/balance?address=<address>&asset_id=<id>` returns an address's balance with the asset's decimals plus raw integer units.
 
 The v3 fee asset is native `IDR`. A token transfer therefore has an asset amount plus an IDR protocol fee. A non-sender fee payer is represented by the paymaster fields in the transaction envelope and must provide a valid authorization signature.
+
+
+`GET /asset/balances?address=<address>` returns all non-zero native/token balances indexed for the address.
