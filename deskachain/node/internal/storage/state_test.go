@@ -14,6 +14,13 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
+func snapshotRoot(snapshot state.Snapshot) (string, error) {
+	if len(snapshot.Assets) > 0 {
+		return state.RootForCollectionsWithAssets(snapshot.Accounts, snapshot.Stakes, snapshot.Assets, snapshot.AssetBalances)
+	}
+	return state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+}
+
 func emptySnapshot(t *testing.T) state.Snapshot {
 	t.Helper()
 	l := ledger.NewMatureWithProfile(config.ConsensusParams{}, config.Localnet())
@@ -37,7 +44,7 @@ func TestStateStorePersistsMetadataAndIndexes(t *testing.T) {
 		Confirmed: 10,
 		Mature:    10,
 	})
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +96,7 @@ func TestStateQueryIndexesReadWithoutLoadingFullSnapshot(t *testing.T) {
 		{StakeID: "stake-3", OwnerAddress: "DKC-bob", Amount: 10, Status: staking.StatusActive},
 	}
 	snapshot.Coinbases = []ledger.StateCoinbase{{Address: "DKC-alice", Amount: 50, Height: 11}}
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +158,7 @@ func TestStateQueryIndexesDisappearWithStateReset(t *testing.T) {
 	snapshot := emptySnapshot(t)
 	snapshot.Accounts = []ledger.StateAccount{{Address: "DKC-alice", Confirmed: 1, Mature: 1}}
 	snapshot.Stakes = []staking.Record{{StakeID: "stake-1", OwnerAddress: "DKC-alice", Amount: 1, Status: staking.StatusActive}}
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,7 +221,7 @@ func TestValidateStateIndexesDetectsOwnerIndexCorruption(t *testing.T) {
 			Status:       staking.StatusActive,
 		},
 	}
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +258,7 @@ func TestValidateStateIndexesDetectsCoinbaseKeyCorruption(t *testing.T) {
 	snapshot.Coinbases = []ledger.StateCoinbase{
 		{Address: "DKC-alice", Amount: 10, Height: 2},
 	}
-	snapshot.StateRoot, err = state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
 	}
