@@ -427,7 +427,6 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			return ErrStateNotInitialized
 		}
 
-		accountCount := 0
 		if err := accounts.ForEach(func(k, v []byte) error {
 			var account ledger.StateAccount
 			if err := json.Unmarshal(v, &account); err != nil {
@@ -436,12 +435,10 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			if account.Address != string(k) {
 				return errors.New("state account key mismatch")
 			}
-			accountCount++
 			return nil
 		}); err != nil {
 			return err
 		}
-		_ = accountCount
 
 		stakeCount := 0
 		if err := stakes.ForEach(func(k, v []byte) error {
