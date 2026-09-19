@@ -2268,10 +2268,17 @@ func (h handler) tx(w http.ResponseWriter, r *http.Request) {
 		"status":   result.status,
 		"from":     result.tx.From,
 		"to":       result.tx.To,
-		"amount":   amount.Format(result.tx.Amount) + " " + config.Ticker,
-		"fee":      amount.Format(result.tx.Fee) + " " + config.Ticker,
 		"nonce":    result.tx.Nonce,
 		"coinbase": result.tx.Coinbase,
+	}
+	if result.tx.ProtocolVersion() >= types.TxVersionAsset {
+		response["asset_id"] = result.tx.EffectiveAssetID()
+		response["amount_units"] = result.tx.Amount
+		response["fee"] = amount.FormatUnits(result.tx.Fee, h.profile().Asset.NativeAssetDecimals) + " " + h.profile().Asset.FeeAssetID
+		response["fee_units"] = result.tx.Fee
+	} else {
+		response["amount"] = amount.Format(result.tx.Amount) + " " + config.Ticker
+		response["fee"] = amount.Format(result.tx.Fee) + " " + config.Ticker
 	}
 	if result.status == "confirmed" {
 		response["block_height"] = result.blockHeight
@@ -2288,7 +2295,7 @@ func (h handler) mempoolList(w http.ResponseWriter, r *http.Request) {
 	detail := r.URL.Query().Get("detail") == "true"
 	views := make([]map[string]any, 0, len(txs))
 	for _, tx := range txs {
-		v := txView(tx, "pending")
+		v := txView(tx, "pending", h.profile())
 		if !detail {
 			delete(v, "timestamp")
 		}
@@ -3919,11 +3926,21 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		if tx.Coinbase {
 			continue
 		}
-		if tx.From == address {
-			info.pendingOutgoingCount++
-			info.pendingOutgoingAmount += tx.Amount + tx.Fee
+		involvesOutgoing := false
+		outgoingAmount := uint64(0)
+		if tx.TxType() == types.TxTypeTransfer && tx.From == address {
+			involvesOutgoing = true
+			outgoingAmount += tx.Amount
 		}
-		if tx.To == address {
+		if tx.EffectiveFeePayer() == address && tx.Fee > 0 {
+			involvesOutgoing = true
+			outgoingAmount += tx.Fee
+		}
+		if involvesOutgoing {
+			info.pendingOutgoingCount++
+			info.pendingOutgoingAmount += outgoingAmount
+		}
+		if tx.TxType() == types.TxTypeTransfer && tx.To == address {
 			info.pendingIncomingCount++
 			info.pendingIncomingAmount += tx.Amount
 		}
@@ -4022,19 +4039,27 @@ func peerView(peer p2p.PeerMetadata) map[string]any {
 	}
 }
 
-func txView(tx types.Transaction, status string) map[string]any {
-	return map[string]any{
+func txView(tx types.Transaction, status string, profile config.NetworkConfig) map[string]any {
+	view := map[string]any{
 		"id":        tx.ID,
 		"txid":      tx.ID,
 		"status":    status,
 		"from":      tx.From,
 		"to":        tx.To,
-		"amount":    amount.Format(tx.Amount) + " " + config.Ticker,
-		"fee":       amount.Format(tx.Fee) + " " + config.Ticker,
 		"nonce":     tx.Nonce,
 		"coinbase":  tx.Coinbase,
 		"timestamp": tx.Timestamp,
 	}
+	if tx.ProtocolVersion() >= types.TxVersionAsset {
+		view["asset_id"] = tx.EffectiveAssetID()
+		view["amount_units"] = tx.Amount
+		view["fee"] = amount.FormatUnits(tx.Fee, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
+		view["fee_units"] = tx.Fee
+	} else {
+		view["amount"] = amount.Format(tx.Amount) + " " + config.Ticker
+		view["fee"] = amount.Format(tx.Fee) + " " + config.Ticker
+	}
+	return view
 }
 
 func miningJobView(job mining.MiningJob) map[string]any {
