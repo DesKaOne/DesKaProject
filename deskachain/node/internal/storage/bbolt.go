@@ -226,7 +226,7 @@ func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapsho
 				return err
 			}
 		}
-		for i, block := range blocks {
+		for i := range blocks {
 			height, err := checkedReplacementHeight(from, uint64(i))
 			if err != nil {
 				return err
