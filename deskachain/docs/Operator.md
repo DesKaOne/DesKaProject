@@ -205,3 +205,17 @@ Artifacts intentionally exclude runtime datadirs, wallets, chain DBs, mempool an
 - `peer rejected`: inspect network ID, chain ID, genesis hash, and protocol version.
 - `invalid seed peer`: inspect the seed file line number or `DKC_SEED_PEERS` entry printed in the error.
 - `circulating supply: 0 DKC` above maturity: run `chain validate` and check the active network profile; circulating supply should equal mature coinbase supply and includes active/unlocking stake.
+
+
+## State Database Verification
+
+Before or after a testnet maintenance window, check the state database without forcing normal RPC queries to replay the entire chain:
+
+```bash
+curl http://127.0.0.1:8811/chain/state
+curl http://127.0.0.1:8811/chain/state/validate
+```
+
+`/chain/state` is a lightweight status check. `/chain/state/validate` is an admin diagnostic and may replay the full chain.
+
+The node keeps its existing `node_id` file for the logical peer identifier and stores the Ed25519 authentication private key in `node_id.ed25519`. Keep that file private and include it in the operator backup set alongside other node identity material. The key file is created with restrictive permissions by the node.
