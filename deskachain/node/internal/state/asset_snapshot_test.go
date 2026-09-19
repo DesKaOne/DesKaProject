@@ -1,6 +1,7 @@
 package state
 
 import (
+	"deskachain/internal/asset"
 	"testing"
 
 	"deskachain/internal/config"
@@ -40,5 +41,27 @@ func TestV3SnapshotRoundTripKeepsAssets(t *testing.T) {
 	if err != nil { t.Fatal(err) }
 	if !Equivalent(snapshot, restoredSnapshot) {
 		t.Fatal("restored v3 state is not equivalent")
+	}
+}
+
+func TestV3SnapshotRejectsNativeAccountBalanceMismatch(t *testing.T) {
+	profile := config.Localnet()
+	profile.TxVersion = types.TxVersionAsset
+	l := ledger.NewMatureWithProfile(profile.Consensus, profile)
+	w, err := wallet.NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+
+	coinbase := types.NewCoinbaseTransactionWithVersion(w.Address, 100, 1, types.TxVersionAsset)
+	if err := l.ApplyBlock(types.Block{Height: 1, MinerAddress: w.Address, Transactions: []types.Transaction{coinbase}}); err != nil { t.Fatal(err) }
+	snapshot, err := SnapshotForLedger(l)
+	if err != nil { t.Fatal(err) }
+	for i := range snapshot.AssetBalances {
+		if snapshot.AssetBalances[i].Address == w.Address && asset.IsNative(snapshot.AssetBalances[i].AssetID) {
+			snapshot.AssetBalances[i].Amount++
+			break
+		}
+	}
+	if err := snapshot.Validate(); err == nil {
+		t.Fatal("snapshot accepted mismatched native IDR/account balance")
 	}
 }
