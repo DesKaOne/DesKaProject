@@ -401,6 +401,36 @@ func (l *MatureLedger) ValidateTransaction(tx types.Transaction) error {
 
 func (l *MatureLedger) BalanceDetails(address string, pending []types.Transaction, currentHeight uint64) BalanceDetails {
 	account := l.accounts[address]
+	return BalanceDetailsFromState(
+		address,
+		StateAccount{
+			Address:   address,
+			Confirmed: account.Confirmed,
+			Mature:    account.Mature,
+			Nonce:     account.Nonce,
+		},
+		l.stakes.Records(currentHeight),
+		pending,
+		l.maturity,
+		currentHeight,
+	)
+}
+
+// BalanceDetailsFromState calculates address balances from persisted state
+// indexes plus pending transactions, without replaying the blockchain.
+func BalanceDetailsFromState(
+	address string,
+	account StateAccount,
+	stakes []staking.Record,
+	pending []types.Transaction,
+	coinbaseMaturity uint64,
+	currentHeight uint64,
+) BalanceDetails {
+	stakeState := staking.NewState(config.StakingParams{})
+	for _, record := range stakes {
+		stakeState.ApplyRecord(record)
+	}
+
 	pendingOutgoing := uint64(0)
 	pendingIncoming := uint64(0)
 	for _, tx := range pending {
@@ -414,10 +444,15 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 			pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
 		}
 	}
-	activeStake, unlockingStake, releasedStake := l.stakes.AddressSummary(address, currentHeight)
+
+	activeStake, unlockingStake, releasedStake := stakeState.AddressSummary(address, currentHeight)
 	pendingStakeLock := staking.PendingStakeLock(pending, address)
+	locked := arith.AddCap(
+		arith.AddCap(activeStake, unlockingStake),
+		arith.AddCap(pendingStakeLock, pendingOutgoing),
+	)
+
 	spendable := uint64(0)
-	locked := arith.AddCap(arith.AddCap(activeStake, unlockingStake), arith.AddCap(pendingStakeLock, pendingOutgoing))
 	if account.Mature > locked {
 		spendable = account.Mature - locked
 	}
@@ -425,6 +460,7 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 	if account.Confirmed > account.Mature {
 		immature = account.Confirmed - account.Mature
 	}
+
 	return BalanceDetails{
 		Address:          address,
 		Confirmed:        account.Confirmed,
@@ -437,7 +473,7 @@ func (l *MatureLedger) BalanceDetails(address string, pending []types.Transactio
 		UnlockingStake:   unlockingStake,
 		ReleasedStake:    releasedStake,
 		PendingStakeLock: pendingStakeLock,
-		CoinbaseMaturity: l.maturity,
+		CoinbaseMaturity: coinbaseMaturity,
 		CurrentHeight:    currentHeight,
 	}
 }
