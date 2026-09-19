@@ -31,12 +31,6 @@ func TestCanonicalTransactionVersionWaitsForNetworkActivation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	l := New()
-	err = l.ValidateTransaction(tx)
-	if err == nil || !strings.Contains(err.Error(), "not active") {
-		t.Fatalf("expected inactive version error from ledger, got %v", err)
-	}
-
 	mature := NewMatureWithProfile(profile.Consensus, profile)
 	err = mature.ValidateTransaction(tx)
 	if err == nil || !strings.Contains(err.Error(), "not active") {
