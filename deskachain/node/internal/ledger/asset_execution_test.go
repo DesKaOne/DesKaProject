@@ -130,7 +130,8 @@ func TestV3SnapshotRoundTripKeepsAssets(t *testing.T) {
 	snapshot, err := state.SnapshotForLedger(l)
 	if err != nil { t.Fatal(err) }
 	if len(snapshot.Assets) < 2 || len(snapshot.AssetBalances) == 0 { t.Fatalf("asset state missing from snapshot: %#v", snapshot) }
-	restored := NewMatureFromStateWithAssets(profile.Consensus, profile, snapshot.Height, snapshot.Accounts, snapshot.Stakes, snapshot.Coinbases, snapshot.Assets, snapshot.AssetBalances)
+	restored, err := NewMatureFromStateWithAssets(profile.Consensus, profile, snapshot.Height, snapshot.Accounts, snapshot.Stakes, snapshot.Coinbases, snapshot.Assets, snapshot.AssetBalances)
+	if err != nil { t.Fatal(err) }
 	restoredSnapshot, err := state.SnapshotForLedger(restored)
 	if err != nil { t.Fatal(err) }
 	if !state.Equivalent(snapshot, restoredSnapshot) { t.Fatal("restored v3 state is not equivalent") }
