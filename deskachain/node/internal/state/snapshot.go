@@ -88,7 +88,7 @@ func Equivalent(a, b Snapshot) bool {
 
 	aAccounts, aStakes := StableDigestInputs(a.Accounts, a.Stakes)
 	bAccounts, bStakes := StableDigestInputs(b.Accounts, b.Stakes)
-	a.Coinbases := append([]ledger.StateCoinbase(nil), a.Coinbases...)
+	a.Coinbases = append([]ledger.StateCoinbase(nil), a.Coinbases...)
 	b.Coinbases = append([]ledger.StateCoinbase(nil), b.Coinbases...)
 	sort.Slice(a.Coinbases, func(i, j int) bool {
 		if a.Coinbases[i].Height != a.Coinbases[j].Height {
