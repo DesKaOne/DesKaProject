@@ -266,6 +266,7 @@ type ConsensusParams struct {
 	MaxBlockBytes    uint64        `json:"max_block_bytes,omitempty"`
 	MaxTxBytes       uint64        `json:"max_tx_bytes,omitempty"`
 	MaxTxCount       uint64        `json:"max_tx_count,omitempty"`
+	MaxGasPerBlock   uint64        `json:"max_gas_per_block,omitempty"`
 	Staking          StakingParams `json:"staking"`
 }
 
