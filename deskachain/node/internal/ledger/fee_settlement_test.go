@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"deskachain/internal/asset"
-	"deskachain/internal/config"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
