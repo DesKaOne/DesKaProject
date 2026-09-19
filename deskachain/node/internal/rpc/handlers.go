@@ -3206,9 +3206,15 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 	if err != nil {
 		return types.Block{}, 0, err
 	}
-	workLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
+	baseLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
 	if err != nil {
 		return types.Block{}, 0, err
+	}
+	workLedger := baseLedger.Clone()
+	tip := blocks[len(blocks)-1]
+	height, err := arith.Add(tip.Height, 1)
+	if err != nil {
+		return types.Block{}, 0, errors.New("block height overflow")
 	}
 	validPending := make([]types.Transaction, 0, len(pending))
 	totalFees := uint64(0)
@@ -3216,19 +3222,20 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 		if tx.Coinbase {
 			continue
 		}
-		if err := workLedger.ApplyTransaction(tx); err != nil {
+		if err := workLedger.ApplyTransactionAtHeight(tx, height); err != nil {
 			continue
 		}
 		validPending = append(validPending, tx)
-		totalFees += tx.Fee
+		nextFees, feeErr := arith.Add(totalFees, tx.Fee)
+		if feeErr != nil {
+			return types.Block{}, 0, errors.New("transaction fees overflow")
+		}
+		totalFees = nextFees
 	}
-	tip := blocks[len(blocks)-1]
-	height := tip.Height + 1
 	reward := h.profile().Economic.BlockSubsidy
 	if h.profile().TxVersion < types.TxVersionAsset {
-		var rewardErr error
-		reward, rewardErr = arith.Add(config.InitialBlockReward, totalFees)
-		if rewardErr != nil {
+		reward, err = arith.Add(config.InitialBlockReward, totalFees)
+		if err != nil {
 			return types.Block{}, 0, errors.New("block reward overflow")
 		}
 	}
@@ -3241,7 +3248,7 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 	txs := append([]types.Transaction{coinbase}, validPending...)
 	block := types.NewBlockWithVersion(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs, h.profile().BlockVersion)
 	if block.ProtocolVersion() == types.BlockVersionCanonical {
-		candidate := workLedger.Clone()
+		candidate := baseLedger.Clone()
 		if err := candidate.ApplyBlock(block); err != nil {
 			return types.Block{}, 0, err
 		}
