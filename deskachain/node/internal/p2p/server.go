@@ -106,17 +106,17 @@ func (s Server) network() config.NetworkConfig {
 func (s Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /p2p/health", s.health)
 	mux.HandleFunc("GET /p2p/handshake", s.handshake)
-	mux.HandleFunc("GET /p2p/peers", s.peers)
-	mux.HandleFunc("GET /p2p/status", s.status)
-	mux.HandleFunc("GET /p2p/tip", s.tip)
-	mux.HandleFunc("GET /p2p/block/", s.block)
-	mux.HandleFunc("GET /p2p/blocks", s.blocks)
-	mux.HandleFunc("GET /p2p/headers", s.headers)
-	mux.HandleFunc("GET /p2p/locator", s.locator)
-	mux.HandleFunc("POST /p2p/common-ancestor", s.commonAncestor)
-	mux.HandleFunc("POST /p2p/tx", s.receiveTx)
-	mux.HandleFunc("POST /p2p/block", s.receiveBlock)
-	mux.HandleFunc("POST /p2p/peer", s.receivePeer)
+	mux.Handle("GET /p2p/peers", s.authenticated(http.HandlerFunc(s.peers)))
+	mux.Handle("GET /p2p/status", s.authenticated(http.HandlerFunc(s.status)))
+	mux.Handle("GET /p2p/tip", s.authenticated(http.HandlerFunc(s.tip)))
+	mux.Handle("GET /p2p/block/", s.authenticated(http.HandlerFunc(s.block)))
+	mux.Handle("GET /p2p/blocks", s.authenticated(http.HandlerFunc(s.blocks)))
+	mux.Handle("GET /p2p/headers", s.authenticated(http.HandlerFunc(s.headers)))
+	mux.Handle("GET /p2p/locator", s.authenticated(http.HandlerFunc(s.locator)))
+	mux.Handle("POST /p2p/common-ancestor", s.authenticated(http.HandlerFunc(s.commonAncestor)))
+	mux.Handle("POST /p2p/tx", s.authenticated(http.HandlerFunc(s.receiveTx)))
+	mux.Handle("POST /p2p/block", s.authenticated(http.HandlerFunc(s.receiveBlock)))
+	mux.Handle("POST /p2p/peer", s.authenticated(http.HandlerFunc(s.receivePeer)))
 }
 
 func (s Server) health(w http.ResponseWriter, _ *http.Request) {
@@ -655,6 +655,50 @@ func (s Server) openChain() (*chain.Blockchain, func(), error) {
 		return nil, nil, err
 	}
 	return bc, func() { _ = store.Close() }, nil
+}
+
+func (s Server) authenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hasAuth := hasP2PAuthHeaders(r.Header)
+		if !hasAuth && !s.network().RequireAuthenticatedNode {
+			next.ServeHTTP(w, r)
+			return
+		}
+		body, err := readAuthenticatedRequestBody(r)
+		if err != nil {
+			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": err.Error()})
+			return
+		}
+		if !hasAuth {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated p2p message required"})
+			return
+		}
+		auth, err := VerifyP2PRequest(s.network().NetworkID, s.network().ChainID, r, body, time.Now())
+		if err != nil {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
+			return
+		}
+		capture := newAuthenticatedResponseWriter(w)
+		next.ServeHTTP(capture, r)
+		responseBody := capture.body.Bytes()
+		if len(responseBody) > p2pMessageAuthResponseLimit {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "authenticated p2p response too large"})
+			return
+		}
+		identity, err := LoadOrCreateNodeIdentity(s.paths.NodeID)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		responseHeaders, err := SignP2PResponse(identity, s.network().NetworkID, s.network().ChainID, auth.Nonce, capture.status, responseBody, time.Now())
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+			return
+		}
+		if err := capture.commit(responseHeaders, responseBody, capture.status); err != nil {
+			log.Printf("authenticated p2p response write failed: %v", err)
+		}
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
