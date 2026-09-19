@@ -3,6 +3,7 @@ package ledger
 import (
 	"testing"
 
+	"deskachain/internal/asset"
 	"deskachain/internal/staking"
 	"deskachain/internal/types"
 )
@@ -84,5 +85,52 @@ func TestBalanceDetailsFromStateNeverUnderflowsSpendable(t *testing.T) {
 	)
 	if details.Spendable != 0 {
 		t.Fatalf("spendable = %d, want 0", details.Spendable)
+	}
+}
+
+func TestBalanceDetailsFromStateSeparatesTokenAmountFromIDRFee(t *testing.T) {
+	pending := []types.Transaction{
+		{
+			Version:  types.TxVersionAsset,
+			Type:     types.TxTypeTransfer,
+			From:     "alice",
+			To:       "bob",
+			AssetID:  "asset:usd",
+			Amount:   1000,
+			Fee:      3,
+			FeePayer: "alice",
+		},
+		{
+			Version:  types.TxVersionAsset,
+			Type:     types.TxTypeTransfer,
+			From:     "carol",
+			To:       "dave",
+			AssetID:  asset.NativeAssetID,
+			Amount:   20,
+			Fee:      4,
+			FeePayer: "sponsor",
+		},
+	}
+	details := BalanceDetailsFromState(
+		"alice",
+		StateAccount{Address: "alice", Confirmed: 100, Mature: 100},
+		nil,
+		pending,
+		0,
+		1,
+	)
+	if details.PendingOutgoing != 3 || details.PendingIncoming != 0 {
+		t.Fatalf("alice pending balances = %#v, want outgoing=3 incoming=0", details)
+	}
+	details = BalanceDetailsFromState(
+		"sponsor",
+		StateAccount{Address: "sponsor", Confirmed: 10, Mature: 10},
+		nil,
+		pending,
+		0,
+		1,
+	)
+	if details.PendingOutgoing != 4 {
+		t.Fatalf("sponsor pending outgoing=%d want 4", details.PendingOutgoing)
 	}
 }
