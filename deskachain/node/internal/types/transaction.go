@@ -176,6 +176,69 @@ func (tx *Transaction) RefreshDerivedAssetID() error {
 	return nil
 }
 
+// ValidateAssetEnvelope validates v3 asset transaction structure without
+// applying balances or issuer state. Consensus execution performs those checks.
+func (tx Transaction) ValidateAssetEnvelope() error {
+	if tx.ProtocolVersion() != TxVersionAsset {
+		return fmt.Errorf("asset envelope requires transaction version 3")
+	}
+	if tx.Coinbase {
+		return fmt.Errorf("asset transactions cannot be coinbase")
+	}
+	if tx.From == "" {
+		return fmt.Errorf("asset transaction sender is required")
+	}
+	if tx.EffectiveFeePayer() == "" {
+		return fmt.Errorf("asset transaction fee payer is required")
+	}
+	switch tx.TxType() {
+	case TxTypeTransfer:
+		if tx.To == "" || tx.To == tx.From {
+			return fmt.Errorf("asset transfer recipient is invalid")
+		}
+		if tx.EffectiveAssetID() == "" {
+			return fmt.Errorf("asset transfer asset id is required")
+		}
+		if tx.Amount == 0 {
+			return fmt.Errorf("asset transfer amount must be greater than zero")
+		}
+	case TxTypeAssetCreate:
+		if tx.To != "" {
+			return fmt.Errorf("asset create recipient must be empty")
+		}
+		if tx.AssetID != "" && tx.ID == "" {
+			return fmt.Errorf("asset create asset id requires transaction id")
+		}
+		if tx.AssetName == "" || tx.AssetSymbol == "" {
+			return fmt.Errorf("asset create metadata is incomplete")
+		}
+		if tx.AssetDecimals > 18 {
+			return fmt.Errorf("asset create decimals too large")
+		}
+	case TxTypeAssetMint:
+		if tx.To == "" || asset.IsNative(tx.AssetID) || tx.AssetID == "" {
+			return fmt.Errorf("asset mint requires an issued asset and recipient")
+		}
+		if tx.Amount == 0 {
+			return fmt.Errorf("asset mint amount must be greater than zero")
+		}
+	case TxTypeAssetBurn:
+		if tx.To != tx.From || tx.AssetID == "" || asset.IsNative(tx.AssetID) {
+			return fmt.Errorf("asset burn requires an issued asset owned by the sender")
+		}
+		if tx.Amount == 0 {
+			return fmt.Errorf("asset burn amount must be greater than zero")
+		default:
+		return fmt.Errorf("unsupported asset transaction type: %s", tx.TxType())
+	}
+	if tx.FeePayer != "" && tx.FeePayer != tx.From {
+		if tx.FeePayerPublicKey == "" || tx.FeePayerSignature == "" {
+			return fmt.Errorf("paymaster authorization is incomplete")
+		}
+	}
+	return nil
+}
+
 func (tx Transaction) EffectiveAssetID() string {
 	if tx.AssetID == "" {
 		return asset.NativeAssetID
