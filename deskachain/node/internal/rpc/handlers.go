@@ -3385,7 +3385,14 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 	if err != nil {
 		return types.Transaction{}, err
 	}
-	nonce := matureLedger.Nonce(from) + pendingFromCount(pending, from) + 1
+	nonceBase, err := arith.Add(matureLedger.Nonce(from), pendingFromCount(pending, from))
+	if err != nil {
+		return types.Transaction{}, errors.New("account nonce overflow")
+	}
+	nonce, err := arith.Add(nonceBase, 1)
+	if err != nil {
+		return types.Transaction{}, errors.New("account nonce overflow")
+	}
 	var tx types.Transaction
 	if h.profile().TxVersion >= types.TxVersionAsset {
 		tx = types.NewAssetTransferTransaction(from, to, h.profile().Asset.NativeAssetID, txAmount, 0, nonce)
@@ -3404,7 +3411,10 @@ func (h handler) createPendingTransaction(from, to, amountText string) (types.Tr
 	if h.profile().TxVersion >= types.TxVersionAsset {
 		fee := tx.Fee
 		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
-		required := txAmount + fee
+		required, requiredErr := arith.Add(txAmount, fee)
+		if requiredErr != nil {
+			return types.Transaction{}, errors.New("transaction amount and fee overflow")
+		}
 		if details.Spendable < required {
 			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol)
 		}
