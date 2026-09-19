@@ -29,6 +29,14 @@ func SelectWithNonces(txs []types.Transaction, profile config.NetworkConfig, max
 		if err := fees.Validate(tx, profile); err != nil {
 			return nil, err
 		}
+		if tx.ProtocolVersion() == types.TxVersionAsset {
+			if err := tx.ValidateAssetEnvelope(); err != nil {
+				return nil, err
+			}
+			if err := tx.ValidateFeePayerAuthorization(profile); err != nil {
+				return nil, err
+			}
+		}
 		gas, _, err := fees.GasUsed(tx, profile)
 		if err != nil {
 			return nil, err
