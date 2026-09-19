@@ -7,8 +7,8 @@ import (
 	"deskachain/internal/arith"
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
-	"deskachain/internal/storage"
 	"deskachain/internal/state"
+	"deskachain/internal/storage"
 	"deskachain/internal/types"
 )
 
@@ -33,10 +33,58 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 	if err != nil {
 		return err
 	}
-	if has {
+
+	if !has {
+		genesis := GenesisBlockForNetwork(profile)
+		snapshot, snapshotErr := state.SnapshotForBlocks([]types.Block{genesis}, profile.Consensus, profile)
+		if snapshotErr != nil {
+			return snapshotErr
+		}
+		if bss, ok := bc.store.(storage.BlockStateStore); ok {
+			return bss.SaveBlockAndState(genesis, snapshot)
+		}
+		if err := bc.store.SaveBlock(genesis); err != nil {
+			return err
+		}
+		if ss, ok := bc.store.(storage.StateStore); ok {
+			return ss.SaveState(snapshot)
+		}
 		return nil
 	}
-	return bc.store.SaveBlock(GenesisBlockForNetwork(profile))
+
+	ss, ok := bc.store.(storage.StateStore)
+	if !ok {
+		return nil
+	}
+
+	tip, err := bc.store.Tip()
+	if err != nil {
+		return err
+	}
+	snapshot, loadErr := ss.LoadState()
+	if loadErr == nil && snapshotMatchesTip(snapshot, tip) {
+		return nil
+	}
+
+	blocks, err := bc.Blocks()
+	if err != nil {
+		return err
+	}
+	snapshot, err = state.SnapshotForBlocks(blocks, profile.Consensus, profile)
+	if err != nil {
+		return err
+	}
+	return ss.SaveState(snapshot)
+}
+
+func snapshotMatchesTip(snapshot state.Snapshot, tip types.Block) bool {
+	if snapshot.Version != state.SnapshotVersion || snapshot.Height != tip.Height {
+		return false
+	}
+	if tip.ProtocolVersion() == types.BlockVersionCanonical {
+		return tip.StateRoot != "" && tip.StateRoot == snapshot.StateRoot
+	}
+	return true
 }
 
 func (bc *Blockchain) Blocks() ([]types.Block, error) {
@@ -52,6 +100,38 @@ func (bc *Blockchain) GetBlockByHeight(height uint64) (types.Block, error) {
 }
 
 func (bc *Blockchain) ReplaceFromHeight(from uint64, blocks []types.Block) error {
+	return bc.ReplaceFromHeightWithNetwork(from, blocks, config.Localnet())
+}
+
+func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.Block, profile config.NetworkConfig) error {
+	existing, err := bc.store.Blocks()
+	if err != nil {
+		return err
+	}
+	prefix := make([]types.Block, 0, len(existing))
+	for _, block := range existing {
+		if block.Height < from {
+			prefix = append(prefix, block)
+		}
+	}
+	full := make([]types.Block, 0, len(prefix)+len(blocks))
+	full = append(full, prefix...)
+	full = append(full, blocks...)
+
+	if ss, ok := bc.store.(storage.StateStore); ok {
+		snapshot, snapshotErr := state.SnapshotForBlocks(full, profile.Consensus, profile)
+		if snapshotErr != nil {
+			return snapshotErr
+		}
+		if bss, ok := bc.store.(storage.BlockStateStore); ok {
+			return bss.ReplaceFromHeightAndState(from, blocks, snapshot)
+		}
+		if err := bc.store.ReplaceFromHeight(from, blocks); err != nil {
+			return err
+		}
+		return ss.SaveState(snapshot)
+	}
+
 	return bc.store.ReplaceFromHeight(from, blocks)
 }
 
@@ -78,6 +158,23 @@ func (bc *Blockchain) AddBlockWithNetwork(block types.Block, profile config.Netw
 	tip := blocks[len(blocks)-1]
 	if err := ValidateNextBlockWithNetwork(block, tip, blocks, profile.Difficulty, profile.Consensus, profile); err != nil {
 		return err
+	}
+
+	nextBlocks := make([]types.Block, 0, len(blocks)+1)
+	nextBlocks = append(nextBlocks, blocks...)
+	nextBlocks = append(nextBlocks, block)
+	if ss, ok := bc.store.(storage.StateStore); ok {
+		snapshot, snapshotErr := state.SnapshotForBlocks(nextBlocks, profile.Consensus, profile)
+		if snapshotErr != nil {
+			return snapshotErr
+		}
+		if bss, ok := bc.store.(storage.BlockStateStore); ok {
+			return bss.SaveBlockAndState(block, snapshot)
+		}
+		if err := bc.store.SaveBlock(block); err != nil {
+			return err
+		}
+		return ss.SaveState(snapshot)
 	}
 	return bc.store.SaveBlock(block)
 }
