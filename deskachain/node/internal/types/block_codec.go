@@ -29,6 +29,7 @@ func (b Block) CanonicalHeaderBytesWithNonce(nonce uint64) ([]byte, error) {
 	writeBlockCanonicalUint32(&buf, b.Difficulty)
 	writeBlockCanonicalString(&buf, b.MinerAddress)
 	writeBlockCanonicalString(&buf, b.MerkleRoot)
+	writeBlockCanonicalString(&buf, b.StateRoot)
 	writeBlockCanonicalString(&buf, b.GenesisMarker)
 	return buf.Bytes(), nil
 }
