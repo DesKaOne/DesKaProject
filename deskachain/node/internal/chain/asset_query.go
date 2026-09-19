@@ -87,3 +87,39 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 	return def, ok, nil
 }
 
+
+
+func (bc *Blockchain) AssetBalancesForAddressWithProfile(address string, profile config.NetworkConfig) ([]asset.BalanceEntry, error) {
+	tip, err := bc.Tip()
+	if err != nil {
+		return nil, err
+	}
+	if profile.Name == "" {
+		profile = config.Localnet()
+	}
+	if q, ok := bc.store.(storage.AssetStateQueryStore); ok {
+		version, height, root, metaErr := q.GetStateMetadata()
+		current := metaErr == nil && version == state.SnapshotVersion && height == tip.Height
+		if current && tip.ProtocolVersion() == types.BlockVersionCanonical {
+			current = tip.StateRoot != "" && tip.StateRoot == root
+		}
+		if current {
+			return q.GetStateAssetBalancesForAddress(address)
+		}
+	}
+	blocks, err := bc.Blocks()
+	if err != nil {
+		return nil, err
+	}
+	l, err := ledger.ReplayMatureWithProfile(blocks, profile.Consensus, profile)
+	if err != nil {
+		return nil, err
+	}
+	entries := make([]asset.BalanceEntry, 0)
+	for _, entry := range l.AssetState().Balances() {
+		if entry.Address == address {
+			entries = append(entries, entry)
+		}
+	}
+	return entries, nil
+}
