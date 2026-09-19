@@ -487,6 +487,9 @@ func (s *BoltStore) DeleteState() error {
 		if err := clearBucket(accounts); err != nil {
 			return err
 		}
+		if err := clearBucket(stakes); err != nil {
+			return err
+		}
 		return clearBucket(stakesByOwner)
 	})
 }
