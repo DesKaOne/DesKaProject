@@ -21,7 +21,7 @@ type AdmissionPolicy struct {
 // Admit validates a transaction against the active fee policy and mempool
 // capacity. It deliberately does not replace an existing nonce; replacement
 // policy is reserved for a later protocol decision.
-func (m Mempool) Admit(tx types.Transaction, policy AdmissionPolicy) error {
+func ValidateForRevalidation(tx types.Transaction, policy AdmissionPolicy) error {
 	if tx.Coinbase {
 		return fmt.Errorf("coinbase transactions are not accepted by the mempool")
 	}
@@ -44,6 +44,16 @@ func (m Mempool) Admit(tx types.Transaction, policy AdmissionPolicy) error {
 		if err := tx.ValidateFeePayerAuthorization(policy.Profile); err != nil {
 			return err
 		}
+	}
+	if _, _, err := fees.GasUsed(tx, policy.Profile); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m Mempool) Admit(tx types.Transaction, policy AdmissionPolicy) error {
+	if err := ValidateForRevalidation(tx, policy); err != nil {
+		return err
 	}
 	txs, err := m.Load()
 	if err != nil {
@@ -98,7 +108,7 @@ func Select(txs []types.Transaction, profile config.NetworkConfig, maxGas uint64
 		if tx.Coinbase {
 			continue
 		}
-		if err := fees.Validate(tx, profile); err != nil {
+		if err := ValidateForRevalidation(tx, AdmissionPolicy{Profile: profile}); err != nil {
 			return nil, err
 		}
 		gas, _, err := fees.GasUsed(tx, profile)
