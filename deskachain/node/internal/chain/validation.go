@@ -191,7 +191,7 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 		if tx.TxType() == types.TxTypeTransfer && tx.From == tx.To {
 			return fmt.Errorf("tx %d sender and recipient must differ", i)
 		}
-		if tx.TxType() == types.TxTypeTransfer {
+		if profile.TxVersion >= types.TxVersionAsset || tx.TxType() == types.TxTypeTransfer {
 			nextFees, feeErr := arith.Add(totalFees, tx.Fee)
 			if feeErr != nil {
 				return errors.New("transaction fees overflow")
