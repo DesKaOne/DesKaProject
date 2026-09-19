@@ -55,6 +55,9 @@ func SnapshotForBlocks(blocks []types.Block, params config.ConsensusParams, prof
 }
 
 func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.ConsensusParams, profile config.NetworkConfig) (Snapshot, error) {
+	if err := snapshot.Validate(); err != nil {
+		return Snapshot{}, err
+	}
 	expectedHeight, err := arith.Add(snapshot.Height, 1)
 	if err != nil {
 		return Snapshot{}, fmt.Errorf("%w: state height overflow", ErrInvalidSnapshot)
