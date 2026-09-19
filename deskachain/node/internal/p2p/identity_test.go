@@ -144,3 +144,27 @@ func TestValidateHandshakeKeepsUnsignedCompatibilityWhenOptional(t *testing.T) {
 		t.Fatalf("optional unsigned handshake rejected: %v", err)
 	}
 }
+
+func TestAuthenticatedHandshakeRejectsChallengeReplay(t *testing.T) {
+	profile := config.Localnet()
+	identity, err := LoadOrCreateNodeIdentity(filepath.Join(t.TempDir(), "node_id"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	hs := testHandshakeForIdentity(t, identity, profile)
+	hs.AuthChallenge = "challenge-a"
+	signature, err := SignHandshake(identity, hs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hs.NodeSignature = signature
+	if err := VerifyHandshakeIdentity(hs); err != nil {
+		t.Fatalf("signed challenge rejected: %v", err)
+	}
+
+	replayed := hs
+	replayed.AuthChallenge = "challenge-b"
+	if err := VerifyHandshakeIdentity(replayed); err == nil || !strings.Contains(err.Error(), "invalid node identity signature") {
+		t.Fatalf("expected challenge replay rejection, got %v", err)
+	}
+}
