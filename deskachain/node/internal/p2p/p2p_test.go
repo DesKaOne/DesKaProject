@@ -2,6 +2,7 @@ package p2p
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -950,10 +951,10 @@ func mineBlock(t *testing.T, paths config.Paths, miner string, pending []types.T
 	t.Helper()
 	bc, closeFn := openTestChain(t, paths)
 	defer closeFn()
-	if err := bc.Init(); err != nil {
+	if err := bc.InitWithProfile(fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
-	block, err := bc.MineBlock(miner, pending)
+	block, err := bc.MineBlockWithContextAndNetwork(context.Background(), miner, pending, chain.MineOptions{}, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1051,7 +1052,7 @@ func TestReorgPreviewPeerMoreWorkAllowed(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 2)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	plan, _, err := BuildReorgPlan(local, server.URL, DefaultMaxReorgDepth)
+	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, DefaultMaxReorgDepth, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1112,7 +1113,7 @@ func TestReorgRequeuesValidOrphanTx(t *testing.T) {
 	mineBlocks(t, peer, newWallet(t).Address, 3)
 	server := newP2PTestServer(peer)
 	defer server.Close()
-	res, err := ApplyReorg(local, server.URL, DefaultMaxReorgDepth, true)
+	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
 		t.Fatal(err)
 	}
