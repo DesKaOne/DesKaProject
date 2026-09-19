@@ -981,18 +981,18 @@ func TestRemoteCLIMineSendAndMempool(t *testing.T) {
 	dir := t.TempDir()
 	paths := config.NewPaths(dir)
 	var setupOut bytes.Buffer
-	local := New(&setupOut).WithDataDir(dir)
+	local := New(&setupOut).WithDataDir(dir).WithProfile(fundedTestProfile())
 	if err := local.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
 	walletA := createTestWallet(t, local, &setupOut)
 	walletB := createTestWallet(t, local, &setupOut)
 	mux := http.NewServeMux()
-	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0"})
+	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", Profile: fundedTestProfile()})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	var out bytes.Buffer
-	remote := New(&out)
+	remote := New(&out).WithProfile(fundedTestProfile())
 	if err := remote.Run([]string{"--rpc-url", server.URL, "chain", "info"}); err != nil {
 		t.Fatal(err)
 	}
@@ -1091,7 +1091,7 @@ func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
 func TestRPCChainInfoRuntimeStatsAndBodyErrors(t *testing.T) {
 	paths := config.NewPaths(t.TempDir())
 	var setupOut bytes.Buffer
-	local := New(&setupOut).WithDataDir(paths.DataDir)
+	local := New(&setupOut).WithDataDir(paths.DataDir).WithProfile(fundedTestProfile())
 	if err := local.Run([]string{"init"}); err != nil {
 		t.Fatal(err)
 	}
@@ -1111,7 +1111,7 @@ func TestRPCChainInfoRuntimeStatsAndBodyErrors(t *testing.T) {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
-	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", State: state})
+	rpc.RegisterHandlers(mux, paths, rpc.NodeInfo{RPCListen: ":0", P2PListen: ":0", State: state, Profile: fundedTestProfile()})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	info, err := remoteGetMap(server.URL, "/chain/info")
