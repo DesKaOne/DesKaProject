@@ -2,8 +2,9 @@ package state
 
 import (
 	"errors"
-	"deskachain/internal/arith"
 	"fmt"
+
+	"deskachain/internal/arith"
 
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
@@ -33,8 +34,9 @@ func SnapshotForLedger(l *ledger.MatureLedger) (Snapshot, error) {
 	snapshot := Snapshot{
 		Version:  SnapshotVersion,
 		Height:   l.Height(),
-		Accounts: accounts,
+		Accounts:  accounts,
 		Stakes:    stakes,
+		Coinbases: l.StateCoinbases(),
 	}
 	root, err := RootForCollections(accounts, stakes)
 	if err != nil {
