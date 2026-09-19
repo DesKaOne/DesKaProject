@@ -216,6 +216,7 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	if err != nil {
 		return err
 	}
+	preBlockLedger := l.Clone()
 	for i, tx := range block.Transactions {
 		if tx.Coinbase {
 			if err := l.ApplyCoinbaseAtHeight(tx, block.Height); err != nil {
@@ -232,7 +233,7 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	}
 
 	if block.ProtocolVersion() == types.BlockVersionCanonical {
-		candidate := l.Clone()
+		candidate := preBlockLedger.Clone()
 		if err := candidate.ApplyBlock(block); err != nil {
 			return fmt.Errorf("state root replay failed: %w", err)
 		}
