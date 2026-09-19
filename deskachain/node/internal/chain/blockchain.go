@@ -7,6 +7,7 @@ import (
 	"deskachain/internal/arith"
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
+	"deskachain/internal/mempool"
 	"deskachain/internal/state"
 	"deskachain/internal/storage"
 	"deskachain/internal/types"
@@ -379,16 +380,31 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		return types.Block{}, err
 	}
 	workLedger := l.Clone()
-	validPending := make([]types.Transaction, 0, len(pending))
-	totalFees := uint64(0)
 	height, heightErr := arith.Add(blocks[len(blocks)-1].Height, 1)
 	if heightErr != nil {
 		return types.Block{}, errors.New("block height overflow")
 	}
+	nextNonce := make(map[string]uint64)
 	for _, tx := range pending {
 		if tx.Coinbase {
 			continue
 		}
+		if _, ok := nextNonce[tx.From]; ok {
+			continue
+		}
+		nonce := workLedger.Nonce(tx.From)
+		if nonce == ^uint64(0) {
+			return types.Block{}, errors.New("transaction nonce overflow")
+		}
+		nextNonce[tx.From] = nonce + 1
+	}
+	selected, err := mempool.SelectWithNonces(pending, profile, profile.Consensus.MaxGasPerBlock, nextNonce)
+	if err != nil {
+		return types.Block{}, err
+	}
+	validPending := make([]types.Transaction, 0, len(selected))
+	totalFees := uint64(0)
+	for _, tx := range selected {
 		if err := ValidateTransactionSize(tx, profile.Consensus); err != nil {
 			continue
 		}
@@ -402,6 +418,9 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 				return types.Block{}, errors.New("transaction fees overflow")
 			}
 			totalFees = nextFees
+		}
+		if profile.Consensus.MaxTxCount > 0 && uint64(len(validPending)) >= profile.Consensus.MaxTxCount {
+			break
 		}
 	}
 	tip := blocks[len(blocks)-1]
