@@ -1,13 +1,12 @@
 package chain
 
 import (
-	"errors"
-	"fmt"
-
 	"deskachain/internal/asset"
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/state"
+	"deskachain/internal/storage"
+	"deskachain/internal/types"
 )
 
 func (bc *Blockchain) AssetBalanceWithProfile(address, assetID string, profile config.NetworkConfig) (uint64, error) {
@@ -18,7 +17,7 @@ func (bc *Blockchain) AssetBalanceWithProfile(address, assetID string, profile c
 	if profile.Name == "" {
 		profile = config.Localnet()
 	}
-	if q, ok := bc.store.(storageAssetQueryStore); ok {
+	if q, ok := bc.store.(storage.AssetStateQueryStore); ok {
 		version, height, root, metaErr := q.GetStateMetadata()
 		current := metaErr == nil && version == state.SnapshotVersion && height == tip.Height
 		if current && tip.ProtocolVersion() == types.BlockVersionCanonical {
@@ -70,13 +69,3 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 	return def, ok, nil
 }
 
-// storageAssetQueryStore is intentionally local to this file so existing
-// query-only mocks that implement StateQueryStore remain source-compatible.
-type storageAssetQueryStore interface {
-	GetStateMetadata() (uint8, uint64, string, error)
-	GetStateAsset(assetID string) (asset.Definition, bool, error)
-	GetStateAssetBalance(address, assetID string) (uint64, bool, error)
-}
-
-var _ = errors.New
-var _ = fmt.Sprintf
