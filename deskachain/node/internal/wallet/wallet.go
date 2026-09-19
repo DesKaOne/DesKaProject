@@ -73,6 +73,11 @@ func (w Wallet) SignTransactionWithProfile(tx *types.Transaction, profile config
 	if err := tx.RefreshIDForChainID(profile.ChainID); err != nil {
 		return err
 	}
+	if tx.ProtocolVersion() == types.TxVersionAsset && tx.TxType() == types.TxTypeAssetCreate {
+		if err := tx.RefreshDerivedAssetID(); err != nil {
+			return err
+		}
+	}
 	signingBytes, err := tx.SigningBytesWithChainID(profile.ChainID)
 	if err != nil {
 		return err
