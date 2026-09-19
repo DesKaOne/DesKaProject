@@ -3,6 +3,8 @@ package asset
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"deskachain/internal/arith"
 )
@@ -17,16 +19,106 @@ var (
 	ErrAssetFrozen         = errors.New("asset is frozen")
 )
 
+type BalanceEntry struct {
+	Address string `json:"address"`
+	AssetID string `json:"asset_id"`
+	Amount  uint64 `json:"amount"`
+}
+
 type State struct {
 	assets   map[string]Definition
 	balances map[string]map[string]uint64
 }
 
 func NewState() *State {
-	return &State{
+	s := &State{
 		assets:   make(map[string]Definition),
 		balances: make(map[string]map[string]uint64),
 	}
+	s.assets[NativeAssetID] = Definition{
+		ID:       NativeAssetID,
+		Name:     NativeSymbol,
+		Symbol:   NativeSymbol,
+		Decimals: NativeDecimals,
+		Kind:     KindFungible,
+		Issuer:   "protocol",
+		Status:   StatusActive,
+	}
+	return s
+}
+
+func (s *State) NativeDefinition() Definition {
+	return s.assets[NativeAssetID]
+}
+
+func (s *State) Definitions() []Definition {
+	out := make([]Definition, 0, len(s.assets))
+	for _, def := range s.assets {
+		out = append(out, def)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out
+}
+
+func (s *State) Balances() []BalanceEntry {
+	var out []BalanceEntry
+	for address, assets := range s.balances {
+		for assetID, amount := range assets {
+			if amount == 0 {
+				continue
+			}
+			out = append(out, BalanceEntry{Address: address, AssetID: assetID, Amount: amount})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Address != out[j].Address { return out[i].Address < out[j].Address }
+		return out[i].AssetID < out[j].AssetID
+	})
+	return out
+}
+
+func (s *State) Restore(definitions []Definition, balances []BalanceEntry) error {
+	for _, def := range definitions {
+		if IsNative(def.ID) {
+			if def.ID != NativeAssetID || def.Symbol != NativeSymbol || def.Decimals != NativeDecimals {
+				return errors.New("invalid native IDR definition")
+			}
+			s.assets[NativeAssetID] = def
+			continue
+		}
+		if err := s.Create(def); err != nil {
+			return err
+		}
+	}
+	for _, entry := range balances {
+		if entry.Address == "" || entry.AssetID == "" || entry.Amount == 0 {
+			return errors.New("invalid asset balance entry")
+		}
+		if _, ok := s.assets[entry.AssetID]; !ok {
+			return fmt.Errorf("asset balance references unknown asset: %s", entry.AssetID)
+		}
+		if err := s.addBalance(entry.Address, entry.AssetID, entry.Amount); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *State) Credit(address, assetID string, amount uint64) error {
+	if strings.TrimSpace(address) == "" {
+		return errors.New("asset balance address is required")
+	}
+	if _, ok := s.assets[assetID]; !ok {
+		return ErrAssetNotFound
+	}
+	return s.addBalance(address, assetID, amount)
+}
+
+func (s *State) Debit(address, assetID string, amount uint64) error {
+	if _, ok := s.assets[assetID]; !ok {
+		return ErrAssetNotFound
+	}
+	return s.subtractBalance(address, assetID, amount)
 }
 
 func (s *State) Clone() *State {
