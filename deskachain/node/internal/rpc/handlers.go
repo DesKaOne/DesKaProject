@@ -14,16 +14,19 @@ import (
 	"time"
 
 	"deskachain/internal/amount"
+	"deskachain/internal/arith"
 	"deskachain/internal/chain"
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/faucet"
+	"deskachain/internal/fees"
 	"deskachain/internal/ledger"
 	"deskachain/internal/mempool"
 	"deskachain/internal/mining"
 	"deskachain/internal/p2p"
 	"deskachain/internal/servicenode"
 	"deskachain/internal/staking"
+	"deskachain/internal/state"
 	"deskachain/internal/storage"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
@@ -153,6 +156,8 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
 	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
 	mux.HandleFunc("GET /asset/balances", h.assetBalances)
+	mux.HandleFunc("GET /fee/policy", h.wrap("generic", h.feePolicy))
+	mux.HandleFunc("POST /fee/estimate", h.wrap("generic", h.feeEstimate))
 	mux.HandleFunc("GET /tx/", h.wrap("generic", h.tx))
 	mux.HandleFunc("GET /mempool", h.wrap("generic", h.mempoolList))
 	mux.HandleFunc("GET /mempool/list", h.wrap("generic", h.mempoolList))
@@ -2057,6 +2062,56 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, balanceDetailsMap(details))
 }
 
+func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
+	p := h.profile().Fee
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":                  true,
+		"enabled":             p.Enabled,
+		"fee_asset_id":        h.profile().Asset.FeeAssetID,
+		"min_fee":             p.MinFee,
+		"min_gas_price":       p.MinGasPrice,
+		"bytes_per_gas":       p.BytesPerGas,
+		"max_gas_per_tx":      p.MaxGasPerTx,
+		"base_gas_transfer":   p.BaseGasTransfer,
+		"base_gas_asset_transfer": p.BaseGasAssetTransfer,
+		"base_gas_stake_lock": p.BaseGasStakeLock,
+		"base_gas_stake_unlock": p.BaseGasStakeUnlock,
+		"base_gas_asset_create": p.BaseGasAssetCreate,
+		"base_gas_asset_mint": p.BaseGasAssetMint,
+		"base_gas_asset_burn": p.BaseGasAssetBurn,
+		"distribution": map[string]any{
+			"model": "block-fee-settlement",
+			"recipient": "miner",
+		},
+	})
+}
+
+func (h handler) feeEstimate(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
+	var req struct {
+		Transaction types.Transaction `json:"transaction"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, err)
+		return
+	}
+	if req.Transaction.ProtocolVersion() == 0 {
+		req.Transaction.Version = types.TxVersionAsset
+	}
+	quote, err := fees.Estimate(req.Transaction, h.profile())
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":           true,
+		"network":      h.profile().Name,
+		"chain_id":     h.profile().ChainID,
+		"fee_asset_id": h.profile().Asset.FeeAssetID,
+		"quote":        quote,
+	})
+}
+
 func (h handler) assetInfo(w http.ResponseWriter, r *http.Request) {
 	assetID := strings.TrimSpace(r.URL.Query().Get("asset_id"))
 	if assetID == "" {
@@ -3169,8 +3224,33 @@ func (h handler) blockTemplate(miner string) (types.Block, int, error) {
 	}
 	tip := blocks[len(blocks)-1]
 	height := tip.Height + 1
-	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, config.InitialBlockReward+totalFees, height)}, validPending...)
-	block := types.NewBlock(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs)
+	reward := h.profile().Economic.BlockSubsidy
+	if h.profile().TxVersion < types.TxVersionAsset {
+		var rewardErr error
+		reward, rewardErr = arith.Add(config.InitialBlockReward, totalFees)
+		if rewardErr != nil {
+			return types.Block{}, 0, errors.New("block reward overflow")
+		}
+	}
+	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, h.profile().TxVersion)
+	if coinbase.ProtocolVersion() >= types.TxVersionCanonical {
+		if err := coinbase.RefreshIDForChainID(h.profile().ChainID); err != nil {
+			return types.Block{}, 0, err
+		}
+	}
+	txs := append([]types.Transaction{coinbase}, validPending...)
+	block := types.NewBlockWithVersion(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs, h.profile().BlockVersion)
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		candidate := workLedger.Clone()
+		if err := candidate.ApplyBlock(block); err != nil {
+			return types.Block{}, 0, err
+		}
+		root, err := state.RootForLedger(candidate)
+		if err != nil {
+			return types.Block{}, 0, err
+		}
+		block.StateRoot = root
+	}
 	return block, len(validPending), nil
 }
 
