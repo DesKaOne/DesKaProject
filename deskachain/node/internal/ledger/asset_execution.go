@@ -7,10 +7,14 @@ import (
 	"deskachain/internal/arith"
 	"deskachain/internal/asset"
 	"deskachain/internal/crypto"
+	"deskachain/internal/fees"
 	"deskachain/internal/types"
 )
 
 func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
+	if err := l.validateFeePolicy(tx); err != nil {
+		return err
+	}
 	if err := tx.ValidateAssetEnvelope(); err != nil {
 		return err
 	}
@@ -242,7 +246,41 @@ func (l *MatureLedger) receiveNative(address string, amount uint64) error {
 }
 
 func (l *MatureLedger) chargeNativeFee(payer string, fee uint64) error {
-	return l.spendNative(payer, fee)
+	if fee == 0 {
+		return nil
+	}
+	if err := l.spendNative(payer, fee); err != nil {
+		return err
+	}
+	if err := l.assets.Credit(asset.FeeCollectorAddress, asset.NativeAssetID, fee); err != nil {
+		// spendNative already mutated both account and native-asset balance.
+		// Restore the payer before returning the collector failure.
+		if restoreErr := l.receiveNative(payer, fee); restoreErr != nil {
+			return fmt.Errorf("fee collector credit failed: %v; payer restore failed: %w", err, restoreErr)
+		}
+		return fmt.Errorf("fee collector credit failed: %w", err)
+	}
+	return nil
+}
+
+func (l *MatureLedger) settleFees(miner string) error {
+	if fee := l.assets.Balance(asset.FeeCollectorAddress, asset.NativeAssetID); fee != 0 {
+		if miner == "" {
+			return errors.New("miner address is required to settle fees")
+		}
+		if err := l.assets.Debit(asset.FeeCollectorAddress, asset.NativeAssetID, fee); err != nil {
+			return err
+		}
+		if err := l.receiveNative(miner, fee); err != nil {
+			_ = l.assets.Credit(asset.FeeCollectorAddress, asset.NativeAssetID, fee)
+			return fmt.Errorf("fee settlement failed: %w", err)
+		}
+	}
+	return nil
+}
+
+func (l *MatureLedger) validateFeePolicy(tx types.Transaction) error {
+	return fees.Validate(tx, l.profile)
 }
 
 func (l *MatureLedger) applyAssetTransactionV3(tx types.Transaction, height uint64) error {
