@@ -1,6 +1,7 @@
 package nodestate
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -64,8 +65,12 @@ func (s *Store) Refresh(paths config.Paths) error {
 	}
 	defer func() { _ = store.Close() }()
 	bc := chain.New(store)
-	if err := bc.InitWithProfile(s.profile); err != nil {
+	has, err := bc.HasChain()
+	if err != nil {
 		return err
+	}
+	if !has {
+		return errors.New("chain is not initialized")
 	}
 	blocks, err := bc.Blocks()
 	if err != nil {
