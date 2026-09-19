@@ -9,14 +9,6 @@ import (
 	"deskachain/internal/wallet"
 )
 
-func feeTestProfile() config.NetworkConfig {
-	p := config.Localnet()
-	p.TxVersion = types.TxVersionAsset
-	p.BlockVersion = types.BlockVersionCanonical
-	p.Consensus.CoinbaseMaturity = 0
-	return p
-}
-
 func TestV3FeesSettleToMinerWithoutIssuance(t *testing.T) {
 	profile := feeTestProfile()
 	miner, err := wallet.NewWithProfile(profile)
