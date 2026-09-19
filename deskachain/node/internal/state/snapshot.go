@@ -151,6 +151,9 @@ func (s Snapshot) Validate() error {
 		if coinbase.Address == "" || coinbase.Amount == 0 {
 			return fmt.Errorf("%w: invalid pending coinbase", ErrInvalidSnapshot)
 		}
+		if coinbase.Height > s.Height {
+			return fmt.Errorf("%w: pending coinbase height %d exceeds snapshot height %d", ErrInvalidSnapshot, coinbase.Height, s.Height)
+		}
 	}
 	root, err := RootForCollections(accounts, stakes)
 	if err != nil {
