@@ -306,6 +306,11 @@ func (l *MatureLedger) ApplyBlock(block types.Block) error {
 			return err
 		}
 	}
+	if l.AssetModelEnabled() {
+		if err := l.settleFees(block.MinerAddress); err != nil {
+			return err
+		}
+	}
 	l.currentHeight = block.Height
 	l.matureCoinbases(block.Height)
 	return nil
@@ -560,11 +565,16 @@ func BalanceDetailsFromState(
 		if tx.Coinbase {
 			continue
 		}
-		if tx.From == address && tx.TxType() == types.TxTypeTransfer {
-			pendingOutgoing = arith.AddCap(pendingOutgoing, arith.AddCap(tx.Amount, tx.Fee))
-		}
-		if tx.To == address && tx.TxType() == types.TxTypeTransfer {
-			pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
+		if tx.TxType() == types.TxTypeTransfer {
+			if tx.From == address {
+				pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Amount)
+			}
+			if tx.EffectiveFeePayer() == address {
+				pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Fee)
+			}
+			if tx.To == address {
+				pendingIncoming = arith.AddCap(pendingIncoming, tx.Amount)
+			}
 		}
 	}
 
