@@ -10,6 +10,7 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/crypto"
 	"deskachain/internal/ledger"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
 
