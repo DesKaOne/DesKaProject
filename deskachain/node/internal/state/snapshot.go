@@ -78,7 +78,7 @@ func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.Cons
 	if block.Height != expectedHeight {
 		return Snapshot{}, fmt.Errorf("%w: block height %d does not follow state height %d", ErrInvalidSnapshot, block.Height, snapshot.Height)
 	}
-	l := ledger.NewMatureFromStateWithAssets(
+	l, err := ledger.NewMatureFromStateWithAssets(
 		params,
 		profile,
 		snapshot.Height,
@@ -88,6 +88,9 @@ func SnapshotAfterBlock(snapshot Snapshot, block types.Block, params config.Cons
 		snapshot.Assets,
 		snapshot.AssetBalances,
 	)
+	if err != nil {
+		return Snapshot{}, err
+	}
 	if err := l.ApplyBlock(block); err != nil {
 		return Snapshot{}, err
 	}
