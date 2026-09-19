@@ -11,6 +11,7 @@ type Store interface {
 	Tip() (types.Block, error)
 	GetBlockByHeight(height uint64) (types.Block, error)
 	DeleteBlockByHeight(height uint64) error
+	ReplaceFromHeight(from uint64, blocks []types.Block) error
 	SetTip(height uint64, hash string) error
 	GetHeight() (uint64, error)
 	GetTip() (uint64, string, error)
