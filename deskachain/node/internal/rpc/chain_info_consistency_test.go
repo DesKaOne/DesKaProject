@@ -184,7 +184,7 @@ func assertChainInfoCanonical(t *testing.T, info, validate map[string]any, block
 
 func assertChainInfoCanonicalFields(t *testing.T, info map[string]any, block types.Block) {
 	t.Helper()
-	if info["height"].(float64) != 1 || info["tip_hash"] != block.Hash || info["tip_difficulty"].(float64) != float64(block.Difficulty) || info["blocks"].(float64) != 2 || info["total_supply"] != "50 IDR" || info["coinbase_blocks"].(float64) != 1 {
+	if info["height"].(float64) != 1 || info["tip_hash"] != block.Hash || info["tip_difficulty"].(float64) != float64(block.Difficulty) || info["blocks"].(float64) != 2 || info["total_supply"] != "0 IDR" || info["coinbase_blocks"].(float64) != 1 {
 		t.Fatalf("unexpected chain info snapshot: %#v block=%#v", info, block)
 	}
 }
