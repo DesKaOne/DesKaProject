@@ -229,7 +229,8 @@ func (tx Transaction) ValidateAssetEnvelope() error {
 		}
 		if tx.Amount == 0 {
 			return fmt.Errorf("asset burn amount must be greater than zero")
-		default:
+		}
+	default:
 		return fmt.Errorf("unsupported asset transaction type: %s", tx.TxType())
 	}
 	if tx.FeePayer != "" && tx.FeePayer != tx.From {
