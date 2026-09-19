@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"deskachain/internal/asset"
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/staking"
@@ -19,6 +20,22 @@ func snapshotRoot(snapshot state.Snapshot) (string, error) {
 		return state.RootForCollectionsWithAssets(snapshot.Accounts, snapshot.Stakes, snapshot.Assets, snapshot.AssetBalances)
 	}
 	return state.RootForCollections(snapshot.Accounts, snapshot.Stakes)
+}
+
+func syncNativeBalances(snapshot *state.Snapshot) {
+	for _, account := range snapshot.Accounts {
+		found := false
+		for i := range snapshot.AssetBalances {
+			if snapshot.AssetBalances[i].Address == account.Address && snapshot.AssetBalances[i].AssetID == asset.NativeAssetID {
+				snapshot.AssetBalances[i].Amount = account.Confirmed
+				found = true
+				break
+			}
+		}
+		if !found && account.Confirmed > 0 {
+			snapshot.AssetBalances = append(snapshot.AssetBalances, asset.BalanceEntry{Address: account.Address, AssetID: asset.NativeAssetID, Amount: account.Confirmed})
+		}
+	}
 }
 
 func emptySnapshot(t *testing.T) state.Snapshot {
@@ -44,6 +61,7 @@ func TestStateStorePersistsMetadataAndIndexes(t *testing.T) {
 		Confirmed: 10,
 		Mature:    10,
 	})
+	syncNativeBalances(&snapshot)
 	snapshot.StateRoot, err = snapshotRoot(snapshot)
 	if err != nil {
 		t.Fatal(err)
