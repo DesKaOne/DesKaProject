@@ -133,6 +133,6 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		return types.Block{}, errors.New("block reward overflow")
 	}
 	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, reward, height)}, validPending...)
-	block := types.NewBlock(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs)
+	block := types.NewBlockWithVersion(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs, profile.BlockVersion)
 	return MineWithContext(ctx, block, opts)
 }
