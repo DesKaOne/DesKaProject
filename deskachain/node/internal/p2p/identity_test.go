@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -166,5 +169,61 @@ func TestAuthenticatedHandshakeRejectsChallengeReplay(t *testing.T) {
 	replayed.AuthChallenge = "challenge-b"
 	if err := VerifyHandshakeIdentity(replayed); err == nil || !strings.Contains(err.Error(), "invalid node identity signature") {
 		t.Fatalf("expected challenge replay rejection, got %v", err)
+	}
+}
+
+func TestClientHandshakeUsesAndVerifiesChallenge(t *testing.T) {
+	profile := config.Localnet()
+	identity, err := LoadOrCreateNodeIdentity(filepath.Join(t.TempDir(), "server-node-id"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		challenge := r.URL.Query().Get("challenge")
+		if len(challenge) != 64 {
+			http.Error(w, "missing challenge", http.StatusBadRequest)
+			return
+		}
+		hs := testHandshakeForIdentity(t, identity, profile)
+		hs.AuthChallenge = challenge
+		signature, err := SignHandshake(identity, hs)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		hs.NodeSignature = signature
+		_ = json.NewEncoder(w).Encode(hs)
+	}))
+	defer server.Close()
+
+	client := NewClient()
+	handshake, err := client.Handshake(server.URL)
+	if err != nil {
+		t.Fatalf("client rejected valid challenged handshake: %v", err)
+	}
+	if handshake.AuthChallenge == "" || len(handshake.AuthChallenge) != 64 {
+		t.Fatalf("unexpected returned challenge: %q", handshake.AuthChallenge)
+	}
+}
+
+func TestClientHandshakeRejectsInvalidIdentitySignature(t *testing.T) {
+	profile := config.Localnet()
+	identity, err := LoadOrCreateNodeIdentity(filepath.Join(t.TempDir(), "server-node-id"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hs := testHandshakeForIdentity(t, identity, profile)
+		hs.AuthChallenge = r.URL.Query().Get("challenge")
+		hs.NodeSignature = strings.Repeat("00", ed25519.SignatureSize)
+		_ = json.NewEncoder(w).Encode(hs)
+	}))
+	defer server.Close()
+
+	client := NewClient()
+	if _, err := client.Handshake(server.URL); err == nil || !strings.Contains(err.Error(), "invalid node identity signature") {
+		t.Fatalf("expected client signature rejection, got %v", err)
 	}
 }
