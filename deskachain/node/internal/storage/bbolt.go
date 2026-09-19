@@ -9,14 +9,26 @@ import (
 
 	bolt "go.etcd.io/bbolt"
 
+	"deskachain/internal/ledger"
+	"deskachain/internal/staking"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 )
 
 var (
-	blocksBucket = []byte("blocks")
-	metaBucket   = []byte("meta")
-	tipKey       = []byte("tip")
+	blocksBucket        = []byte("blocks")
+	metaBucket          = []byte("meta")
+	tipKey              = []byte("tip")
+	stateBucket         = []byte("state")
+	stateMetaBucket     = []byte("meta")
+	stateAccountsBucket = []byte("accounts")
+	stateStakesBucket   = []byte("stakes")
+	stateVersionKey     = []byte("version")
+	stateHeightKey      = []byte("height")
+	stateRootKey        = []byte("root")
 )
+
+var ErrStateNotInitialized = errors.New("state is not initialized")
 
 type BoltStore struct {
 	path string
@@ -40,7 +52,20 @@ func (s *BoltStore) Init() error {
 		if _, err := tx.CreateBucketIfNotExists(blocksBucket); err != nil {
 			return err
 		}
-		_, err := tx.CreateBucketIfNotExists(metaBucket)
+		if _, err := tx.CreateBucketIfNotExists(metaBucket); err != nil {
+			return err
+		}
+		root, err := tx.CreateBucketIfNotExists(stateBucket)
+		if err != nil {
+			return err
+		}
+		if _, err := root.CreateBucketIfNotExists(stateMetaBucket); err != nil {
+			return err
+		}
+		if _, err := root.CreateBucketIfNotExists(stateAccountsBucket); err != nil {
+			return err
+		}
+		_, err = root.CreateBucketIfNotExists(stateStakesBucket)
 		return err
 	})
 }
@@ -69,6 +94,26 @@ func (s *BoltStore) SaveBlock(block types.Block) error {
 			return err
 		}
 		return tx.Bucket(metaBucket).Put(tipKey, key)
+	})
+}
+
+func (s *BoltStore) SaveBlockAndState(block types.Block, snapshot state.Snapshot) error {
+	raw, err := json.Marshal(block)
+	if err != nil {
+		return err
+	}
+	if err := validateBlockStatePair(block, snapshot); err != nil {
+		return err
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		key := heightKey(block.Height)
+		if err := tx.Bucket(blocksBucket).Put(key, raw); err != nil {
+			return err
+		}
+		if err := tx.Bucket(metaBucket).Put(tipKey, key); err != nil {
+			return err
+		}
+		return saveStateTx(tx, snapshot)
 	})
 }
 
@@ -122,17 +167,30 @@ func (s *BoltStore) GetBlockByHeight(height uint64) (types.Block, error) {
 }
 
 func (s *BoltStore) DeleteBlockByHeight(height uint64) error {
-	return s.db.Update(func(tx *bolt.Tx) error { return tx.Bucket(blocksBucket).Delete(heightKey(height)) })
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket(blocksBucket).Delete(heightKey(height))
+	})
 }
 
 func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
+	return s.replaceFromHeight(from, blocks, nil)
+}
+
+func (s *BoltStore) ReplaceFromHeightAndState(from uint64, blocks []types.Block, snapshot state.Snapshot) error {
+	if err := validateBlockStateBranch(blocks, snapshot); err != nil {
+		return err
+	}
+	return s.replaceFromHeight(from, blocks, &snapshot)
+}
+
+func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
 	if len(blocks) == 0 {
 		return errors.New("replacement branch is empty")
 	}
 	for i, block := range blocks {
-		expectedHeight := from + uint64(i)
-		if i > 0 && expectedHeight < from {
-			return errors.New("replacement branch height overflow")
+		expectedHeight, err := checkedReplacementHeight(from, uint64(i))
+		if err != nil {
+			return err
 		}
 		if block.Height != expectedHeight {
 			return errors.New("replacement branch is not contiguous")
@@ -160,12 +218,31 @@ func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
 			}
 		}
 		for i, block := range blocks {
-			if err := b.Put(heightKey(from+uint64(i)), rawBlocks[i]); err != nil {
+			height, err := checkedReplacementHeight(from, uint64(i))
+			if err != nil {
+				return err
+			}
+			if err := b.Put(heightKey(height), rawBlocks[i]); err != nil {
 				return err
 			}
 		}
-		return tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height))
+		if err := tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height)); err != nil {
+			return err
+		}
+		if snapshot != nil {
+			if err := saveStateTx(tx, *snapshot); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
+}
+
+func checkedReplacementHeight(from, offset uint64) (uint64, error) {
+	if ^uint64(0)-from < offset {
+		return 0, errors.New("replacement branch height overflow")
+	}
+	return from + offset, nil
 }
 
 func (s *BoltStore) SetTip(height uint64, hash string) error {
@@ -200,4 +277,202 @@ func (s *BoltStore) GetTip() (uint64, string, error) {
 		return 0, "", err
 	}
 	return block.Height, block.Hash, nil
+}
+
+func (s *BoltStore) SaveState(snapshot state.Snapshot) error {
+	if err := snapshot.Validate(); err != nil {
+		return err
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return saveStateTx(tx, snapshot)
+	})
+}
+
+func (s *BoltStore) LoadState() (state.Snapshot, error) {
+	var snapshot state.Snapshot
+	err := s.db.View(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		accountsBucket := root.Bucket(stateAccountsBucket)
+		stakesBucket := root.Bucket(stateStakesBucket)
+		if meta == nil || accountsBucket == nil || stakesBucket == nil {
+			return ErrStateNotInitialized
+		}
+		version := meta.Get(stateVersionKey)
+		height := meta.Get(stateHeightKey)
+		stateRoot := meta.Get(stateRootKey)
+		if len(version) != 1 || len(height) != 8 || len(stateRoot) == 0 {
+			return ErrStateNotInitialized
+		}
+		snapshot.Version = version[0]
+		snapshot.Height = binary.BigEndian.Uint64(height)
+		snapshot.StateRoot = string(stateRoot)
+		if err := accountsBucket.ForEach(func(k, v []byte) error {
+			var account ledger.StateAccount
+			if err := json.Unmarshal(v, &account); err != nil {
+				return err
+			}
+			if account.Address != string(k) {
+				return errors.New("state account key mismatch")
+			}
+			snapshot.Accounts = append(snapshot.Accounts, account)
+			return nil
+		}); err != nil {
+			return err
+		}
+		if err := stakesBucket.ForEach(func(k, v []byte) error {
+			var record staking.Record
+			if err := json.Unmarshal(v, &record); err != nil {
+				return err
+			}
+			if record.StakeID != string(k) {
+				return errors.New("state stake key mismatch")
+			}
+			snapshot.Stakes = append(snapshot.Stakes, record)
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return state.Snapshot{}, err
+	}
+	if err := snapshot.Validate(); err != nil {
+		return state.Snapshot{}, err
+	}
+	return snapshot, nil
+}
+
+func (s *BoltStore) DeleteState() error {
+	return s.db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		accounts := root.Bucket(stateAccountsBucket)
+		stakes := root.Bucket(stateStakesBucket)
+		if meta == nil || accounts == nil || stakes == nil {
+			return ErrStateNotInitialized
+		}
+		if err := clearBucket(meta); err != nil {
+			return err
+		}
+		if err := clearBucket(accounts); err != nil {
+			return err
+		}
+		return clearBucket(stakes)
+	})
+}
+
+func validateBlockStatePair(block types.Block, snapshot state.Snapshot) error {
+	if err := snapshot.Validate(); err != nil {
+		return err
+	}
+	if block.ProtocolVersion() == types.BlockVersionCanonical {
+		if block.StateRoot == "" || block.StateRoot != snapshot.StateRoot {
+			return errors.New("block state root does not match persisted state")
+		}
+	}
+	return nil
+}
+
+func validateBlockStateBranch(blocks []types.Block, snapshot state.Snapshot) error {
+	if len(blocks) == 0 {
+		return errors.New("replacement branch is empty")
+	}
+	if err := snapshot.Validate(); err != nil {
+		return err
+	}
+	for _, block := range blocks {
+		if block.ProtocolVersion() == types.BlockVersionCanonical && block.StateRoot == "" {
+			return errors.New("canonical replacement block has empty state root")
+		}
+	}
+	return nil
+}
+
+func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
+	if err := snapshot.Validate(); err != nil {
+		return err
+	}
+	root, err := tx.CreateBucketIfNotExists(stateBucket)
+	if err != nil {
+		return err
+	}
+	meta, err := root.CreateBucketIfNotExists(stateMetaBucket)
+	if err != nil {
+		return err
+	}
+	accountsBucket, err := root.CreateBucketIfNotExists(stateAccountsBucket)
+	if err != nil {
+		return err
+	}
+	stakesBucket, err := root.CreateBucketIfNotExists(stateStakesBucket)
+	if err != nil {
+		return err
+	}
+
+	if err := clearBucket(meta); err != nil {
+		return err
+	}
+	if err := clearBucket(accountsBucket); err != nil {
+		return err
+	}
+	if err := clearBucket(stakesBucket); err != nil {
+		return err
+	}
+
+	if err := meta.Put(stateVersionKey, []byte{snapshot.Version}); err != nil {
+		return err
+	}
+	if err := meta.Put(stateHeightKey, heightKey(snapshot.Height)); err != nil {
+		return err
+	}
+	if err := meta.Put(stateRootKey, []byte(snapshot.StateRoot)); err != nil {
+		return err
+	}
+
+	for _, account := range snapshot.Accounts {
+		raw, err := json.Marshal(account)
+		if err != nil {
+			return err
+		}
+		if err := accountsBucket.Put([]byte(account.Address), raw); err != nil {
+			return err
+		}
+	}
+	for _, record := range snapshot.Stakes {
+		raw, err := json.Marshal(record)
+		if err != nil {
+			return err
+		}
+		if err := stakesBucket.Put([]byte(record.StakeID), raw); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func clearBucket(bucket *bolt.Bucket) error {
+	if bucket == nil {
+		return nil
+	}
+	var keys [][]byte
+	if err := bucket.ForEach(func(k, _ []byte) error {
+		keys = append(keys, append([]byte(nil), k...))
+		return nil
+	}); err != nil {
+		return err
+	}
+	for _, key := range keys {
+		if err := bucket.Delete(key); err != nil {
+			return err
+		}
+	}
+	return nil
 }
