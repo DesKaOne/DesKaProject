@@ -490,7 +490,7 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		writeError(w, err)
 		return
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := h.openChainBalanceDetails(address, pending)
 	if err != nil {
 		writeError(w, err)
 		return
@@ -518,6 +518,15 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		"simulation_only":             true,
 		"service_points_warning":      "service points are simulation-only and are not spendable DKC",
 	})
+}
+
+func (h handler) openChainBalanceDetails(address string, pending []types.Transaction) (ledger.BalanceDetails, error) {
+	bc, closeFn, err := h.openChain()
+	if err != nil {
+		return ledger.BalanceDetails{}, err
+	}
+	defer closeFn()
+	return bc.BalanceDetailsForWithProfile(address, pending, h.profile())
 }
 
 func (h handler) explorerAddressTxs(w http.ResponseWriter, r *http.Request, address string) {
@@ -2000,17 +2009,12 @@ func (h handler) balance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
 	pending, err := mempool.New(h.paths.Mempool).Load()
 	if err != nil {
 		writeError(w, err)
 		return
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(address, pending, h.profile())
 	if err != nil {
 		writeError(w, err)
 		return
@@ -2949,7 +2953,7 @@ func (h handler) mine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pending, _ := mempool.New(h.paths.Mempool).Load()
-	details, err := ledger.BalanceDetailsForWithProfile(req.Address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(req.Address, pending, h.profile())
 	if err != nil {
 		writeError(w, err)
 		return
@@ -3660,19 +3664,15 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		return addressInspection{}, err
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return addressInspection{}, err
-	}
-	l, err := bc.Ledger()
-	if err != nil {
-		return addressInspection{}, err
-	}
 	pending, err := mempool.New(h.paths.Mempool).Load()
 	if err != nil {
 		return addressInspection{}, err
 	}
-	details, err := ledger.BalanceDetailsForWithProfile(address, blocks, pending, h.profile().Consensus, h.profile())
+	details, err := bc.BalanceDetailsForWithProfile(address, pending, h.profile())
+	if err != nil {
+		return addressInspection{}, err
+	}
+	nonce, err := bc.AccountNonceWithProfile(address, h.profile())
 	if err != nil {
 		return addressInspection{}, err
 	}
@@ -3682,7 +3682,7 @@ func (h handler) inspectAddress(address string) (addressInspection, error) {
 		matureBalance:    details.Mature,
 		immatureBalance:  details.Immature,
 		spendableBalance: details.Spendable,
-		confirmedNonce:   l.Nonce(address),
+		confirmedNonce:   nonce,
 	}
 	for _, tx := range pending {
 		if tx.Coinbase {
