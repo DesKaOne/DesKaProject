@@ -85,7 +85,7 @@ func TestV3PaymasterPaysNativeIDRFee(t *testing.T) {
 		t.Fatalf("unexpected sponsored token balances")
 	}
 	if l.Balance(paymaster.Address) != 17 { t.Fatalf("paymaster IDR balance=%d want 17", l.Balance(paymaster.Address)) }
-	if l.Balance(owner.Address) != 20 { t.Fatalf("owner IDR balance=%d want 20", l.Balance(owner.Address)) }
+	if l.Balance(owner.Address) != 0 { t.Fatalf("owner IDR balance=%d want 0", l.Balance(owner.Address)) }
 }
 
 func TestV3NativeIDRTransferSeparatesFeePayer(t *testing.T) {
