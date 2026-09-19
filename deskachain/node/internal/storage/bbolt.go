@@ -373,6 +373,9 @@ func validateBlockStatePair(block types.Block, snapshot state.Snapshot) error {
 	if err := snapshot.Validate(); err != nil {
 		return err
 	}
+	if snapshot.Height != block.Height {
+		return errors.New("state snapshot height does not match block height")
+	}
 	if block.ProtocolVersion() == types.BlockVersionCanonical {
 		if block.StateRoot == "" || block.StateRoot != snapshot.StateRoot {
 			return errors.New("block state root does not match persisted state")
@@ -388,10 +391,17 @@ func validateBlockStateBranch(blocks []types.Block, snapshot state.Snapshot) err
 	if err := snapshot.Validate(); err != nil {
 		return err
 	}
+	tip := blocks[len(blocks)-1]
+	if snapshot.Height != tip.Height {
+		return errors.New("state snapshot height does not match replacement tip")
+	}
 	for _, block := range blocks {
 		if block.ProtocolVersion() == types.BlockVersionCanonical && block.StateRoot == "" {
 			return errors.New("canonical replacement block has empty state root")
 		}
+	}
+	if tip.ProtocolVersion() == types.BlockVersionCanonical && tip.StateRoot != snapshot.StateRoot {
+		return errors.New("replacement tip state root does not match persisted state")
 	}
 	return nil
 }
