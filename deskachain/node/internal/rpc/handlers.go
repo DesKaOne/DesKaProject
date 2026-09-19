@@ -4107,6 +4107,8 @@ func txView(tx types.Transaction, status string, profile config.NetworkConfig) m
 	if tx.ProtocolVersion() >= types.TxVersionAsset {
 		view["asset_id"] = tx.EffectiveAssetID()
 		view["amount_units"] = tx.Amount
+		// Keep a human-readable amount for generic RPC/CLI consumers; amount_units remains canonical.
+		view["amount"] = amount.FormatUnits(tx.Amount, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
 		view["fee"] = amount.FormatUnits(tx.Fee, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
 		view["fee_units"] = tx.Fee
 	} else {
