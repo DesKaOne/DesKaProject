@@ -56,6 +56,11 @@ func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
 	keyPath := nodeIDPath + ".ed25519"
 	raw, err := os.ReadFile(keyPath)
 	if err == nil {
+		// Existing key files may have been created with broader permissions by older releases.
+		// Tighten them on load so private key material remains owner-only on Unix-like systems.
+		if chmodErr := os.Chmod(keyPath, 0600); chmodErr != nil && !errors.Is(chmodErr, os.ErrPermission) {
+			return NodeIdentity{}, chmodErr
+		}
 		privateKeyRaw, decodeErr := hex.DecodeString(string(raw))
 		if decodeErr != nil || len(privateKeyRaw) != ed25519.PrivateKeySize {
 			return NodeIdentity{}, errors.New("invalid node identity private key")
