@@ -158,6 +158,9 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 	coinbaseCount := 0
 	totalFees := uint64(0)
 	for i, tx := range block.Transactions {
+		if err := types.ValidateTransactionVersion(tx.ProtocolVersion(), profile.TxVersion); err != nil {
+			return fmt.Errorf("tx %d %w", i, err)
+		}
 		if tx.Coinbase {
 			coinbaseCount++
 			if i != 0 {
@@ -166,7 +169,11 @@ func validateBlock(block types.Block, prior []types.Block, params config.Difficu
 			if tx.From != types.CoinbaseSender {
 				return errors.New("coinbase sender must be COINBASE")
 			}
-			if tx.ID != tx.CalculateID() {
+			expectedID, idErr := tx.CalculateIDForChainID(profile.ChainID)
+			if idErr != nil {
+				return idErr
+			}
+			if tx.ID != expectedID {
 				return errors.New("coinbase transaction id mismatch")
 			}
 			continue
