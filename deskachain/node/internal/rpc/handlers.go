@@ -2974,11 +2974,6 @@ func (h handler) mine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
 	tip, err := bc.Tip()
 	if err != nil {
 		writeError(w, err)
