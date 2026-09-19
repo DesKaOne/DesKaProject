@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"deskachain/internal/config"
+	"deskachain/internal/arith"\n\t"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
 	"deskachain/internal/types"
@@ -126,11 +126,11 @@ func (bc *Blockchain) MineBlockWithContextAndNetwork(ctx context.Context, miner 
 		}
 		validPending = append(validPending, tx)
 		if tx.TxType() == types.TxTypeTransfer {
-			totalFees += tx.Fee
+			totalFees = arith.AddCap(totalFees, tx.Fee)
 		}
 	}
 	tip := blocks[len(blocks)-1]
-	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, config.InitialBlockReward+totalFees, height)}, validPending...)
+	txs := append([]types.Transaction{types.NewCoinbaseTransaction(miner, arith.AddCap(config.InitialBlockReward, totalFees), height)}, validPending...)
 	block := types.NewBlock(height, tip.Hash, miner, CalculateNextDifficultyWithParams(blocks, profile.Difficulty), txs)
 	return MineWithContext(ctx, block, opts)
 }
