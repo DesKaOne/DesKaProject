@@ -112,12 +112,14 @@ type PeerIntroduction struct {
 }
 
 type BlockHeader struct {
+	Version      uint32 `json:"version,omitempty"`
 	Height       uint64 `json:"height"`
 	Hash         string `json:"hash"`
 	PreviousHash string `json:"previous_hash"`
 	Timestamp    int64  `json:"timestamp"`
 	Difficulty   uint32 `json:"difficulty"`
 	MerkleRoot   string `json:"merkle_root"`
+	StateRoot    string `json:"state_root,omitempty"`
 	TxCount      int    `json:"tx_count"`
 	MinerAddress string `json:"miner_address"`
 }
