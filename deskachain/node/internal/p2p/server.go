@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -133,30 +134,38 @@ func (s Server) handshake(w http.ResponseWriter, _ *http.Request) {
 		writeError(w, err)
 		return
 	}
-	nodeID, err := LoadOrCreateNodeID(s.paths.NodeID)
+	identity, err := LoadOrCreateNodeIdentity(s.paths.NodeID)
 	if err != nil {
 		writeError(w, err)
 		return
 	}
 	net := s.network()
 	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
-	writeJSON(w, http.StatusOK, Handshake{
-		NetworkName:        net.NetworkName,
-		NetworkID:          net.NetworkID,
-		ChainID:            net.ChainID,
-		ProtocolVersion:    net.ProtocolVersion,
-		P2PProtocolVersion: net.P2PProtocolVersion,
-		MinProtocolVersion: net.MinProtocolVersion,
-		GenesisHash:        net.GenesisHash,
-		Height:             status.Height,
-		TipHash:            status.TipHash,
-		CumulativeWork:     status.CumulativeWork,
-		NodeID:             nodeID,
-		P2PListen:          s.p2pListen,
-		P2PAdvertise:       s.p2pAdvertise,
-		Services:           []string{"p2p"},
-		KnownPeers:         PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
-	})
+	handshake := Handshake{
+		NetworkName:         net.NetworkName,
+		NetworkID:           net.NetworkID,
+		ChainID:             net.ChainID,
+		ProtocolVersion:     net.ProtocolVersion,
+		P2PProtocolVersion:  net.P2PProtocolVersion,
+		MinProtocolVersion:  net.MinProtocolVersion,
+		GenesisHash:         net.GenesisHash,
+		Height:              status.Height,
+		TipHash:             status.TipHash,
+		CumulativeWork:      status.CumulativeWork,
+		NodeID:              identity.NodeID,
+		IdentityVersion:     NodeIdentityVersion,
+		NodePublicKey:       hex.EncodeToString(identity.PublicKey),
+		P2PListen:            s.p2pListen,
+		P2PAdvertise:         s.p2pAdvertise,
+		Services:            []string{"p2p"},
+		KnownPeers:          PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
+	}
+	handshake.NodeSignature, err = SignHandshake(identity, handshake)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, handshake)
 }
 
 func (s Server) peers(w http.ResponseWriter, _ *http.Request) {
