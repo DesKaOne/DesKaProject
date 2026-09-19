@@ -1315,6 +1315,9 @@ Returns profile and node identity used by peer validation.
   "tip_hash": "<HASH>",
   "cumulative_work": 123456,
   "node_id": "<NODE_ID>",
+  "identity_version": 1,
+  "node_public_key": "<ED25519_PUBLIC_KEY_HEX>",
+  "node_signature": "<ED25519_SIGNATURE_HEX>",
   "p2p_listen": ":9811",
   "p2p_advertise": "http://127.0.0.1:9811"
 }
