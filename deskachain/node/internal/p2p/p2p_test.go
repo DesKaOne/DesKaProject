@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -178,6 +179,38 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	l := ledgerFor(t, b)
 	if got := l.Balance(receiver.Address); got != 10*config.UnitsPerCoin {
 		t.Fatalf("receiver balance = %d", got)
+	}
+}
+
+func TestPeerStoreAtomicReplacementAndConcurrentUpsert(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "peers.json")
+	store := NewPeerStore(path)
+	if err := store.SaveMetadata([]PeerMetadata{{URL: "http://127.0.0.1:9331", Status: PeerStatusActive}}); err != nil {
+		t.Fatal(err)
+	}
+
+	const writers = 12
+	errCh := make(chan error, writers)
+	for i := 0; i < writers; i++ {
+		go func(i int) {
+			peer := PeerMetadata{URL: fmt.Sprintf("http://127.0.0.1:%d", 9400+i), Status: PeerStatusActive, Score: i}
+			errCh <- store.Upsert(peer)
+		}(i)
+	}
+	for i := 0; i < writers; i++ {
+		if err := <-errCh; err != nil {
+			t.Fatal(err)
+		}
+	}
+	peers, err := store.LoadMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(peers) != writers+1 {
+		t.Fatalf("concurrent upserts lost metadata: got %d peers, want %d: %#v", len(peers), writers+1, peers)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("peer store path missing after concurrent writes: %v", err)
 	}
 }
 
