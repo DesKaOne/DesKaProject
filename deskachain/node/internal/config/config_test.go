@@ -226,3 +226,19 @@ func TestV3NetworkProfileRejectsEconomicDrift(t *testing.T) {
 		t.Fatal("expected unsupported tx version to be rejected")
 	}
 }
+
+func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
+	if Localnet().RequireAuthenticatedNode {
+		t.Fatal("localnet should remain permissive for standalone development")
+	}
+	for _, profile := range []NetworkConfig{Testnet(), Mainnet()} {
+		if !profile.RequireAuthenticatedNode {
+			t.Fatalf("%s must require authenticated P2P", profile.Name)
+		}
+		insecure := profile
+		insecure.RequireAuthenticatedNode = false
+		if err := ValidateNetworkProfile(insecure); err == nil {
+			t.Fatalf("%s accepted unauthenticated P2P profile", profile.Name)
+		}
+	}
+}
