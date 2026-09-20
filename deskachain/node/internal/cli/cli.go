@@ -159,18 +159,18 @@ func (a App) Run(args []string) error {
 			}
 		}
 	}
-	// Keep an explicitly injected profile (used by integration tests) when the
-	// selected network identity matches it. CLI flags and persisted metadata still
-	// control the network identity; the injected profile only overrides economics.
+	// An explicitly injected profile is only used when no CLI network was selected.
+	// This keeps integration-test economics injectable while preserving the selected
+	// network identity and launch-critical validation.
 	if !networkFlagProvided && a.profile.Name == network.Name {
 		network = a.profile
 	}
-	if a.profile.Name == "mainnet" && !networkFlagProvided {
-		return errors.New("mainnet requires explicit --network mainnet selection")
-	}
 	if network.Name == "mainnet" {
-		if network.GenesisHash != config.MainnetGenesisHash {
-			return fmt.Errorf("mainnet genesis hash is not frozen")
+		if !networkFlagProvided {
+			return errors.New("mainnet requires explicit --network mainnet selection")
+		}
+		if err := config.ValidateNetworkProfile(network); err != nil {
+			return err
 		}
 	} else {
 		network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
