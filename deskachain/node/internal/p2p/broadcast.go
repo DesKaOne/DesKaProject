@@ -71,7 +71,7 @@ func broadcastTxToPeers(paths config.Paths, peers []PeerMetadata, tx types.Trans
 		}
 		summary.Success++
 		summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: true, Message: "accepted"})
-		adjustBroadcastScore(peerStorePath, peer.URL, 2, "broadcast tx")
+		adjustBroadcastScore(paths.Peers, peer.URL, 2, "broadcast tx")
 		log.Printf("tx broadcast success peer=%s tx=%s", peer.URL, tx.ID)
 	}
 	return summary
