@@ -81,8 +81,13 @@ func NewHTTPServer(addr string, paths config.Paths, state *nodestate.Store, adve
 }
 
 func NewHTTPServerWithProfile(addr string, paths config.Paths, state *nodestate.Store, profile config.NetworkConfig, advertise ...string) *http.Server {
+	return NewHTTPServerWithProfileAndMutationMutex(addr, paths, state, profile, nil, advertise...)
+}
+
+func NewHTTPServerWithProfileAndMutationMutex(addr string, paths config.Paths, state *nodestate.Store, profile config.NetworkConfig, mutationMu *sync.Mutex, advertise ...string) *http.Server {
 	mux := http.NewServeMux()
 	server := NewServerWithStateAndProfile(paths, addr, firstString(advertise), state, profile)
+	server.SetMutationMutex(mutationMu)
 	server.Register(mux)
 	log.Printf("p2p listening on %s advertise=%s", addr, server.p2pAdvertise)
 	return &http.Server{
