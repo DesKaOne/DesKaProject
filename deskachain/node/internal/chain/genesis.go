@@ -32,7 +32,8 @@ func GenesisBlockForNetwork(profile config.NetworkConfig) types.Block {
 }
 
 // GenesisHashForNetwork returns the deterministic genesis identity for a
-// network. The caller can compare it with the canonical profile identity.
+// network. The mainnet profile is validated separately against its frozen
+// canonical identity.
 func GenesisHashForNetwork(profile config.NetworkConfig) string {
 	return GenesisBlockForNetwork(profile).Hash
 }
