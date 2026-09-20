@@ -197,6 +197,19 @@ func TestMainnetCLIMetadataGenesisMismatchRejected(t *testing.T) {
 	}
 }
 
+func TestMainnetCLIMetadataGenesisMissingRejected(t *testing.T) {
+	dir := t.TempDir()
+	profile := config.Mainnet()
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := config.WriteNetworkMetadata(config.NewPaths(dir), profile, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "datadir genesis metadata missing for mainnet") {
+		t.Fatalf("expected missing mainnet genesis metadata rejection, got %v", err)
+	}
+}
+
 func TestMainnetCLIRequiresExplicitSelection(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
