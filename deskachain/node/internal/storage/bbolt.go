@@ -455,43 +455,44 @@ func (s *BoltStore) replaceFromHeightTx(tx *bolt.Tx, from uint64, blocks []types
 		rawBlocks[i] = raw
 	}
 
-	return s.db.Update(func(tx *bolt.Tx) error {
-		if snapshot != nil {
-			if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, *snapshot); err != nil {
-				return err
-			}
-		} else if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, state.Snapshot{}); err != nil {
+	if snapshot != nil {
+		if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, *snapshot); err != nil {
 			return err
 		}
-		b := tx.Bucket(blocksBucket)
-		if from > 0 && b.Get(heightKey(from-1)) == nil {
-			return errors.New("replacement branch predecessor not found")
-		}
-		cursor := b.Cursor()
-		for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
-			if err := cursor.Delete(); err != nil {
-				return err
-			}
-		}
-		for i := range blocks {
-			height, err := checkedReplacementHeight(from, uint64(i))
-			if err != nil {
-				return err
-			}
-			if err := b.Put(heightKey(height), rawBlocks[i]); err != nil {
-				return err
-			}
-		}
-		if err := tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height)); err != nil {
+	} else if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, state.Snapshot{}); err != nil {
+		return err
+	}
+	b := tx.Bucket(blocksBucket)
+	if b == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	if from > 0 && b.Get(heightKey(from-1)) == nil {
+		return errors.New("replacement branch predecessor not found")
+	}
+	cursor := b.Cursor()
+	for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
+		if err := cursor.Delete(); err != nil {
 			return err
 		}
-		if snapshot != nil {
-			if err := saveStateTx(tx, *snapshot); err != nil {
-				return err
-			}
+	}
+	for i := range blocks {
+		height, err := checkedReplacementHeight(from, uint64(i))
+		if err != nil {
+			return err
 		}
-		return nil
-	})
+		if err := b.Put(heightKey(height), rawBlocks[i]); err != nil {
+			return err
+		}
+	}
+	if err := tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height)); err != nil {
+		return err
+	}
+	if snapshot != nil {
+		if err := saveStateTx(tx, *snapshot); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func checkedReplacementHeight(from, offset uint64) (uint64, error) {
