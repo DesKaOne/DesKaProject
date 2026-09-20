@@ -165,7 +165,13 @@ func (a App) Run(args []string) error {
 	if !networkFlagProvided && a.profile.Name == network.Name {
 		network = a.profile
 	}
-	network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
+	if network.Name == "mainnet" {
+		if network.GenesisHash != config.MainnetGenesisHash {
+			return fmt.Errorf("mainnet genesis hash is not frozen")
+		}
+	} else {
+		network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
+	}
 	a.profile = network
 	a.rpcURL = strings.TrimRight(*rpcURL, "/")
 	a.ignoreLock = *ignoreLock
