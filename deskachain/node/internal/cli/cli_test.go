@@ -180,7 +180,7 @@ func TestMainnetCLIRequiresFrozenGenesis(t *testing.T) {
 	profile := config.Mainnet()
 	profile.GenesisHash = "tampered"
 	app := New(&bytes.Buffer{}).WithDataDir(dir).WithProfile(profile)
-	if err := app.Run([]string{"network", "info"}); err == nil || !strings.Contains(err.Error(), "mainnet genesis hash is not frozen") {
+	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "mainnet genesis hash is not frozen") {
 		t.Fatalf("expected frozen mainnet genesis rejection, got %v", err)
 	}
 }
