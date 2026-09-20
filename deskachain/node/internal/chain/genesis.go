@@ -30,3 +30,13 @@ func GenesisBlockForNetwork(profile config.NetworkConfig) types.Block {
 	block.Hash = block.CalculateHash()
 	return block
 }
+
+// GenesisHashForNetwork returns the launch-sensitive genesis identity for a
+// network. Mainnet uses the frozen hash from the canonical profile instead of
+// relying on a regenerated value at each call site.
+func GenesisHashForNetwork(profile config.NetworkConfig) string {
+	if profile.Name == "mainnet" {
+		return config.MainnetGenesisHash
+	}
+	return GenesisBlockForNetwork(profile).Hash
+}
