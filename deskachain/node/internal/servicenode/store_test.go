@@ -195,17 +195,20 @@ func TestScoreCollateralEligibility(t *testing.T) {
 	funding := []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
+		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
 	}
-	for height := uint64(2); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
 		funding = append(funding, types.Block{Height: height})
 	}
 	saveServiceBlocks(t, paths, funding)
+	lockHeight := config.Localnet().Consensus.CoinbaseMaturity + 2
 	lock := types.NewStakeLockTransaction(w.Address, config.Localnet().Consensus.Staking.MinServiceStake, 1)
 	if err := w.SignTransaction(&lock); err != nil {
 		t.Fatal(err)
 	}
 	lock.StakeID = lock.ID
-	saveServiceBlocks(t, paths, []types.Block{{Height: 2, Transactions: []types.Transaction{lock}}})
+	lockBlock := types.Block{Height: lockHeight, Transactions: []types.Transaction{lock}}
+	saveServiceBlocks(t, paths, []types.Block{lockBlock})
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -232,8 +235,9 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	funding := []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
+		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
 	}
-	for height := uint64(2); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
 		funding = append(funding, types.Block{Height: height})
 	}
 	saveServiceBlocks(t, paths, funding)
