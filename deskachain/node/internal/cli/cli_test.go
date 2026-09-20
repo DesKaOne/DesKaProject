@@ -240,6 +240,14 @@ func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	}
 }
 
+func TestMainnetStandaloneRPCIsGated(t *testing.T) {
+	app := New(io.Discard).WithDataDir(t.TempDir())
+	err := app.Run([]string{"--network", "mainnet", "rpc", "--addr", ":0"})
+	if err == nil || !strings.Contains(err.Error(), "mainnet is not operational: launch gate is closed") {
+		t.Fatalf("expected standalone mainnet RPC launch gate, got %v", err)
+	}
+}
+
 func TestMainnetOperationalCommandsRemainGatedWhenOverridesAreSet(t *testing.T) {
 	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "true")
 	t.Setenv("IDR_ALLOW_ISOLATED_WRITES", "true")
