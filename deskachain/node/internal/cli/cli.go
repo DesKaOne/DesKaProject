@@ -37,6 +37,9 @@ func (a App) Run(args []string) error {
 		return err
 	}
 	network := selectedNetwork
+	if network.Name == "mainnet" && !networkFlagProvided {
+		return errors.New("mainnet requires explicit --network mainnet selection")
+	}
 	a.paths = config.NewPaths(*datadir)
 	args = fs.Args()
 	if len(args) == 0 {
