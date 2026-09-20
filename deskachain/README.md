@@ -2,7 +2,7 @@
 
 DesKaChain is a small experimental CPU-mined blockchain written in Go.
 
-Current phase: Phase 4.12 - Peer Discovery & Auto Bootstrap.
+Current phase: Phase 7 - Mainnet Readiness.
 
 Warning: DesKaChain is experimental local blockchain software. Do not use Phase 1.5 wallets for real funds. Wallet private keys are stored locally for development convenience only.
 
@@ -67,6 +67,9 @@ Not included yet:
 - EVM
 - Production wallet security
 - Real service-node payout, public proxy/VPN relay, staking, PoS, GPU mining, or mining pool
+
+
+Phase 7 starts from the Phase 6 production-readiness baseline. The goal is to freeze and verify the mainnet identity and launch-critical invariants before any live mainnet operation. Mainnet uses IDR as the native fee-settlement asset with zero block subsidy; issued asset tokens remain separate and may use the IDR fee asset or an authorized paymaster. Phase 7 does not change the native IDR economic model or imply that mainnet is live.
 
 ## Protocol Basics
 
@@ -911,7 +914,7 @@ go run ./node/cmd/deskachain chain validate
 - Phase 4: Explorer + faucet
 - Phase 5: Flutter wallet
 - Phase 6: Public testnet
-- Phase 7: Mainnet
+- Phase 7: Mainnet readiness and launch hardening
 
 ## Phase 2.4.3 — Same Height Fork Sync Fix & Chain Info Tx Count
 
