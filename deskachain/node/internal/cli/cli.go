@@ -260,7 +260,7 @@ func (a App) network(args []string) error {
 	}
 	net := a.profile
 	if net.Name != "mainnet" {
-		net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+		net.GenesisHash = chain.GenesisHashForNetwork(net)
 	}
 
 	fmt.Fprintf(a.out, "network name: %s\n", net.NetworkName)
@@ -1662,7 +1662,7 @@ func (a App) node(args []string) error {
 	}()
 	serviceStore := servicenode.NewStore(a.paths, a.profile)
 	serviceNodes, _ := serviceStore.LoadNodes()
-	log.Printf("node started network=%s network_id=%s chain_id=%d genesis=%s protocol=%d datadir=%s rpc=%s p2p=%s advertise=%s bootnodes=%d seed_peers=%d upstream_peers=%d skipped_self=%d public_rpc=%t wallet_rpc=%t miner_rpc=%t admin_rpc=%t service_rpc=%t faucet_rpc=%t max_peers=%d max_reorg_depth=%d min_mining_peers=%d allow_isolated_mining=%t height=%d tip=%s pid=%d", a.profile.Name, a.profile.NetworkID, a.profile.ChainID, chain.GenesisBlockForNetwork(a.profile).Hash, a.profile.ProtocolVersion, a.paths.DataDir, lock.RPC, lock.P2P, lock.P2PAdvertise, startupPeers.BootnodesAdded, startupPeers.SeedsAdded, len(upstreamPeers), startupPeers.SkippedSelf, *publicRPC, *enableWalletRPC, *enableMinerRPC, *enableAdminRPC, *enableServiceRPC, *enableFaucetRPC, maxPeers, *maxReorgDepth, *minMiningPeers, *allowIsolatedMining, tip.Height, tip.Hash, lock.PID)
+	log.Printf("node started network=%s network_id=%s chain_id=%d genesis=%s protocol=%d datadir=%s rpc=%s p2p=%s advertise=%s bootnodes=%d seed_peers=%d upstream_peers=%d skipped_self=%d public_rpc=%t wallet_rpc=%t miner_rpc=%t admin_rpc=%t service_rpc=%t faucet_rpc=%t max_peers=%d max_reorg_depth=%d min_mining_peers=%d allow_isolated_mining=%t height=%d tip=%s pid=%d", a.profile.Name, a.profile.NetworkID, a.profile.ChainID, chain.GenesisHashForNetwork(a.profile), a.profile.ProtocolVersion, a.paths.DataDir, lock.RPC, lock.P2P, lock.P2PAdvertise, startupPeers.BootnodesAdded, startupPeers.SeedsAdded, len(upstreamPeers), startupPeers.SkippedSelf, *publicRPC, *enableWalletRPC, *enableMinerRPC, *enableAdminRPC, *enableServiceRPC, *enableFaucetRPC, maxPeers, *maxReorgDepth, *minMiningPeers, *allowIsolatedMining, tip.Height, tip.Hash, lock.PID)
 	if *enableMinerRPC && a.profile.Name == "testnet" && !*allowIsolatedMining && *minMiningPeers > 0 {
 		log.Printf("warning: miner RPC enabled; mining templates require at least %d active peer or reachable upstream peer on testnet", *minMiningPeers)
 	}
@@ -1734,7 +1734,7 @@ func (a App) node(args []string) error {
 	fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 	fmt.Fprintf(a.out, "network id: %s\n", a.profile.NetworkID)
 	fmt.Fprintf(a.out, "chain id: %d\n", a.profile.ChainID)
-	fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisBlockForNetwork(a.profile).Hash)
+	fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisHashForNetwork(a.profile))
 	fmt.Fprintf(a.out, "datadir: %s\n", a.paths.DataDir)
 	fmt.Fprintf(a.out, "rpc: %s\n", *rpcAddr)
 	fmt.Fprintf(a.out, "p2p: %s\n", *p2pAddr)
@@ -2033,7 +2033,7 @@ func (a App) peer(args []string) error {
 		}
 		fmt.Fprintf(a.out, "network id: %s\n", a.profile.NetworkID)
 		fmt.Fprintf(a.out, "chain id: %d\n", a.profile.ChainID)
-		fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisBlockForNetwork(a.profile).Hash)
+		fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisHashForNetwork(a.profile))
 		fmt.Fprintf(a.out, "local height: %d\n", tip.Height)
 		fmt.Fprintf(a.out, "local tip: %s\n", tip.Hash)
 		fmt.Fprintf(a.out, "known peers: %d\n", len(meta))
@@ -2220,7 +2220,7 @@ func (a App) localChainInfoMap() (map[string]any, error) {
 	return map[string]any{
 		"network_id":         a.profile.NetworkID,
 		"chain_id":           float64(a.profile.ChainID),
-		"genesis_hash":       chain.GenesisBlockForNetwork(a.profile).Hash,
+		"genesis_hash":       chain.GenesisHashForNetwork(a.profile),
 		"protocol_version":   float64(a.profile.ProtocolVersion),
 		"height":             float64(tip.Height),
 		"tip_hash":           tip.Hash,
