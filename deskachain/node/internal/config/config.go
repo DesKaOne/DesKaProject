@@ -35,6 +35,11 @@ const (
 
 	GenesisTimestamp int64 = 1717200000
 	GenesisMessage         = "DesKaChain Genesis - fair CPU mining starts here"
+
+	// MainnetGenesisHash is the frozen deterministic genesis hash for the
+	// production mainnet profile. Any mismatch must stop startup rather than
+	// silently accepting a different mainnet history.
+	MainnetGenesisHash = "b01cbf6a3b04f3a9e374cad6adfb5cd8d24f5b2ef9723c3f7f440eb7fe53bde4"
 )
 
 type Paths struct {
@@ -436,7 +441,7 @@ func Testnet() NetworkConfig {
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
 		SeedPeers:                nil,
-		GenesisHash:              "",
+		GenesisHash:              MainnetGenesisHash,
 		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
@@ -573,6 +578,9 @@ func ValidateNetworkProfile(profile NetworkConfig) error {
 	}
 	if profile.Name != "localnet" && !profile.RequireAuthenticatedNode {
 		return fmt.Errorf("production network requires authenticated P2P nodes")
+	}
+	if profile.Name == "mainnet" && profile.GenesisHash != MainnetGenesisHash {
+		return fmt.Errorf("mainnet genesis hash is not frozen")
 	}
 	return nil
 }
