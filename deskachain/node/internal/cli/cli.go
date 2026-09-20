@@ -47,7 +47,7 @@ type App struct {
 	profile    config.NetworkConfig
 	rpcURL     string
 	ignoreLock bool
-	chainMu   *sync.Mutex
+	chainMu    *sync.Mutex
 }
 
 type multiStringFlag []string
@@ -5401,4 +5401,4 @@ func Main() {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
-}\t\t\t\tunlock()\n
+}
