@@ -21,7 +21,7 @@ func CheckPeerWithProfile(paths config.Paths, peer string, profile config.Networ
 		profile = config.Localnet()
 	}
 	local := profile
-	local.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+	local.GenesisHash = chain.GenesisHashForNetwork(profile)
 	start := time.Now()
 	hs, err := NewClientWithTimeout(2 * time.Second).Handshake(peer)
 	latency := time.Since(start).Milliseconds()
