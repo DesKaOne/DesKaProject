@@ -181,11 +181,11 @@ func (s PeerStore) AddWithSource(peer, source string) error {
 	if err != nil {
 		return err
 	}
-	for _, existing := range peers {
-		if existing.URL == peer {
+	for i := range peers {
+		if peers[i].URL == peer {
 			if source != "" {
-				existing.Source = mergePeerSource(existing.Source, source)
-				return s.Upsert(existing)
+				peers[i].Source = mergePeerSource(peers[i].Source, source)
+				return s.saveMetadataUnlocked(peers)
 			}
 			return nil
 		}
