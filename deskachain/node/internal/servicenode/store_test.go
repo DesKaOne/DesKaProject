@@ -197,7 +197,7 @@ func TestScoreCollateralEligibility(t *testing.T) {
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
 		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
 	}
-	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+2; height++ {
 		funding = append(funding, types.Block{Height: height})
 	}
 	saveServiceBlocks(t, paths, funding)
@@ -237,7 +237,7 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
 		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
 	}
-	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+1; height++ {
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+2; height++ {
 		funding = append(funding, types.Block{Height: height})
 	}
 	saveServiceBlocks(t, paths, funding)
