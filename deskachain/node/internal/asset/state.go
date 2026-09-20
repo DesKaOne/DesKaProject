@@ -193,6 +193,9 @@ func (s *State) CreateFromTransactionID(txID, name, symbol string, decimals uint
 }
 
 func (s *State) Mint(assetID, issuer, to string, amount uint64) error {
+	if strings.TrimSpace(to) == "" {
+		return errors.New("mint recipient is required")
+	}
 	if amount == 0 {
 		return errors.New("mint amount must be greater than zero")
 	}
@@ -225,6 +228,9 @@ func (s *State) Mint(assetID, issuer, to string, amount uint64) error {
 }
 
 func (s *State) Burn(assetID, owner string, amount uint64) error {
+	if strings.TrimSpace(owner) == "" {
+		return errors.New("burn owner is required")
+	}
 	if amount == 0 {
 		return errors.New("burn amount must be greater than zero")
 	}
@@ -238,12 +244,12 @@ func (s *State) Burn(assetID, owner string, amount uint64) error {
 	if def.Status == StatusFrozen {
 		return ErrAssetFrozen
 	}
-	if err := s.subtractBalance(owner, assetID, amount); err != nil {
-		return err
-	}
 	newSupply, err := arith.Sub(def.TotalSupply, amount)
 	if err != nil {
 		return fmt.Errorf("asset supply underflow: %w", err)
+	}
+	if err := s.subtractBalance(owner, assetID, amount); err != nil {
+		return err
 	}
 	def.TotalSupply = newSupply
 	s.assets[assetID] = def

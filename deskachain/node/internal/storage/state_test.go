@@ -297,3 +297,118 @@ func TestValidateStateIndexesDetectsCoinbaseKeyCorruption(t *testing.T) {
 		t.Fatalf("expected coinbase key corruption, got %v", err)
 	}
 }
+
+
+func TestOpenBoltRejectsPersistedStateRootMismatch(t *testing.T) {
+	path := t.TempDir() + "/chain.db"
+
+	store, err := OpenBolt(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot := emptySnapshot(t)
+	block := types.Block{
+		Height:    snapshot.Height,
+		Hash:      "genesis-hash",
+		StateRoot: snapshot.StateRoot,
+	}
+	if err := store.SaveBlockAndState(block, snapshot); err != nil {
+		_ = store.Close()
+		t.Fatal(err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := bolt.Open(path, 0600, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		meta := root.Bucket(stateMetaBucket)
+		return meta.Put(stateRootKey, []byte("tampered-state-root"))
+	})
+	if closeErr := db.Close(); err != nil {
+		t.Fatal(err)
+	} else if closeErr != nil {
+		t.Fatal(closeErr)
+	}
+
+	if _, err := OpenBolt(path); err == nil || !strings.Contains(err.Error(), "state root mismatch") {
+		t.Fatalf("expected startup state-root rejection, got %v", err)
+	}
+}
+
+
+
+func TestSaveBlockAndStateRollsBackBlockOnStateWriteFailure(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	if err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket(stateBucket)
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	block := types.Block{
+		Height:    snapshot.Height,
+		Hash:      "genesis",
+		StateRoot: snapshot.StateRoot,
+	}
+	if err := store.SaveBlockAndState(block, snapshot); err == nil {
+		t.Fatal("expected state write failure")
+	}
+
+	hasChain, err := store.HasChain()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hasChain {
+		t.Fatal("block/tip mutation survived failed atomic commit")
+	}
+	if _, err := store.Tip(); err == nil {
+		t.Fatal("tip exists after failed atomic commit")
+	}
+}
+
+func TestSaveBlockAndStateRejectsNonCanonicalCommitWithoutMutation(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	genesis := types.Block{Height: 0, Hash: "genesis", StateRoot: snapshot.StateRoot}
+	if err := store.SaveBlockAndState(genesis, snapshot); err != nil {
+		t.Fatal(err)
+	}
+
+	next := snapshot
+	next.Height = 2
+	bad := types.Block{Height: 2, Hash: "bad", PreviousHash: genesis.Hash, StateRoot: snapshot.StateRoot}
+	if err := store.SaveBlockAndState(bad, next); err == nil || !strings.Contains(err.Error(), "next canonical height") {
+		t.Fatalf("expected canonical height rejection, got %v", err)
+	}
+
+	tip, err := store.Tip()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tip.Height != genesis.Height || tip.Hash != genesis.Hash {
+		t.Fatalf("canonical tip mutated after rejected commit: %#v", tip)
+	}
+	got, err := store.LoadState()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Height != snapshot.Height || got.StateRoot != snapshot.StateRoot {
+		t.Fatalf("state mutated after rejected commit: %#v", got)
+	}
+}

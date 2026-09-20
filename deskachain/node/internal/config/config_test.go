@@ -192,3 +192,53 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 		}
 	}
 }
+
+
+func TestBuiltInNetworkProfilesSatisfyV3Freeze(t *testing.T) {
+	for _, profile := range []NetworkConfig{Localnet(), Testnet(), Mainnet()} {
+		if err := ValidateNetworkProfile(profile); err != nil {
+			t.Fatalf("%s profile failed validation: %v", profile.Name, err)
+		}
+		if got, err := NetworkByName(profile.Name); err != nil {
+			t.Fatalf("%s profile lookup failed: %v", profile.Name, err)
+		} else if got.NetworkID != profile.NetworkID || got.ChainID != profile.ChainID {
+			t.Fatalf("%s profile identity changed during lookup", profile.Name)
+		}
+	}
+}
+
+func TestV3NetworkProfileRejectsEconomicDrift(t *testing.T) {
+	profile := Localnet()
+	profile.Economic.BlockSubsidy = 1
+	if err := ValidateNetworkProfile(profile); err == nil {
+		t.Fatal("expected non-zero block subsidy to be rejected")
+	}
+
+	profile = Localnet()
+	profile.Asset.FeeAssetID = "USDT"
+	if err := ValidateNetworkProfile(profile); err == nil {
+		t.Fatal("expected non-IDR fee asset to be rejected")
+	}
+
+	profile = Localnet()
+	profile.TxVersion = 4
+	if err := ValidateNetworkProfile(profile); err == nil {
+		t.Fatal("expected unsupported tx version to be rejected")
+	}
+}
+
+func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
+	if Localnet().RequireAuthenticatedNode {
+		t.Fatal("localnet should remain permissive for standalone development")
+	}
+	for _, profile := range []NetworkConfig{Testnet(), Mainnet()} {
+		if !profile.RequireAuthenticatedNode {
+			t.Fatalf("%s must require authenticated P2P", profile.Name)
+		}
+		insecure := profile
+		insecure.RequireAuthenticatedNode = false
+		if err := ValidateNetworkProfile(insecure); err == nil {
+			t.Fatalf("%s accepted unauthenticated P2P profile", profile.Name)
+		}
+	}
+}

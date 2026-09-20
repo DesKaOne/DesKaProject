@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"deskachain/internal/config"
 	"deskachain/internal/types"
 )
 
@@ -30,7 +31,22 @@ func BroadcastTx(peers []string, tx types.Transaction) BroadcastSummary {
 }
 
 func BroadcastTxToPeers(peerStorePath string, peers []PeerMetadata, tx types.Transaction) BroadcastSummary {
+	return broadcastTxToPeers(config.Paths{Peers: peerStorePath}, peers, tx, nil)
+}
+
+func BroadcastTxToPeersWithProfile(paths config.Paths, profile config.NetworkConfig, peers []PeerMetadata, tx types.Transaction) BroadcastSummary {
+	return broadcastTxToPeers(paths, peers, tx, &profile)
+}
+
+func broadcastTxToPeers(paths config.Paths, peers []PeerMetadata, tx types.Transaction, profile *config.NetworkConfig) BroadcastSummary {
 	client := NewClient()
+	if profile != nil {
+		var err error
+		client, err = NewClientForProfile(paths, *profile, 5*time.Second)
+		if err != nil {
+			return BroadcastSummary{Peers: len(peers), Failed: len(peers), Errors: []string{err.Error()}}
+		}
+	}
 	summary := BroadcastSummary{Peers: len(peers)}
 	for _, peer := range peers {
 		if peer.Status == PeerStatusBad {
@@ -42,7 +58,7 @@ func BroadcastTxToPeers(peerStorePath string, peers []PeerMetadata, tx types.Tra
 			summary.Failed++
 			summary.Errors = append(summary.Errors, err.Error())
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: err.Error()})
-			adjustBroadcastScore(peerStorePath, peer.URL, -5, "request failed")
+			adjustBroadcastScore(paths.Peers, peer.URL, -5, "request failed")
 			continue
 		}
 		if !response.Accepted {
@@ -50,12 +66,12 @@ func BroadcastTxToPeers(peerStorePath string, peers []PeerMetadata, tx types.Tra
 			summary.Failed++
 			summary.Errors = append(summary.Errors, response.Error)
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: response.Error})
-			adjustBroadcastScore(peerStorePath, peer.URL, -30, "invalid tx")
+			adjustBroadcastScore(paths.Peers, peer.URL, -30, "invalid tx")
 			continue
 		}
 		summary.Success++
 		summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: true, Message: "accepted"})
-		adjustBroadcastScore(peerStorePath, peer.URL, 2, "broadcast tx")
+		adjustBroadcastScore(paths.Peers, peer.URL, 2, "broadcast tx")
 		log.Printf("tx broadcast success peer=%s tx=%s", peer.URL, tx.ID)
 	}
 	return summary
@@ -70,7 +86,22 @@ func BroadcastBlock(peers []string, block types.Block) BroadcastSummary {
 }
 
 func BroadcastBlockToPeers(peerStorePath string, peers []PeerMetadata, block types.Block) BroadcastSummary {
+	return broadcastBlockToPeers(config.Paths{Peers: peerStorePath}, peers, block, nil)
+}
+
+func BroadcastBlockToPeersWithProfile(paths config.Paths, profile config.NetworkConfig, peers []PeerMetadata, block types.Block) BroadcastSummary {
+	return broadcastBlockToPeers(paths, peers, block, &profile)
+}
+
+func broadcastBlockToPeers(paths config.Paths, peers []PeerMetadata, block types.Block, profile *config.NetworkConfig) BroadcastSummary {
 	client := NewClientWithTimeout(3 * time.Second)
+	if profile != nil {
+		var err error
+		client, err = NewClientForProfile(paths, *profile, 3*time.Second)
+		if err != nil {
+			return BroadcastSummary{Peers: len(peers), Failed: len(peers), Errors: []string{err.Error()}}
+		}
+	}
 	summary := BroadcastSummary{Peers: len(peers)}
 	for _, peer := range peers {
 		if peer.Status == PeerStatusBad {
@@ -82,7 +113,7 @@ func BroadcastBlockToPeers(peerStorePath string, peers []PeerMetadata, block typ
 			summary.Failed++
 			summary.Errors = append(summary.Errors, err.Error())
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: err.Error()})
-			adjustBroadcastScore(peerStorePath, peer.URL, -5, "request failed")
+			adjustBroadcastScore(paths.Peers, peer.URL, -5, "request failed")
 			continue
 		}
 		if !response.Accepted {
@@ -90,12 +121,12 @@ func BroadcastBlockToPeers(peerStorePath string, peers []PeerMetadata, block typ
 			summary.Failed++
 			summary.Errors = append(summary.Errors, response.Error)
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: response.Error})
-			adjustBroadcastScore(peerStorePath, peer.URL, -30, "invalid block")
+			adjustBroadcastScore(paths.Peers, peer.URL, -30, "invalid block")
 			continue
 		}
 		summary.Success++
 		summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: true, Message: "accepted"})
-		adjustBroadcastScore(peerStorePath, peer.URL, 3, "broadcast block")
+		adjustBroadcastScore(paths.Peers, peer.URL, 3, "broadcast block")
 		log.Printf("block broadcast success peer=%s height=%d", peer.URL, block.Height)
 	}
 	return summary
@@ -109,3 +140,4 @@ func adjustBroadcastScore(path, peer string, delta int, reason string) {
 		log.Printf("peer score update failed peer=%s error=%v", peer, err)
 	}
 }
+

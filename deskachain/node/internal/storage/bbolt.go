@@ -50,7 +50,40 @@ func OpenBolt(path string) (*BoltStore, error) {
 		return nil, err
 	}
 	store := &BoltStore{path: path, db: db}
-	return store, store.Init()
+	if err := store.Init(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	if err := store.ValidateStartupIntegrity(); err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	return store, nil
+}
+
+func (s *BoltStore) ValidateStartupIntegrity() error {
+	hasChain, err := s.HasChain()
+	if err != nil {
+		return err
+	}
+	if !hasChain {
+		return nil
+	}
+	if err := s.ValidateChainStateConsistency(); err != nil {
+		return err
+	}
+	if err := s.ValidateStateIndexes(); err != nil {
+		return err
+	}
+	// LoadState performs full snapshot validation, including recomputing the
+	// state root from persisted accounts, stakes, coinbases, assets, and
+	// balances. Do this during startup so structurally valid indexes cannot
+	// hide a semantically inconsistent persisted snapshot.
+	if _, err := s.LoadState(); err != nil {
+		return err
+	}
+	_, _, _, err = s.GetStateMetadata()
+	return err
 }
 
 func (s *BoltStore) Init() error {
@@ -107,6 +140,13 @@ func (s *BoltStore) SaveBlock(block types.Block) error {
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
+		// Keep the legacy block-only API canonical-safe. Production v3 callers
+		// use SaveBlockAndState so block and state commit atomically, while this
+		// path must still never overwrite an existing canonical tip or skip a
+		// predecessor.
+		if err := validateCanonicalCommitPreconditionsTx(tx, block); err != nil {
+			return err
+		}
 		key := heightKey(block.Height)
 		if err := tx.Bucket(blocksBucket).Put(key, raw); err != nil {
 			return err
@@ -123,7 +163,13 @@ func (s *BoltStore) SaveBlockAndState(block types.Block, snapshot state.Snapshot
 	if err := validateBlockStatePair(block, snapshot); err != nil {
 		return err
 	}
+	if err := s.validateCanonicalCommitPreconditions(block); err != nil {
+		return err
+	}
 	return s.db.Update(func(tx *bolt.Tx) error {
+		if err := validateCanonicalCommitPreconditionsTx(tx, block); err != nil {
+			return err
+		}
 		key := heightKey(block.Height)
 		if err := tx.Bucket(blocksBucket).Put(key, raw); err != nil {
 			return err
@@ -132,6 +178,85 @@ func (s *BoltStore) SaveBlockAndState(block types.Block, snapshot state.Snapshot
 			return err
 		}
 		return saveStateTx(tx, snapshot)
+	})
+}
+
+func (s *BoltStore) validateCanonicalCommitPreconditions(block types.Block) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		return validateCanonicalCommitPreconditionsTx(tx, block)
+	})
+}
+
+func validateCanonicalCommitPreconditionsTx(tx *bolt.Tx, block types.Block) error {
+	meta := tx.Bucket(metaBucket)
+	blocks := tx.Bucket(blocksBucket)
+	if meta == nil || blocks == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	tip := meta.Get(tipKey)
+	if block.Height == 0 {
+		if tip != nil {
+			return errors.New("genesis commit attempted on initialized chain")
+		}
+		return nil
+	}
+	if tip == nil {
+		return errors.New("non-genesis commit requires existing chain tip")
+	}
+	var tipBlock types.Block
+	raw := blocks.Get(tip)
+	if raw == nil {
+		return errors.New("chain tip block missing")
+	}
+	if err := json.Unmarshal(raw, &tipBlock); err != nil {
+		return err
+	}
+	if tipBlock.Height == ^uint64(0) || tipBlock.Height+1 != block.Height {
+		return errors.New("block height is not the next canonical height")
+	}
+	if tipBlock.Hash == "" || block.PreviousHash != tipBlock.Hash {
+		return errors.New("block predecessor does not match canonical tip")
+	}
+	return nil
+}
+
+func (s *BoltStore) ValidateChainStateConsistency() error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		root := tx.Bucket(stateBucket)
+		if meta == nil || blocks == nil || root == nil {
+			return errors.New("chain/state storage is not initialized")
+		}
+		tipKey := meta.Get(tipKey)
+		if tipKey == nil {
+			return errors.New("chain tip is not initialized")
+		}
+		rawBlock := blocks.Get(tipKey)
+		if rawBlock == nil {
+			return errors.New("chain tip block is missing")
+		}
+		var tip types.Block
+		if err := json.Unmarshal(rawBlock, &tip); err != nil {
+			return err
+		}
+		stateMeta := root.Bucket(stateMetaBucket)
+		if stateMeta == nil {
+			return ErrStateNotInitialized
+		}
+		rawHeight := stateMeta.Get(stateHeightKey)
+		rawRoot := stateMeta.Get(stateRootKey)
+		if len(rawHeight) != 8 || len(rawRoot) == 0 {
+			return ErrStateNotInitialized
+		}
+		stateHeight := binary.BigEndian.Uint64(rawHeight)
+		if stateHeight != tip.Height {
+			return errors.New("chain tip/state height mismatch")
+		}
+		if tip.StateRoot != "" && string(rawRoot) != tip.StateRoot {
+			return errors.New("chain tip/state root mismatch")
+		}
+		return nil
 	})
 }
 
@@ -186,12 +311,54 @@ func (s *BoltStore) GetBlockByHeight(height uint64) (types.Block, error) {
 
 func (s *BoltStore) DeleteBlockByHeight(height uint64) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(blocksBucket).Delete(heightKey(height))
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		if meta == nil || blocks == nil {
+			return errors.New("chain storage is not initialized")
+		}
+		key := heightKey(height)
+		if blocks.Get(key) == nil {
+			return errors.New("block not found")
+		}
+		tipKeyBytes := meta.Get(tipKey)
+		if tipKeyBytes == nil {
+			return errors.New("chain is not initialized")
+		}
+		// Never expose a mutation path that can remove canonical history while
+		// leaving the tip/state metadata pointing at the removed chain.
+		if bytes.Equal(tipKeyBytes, key) {
+			return errors.New("cannot delete canonical tip block")
+		}
+		// Deleting a block at or below the canonical tip would create a hole in
+		// canonical history. Only non-canonical blocks above the tip may be
+		// removed through this legacy maintenance API.
+		tipHeight := binary.BigEndian.Uint64(tipKeyBytes)
+		if height <= tipHeight {
+			return errors.New("cannot delete canonical chain block")
+		}
+		return blocks.Delete(key)
 	})
 }
 
 func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
-	return s.replaceFromHeight(from, blocks, nil)
+	// A block-only replacement cannot safely mutate an initialized v3 chain:
+	// canonical blocks and the persisted state must advance atomically. Keep
+	// this legacy API available for pre-state callers, but fail closed once a
+	// canonical state snapshot exists.
+	return s.db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil {
+			return ErrStateNotInitialized
+		}
+		if meta.Get(stateVersionKey) != nil || meta.Get(stateHeightKey) != nil || meta.Get(stateRootKey) != nil {
+			return errors.New("cannot replace canonical blocks without atomic state commit")
+		}
+		return s.replaceFromHeightTx(tx, from, blocks, nil)
+	})
 }
 
 func (s *BoltStore) ReplaceFromHeightAndState(from uint64, blocks []types.Block, snapshot state.Snapshot) error {
@@ -201,7 +368,73 @@ func (s *BoltStore) ReplaceFromHeightAndState(from uint64, blocks []types.Block,
 	return s.replaceFromHeight(from, blocks, &snapshot)
 }
 
+func (s *BoltStore) validateReplacementAgainstCanonicalTip(from uint64, blocks []types.Block, snapshot state.Snapshot) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		return validateReplacementAgainstCanonicalTipTx(tx, from, blocks, snapshot)
+	})
+}
+
+func validateReplacementAgainstCanonicalTipTx(tx *bolt.Tx, from uint64, blocks []types.Block, snapshot state.Snapshot) error {
+	meta := tx.Bucket(metaBucket)
+	chain := tx.Bucket(blocksBucket)
+	if meta == nil || chain == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	tipKey := meta.Get(tipKey)
+	if tipKey == nil {
+		return errors.New("chain tip is not initialized")
+	}
+	var tip types.Block
+	rawTip := chain.Get(tipKey)
+	if rawTip == nil {
+		return errors.New("chain tip block is missing")
+	}
+	if err := json.Unmarshal(rawTip, &tip); err != nil {
+		return err
+	}
+	if len(blocks) == 0 {
+		return errors.New("replacement branch is empty")
+	}
+	if from > 0 {
+		rawParent := chain.Get(heightKey(from - 1))
+		if rawParent == nil {
+			return errors.New("replacement branch predecessor not found")
+		}
+		var parent types.Block
+		if err := json.Unmarshal(rawParent, &parent); err != nil {
+			return err
+		}
+		if parent.Hash == "" || blocks[0].PreviousHash != parent.Hash {
+			return errors.New("replacement branch predecessor mismatch")
+		}
+	}
+	replacementTip := blocks[len(blocks)-1]
+	if snapshot.Version != 0 {
+		if snapshot.Height != replacementTip.Height {
+			return errors.New("replacement state height does not match replacement tip")
+		}
+		if replacementTip.StateRoot != "" && snapshot.StateRoot != replacementTip.StateRoot {
+			return errors.New("replacement state root does not match replacement tip")
+		}
+	}
+	if from > tip.Height {
+		return errors.New("replacement height is beyond canonical tip")
+	}
+	return nil
+}
+
 func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
+	if snapshot == nil {
+		return s.db.Update(func(tx *bolt.Tx) error {
+			return s.replaceFromHeightTx(tx, from, blocks, nil)
+		})
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return s.replaceFromHeightTx(tx, from, blocks, snapshot)
+	})
+}
+
+func (s *BoltStore) replaceFromHeightTx(tx *bolt.Tx, from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
 	if len(blocks) == 0 {
 		return errors.New("replacement branch is empty")
 	}
@@ -224,36 +457,44 @@ func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapsho
 		rawBlocks[i] = raw
 	}
 
-	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(blocksBucket)
-		if from > 0 && b.Get(heightKey(from-1)) == nil {
-			return errors.New("replacement branch predecessor not found")
-		}
-		cursor := b.Cursor()
-		for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
-			if err := cursor.Delete(); err != nil {
-				return err
-			}
-		}
-		for i := range blocks {
-			height, err := checkedReplacementHeight(from, uint64(i))
-			if err != nil {
-				return err
-			}
-			if err := b.Put(heightKey(height), rawBlocks[i]); err != nil {
-				return err
-			}
-		}
-		if err := tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height)); err != nil {
+	if snapshot != nil {
+		if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, *snapshot); err != nil {
 			return err
 		}
-		if snapshot != nil {
-			if err := saveStateTx(tx, *snapshot); err != nil {
-				return err
-			}
+	} else if err := validateReplacementAgainstCanonicalTipTx(tx, from, blocks, state.Snapshot{}); err != nil {
+		return err
+	}
+	b := tx.Bucket(blocksBucket)
+	if b == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	if from > 0 && b.Get(heightKey(from-1)) == nil {
+		return errors.New("replacement branch predecessor not found")
+	}
+	cursor := b.Cursor()
+	for key, _ := cursor.Seek(heightKey(from)); key != nil; key, _ = cursor.Next() {
+		if err := cursor.Delete(); err != nil {
+			return err
 		}
-		return nil
-	})
+	}
+	for i := range blocks {
+		height, err := checkedReplacementHeight(from, uint64(i))
+		if err != nil {
+			return err
+		}
+		if err := b.Put(heightKey(height), rawBlocks[i]); err != nil {
+			return err
+		}
+	}
+	if err := tx.Bucket(metaBucket).Put(tipKey, heightKey(blocks[len(blocks)-1].Height)); err != nil {
+		return err
+	}
+	if snapshot != nil {
+		if err := saveStateTx(tx, *snapshot); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func checkedReplacementHeight(from, offset uint64) (uint64, error) {
@@ -265,8 +506,13 @@ func checkedReplacementHeight(from, offset uint64) (uint64, error) {
 
 func (s *BoltStore) SetTip(height uint64, hash string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(blocksBucket)
-		raw := b.Get(heightKey(height))
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		if meta == nil || blocks == nil {
+			return errors.New("chain storage is not initialized")
+		}
+		key := heightKey(height)
+		raw := blocks.Get(key)
 		if raw == nil {
 			return errors.New("tip block not found")
 		}
@@ -274,11 +520,54 @@ func (s *BoltStore) SetTip(height uint64, hash string) error {
 		if err := json.Unmarshal(raw, &block); err != nil {
 			return err
 		}
+		if block.Height != height {
+			return errors.New("tip block height mismatch")
+		}
 		if block.Hash != hash {
 			return errors.New("tip hash mismatch")
 		}
-		return tx.Bucket(metaBucket).Put(tipKey, heightKey(height))
+
+		currentKey := meta.Get(tipKey)
+		if currentKey == nil {
+			return errors.New("chain is not initialized")
+		}
+		if bytes.Equal(currentKey, key) {
+			// Setting the already-canonical tip is harmless, but still verify the
+			// persisted state before accepting the mutation path.
+			if err := validateTipStateConsistencyTx(tx, block); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		// SetTip is a legacy mutation API. It must not be able to rewind or
+		// advance canonical history without an atomic state update. Production
+		// v3 callers use SaveBlockAndState / ReplaceFromHeightAndState instead.
+		return errors.New("cannot mutate canonical tip without atomic state commit")
 	})
+}
+
+func validateTipStateConsistencyTx(tx *bolt.Tx, tip types.Block) error {
+	root := tx.Bucket(stateBucket)
+	if root == nil {
+		return ErrStateNotInitialized
+	}
+	meta := root.Bucket(stateMetaBucket)
+	if meta == nil {
+		return ErrStateNotInitialized
+	}
+	rawHeight := meta.Get(stateHeightKey)
+	rawRoot := meta.Get(stateRootKey)
+	if len(rawHeight) != 8 || len(rawRoot) == 0 {
+		return ErrStateNotInitialized
+	}
+	if binary.BigEndian.Uint64(rawHeight) != tip.Height {
+		return errors.New("chain tip/state height mismatch")
+	}
+	if tip.StateRoot != "" && string(rawRoot) != tip.StateRoot {
+		return errors.New("chain tip/state root mismatch")
+	}
+	return nil
 }
 
 func (s *BoltStore) GetHeight() (uint64, error) {
@@ -302,8 +591,45 @@ func (s *BoltStore) SaveState(snapshot state.Snapshot) error {
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
+		if err := validateStateAgainstCanonicalTipTx(tx, snapshot); err != nil {
+			return err
+		}
 		return saveStateTx(tx, snapshot)
 	})
+}
+
+func (s *BoltStore) validateStateAgainstCanonicalTip(snapshot state.Snapshot) error {
+	return s.db.View(func(tx *bolt.Tx) error {
+		return validateStateAgainstCanonicalTipTx(tx, snapshot)
+	})
+}
+
+func validateStateAgainstCanonicalTipTx(tx *bolt.Tx, snapshot state.Snapshot) error {
+	meta := tx.Bucket(metaBucket)
+	blocks := tx.Bucket(blocksBucket)
+	if meta == nil || blocks == nil {
+		return errors.New("chain storage is not initialized")
+	}
+	tipKey := meta.Get(tipKey)
+	if tipKey == nil {
+		// State may be initialized before the first block is committed.
+		return nil
+	}
+	raw := blocks.Get(tipKey)
+	if raw == nil {
+		return errors.New("chain tip block is missing")
+	}
+	var tip types.Block
+	if err := json.Unmarshal(raw, &tip); err != nil {
+		return err
+	}
+	if snapshot.Height != tip.Height {
+		return errors.New("state height does not match canonical tip")
+	}
+	if tip.StateRoot != "" && snapshot.StateRoot != tip.StateRoot {
+		return errors.New("state root does not match canonical tip")
+	}
+	return nil
 }
 
 func (s *BoltStore) GetStateMetadata() (version uint8, height uint64, stateRoot string, err error) {
@@ -578,6 +904,27 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			return err
 		}
 
+		nativeBalances := make(map[string]uint64)
+		if err := assetBalances.ForEach(func(k, v []byte) error {
+			separator := bytes.IndexByte(k, 0)
+			if separator <= 0 || separator == len(k)-1 {
+				return errors.New("invalid state asset balance key")
+			}
+			assetID := string(k[separator+1:])
+			if _, ok := assetIDs[assetID]; !ok {
+				return errors.New("state asset balance references unknown asset")
+			}
+			if len(v) != 8 || binary.BigEndian.Uint64(v) == 0 {
+				return errors.New("invalid persisted asset balance")
+			}
+			if asset.IsNative(assetID) {
+				nativeBalances[string(k[:separator])] = binary.BigEndian.Uint64(v)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
 		if err := accounts.ForEach(func(k, v []byte) error {
 			var account ledger.StateAccount
 			if err := json.Unmarshal(v, &account); err != nil {
@@ -585,6 +932,9 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			}
 			if account.Address != string(k) {
 				return errors.New("state account key mismatch")
+			}
+			if nativeBalances[account.Address] != account.Confirmed {
+				return errors.New("persisted native IDR/account balance mismatch")
 			}
 			return nil
 		}); err != nil {
@@ -637,23 +987,6 @@ func (s *BoltStore) ValidateStateIndexes() error {
 		}
 		if stakeCount != ownerCount {
 			return errors.New("state stake owner index count mismatch")
-		}
-
-		if err := assetBalances.ForEach(func(k, v []byte) error {
-			separator := bytes.IndexByte(k, 0)
-			if separator <= 0 || separator == len(k)-1 {
-				return errors.New("invalid state asset balance key")
-			}
-			assetID := string(k[separator+1:])
-			if _, ok := assetIDs[assetID]; !ok {
-				return errors.New("state asset balance references unknown asset")
-			}
-			if len(v) != 8 || binary.BigEndian.Uint64(v) == 0 {
-				return errors.New("invalid persisted asset balance")
-			}
-			return nil
-		}); err != nil {
-			return err
 		}
 
 		if err := coinbases.ForEach(func(k, v []byte) error {
@@ -865,37 +1198,19 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 	if err := snapshot.Validate(); err != nil {
 		return err
 	}
-	root, err := tx.CreateBucketIfNotExists(stateBucket)
-	if err != nil {
-		return err
+	root := tx.Bucket(stateBucket)
+	if root == nil {
+		return ErrStateNotInitialized
 	}
-	meta, err := root.CreateBucketIfNotExists(stateMetaBucket)
-	if err != nil {
-		return err
-	}
-	accountsBucket, err := root.CreateBucketIfNotExists(stateAccountsBucket)
-	if err != nil {
-		return err
-	}
-	stakesBucket, err := root.CreateBucketIfNotExists(stateStakesBucket)
-	if err != nil {
-		return err
-	}
-	stakesByOwnerBucket, err := root.CreateBucketIfNotExists(stateStakesByOwnerBucket)
-	if err != nil {
-		return err
-	}
-	coinbasesBucket, err := root.CreateBucketIfNotExists(stateCoinbasesBucket)
-	if err != nil {
-		return err
-	}
-	assetsBucket, err := root.CreateBucketIfNotExists(stateAssetsBucket)
-	if err != nil {
-		return err
-	}
-	assetBalancesBucket, err := root.CreateBucketIfNotExists(stateAssetBalancesBucket)
-	if err != nil {
-		return err
+	meta := root.Bucket(stateMetaBucket)
+	accountsBucket := root.Bucket(stateAccountsBucket)
+	stakesBucket := root.Bucket(stateStakesBucket)
+	stakesByOwnerBucket := root.Bucket(stateStakesByOwnerBucket)
+	coinbasesBucket := root.Bucket(stateCoinbasesBucket)
+	assetsBucket := root.Bucket(stateAssetsBucket)
+	assetBalancesBucket := root.Bucket(stateAssetBalancesBucket)
+	if meta == nil || accountsBucket == nil || stakesBucket == nil || stakesByOwnerBucket == nil || coinbasesBucket == nil || assetsBucket == nil || assetBalancesBucket == nil {
+		return ErrStateNotInitialized
 	}
 
 	if err := clearBucket(meta); err != nil {

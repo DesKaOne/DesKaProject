@@ -47,6 +47,7 @@ type App struct {
 	profile    config.NetworkConfig
 	rpcURL     string
 	ignoreLock bool
+	chainMu    *sync.Mutex
 }
 
 type multiStringFlag []string
@@ -1593,6 +1594,8 @@ func (a App) node(args []string) error {
 		return err
 	}
 	miningService := mining.NewService()
+	chainMutationMu := &sync.Mutex{}
+	a.chainMu = chainMutationMu
 	flagPeers := parsePeers(*peerText)
 	bootnodes := parsePeers(strings.Join([]string{*bootnode, *bootnodesText}, ","))
 	seedPeers, err := collectSeedPeers(a.profile, strings.Join(seedPeer, ","), *seedPeersText, *seedFile)
@@ -1639,7 +1642,7 @@ func (a App) node(args []string) error {
 	log.Printf("peer store: %s", a.paths.Peers)
 	log.Printf("service store: %s", a.paths.ServiceNodes)
 	log.Printf("service nodes: %d", len(serviceNodes))
-	p2pServer := p2p.NewHTTPServerWithProfile(*p2pAddr, a.paths, state, a.profile, advertise)
+	p2pServer := p2p.NewHTTPServerWithProfileAndMutationMutex(*p2pAddr, a.paths, state, a.profile, chainMutationMu, advertise)
 	go func() {
 		if err := p2pServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("p2p server stopped: %v", err)
@@ -1680,6 +1683,7 @@ func (a App) node(args []string) error {
 		AllowIsolatedWrites:      *allowIsolatedWrites,
 		StartedAt:                time.Now(),
 		Profile:                  a.profile,
+		ChainMutationMu:          chainMutationMu,
 	}
 	rpcServer := rpc.NewHTTPServer(*rpcAddr, a.paths, rpcInfo)
 	go func() {
@@ -2554,11 +2558,19 @@ func (a App) knownPeerMetadata() []p2p.PeerMetadata {
 }
 
 func (a App) broadcastTx(tx types.Transaction) {
-	p2p.BroadcastTxToPeers(a.paths.Peers, a.knownPeerMetadata(), tx)
+	p2p.BroadcastTxToPeersWithProfile(a.paths, a.profile, a.knownPeerMetadata(), tx)
 }
 
 func (a App) broadcastBlock(block types.Block) {
-	p2p.BroadcastBlockToPeers(a.paths.Peers, a.knownPeerMetadata(), block)
+	p2p.BroadcastBlockToPeersWithProfile(a.paths, a.profile, a.knownPeerMetadata(), block)
+}
+
+func (a App) lockChainMutation() func() {
+	if a.chainMu == nil {
+		return func() {}
+	}
+	a.chainMu.Lock()
+	return a.chainMu.Unlock
 }
 
 func (a App) syncLoop(interval time.Duration, verbose bool, state *nodestate.Store, maxReorgDepth uint64, upstreamPeers []string) {
@@ -2580,6 +2592,8 @@ func (a App) syncLoop(interval time.Duration, verbose bool, state *nodestate.Sto
 			}
 			go func(peerURL string) {
 				defer tracker.done(peerURL)
+				unlock := a.lockChainMutation()
+				defer unlock()
 				if err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, peerURL, nil, a.profile, maxReorgDepth); err != nil {
 					if tracker.shouldLogError(peerURL, err.Error(), time.Now()) {
 						log.Printf("sync failed peer=%s error=%v", peerURL, err)
@@ -2613,7 +2627,7 @@ func (a App) bootstrapPeers(seedPeers []string, selfURL string, state *nodestate
 		normalized, err := p2p.NormalizePeerURL(seed)
 		if err != nil {
 			failed++
-			log.Printf("seed rejected seed=%s reason=%q", seed, err.Error())
+			log.Printf("seed rejected seed=%s reason=%q", normalized, err.Error())
 			continue
 		}
 		if selfURL != "" {
@@ -2630,7 +2644,10 @@ func (a App) bootstrapPeers(seedPeers []string, selfURL string, state *nodestate
 		}
 		accepted++
 		log.Printf("seed accepted seed=%s height=%d tip=%s", normalized, hs.Height, hs.TipHash)
-		if err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth); err != nil {
+		unlock := a.lockChainMutation()
+		err = p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth)
+		unlock()
+		if err != nil {
 			log.Printf("seed sync checked seed=%s result=%q", normalized, err.Error())
 		} else {
 			log.Printf("seed sync accepted seed=%s", normalized)
@@ -5327,9 +5344,14 @@ func (a App) openInitializedChain() (*chain.Blockchain, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if err := bc.InitWithProfile(a.profile); err != nil {
+	has, err := bc.HasChain()
+	if err != nil {
 		closeFn()
 		return nil, nil, err
+	}
+	if !has {
+		closeFn()
+		return nil, nil, errors.New("chain is not initialized")
 	}
 	if err := config.EnsureNetworkMatches(a.paths, a.profile); err != nil {
 		closeFn()

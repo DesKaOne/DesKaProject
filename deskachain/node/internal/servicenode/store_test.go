@@ -2,6 +2,7 @@ package servicenode
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -190,27 +192,23 @@ func TestScoreCollateralEligibility(t *testing.T) {
 	if score.StakeEligible || score.CollateralStatus != "none" || score.EligibleSimulatedPoints != 0 {
 		t.Fatalf("expected ineligible without stake: %+v", score)
 	}
+	funding := []types.Block{
+		{Height: 0},
+		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
+		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
+	}
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+2; height++ {
+		funding = append(funding, types.Block{Height: height})
+	}
+	saveServiceBlocks(t, paths, funding)
+	lockHeight := config.Localnet().Consensus.CoinbaseMaturity + 3
 	lock := types.NewStakeLockTransaction(w.Address, config.Localnet().Consensus.Staking.MinServiceStake, 1)
 	if err := w.SignTransaction(&lock); err != nil {
 		t.Fatal(err)
 	}
 	lock.StakeID = lock.ID
-	bolt, err := storage.OpenBolt(paths.DB)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, block := range []types.Block{
-		{Height: 0},
-		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
-		{Height: 2, Transactions: []types.Transaction{lock}},
-	} {
-		if err := bolt.SaveBlock(block); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := bolt.Close(); err != nil {
-		t.Fatal(err)
-	}
+	lockBlock := types.Block{Height: lockHeight, Transactions: []types.Transaction{lock}}
+	saveServiceBlocks(t, paths, []types.Block{lockBlock})
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -234,13 +232,21 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	if _, _, err := store.Heartbeat(w.Address, "", Metadata{}); err != nil {
 		t.Fatal(err)
 	}
-	lock, unlock := serviceStakeTxs(t, w, config.Localnet().Consensus.Staking.MinServiceStake)
-	saveServiceBlocks(t, paths, []types.Block{
+	funding := []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
-		{Height: 2, Transactions: []types.Transaction{lock}},
-		{Height: 3, Transactions: []types.Transaction{unlock}},
-	})
+		{Height: 2, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 2)}},
+	}
+	for height := uint64(3); height <= config.Localnet().Consensus.CoinbaseMaturity+2; height++ {
+		funding = append(funding, types.Block{Height: height})
+	}
+	saveServiceBlocks(t, paths, funding)
+	lock, unlock := serviceStakeTxs(t, w, config.Localnet().Consensus.Staking.MinServiceStake)
+	lockHeight := config.Localnet().Consensus.CoinbaseMaturity + 3
+	unlockHeight := lockHeight + 1
+	lockBlock := types.Block{Height: lockHeight, Transactions: []types.Transaction{lock}}
+	unlockBlock := types.Block{Height: unlockHeight, Transactions: []types.Transaction{unlock}}
+	saveServiceBlocks(t, paths, []types.Block{lockBlock, unlockBlock})
 	score, err := store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -248,13 +254,10 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	if score.StakeEligible || score.CollateralStatus != "unlocking" || score.ActiveStake != 0 || score.EligibleSimulatedPoints != 0 {
 		t.Fatalf("expected unlocking stake to be ineligible: %+v", score)
 	}
-	saveServiceBlocks(t, paths, []types.Block{
-		{Height: 0},
-		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
-		{Height: 2, Transactions: []types.Transaction{lock}},
-		{Height: 3, Transactions: []types.Transaction{unlock}},
-		{Height: 13},
-	})
+	releaseHeight := unlockHeight + config.Localnet().Consensus.Staking.UnbondingPeriodBlocks
+	for height := unlockHeight + 1; height <= releaseHeight; height++ {
+		saveServiceBlocks(t, paths, []types.Block{{Height: height}})
+	}
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -338,6 +341,13 @@ func serviceStakeTxs(t *testing.T, w wallet.Wallet, value uint64) (types.Transac
 	return lock, unlock
 }
 
+func prepareServiceBlocks(blocks []types.Block) {
+	for i := range blocks {
+		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
+		if i > 0 { blocks[i].PreviousHash = blocks[i-1].Hash }
+	}
+}
+
 func saveServiceBlocks(t *testing.T, paths config.Paths, blocks []types.Block) {
 	t.Helper()
 	bolt, err := storage.OpenBolt(paths.DB)
@@ -345,10 +355,36 @@ func saveServiceBlocks(t *testing.T, paths config.Paths, blocks []types.Block) {
 		t.Fatal(err)
 	}
 	defer bolt.Close()
-	for _, block := range blocks {
-		if err := bolt.SaveBlock(block); err != nil {
+
+	canonical, err := bolt.Blocks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var previous string
+	if len(canonical) > 0 {
+		previous = canonical[len(canonical)-1].Hash
+	}
+	for i := range blocks {
+		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
+		if previous != "" {
+			blocks[i].PreviousHash = previous
+		}
+		if err := bolt.SaveBlock(blocks[i]); err != nil {
 			t.Fatal(err)
 		}
+		previous = blocks[i].Hash
+	}
+	canonical, err = bolt.Blocks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	profile := config.Localnet()
+	snapshot, err := state.SnapshotForBlocks(canonical, profile.Consensus, profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := bolt.SaveState(snapshot); err != nil {
+		t.Fatal(err)
 	}
 }
 

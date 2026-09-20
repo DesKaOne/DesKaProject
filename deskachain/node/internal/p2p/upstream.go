@@ -58,7 +58,10 @@ func BackfillToPeer(paths config.Paths, peer string, profile config.NetworkConfi
 	}
 	localNet := profile
 	localNet.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
-	client := NewClientWithTimeout(5 * time.Second)
+	client, err := NewClientForProfile(paths, profile, 5*time.Second)
+	if err != nil {
+		return UpstreamBackfillResult{Peer: peer}, err
+	}
 	hs, err := client.Handshake(peer)
 	if err != nil {
 		return UpstreamBackfillResult{Peer: peer}, err

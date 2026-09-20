@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"deskachain/internal/amount"
@@ -28,6 +29,7 @@ type Server struct {
 	p2pAdvertise string
 	state        *nodestate.Store
 	profile      config.NetworkConfig
+	mutationMu   *sync.Mutex
 }
 
 const (
@@ -57,6 +59,11 @@ func NewServerWithAdvertiseAndProfile(paths config.Paths, listen, advertise stri
 	return Server{paths: paths, p2pListen: listen, p2pAdvertise: advertise, profile: profile}
 }
 
+// SetMutationMutex shares the node-level canonical-chain mutation lock with RPC and background sync.
+func (s *Server) SetMutationMutex(mu *sync.Mutex) {
+	s.mutationMu = mu
+}
+
 func NewServerWithState(paths config.Paths, listen, advertise string, state *nodestate.Store) Server {
 	return NewServerWithStateAndProfile(paths, listen, advertise, state, config.Localnet())
 }
@@ -81,8 +88,13 @@ func NewHTTPServer(addr string, paths config.Paths, state *nodestate.Store, adve
 }
 
 func NewHTTPServerWithProfile(addr string, paths config.Paths, state *nodestate.Store, profile config.NetworkConfig, advertise ...string) *http.Server {
+	return NewHTTPServerWithProfileAndMutationMutex(addr, paths, state, profile, nil, advertise...)
+}
+
+func NewHTTPServerWithProfileAndMutationMutex(addr string, paths config.Paths, state *nodestate.Store, profile config.NetworkConfig, mutationMu *sync.Mutex, advertise ...string) *http.Server {
 	mux := http.NewServeMux()
 	server := NewServerWithStateAndProfile(paths, addr, firstString(advertise), state, profile)
+	server.SetMutationMutex(mutationMu)
 	server.Register(mux)
 	log.Printf("p2p listening on %s advertise=%s", addr, server.p2pAdvertise)
 	return &http.Server{
@@ -94,6 +106,14 @@ func NewHTTPServerWithProfile(addr string, paths config.Paths, state *nodestate.
 		IdleTimeout:       60 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 	}
+}
+
+func (s Server) lockMutation() func() {
+	if s.mutationMu == nil {
+		return func() {}
+	}
+	s.mutationMu.Lock()
+	return s.mutationMu.Unlock
 }
 
 func (s Server) network() config.NetworkConfig {
@@ -357,6 +377,8 @@ func (s Server) receiveTx(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) receiveBlock(w http.ResponseWriter, r *http.Request) {
+	unlock := s.lockMutation()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxBlockBody)
 	var block types.Block
 	if err := json.NewDecoder(r.Body).Decode(&block); err != nil {
@@ -725,4 +747,5 @@ func writeError(w http.ResponseWriter, err error) {
 		return
 	}
 	writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+
 }

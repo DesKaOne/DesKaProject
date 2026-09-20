@@ -405,5 +405,27 @@ func (tx Transaction) FeePayerSigningBytesWithChainID(chainID uint64) ([]byte, e
 	if tx.ProtocolVersion() != TxVersionAsset {
 		return nil, fmt.Errorf("fee payer authorization requires transaction version 3")
 	}
-	return canonicalFeePayerSigningBytes(tx, chainID)
+	// Bind the sponsor authorization to the transaction fee and all fields
+	// relevant to the fee obligation. Sponsor material stays outside the
+	// payload so it can be attached after the sender signs.
+	payload := struct {
+		Domain string `json:"domain"`
+		ChainID uint64 `json:"chain_id"`
+		TxID string `json:"tx_id"`
+		From string `json:"from"`
+		To string `json:"to"`
+		Amount uint64 `json:"amount"`
+		Fee uint64 `json:"fee"`
+		Nonce uint64 `json:"nonce"`
+		Timestamp int64 `json:"timestamp"`
+		Type string `json:"type"`
+		AssetID string `json:"asset_id"`
+		FeePayer string `json:"fee_payer"`
+	}{
+		Domain: "deska-paymaster-v1", ChainID: chainID, TxID: tx.ID,
+		From: tx.From, To: tx.To, Amount: tx.Amount, Fee: tx.Fee,
+		Nonce: tx.Nonce, Timestamp: tx.Timestamp, Type: tx.TxType(),
+		AssetID: tx.EffectiveAssetID(), FeePayer: tx.EffectiveFeePayer(),
+	}
+	return json.Marshal(payload)
 }

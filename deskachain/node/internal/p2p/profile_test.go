@@ -49,6 +49,7 @@ func TestP2PRejectsTestnetPeerFromLocalnet(t *testing.T) {
 
 func TestP2PReorgUsesActiveProfile(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, local, profile, 1)
@@ -83,6 +84,7 @@ func TestP2PReorgRejectsNetworkMismatch(t *testing.T) {
 
 func TestPeerSyncTestnet(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 1)
@@ -114,6 +116,7 @@ func TestPeerSyncTestnet(t *testing.T) {
 
 func TestPeerSyncTestnetHigherWorkForkReorgs(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, local, profile, 1)
@@ -146,6 +149,7 @@ func TestPeerSyncTestnetHigherWorkForkReorgs(t *testing.T) {
 
 func TestPeerSyncTestnetDeepHigherWorkForkHonorsMaxReorgDepth(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	localAllowed := newProfileTestNode(t, profile)
 	localRejected := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
@@ -252,6 +256,7 @@ func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
 
 func TestPeerSyncUpToDateValidPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
@@ -306,6 +311,7 @@ func TestNormalizePeerURLAndPeerStoreDedupesBootnodes(t *testing.T) {
 
 func TestPeerCheckStatusOfflineAndRecovery(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	addr := freeTCPAddr(t)
 	offlineURL := "http://" + addr
@@ -336,6 +342,7 @@ func TestPeerCheckStatusOfflineAndRecovery(t *testing.T) {
 
 func TestPeerSyncAfterRestartUsesPersistedPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 2)
@@ -380,15 +387,17 @@ func TestPeerSyncNoCompleteOnMismatchAndLocalAheadOutput(t *testing.T) {
 		t.Fatalf("mismatch output must not claim sync complete:\n%s", out.String())
 	}
 
-	localAhead := newProfileTestNode(t, config.Testnet())
-	peer := newProfileTestNode(t, config.Testnet())
-	mineProfileBlocks(t, localAhead, config.Testnet(), 1)
+	localAheadProfile := config.Testnet()
+	localAheadProfile.RequireAuthenticatedNode = false
+	localAhead := newProfileTestNode(t, localAheadProfile)
+	peer := newProfileTestNode(t, localAheadProfile)
+	mineProfileBlocks(t, localAhead, localAheadProfile, 1)
 	mux = http.NewServeMux()
-	NewServerWithAdvertiseAndProfile(peer, ":0", "", config.Testnet()).Register(mux)
+	NewServerWithAdvertiseAndProfile(peer, ":0", "", localAheadProfile).Register(mux)
 	server = httptest.NewServer(mux)
 	defer server.Close()
 	out.Reset()
-	if err := SyncFromPeerWithProfile(localAhead, server.URL, &out, config.Testnet()); err != nil {
+	if err := SyncFromPeerWithProfile(localAhead, server.URL, &out, localAheadProfile); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "local chain ahead of peer") || !strings.Contains(out.String(), "imported blocks: 0") {
@@ -398,6 +407,7 @@ func TestPeerSyncNoCompleteOnMismatchAndLocalAheadOutput(t *testing.T) {
 
 func TestPeerSyncInvalidBlockPenalizesPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 1)
@@ -448,6 +458,7 @@ func TestPeerSyncInvalidBlockPenalizesPeer(t *testing.T) {
 
 func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	candidate := newProfileTestNode(t, profile)
 	candidateMux := http.NewServeMux()
@@ -464,7 +475,11 @@ func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 	seedServer := httptest.NewServer(seedMux)
 	defer seedServer.Close()
 
-	response, err := NewClient().Peers(seedServer.URL)
+	client, err := NewClientForProfile(local, profile, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Peers(seedServer.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -498,6 +513,7 @@ func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 
 func TestDiscoverySkipsSelfInvalidAndWrongNetwork(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	wrong := newProfileTestNode(t, config.Localnet())
 	wrongMux := http.NewServeMux()
@@ -576,6 +592,7 @@ func freeTCPAddr(t *testing.T) string {
 
 func newProfileP2PServerOnAddr(t *testing.T, profile config.NetworkConfig, addr string) *httptest.Server {
 	t.Helper()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
 	NewServerWithAdvertiseAndProfile(paths, ":0", "", profile).Register(mux)
@@ -610,6 +627,7 @@ func profileBlocks(t *testing.T, paths config.Paths) []types.Block {
 
 func newProfileP2PServer(t *testing.T, profile config.NetworkConfig) (config.Paths, *httptest.Server) {
 	t.Helper()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
 	NewServerWithAdvertiseAndProfile(paths, ":0", "", profile).Register(mux)

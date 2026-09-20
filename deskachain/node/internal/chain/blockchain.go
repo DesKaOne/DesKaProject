@@ -3,6 +3,7 @@ package chain
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"deskachain/internal/arith"
 	"deskachain/internal/config"
@@ -44,13 +45,7 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.SaveBlockAndState(genesis, snapshot)
 		}
-		if err := bc.store.SaveBlock(genesis); err != nil {
-			return err
-		}
-		if ss, ok := bc.store.(storage.StateStore); ok {
-			return ss.SaveState(snapshot)
-		}
-		return nil
+		return errors.New("production chain requires atomic block-state storage")
 	}
 
 	ss, ok := bc.store.(storage.StateStore)
@@ -63,15 +58,38 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 		return err
 	}
 	snapshot, loadErr := ss.LoadState()
-	if loadErr == nil && snapshotMatchesTip(snapshot, tip) {
-		return nil
+	if loadErr != nil {
+		return fmt.Errorf("persisted state unavailable: %w", loadErr)
 	}
+	if !snapshotMatchesTip(snapshot, tip) {
+		return errors.New("persisted state does not match canonical tip")
+	}
+	q, ok := bc.store.(storage.StateQueryStore)
+	if !ok {
+		return errors.New("state query store is not available")
+	}
+	if err := q.ValidateChainStateConsistency(); err != nil {
+		return err
+	}
+	return nil
+}
 
+// RebuildStateWithProfile is an explicit recovery operation for operators.
+// Runtime initialization must never silently rewrite state derived from the
+// canonical chain.
+func (bc *Blockchain) RebuildStateWithProfile(profile config.NetworkConfig) error {
+	ss, ok := bc.store.(storage.StateStore)
+	if !ok {
+		return errors.New("state store is not available")
+	}
 	blocks, err := bc.Blocks()
 	if err != nil {
 		return err
 	}
-	snapshot, err = state.SnapshotForBlocks(blocks, profile.Consensus, profile)
+	if len(blocks) == 0 {
+		return errors.New("chain is not initialized")
+	}
+	snapshot, err := state.SnapshotForBlocks(blocks, profile.Consensus, profile)
 	if err != nil {
 		return err
 	}
@@ -119,7 +137,7 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 	full = append(full, prefix...)
 	full = append(full, blocks...)
 
-	if ss, ok := bc.store.(storage.StateStore); ok {
+	if _, ok := bc.store.(storage.StateStore); ok {
 		snapshot, snapshotErr := state.SnapshotForBlocks(full, profile.Consensus, profile)
 		if snapshotErr != nil {
 			return snapshotErr
@@ -127,13 +145,10 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.ReplaceFromHeightAndState(from, blocks, snapshot)
 		}
-		if err := bc.store.ReplaceFromHeight(from, blocks); err != nil {
-			return err
-		}
-		return ss.SaveState(snapshot)
+		return errors.New("production chain requires atomic block-state storage")
 	}
 
-	return bc.store.ReplaceFromHeight(from, blocks)
+	return errors.New("production chain requires persistent state storage")
 }
 
 // BalanceDetailsForWithProfile prefers the persistent state indexes and
@@ -351,12 +366,9 @@ func (bc *Blockchain) AddBlockWithNetwork(block types.Block, profile config.Netw
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.SaveBlockAndState(block, snapshot)
 		}
-		if err := bc.store.SaveBlock(block); err != nil {
-			return err
-		}
-		return ss.SaveState(snapshot)
+		return errors.New("production chain requires atomic block-state storage")
 	}
-	return bc.store.SaveBlock(block)
+	return errors.New("production chain requires persistent state storage")
 }
 
 func (bc *Blockchain) MineBlock(miner string, pending []types.Transaction) (types.Block, error) {
