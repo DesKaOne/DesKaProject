@@ -203,6 +203,25 @@ func TestMainnetProfileRequiresExplicitNetworkSelection(t *testing.T) {
 	}
 }
 
+func TestNetworkByNameMainnetIsExplicit(t *testing.T) {
+	mainnet, err := NetworkByName("mainnet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mainnet.Name != "mainnet" || mainnet.ChainID != 777000 {
+		t.Fatalf("unexpected mainnet selection: %#v", mainnet)
+	}
+	for _, name := range []string{"", "localnet", "testnet"} {
+		profile, err := NetworkByName(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if profile.Name == "mainnet" {
+			t.Fatalf("non-mainnet selector %q returned mainnet", name)
+		}
+	}
+}
+
 func TestMainnetDoesNotAdvertiseAsAvailable(t *testing.T) {
 	profile := Mainnet()
 	if profile.Name != "mainnet" {
