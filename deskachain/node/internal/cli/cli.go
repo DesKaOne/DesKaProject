@@ -1003,6 +1003,9 @@ func (a App) mine(args []string) error {
 }
 
 func (a App) service(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("service command is required")
 	}
@@ -1137,6 +1140,9 @@ func (a App) serviceChallenge(args []string, store servicenode.Store) error {
 }
 
 func (a App) stake(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("stake command is required")
 	}
