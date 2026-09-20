@@ -464,7 +464,11 @@ func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 	seedServer := httptest.NewServer(seedMux)
 	defer seedServer.Close()
 
-	response, err := NewClient().Peers(seedServer.URL)
+	client, err := NewClientForProfile(local, profile, 5*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	response, err := client.Peers(seedServer.URL)
 	if err != nil {
 		t.Fatal(err)
 	}
