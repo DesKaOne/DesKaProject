@@ -1,3 +1,92 @@
+package cli
+
+import (
+	"bufio"
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"log"
+	"math/rand"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	"deskachain/internal/amount"
+	"deskachain/internal/chain"
+	"deskachain/internal/config"
+	"deskachain/internal/crypto"
+	"deskachain/internal/ledger"
+	"deskachain/internal/mempool"
+	"deskachain/internal/mining"
+	"deskachain/internal/nodestate"
+	"deskachain/internal/p2p"
+	"deskachain/internal/rpc"
+	"deskachain/internal/servicenode"
+	"deskachain/internal/staking"
+	"deskachain/internal/storage"
+	"deskachain/internal/types"
+	"deskachain/internal/version"
+	"deskachain/internal/wallet"
+)
+
+type App struct {
+	out        io.Writer
+	paths      config.Paths
+	profile    config.NetworkConfig
+	rpcURL     string
+	ignoreLock bool
+	chainMu    *sync.Mutex
+}
+
+type multiStringFlag []string
+
+func (m *multiStringFlag) String() string {
+	return strings.Join(*m, ",")
+}
+
+func (m *multiStringFlag) Set(value string) error {
+	*m = append(*m, value)
+	return nil
+}
+
+func New(out io.Writer) App {
+	return App{out: out, paths: config.NewPaths(config.DefaultDataDir), profile: config.Localnet()}
+}
+
+func isHelpArg(arg string) bool {
+	return arg == "-h" || arg == "--help" || arg == "help"
+}
+
+func printHelp(out io.Writer) {
+	fmt.Fprintln(out, "DesKaChain")
+	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet] <command> [args]")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "commands:")
+	fmt.Fprintln(out, "  version")
+	fmt.Fprintln(out, "  init")
+	fmt.Fprintln(out, "  node start")
+	fmt.Fprintln(out, "  chain info|validate|difficulty")
+	fmt.Fprintln(out, "  mining status|difficulty|blocks")
+	fmt.Fprintln(out, "  wallet new|list")
+	fmt.Fprintln(out, "  peer list|sync|check")
+	fmt.Fprintln(out, "  upstream list|status|push|push-all")
+	fmt.Fprintln(out, "  service register|score")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "mainnet: not available")
+}
+
 func (a App) WithDataDir(datadir string) App {
 	a.paths = config.NewPaths(datadir)
 	return a
