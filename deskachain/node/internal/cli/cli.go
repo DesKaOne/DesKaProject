@@ -1477,6 +1477,13 @@ func (a App) rpc(args []string) error {
 	return rpc.ListenAndServe(*addr, a.paths)
 }
 
+func ensureMainnetOperational(profile config.NetworkConfig) error {
+	if profile.Name == "mainnet" {
+		return errors.New("mainnet is not operational: launch gate is closed")
+	}
+	return nil
+}
+
 func (a App) node(args []string) error {
 	if len(args) == 0 {
 		return errors.New("node command is required")
