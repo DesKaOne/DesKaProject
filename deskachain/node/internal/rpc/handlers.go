@@ -2574,7 +2574,7 @@ func (h handler) send(w http.ResponseWriter, r *http.Request) {
 	}
 	h.refreshState()
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastTxToPeers(h.paths.Peers, peers, tx)
+	broadcast := p2p.BroadcastTxToPeersWithProfile(h.paths, h.profile(), peers, tx)
 	view := txView(tx, "pending", h.profile())
 	view["status"] = "pending"
 	view["broadcast"] = broadcast
@@ -2778,7 +2778,7 @@ func (h handler) minerSubmit(w http.ResponseWriter, r *http.Request) {
 	h.refreshState()
 	// Do not broadcast while holding runtime/chain locks or an open chain store.
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastBlockToPeers(h.paths.Peers, peers, block)
+	broadcast := p2p.BroadcastBlockToPeersWithProfile(h.paths, h.profile(), peers, block)
 	log.Printf("miner submit broadcast complete height=%d success=%d failed=%d", block.Height, broadcast.Success, broadcast.Failed)
 	h.scheduleUpstreamBackfill()
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -3048,7 +3048,7 @@ func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
 	}
 	h.refreshState()
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastTxToPeers(h.paths.Peers, peers, tx)
+	broadcast := p2p.BroadcastTxToPeersWithProfile(h.paths, h.profile(), peers, tx)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":        true,
 		"tx_id":     tx.ID,
@@ -3082,7 +3082,7 @@ func (h handler) stakeUnlock(w http.ResponseWriter, r *http.Request) {
 	}
 	h.refreshState()
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastTxToPeers(h.paths.Peers, peers, tx)
+	broadcast := p2p.BroadcastTxToPeersWithProfile(h.paths, h.profile(), peers, tx)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":             true,
 		"tx_id":          tx.ID,
@@ -3169,7 +3169,7 @@ func (h handler) mine(w http.ResponseWriter, r *http.Request) {
 		log.Printf("mining block committed height=%d hash=%s", block.Height, block.Hash)
 		// Do not hold chain or mempool locks while performing network I/O.
 		peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-		blockBroadcast := p2p.BroadcastBlockToPeers(h.paths.Peers, peers, block)
+		blockBroadcast := p2p.BroadcastBlockToPeersWithProfile(h.paths, h.profile(), peers, block)
 		broadcast.Peers += blockBroadcast.Peers
 		broadcast.Success += blockBroadcast.Success
 		broadcast.Failed += blockBroadcast.Failed
