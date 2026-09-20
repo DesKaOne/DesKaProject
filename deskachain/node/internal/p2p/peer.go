@@ -168,6 +168,10 @@ func (s PeerStore) Add(peer string) error {
 }
 
 func (s PeerStore) AddWithSource(peer, source string) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	normalized, err := NormalizePeerURL(peer)
 	if err != nil {
 		return err
@@ -187,10 +191,14 @@ func (s PeerStore) AddWithSource(peer, source string) error {
 		}
 	}
 	now := time.Now().Format(time.RFC3339)
-	return s.SaveMetadata(append(peers, PeerMetadata{URL: peer, Status: PeerStatusUnknown, Source: source, FirstSeenAt: now}))
+	return s.saveMetadataUnlocked(append(peers, PeerMetadata{URL: peer, Status: PeerStatusUnknown, Source: source, FirstSeenAt: now}))
 }
 
 func (s PeerStore) Upsert(peer PeerMetadata) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	normalized, err := NormalizePeerURL(peer.URL)
 	if err != nil {
 		return err
@@ -211,10 +219,10 @@ func (s PeerStore) Upsert(peer PeerMetadata) error {
 				peer.Source = peers[i].Source
 			}
 			peers[i] = peer
-			return s.SaveMetadata(peers)
+			return s.saveMetadataUnlocked(peers)
 		}
 	}
-	return s.SaveMetadata(append(peers, peer))
+	return s.saveMetadataUnlocked(append(peers, peer))
 }
 
 func mergePeerSource(existing, incoming string) string {
@@ -228,6 +236,10 @@ func mergePeerSource(existing, incoming string) string {
 }
 
 func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	normalized, err := NormalizePeerURL(peerURL)
 	if err != nil {
 		return err
@@ -268,6 +280,10 @@ func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) err
 }
 
 func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	normalized, err := NormalizePeerURL(peerURL)
 	if err != nil {
 		return err
@@ -333,6 +349,10 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 }
 
 func (s PeerStore) Remove(peer string) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	normalized, err := NormalizePeerURL(peer)
 	if err != nil {
 		return err
@@ -352,10 +372,18 @@ func (s PeerStore) Remove(peer string) error {
 }
 
 func (s PeerStore) Clear() error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	return s.SaveMetadata(nil)
 }
 
 func (s PeerStore) PruneExpired(ttl time.Duration, now time.Time) (int, error) {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
 	if ttl <= 0 {
 		return 0, nil
 	}
@@ -380,7 +408,7 @@ func (s PeerStore) PruneExpired(ttl time.Duration, now time.Time) (int, error) {
 	if pruned == 0 {
 		return 0, nil
 	}
-	return pruned, s.SaveMetadata(kept)
+	return pruned, s.saveMetadataUnlocked(kept)
 }
 
 func MetadataFromHandshake(url string, hs Handshake, scoreDelta int) PeerMetadata {
