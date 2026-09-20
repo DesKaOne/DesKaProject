@@ -44,13 +44,7 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.SaveBlockAndState(genesis, snapshot)
 		}
-		if err := bc.store.SaveBlock(genesis); err != nil {
-			return err
-		}
-		if ss, ok := bc.store.(storage.StateStore); ok {
-			return ss.SaveState(snapshot)
-		}
-		return nil
+		return errors.New("production chain requires atomic block-state storage")
 	}
 
 	ss, ok := bc.store.(storage.StateStore)
@@ -127,13 +121,10 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.ReplaceFromHeightAndState(from, blocks, snapshot)
 		}
-		if err := bc.store.ReplaceFromHeight(from, blocks); err != nil {
-			return err
-		}
-		return ss.SaveState(snapshot)
+		return errors.New("production chain requires atomic block-state storage")
 	}
 
-	return bc.store.ReplaceFromHeight(from, blocks)
+	return errors.New("production chain requires persistent state storage")
 }
 
 // BalanceDetailsForWithProfile prefers the persistent state indexes and
@@ -351,12 +342,9 @@ func (bc *Blockchain) AddBlockWithNetwork(block types.Block, profile config.Netw
 		if bss, ok := bc.store.(storage.BlockStateStore); ok {
 			return bss.SaveBlockAndState(block, snapshot)
 		}
-		if err := bc.store.SaveBlock(block); err != nil {
-			return err
-		}
-		return ss.SaveState(snapshot)
+		return errors.New("production chain requires atomic block-state storage")
 	}
-	return bc.store.SaveBlock(block)
+	return errors.New("production chain requires persistent state storage")
 }
 
 func (bc *Blockchain) MineBlock(miner string, pending []types.Transaction) (types.Block, error) {
