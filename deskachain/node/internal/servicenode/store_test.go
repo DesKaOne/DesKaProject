@@ -10,6 +10,7 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -337,6 +338,13 @@ func serviceStakeTxs(t *testing.T, w wallet.Wallet, value uint64) (types.Transac
 		t.Fatal(err)
 	}
 	return lock, unlock
+}
+
+func prepareServiceBlocks(blocks []types.Block) {
+	for i := range blocks {
+		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
+		if i > 0 { blocks[i].PreviousHash = blocks[i-1].Hash }
+	}
 }
 
 func saveServiceBlocks(t *testing.T, paths config.Paths, blocks []types.Block) {
