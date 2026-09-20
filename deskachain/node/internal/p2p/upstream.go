@@ -57,7 +57,7 @@ func BackfillToPeer(paths config.Paths, peer string, profile config.NetworkConfi
 		maxReorgDepth = config.DefaultMaxReorgDepth(profile)
 	}
 	localNet := profile
-	localNet.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+	localNet.GenesisHash = chain.GenesisHashForNetwork(profile)
 	client, err := NewClientForProfile(paths, profile, 5*time.Second)
 	if err != nil {
 		return UpstreamBackfillResult{Peer: peer}, err
