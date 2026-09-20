@@ -118,6 +118,32 @@ func TestMainnetLaunchGateAllowsReadOnlyMethodsOnReadOnlyPaths(t *testing.T) {
 	}
 }
 
+func TestMainnetReadOnlyRPCPathNormalizesTrailingSlash(t *testing.T) {
+	for _, path := range []string{"/network/info/", "/health/", "/chain/info/", "/stake/status/"} {
+		if !mainnetReadOnlyRPCPath(path) {
+			t.Fatalf("mainnetReadOnlyRPCPath(%q) = false, want true", path)
+		}
+	}
+	for _, path := range []string{"/send/", "/wallet/new/", "/mine/"} {
+		if mainnetReadOnlyRPCPath(path) {
+			t.Fatalf("mainnetReadOnlyRPCPath(%q) = true, want false", path)
+		}
+	}
+}
+
+func TestMainnetLaunchGateRejectsUnknownReadOnlyMethod(t *testing.T) {
+	for _, method := range []string{"TRACE", "CONNECT"} {
+		nextCalled := false
+		next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { nextCalled = true })
+		req := httptest.NewRequest(method, "/health", nil)
+		rec := httptest.NewRecorder()
+		mainnetLaunchGate(next).ServeHTTP(rec, req)
+		if rec.Code != http.StatusServiceUnavailable || nextCalled {
+			t.Fatalf("%s should be blocked, status=%d reached=%t", method, rec.Code, nextCalled)
+		}
+	}
+}
+
 func TestNormalizeRPCProfileDefaultsToLocalnet(t *testing.T) {
 	profile := normalizeRPCProfile(NodeInfo{})
 	if profile.Name != config.Localnet().Name {
