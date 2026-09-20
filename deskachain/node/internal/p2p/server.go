@@ -747,4 +747,3 @@ func writeError(w http.ResponseWriter, err error) {
 		return
 	}
 	writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-}\tunlock := s.lockMutation()\n\tdefer unlock()\n
