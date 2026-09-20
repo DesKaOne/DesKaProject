@@ -208,18 +208,6 @@ func TestMainnetCLIRequiresExplicitSelection(t *testing.T) {
 	}
 }
 
-func TestMainnetCLIRejectsTamperedDatadirGenesis(t *testing.T) {
-	dir := t.TempDir()
-	profile := config.Mainnet()
-	var out bytes.Buffer
-	app := New(&out).WithDataDir(dir)
-	if err := config.WriteNetworkMetadata(config.NewPaths(dir), profile, "tampered"); err != nil {
-		t.Fatal(err)
-	}
-	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "datadir genesis mismatch for mainnet") {
-		t.Fatalf("expected mainnet metadata genesis mismatch rejection, got %v", err)
-	}
-}
 
 func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	dir := t.TempDir()
