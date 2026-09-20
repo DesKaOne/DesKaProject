@@ -2,6 +2,68 @@ package p2p
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"deskachain/internal/chain"
+	"deskachain/internal/config"
+	"deskachain/internal/ledger"
+	"deskachain/internal/mempool"
+	"deskachain/internal/nodestate"
+	"deskachain/internal/storage"
+	"deskachain/internal/types"
+	"deskachain/internal/wallet"
+)
+
+func TestNodeIDPersistent(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "node_id")
+	first, err := LoadOrCreateNodeID(path)
+	if err != nil { t.Fatal(err) }
+	second, err := LoadOrCreateNodeID(path)
+	if err != nil { t.Fatal(err) }
+	if first == "" || first != second { t.Fatalf("node id not persistent: %q %q", first, second) }
+}
+
+func TestHandshakeValidation(t *testing.T) {
+	local := config.Localnet()
+	local.GenesisHash = "abc"
+	peer := Handshake{NetworkID: local.NetworkID, ChainID: local.ChainID, ProtocolVersion: local.ProtocolVersion, MinProtocolVersion: local.MinProtocolVersion, GenesisHash: local.GenesisHash}
+	if err := ValidateHandshake(local, peer); err != nil { t.Fatal(err) }
+	peer.NetworkID = "other"
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") { t.Fatalf("expected network mismatch, got %v", err) }
+	peer.NetworkID = local.NetworkID
+	peer.GenesisHash = "other"
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected genesis mismatch, got %v", err) }
+	peer.GenesisHash = local.GenesisHash
+	peer.ProtocolVersion = 0
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") { t.Fatalf("expected protocol mismatch, got %v", err) }
+}
+
+func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	local.GenesisHash = "tampered"
+	peer := Handshake{NetworkName: local.NetworkName, NetworkID: local.NetworkID, ChainID: local.ChainID, ProtocolVersion: local.ProtocolVersion, P2PProtocolVersion: local.P2PProtocolVersion, MinProtocolVersion: local.MinProtocolVersion, GenesisHash: config.MainnetGenesisHash}
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity required") { t.Fatalf("unexpected canonical genesis result: %v", err) }
+	peer.GenesisHash = strings.Repeat("f", 64)
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
+}
+
+func TestMainnetStatusValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	local.GenesisHash = "tampered"
+	peer := Status{NetworkID: local.NetworkID, ChainID: local.ChainID, GenesisHash: config.MainnetGenesisHash, ProtocolVersion: local.ProtocolVersion}
+	if err := ValidateStatus(local, peer); err != nil { t.Fatalf("canonical mainnet status should pass despite tampered local profile, got %v", err) }
+	peer.GenesisHash = strings.Repeat("f", 64)
+	if err := ValidateStatus(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
+}
+
 func TestP2PServerTimeoutConfig(t *testing.T) {
 	server := NewHTTPServer(":0", config.NewPaths(t.TempDir()), nil)
 	if server.ReadHeaderTimeout <= 0 || server.ReadTimeout <= 0 || server.WriteTimeout <= 0 || server.IdleTimeout <= 0 || server.MaxHeaderBytes <= 0 {
