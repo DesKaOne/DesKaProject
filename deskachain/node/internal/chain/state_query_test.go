@@ -52,7 +52,7 @@ func (s *queryOnlyStore) ValidateStateIndexes() error { return nil }
 
 func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
-		tip: types.Block{Height: 5, Hash: "tip"},
+		tip: types.Block{Height: 5, Hash: "tip", StateRoot: "legacy-state-root"},
 		account: ledger.StateAccount{
 			Address:   "IDR-alice",
 			Confirmed: 100,
@@ -81,7 +81,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 
 func TestAccountNoncePrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
-		tip:     types.Block{Height: 5, Hash: "tip"},
+		tip:     types.Block{Height: 5, Hash: "tip", StateRoot: "legacy-state-root"},
 		account: ledger.StateAccount{Address: "IDR-alice", Nonce: 11},
 	}
 	bc := New(store)
