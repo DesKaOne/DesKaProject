@@ -160,7 +160,7 @@ func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	net := s.network()
-	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+	net.GenesisHash = chain.GenesisHashForNetwork(net)
 	challenge := strings.TrimSpace(r.URL.Query().Get("challenge"))
 	if challenge != "" {
 		if len(challenge) != 64 {
@@ -206,7 +206,7 @@ func (s Server) peers(w http.ResponseWriter, _ *http.Request) {
 		Network:        net.Name,
 		NetworkID:      net.NetworkID,
 		ChainID:        net.ChainID,
-		GenesisHash:    chain.GenesisBlockForNetwork(net).Hash,
+		GenesisHash:    chain.GenesisHashForNetwork(net),
 		AdvertiseP2P:   s.p2pAdvertise,
 		KnownPeers:     PeerViews(s.safeKnownPeers(), DefaultMaxDiscoveredPeers),
 		KnownCount:     len(s.safeKnownPeers()),
@@ -571,7 +571,7 @@ func (s Server) localStatus() (Status, error) {
 			Network:            net.Name,
 			NetworkID:          net.NetworkID,
 			ChainID:            net.ChainID,
-			GenesisHash:        chain.GenesisBlockForNetwork(net).Hash,
+			GenesisHash:        chain.GenesisHashForNetwork(net),
 			ProtocolVersion:    net.ProtocolVersion,
 			P2PProtocolVersion: net.P2PProtocolVersion,
 			Height:             snapshot.Height,
@@ -604,7 +604,7 @@ func (s Server) localStatus() (Status, error) {
 		Network:            net.Name,
 		NetworkID:          net.NetworkID,
 		ChainID:            net.ChainID,
-		GenesisHash:        chain.GenesisBlockForNetwork(net).Hash,
+		GenesisHash:        chain.GenesisHashForNetwork(net),
 		ProtocolVersion:    net.ProtocolVersion,
 		P2PProtocolVersion: net.P2PProtocolVersion,
 		Height:             tip.Height,
