@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"deskachain/internal/config"
 	"deskachain/internal/types"
 )
 
@@ -30,7 +31,22 @@ func BroadcastTx(peers []string, tx types.Transaction) BroadcastSummary {
 }
 
 func BroadcastTxToPeers(peerStorePath string, peers []PeerMetadata, tx types.Transaction) BroadcastSummary {
+	return broadcastTxToPeers(peerStorePath, peers, tx, nil)
+}
+
+func BroadcastTxToPeersWithProfile(paths config.Paths, profile config.NetworkConfig, peers []PeerMetadata, tx types.Transaction) BroadcastSummary {
+	return broadcastTxToPeers(paths.Peers, peers, tx, &profile)
+}
+
+func broadcastTxToPeers(peerStorePath string, peers []PeerMetadata, tx types.Transaction, profile *config.NetworkConfig) BroadcastSummary {
 	client := NewClient()
+	if profile != nil {
+		var err error
+		client, err = NewClientForProfile(config.Paths{NodeID: pathsNodeIDForBroadcast(peerStorePath)}, *profile, 5*time.Second)
+		if err != nil {
+			return BroadcastSummary{Peers: len(peers), Failed: len(peers), Errors: []string{err.Error()}}
+		}
+	}
 	summary := BroadcastSummary{Peers: len(peers)}
 	for _, peer := range peers {
 		if peer.Status == PeerStatusBad {
@@ -70,7 +86,22 @@ func BroadcastBlock(peers []string, block types.Block) BroadcastSummary {
 }
 
 func BroadcastBlockToPeers(peerStorePath string, peers []PeerMetadata, block types.Block) BroadcastSummary {
+	return broadcastBlockToPeers(peerStorePath, peers, block, nil)
+}
+
+func BroadcastBlockToPeersWithProfile(paths config.Paths, profile config.NetworkConfig, peers []PeerMetadata, block types.Block) BroadcastSummary {
+	return broadcastBlockToPeers(paths.Peers, peers, block, &profile)
+}
+
+func broadcastBlockToPeers(peerStorePath string, peers []PeerMetadata, block types.Block, profile *config.NetworkConfig) BroadcastSummary {
 	client := NewClientWithTimeout(3 * time.Second)
+	if profile != nil {
+		var err error
+		client, err = NewClientForProfile(config.Paths{NodeID: pathsNodeIDForBroadcast(peerStorePath)}, *profile, 3*time.Second)
+		if err != nil {
+			return BroadcastSummary{Peers: len(peers), Failed: len(peers), Errors: []string{err.Error()}}
+		}
+	}
 	summary := BroadcastSummary{Peers: len(peers)}
 	for _, peer := range peers {
 		if peer.Status == PeerStatusBad {
@@ -109,3 +140,5 @@ func adjustBroadcastScore(path, peer string, delta int, reason string) {
 		log.Printf("peer score update failed peer=%s error=%v", peer, err)
 	}
 }
+
+func pathsNodeIDForBroadcast(peerStorePath string) string { return peerStorePath }
