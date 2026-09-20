@@ -435,8 +435,9 @@ func Testnet() NetworkConfig {
 		AllowIsolatedMining: false,
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
-		SeedPeers:           nil,
-		GenesisHash:         "",
+		SeedPeers:                nil,
+		GenesisHash:              "",
+		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
 			MaxSyncBlocks:       500,
@@ -518,8 +519,9 @@ func Mainnet() NetworkConfig {
 		AllowIsolatedMining: false,
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
-		SeedPeers:           nil,
-		GenesisHash:         "",
+		SeedPeers:                nil,
+		GenesisHash:              "",
+		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
 			MaxSyncBlocks:       500,
@@ -568,6 +570,9 @@ func ValidateNetworkProfile(profile NetworkConfig) error {
 	}
 	if profile.NetworkLimits.MaxHeaderBatch == 0 || profile.NetworkLimits.MaxSyncBlocks == 0 || profile.NetworkLimits.MaxReorgFetchBlocks == 0 {
 		return fmt.Errorf("network fetch limits are incomplete")
+	}
+	if profile.Name != "localnet" && !profile.RequireAuthenticatedNode {
+		return fmt.Errorf("production network requires authenticated P2P nodes")
 	}
 	return nil
 }
