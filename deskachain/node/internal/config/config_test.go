@@ -194,6 +194,16 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 }
 
 
+func TestMainnetDoesNotAdvertiseAsAvailable(t *testing.T) {
+	profile := Mainnet()
+	if profile.Name != "mainnet" {
+		t.Fatalf("unexpected mainnet profile: %q", profile.Name)
+	}
+	if profile.GenesisHash == "" || profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis identity is not frozen: %q", profile.GenesisHash)
+	}
+}
+
 func TestMainnetLaunchCriticalProfile(t *testing.T) {
 	profile := Mainnet()
 	checks := map[string]bool{
