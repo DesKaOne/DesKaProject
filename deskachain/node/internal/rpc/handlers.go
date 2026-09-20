@@ -107,6 +107,9 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /explorer-ui/", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer/status", h.wrap("generic", h.explorerStatus))
 	mux.HandleFunc("GET /explorer/indexer", h.wrap("generic", h.explorerIndexerStatus))
+	mux.HandleFunc("GET /explorer/indexed/search", h.wrap("generic", h.explorerIndexedSearch))
+	mux.HandleFunc("GET /explorer/indexed/tx/", h.wrap("generic", h.explorerIndexedTx))
+	mux.HandleFunc("GET /explorer/indexed/address/", h.wrap("generic", h.explorerIndexedAddressRouter))
 	mux.HandleFunc("GET /explorer/search", h.wrap("generic", h.explorerSearch))
 	mux.HandleFunc("GET /explorer/blocks", h.wrap("generic", h.explorerBlocks))
 	mux.HandleFunc("GET /explorer/blocks/", h.wrap("generic", h.explorerBlockByHeight))
@@ -250,6 +253,166 @@ func (h handler) ready(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
+}
+
+func (h handler) explorerIndexerReady() (*explorerIndexer, ExplorerIndexerStatus, bool) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.status()
+	if err != nil || !status.Ready {
+		return indexer, status, false
+	}
+	return indexer, status, true
+}
+
+func (h handler) explorerIndexedUnavailable(w http.ResponseWriter, status ExplorerIndexerStatus) {
+	explorerError(w, http.StatusServiceUnavailable, "indexer_not_ready",
+		fmt.Sprintf("explorer indexer is not ready (indexed_height=%d chain_height=%d lag=%d)", status.IndexedHeight, status.ChainHeight, status.Lag))
+}
+
+func (h handler) explorerIndexedTx(w http.ResponseWriter, r *http.Request) {
+	txID := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/tx/")
+	if !isHexHash(txID) {
+		explorerError(w, http.StatusBadRequest, "invalid_txid", "transaction id must be a 64-character hex string")
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	tx, found, err := indexer.transaction(txID)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		explorerError(w, http.StatusNotFound, "tx_not_found", "indexed transaction not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok": true,
+		"api_version": ExplorerAPIVersion,
+		"indexer": status,
+		"transaction": tx,
+	})
+}
+
+func (h handler) explorerIndexedAddressRouter(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/address/")
+	if strings.HasSuffix(path, "/txs") {
+		h.explorerIndexedAddressTxs(w, r, strings.TrimSuffix(path, "/txs"))
+		return
+	}
+	explorerError(w, http.StatusNotFound, "not_found", "indexed explorer endpoint not found")
+}
+
+func (h handler) explorerIndexedAddressTxs(w http.ResponseWriter, r *http.Request, address string) {
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
+		return
+	}
+	limit, offset, ok := explorerLimitOffset(w, r, 20, 100)
+	if !ok {
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	history, total, err := indexer.addressHistory(address, limit, offset)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(history))
+	for _, item := range history {
+		items = append(items, map[string]any{
+			"txid": item.TxID,
+			"block_height": item.BlockHeight,
+			"block_hash": item.BlockHash,
+			"role": item.Role,
+			"counterparty": item.Counterparty,
+			"asset_id": item.AssetID,
+			"amount": item.Amount,
+			"fee": item.Fee,
+		})
+	}
+	resp := explorerPagedResponse("transactions", items, total, limit, offset)
+	resp["address"] = address
+	resp["api_version"] = ExplorerAPIVersion
+	resp["indexer"] = status
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	if query == "" {
+		explorerError(w, http.StatusBadRequest, "empty_query", "search query is required")
+		return
+	}
+	if len(query) > 128 {
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query is too long")
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	results := []map[string]any{}
+	if isUnsignedInteger(query) {
+		height, err := strconv.ParseUint(query, 10, 64)
+		if err != nil {
+			explorerError(w, http.StatusBadRequest, "invalid_height", "block height is invalid")
+			return
+		}
+		block, found, err := indexer.blockByHeight(height)
+		if err != nil { writeError(w, err); return }
+		if found {
+			results = append(results, map[string]any{
+				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
+				"path": fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
+			})
+		}
+	} else if strings.HasPrefix(query, "IDR") {
+		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
+			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
+			return
+		}
+		results = append(results, map[string]any{
+			"type": "address", "id": query, "label": "Address " + query,
+			"path": "/explorer-ui/#/address/" + query, "api_path": "/explorer/address/" + query,
+		})
+	} else if isHexHash(query) {
+		block, found, err := indexer.blockByHash(query)
+		if err != nil { writeError(w, err); return }
+		if found {
+			results = append(results, map[string]any{
+				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
+				"path": fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
+			})
+		}
+		tx, found, err := indexer.transaction(query)
+		if err != nil { writeError(w, err); return }
+		if found {
+			results = append(results, map[string]any{
+				"type": "tx", "id": tx.ID, "label": "Transaction " + tx.ID,
+				"path": "/explorer-ui/#/tx/" + tx.ID, "api_path": "/explorer/tx/" + tx.ID,
+				"block_height": tx.BlockHeight, "block_hash": tx.BlockHash, "status": tx.Status,
+			})
+		}
+	} else {
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
+		return
+	}
+	if len(results) == 0 {
+		explorerError(w, http.StatusNotFound, "not_found", "no indexed explorer result found")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "query": query, "indexer": status, "results": results, "count": len(results)})
 }
 
 func (h handler) explorerIndexerStatus(w http.ResponseWriter, _ *http.Request) {
