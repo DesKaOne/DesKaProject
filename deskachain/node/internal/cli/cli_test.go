@@ -240,6 +240,22 @@ func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	}
 }
 
+func TestMainnetRejectsIsolatedGuardOverrides(t *testing.T) {
+	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "true")
+	app := New(io.Discard).WithDataDir(t.TempDir())
+	err := app.Run([]string{"--network", "mainnet", "node", "start"})
+	if err == nil || !strings.Contains(err.Error(), "mainnet cannot override isolated mining guard") {
+		t.Fatalf("expected mainnet isolated mining override rejection, got %v", err)
+	}
+
+	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "")
+	t.Setenv("IDR_ALLOW_ISOLATED_WRITES", "true")
+	err = app.Run([]string{"--network", "mainnet", "node", "start"})
+	if err == nil || !strings.Contains(err.Error(), "mainnet cannot override isolated writes guard") {
+		t.Fatalf("expected mainnet isolated writes override rejection, got %v", err)
+	}
+}
+
 func TestPublicRPCUnsafeWalletAdminBindRejected(t *testing.T) {
 	if err := validatePublicRPCMode(true, ":8811", true, false); err == nil || !strings.Contains(err.Error(), "wallet RPC cannot be enabled") {
 		t.Fatalf("expected public wallet RPC rejection, got %v", err)
