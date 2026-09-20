@@ -327,4 +327,25 @@ func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
 			t.Fatalf("%s accepted unauthenticated P2P profile", profile.Name)
 		}
 	}
+
+func TestEnsureNetworkMatchesMainnetRequiresGenesisMetadata(t *testing.T) {
+	tmp := t.TempDir()
+	paths := NewPaths(tmp)
+	profile := Mainnet()
+
+	if err := WriteNetworkMetadata(paths, profile, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsureNetworkMatches(paths, profile); err == nil || !strings.Contains(err.Error(), "genesis") {
+		t.Fatalf("expected missing mainnet genesis metadata to be rejected, got %v", err)
+	}
+
+	if err := WriteNetworkMetadata(paths, profile, MainnetGenesisHash); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsureNetworkMatches(paths, profile); err != nil {
+		t.Fatalf("expected matching mainnet genesis metadata to pass: %v", err)
+	}
+}
+
 }
