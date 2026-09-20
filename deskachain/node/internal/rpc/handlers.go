@@ -1310,7 +1310,11 @@ func (h handler) scheduleUpstreamBackfill() {
 		return
 	}
 	peers := append([]string(nil), h.info.UpstreamPeers...)
-	go p2p.BackfillToPeers(h.paths, peers, h.profile(), h.maxReorgDepth())
+	go func() {
+		unlock := h.lockChainMutation()
+		defer unlock()
+		p2p.BackfillToPeers(h.paths, peers, h.profile(), h.maxReorgDepth())
+	}()
 }
 
 func (h handler) peerDiscover(w http.ResponseWriter, r *http.Request) {
