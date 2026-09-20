@@ -35,8 +35,12 @@ func GenesisBlockForNetwork(profile config.NetworkConfig) types.Block {
 // network. Mainnet uses the frozen hash from the canonical profile instead of
 // relying on a regenerated value at each call site.
 func GenesisHashForNetwork(profile config.NetworkConfig) string {
+	genesis := GenesisBlockForNetwork(profile)
 	if profile.Name == "mainnet" {
-		return config.MainnetGenesisHash
+		if genesis.Hash != config.MainnetGenesisHash {
+			return config.MainnetGenesisHash
+		}
+		return genesis.Hash
 	}
-	return GenesisBlockForNetwork(profile).Hash
+	return genesis.Hash
 }
