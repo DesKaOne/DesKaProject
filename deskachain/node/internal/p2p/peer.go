@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -34,6 +35,7 @@ const (
 
 type PeerStore struct {
 	path string
+	mu   *sync.Mutex
 }
 
 type PeerMetadata struct {
@@ -71,8 +73,11 @@ type peerFile struct {
 	Peers []PeerMetadata `json:"peers"`
 }
 
+var peerStoreLocks sync.Map
+
 func NewPeerStore(path string) PeerStore {
-	return PeerStore{path: path}
+	value, _ := peerStoreLocks.LoadOrStore(filepath.Clean(path), &sync.Mutex{})
+	return PeerStore{path: path, mu: value.(*sync.Mutex)}
 }
 
 func (s PeerStore) Load() ([]string, error) {
@@ -125,7 +130,7 @@ func (s PeerStore) Save(peers []string) error {
 	return s.SaveMetadata(meta)
 }
 
-func (s PeerStore) SaveMetadata(peers []PeerMetadata) error {
+func (s PeerStore) saveMetadataUnlocked(peers []PeerMetadata) error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0755); err != nil {
 		return err
 	}
@@ -147,8 +152,15 @@ func (s PeerStore) SaveMetadata(peers []PeerMetadata) error {
 		_ = os.Remove(tmpName)
 		return err
 	}
-	_ = os.Remove(s.path)
 	return os.Rename(tmpName, s.path)
+}
+
+func (s PeerStore) SaveMetadata(peers []PeerMetadata) error {
+	if s.mu != nil {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+	}
+	return s.saveMetadataUnlocked(peers)
 }
 
 func (s PeerStore) Add(peer string) error {
