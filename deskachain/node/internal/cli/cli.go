@@ -2588,7 +2588,9 @@ func (a App) syncLoop(interval time.Duration, verbose bool, state *nodestate.Sto
 			}
 			go func(peerURL string) {
 				defer tracker.done(peerURL)
-				unlock := a.lockChainMutation()\n\t\t\t\tif err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, peerURL, nil, a.profile, maxReorgDepth); err != nil {
+				unlock := a.lockChainMutation()
+				defer unlock()
+				if err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, peerURL, nil, a.profile, maxReorgDepth); err != nil {
 					if tracker.shouldLogError(peerURL, err.Error(), time.Now()) {
 						log.Printf("sync failed peer=%s error=%v", peerURL, err)
 					}
@@ -2621,7 +2623,7 @@ func (a App) bootstrapPeers(seedPeers []string, selfURL string, state *nodestate
 		normalized, err := p2p.NormalizePeerURL(seed)
 		if err != nil {
 			failed++
-			log.Printf("seed rejected seed=%s reason=%q", seed, err.Error())
+			log.Printf("seed rejected seed=%s reason=%q", normalized, err.Error())
 			continue
 		}
 		if selfURL != "" {
@@ -2638,7 +2640,10 @@ func (a App) bootstrapPeers(seedPeers []string, selfURL string, state *nodestate
 		}
 		accepted++
 		log.Printf("seed accepted seed=%s height=%d tip=%s", normalized, hs.Height, hs.TipHash)
-		unlock := a.lockChainMutation()\n\t\tif err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth); err != nil {
+		unlock := a.lockChainMutation()
+		err = p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth)
+		unlock()
+		if err != nil {
 			log.Printf("seed sync checked seed=%s result=%q", normalized, err.Error())
 		} else {
 			log.Printf("seed sync accepted seed=%s", normalized)
