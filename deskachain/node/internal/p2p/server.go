@@ -377,6 +377,8 @@ func (s Server) receiveTx(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s Server) receiveBlock(w http.ResponseWriter, r *http.Request) {
+	unlock := s.lockMutation()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxBlockBody)
 	var block types.Block
 	if err := json.NewDecoder(r.Body).Decode(&block); err != nil {
