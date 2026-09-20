@@ -1024,6 +1024,30 @@ func TestAddressValidateCommand(t *testing.T) {
 	assertOutputContains(t, out.String(), "address invalid")
 }
 
+func TestNodeStartLockAcquiredBeforeStartupSideEffects(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := app.Run([]string{"init"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := p2p.CreateLock(paths.Lock, ":8331", ":9331"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = p2p.RemoveLock(paths.Lock) }()
+
+	// A second node start must fail on the lock before opening chain state or
+	// touching peer metadata, even if startup peers are supplied.
+	err := app.Run([]string{"node", "start", "--rpc", ":0", "--p2p", ":0", "--peers", "http://127.0.0.1:9999"})
+	if err == nil || !strings.Contains(err.Error(), "datadir is locked by running node") {
+		t.Fatalf("expected startup lock rejection, got %v", err)
+	}
+	if _, err := os.Stat(paths.Peers); !os.IsNotExist(err) {
+		t.Fatalf("startup lock rejection created or modified peer store: stat=%v", err)
+	}
+}
+
 func TestLockRejectsWriteAllowsRead(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
