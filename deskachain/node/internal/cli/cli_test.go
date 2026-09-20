@@ -2002,6 +2002,18 @@ func TestPeerSyncTrackerSkipThrottleAndRecovery(t *testing.T) {
 	}
 }
 
+func TestRemoteMainnetCLIIsBlocked(t *testing.T) {
+	var out bytes.Buffer
+	app := New(&out)
+	app = app.WithProfile(config.Mainnet())
+	err := app.Run([]string{"--network", "mainnet", "--rpc-url", "http://127.0.0.1:8332", "chain", "info"})
+	if err == nil {
+		t.Fatal("expected remote mainnet mode to be blocked")
+	}
+	assertOutputContains(t, err.Error(), "mainnet is not operational")
+	assertOutputContains(t, err.Error(), "remote RPC mode is blocked")
+}
+
 func TestLockedPeerSyncSuggestsRemoteCommand(t *testing.T) {
 	dir := t.TempDir()
 	paths := config.NewPaths(dir)
