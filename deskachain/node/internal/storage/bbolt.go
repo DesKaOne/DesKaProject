@@ -341,7 +341,24 @@ func (s *BoltStore) DeleteBlockByHeight(height uint64) error {
 }
 
 func (s *BoltStore) ReplaceFromHeight(from uint64, blocks []types.Block) error {
-	return s.replaceFromHeight(from, blocks, nil)
+	// A block-only replacement cannot safely mutate an initialized v3 chain:
+	// canonical blocks and the persisted state must advance atomically. Keep
+	// this legacy API available for pre-state callers, but fail closed once a
+	// canonical state snapshot exists.
+	return s.db.Update(func(tx *bolt.Tx) error {
+		root := tx.Bucket(stateBucket)
+		if root == nil {
+			return ErrStateNotInitialized
+		}
+		meta := root.Bucket(stateMetaBucket)
+		if meta == nil {
+			return ErrStateNotInitialized
+		}
+		if meta.Get(stateVersionKey) != nil || meta.Get(stateHeightKey) != nil || meta.Get(stateRootKey) != nil {
+			return errors.New("cannot replace canonical blocks without atomic state commit")
+		}
+		return s.replaceFromHeightTx(tx, from, blocks, nil)
+	})
 }
 
 func (s *BoltStore) ReplaceFromHeightAndState(from uint64, blocks []types.Block, snapshot state.Snapshot) error {
@@ -405,6 +422,17 @@ func validateReplacementAgainstCanonicalTipTx(tx *bolt.Tx, from uint64, blocks [
 }
 
 func (s *BoltStore) replaceFromHeight(from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
+	if snapshot == nil {
+		return s.db.Update(func(tx *bolt.Tx) error {
+			return s.replaceFromHeightTx(tx, from, blocks, nil)
+		})
+	}
+	return s.db.Update(func(tx *bolt.Tx) error {
+		return s.replaceFromHeightTx(tx, from, blocks, snapshot)
+	})
+}
+
+func (s *BoltStore) replaceFromHeightTx(tx *bolt.Tx, from uint64, blocks []types.Block, snapshot *state.Snapshot) error {
 	if len(blocks) == 0 {
 		return errors.New("replacement branch is empty")
 	}
