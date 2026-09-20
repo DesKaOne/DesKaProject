@@ -71,7 +71,7 @@ func isHelpArg(arg string) bool {
 
 func printHelp(out io.Writer) {
 	fmt.Fprintln(out, "DesKaChain")
-	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet] <command> [args]")
+	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet|mainnet] <command> [args]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "commands:")
 	fmt.Fprintln(out, "  version")
