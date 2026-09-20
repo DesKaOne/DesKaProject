@@ -10,6 +10,7 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -196,24 +197,11 @@ func TestScoreCollateralEligibility(t *testing.T) {
 		t.Fatal(err)
 	}
 	lock.StakeID = lock.ID
-	bolt, err := storage.OpenBolt(paths.DB)
-	if err != nil {
-		t.Fatal(err)
-	}
-	blocks := []types.Block{
+	saveServiceBlocks(t, paths, []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
 		{Height: 2, Transactions: []types.Transaction{lock}},
-	}
-	prepareServiceBlocks(blocks)
-	for _, block := range blocks {
-		if err := bolt.SaveBlock(block); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := bolt.Close(); err != nil {
-		t.Fatal(err)
-	}
+	})
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -349,16 +337,36 @@ func saveServiceBlocks(t *testing.T, paths config.Paths, blocks []types.Block) {
 		t.Fatal(err)
 	}
 	defer bolt.Close()
+
+	canonical, err := bolt.Blocks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var previous string
+	if len(canonical) > 0 {
+		previous = canonical[len(canonical)-1].Hash
+	}
 	for i := range blocks {
-		// Build a minimal canonical chain for the service-node fixture. The
-		// storage layer now enforces predecessor linkage on every block commit.
 		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
-		if i > 0 {
-			blocks[i].PreviousHash = blocks[i-1].Hash
+		if previous != "" {
+			blocks[i].PreviousHash = previous
 		}
 		if err := bolt.SaveBlock(blocks[i]); err != nil {
 			t.Fatal(err)
 		}
+		previous = blocks[i].Hash
+	}
+	canonical, err = bolt.Blocks()
+	if err != nil {
+		t.Fatal(err)
+	}
+	profile := config.Localnet()
+	snapshot, err := state.SnapshotForBlocks(canonical, profile.Consensus, profile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := bolt.SaveState(snapshot); err != nil {
+		t.Fatal(err)
 	}
 }
 
