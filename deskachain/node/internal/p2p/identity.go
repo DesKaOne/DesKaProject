@@ -153,10 +153,7 @@ func ValidateHandshake(local config.NetworkConfig, peer Handshake) error {
 	if peer.ChainID != local.ChainID {
 		return errors.New("peer rejected: chain id mismatch")
 	}
-	expectedGenesis := local.GenesisHash
-	if expectedGenesis == "" {
-		expectedGenesis = chain.GenesisBlockForNetwork(local).Hash
-	}
+	expectedGenesis := chain.GenesisHashForNetwork(local)
 	if peer.GenesisHash != expectedGenesis {
 		return errors.New("peer rejected: genesis hash mismatch")
 	}
