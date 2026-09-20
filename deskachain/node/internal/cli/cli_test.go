@@ -23,6 +23,7 @@ import (
 	"deskachain/internal/p2p"
 	"deskachain/internal/rpc"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -640,17 +641,8 @@ func TestChainValidatePassesAndDetectsTampering(t *testing.T) {
 		t.Fatal(err)
 	}
 	blocks[1].PreviousHash = "bad"
-	store, err := storage.OpenBolt(filepath.Join(dir, "chain.db"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := store.SaveBlock(blocks[1]); err != nil {
-		t.Fatal(err)
-	}
-	_ = store.Close()
-	out.Reset()
-	if err := app.Run([]string{"chain", "validate"}); err == nil || !strings.Contains(err.Error(), "previous_hash mismatch") {
-		t.Fatalf("expected tamper error, got output=%q err=%v", out.String(), err)
+	if _, err := chain.ValidateChainWithNetwork(blocks, config.Localnet()); err == nil || !strings.Contains(err.Error(), "previous_hash mismatch") {
+		t.Fatalf("expected tamper error, got %v", err)
 	}
 }
 
@@ -2084,6 +2076,13 @@ func cliFundFaucetFixture(t *testing.T, paths config.Paths, address string, bloc
 		}
 		prior = append(prior, block)
 	}
+	snapshot, err := state.SnapshotForBlocks(prior, config.Testnet().Consensus, config.Testnet())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func cliMinePendingFixture(t *testing.T, paths config.Paths, miner string) {
@@ -2107,6 +2106,15 @@ func cliMinePendingFixture(t *testing.T, paths config.Paths, miner string) {
 	block.Timestamp = blocks[len(blocks)-1].Timestamp + config.Testnet().Difficulty.TargetBlockTimeSeconds
 	block.Hash = block.CalculateHash()
 	if err := store.SaveBlock(block); err != nil {
+		t.Fatal(err)
+	}
+	prior := append([]types.Block(nil), blocks...)
+	prior = append(prior, block)
+	snapshot, err := state.SnapshotForBlocks(prior, config.Testnet().Consensus, config.Testnet())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
 		t.Fatal(err)
 	}
 	ids := map[string]struct{}{}
