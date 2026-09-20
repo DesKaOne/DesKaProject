@@ -906,7 +906,6 @@ func newP2PTestServer(paths config.Paths) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-
 func fetchStatus(t *testing.T, baseURL string) Status {
 	t.Helper()
 	resp, err := http.Get(baseURL + "/p2p/status")
