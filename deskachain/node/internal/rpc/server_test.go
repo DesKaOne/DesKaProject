@@ -51,6 +51,42 @@ func TestMainnetLaunchGateBlocksOperationalRPC(t *testing.T) {
 	}
 }
 
+func TestMainnetLaunchGateCoversRegisteredMutationEndpoints(t *testing.T) {
+	paths := []string{
+		"/debug/p2p/ping",
+		"/upstream/push",
+		"/upstream/push-all",
+		"/peers",
+		"/peers/connect",
+		"/peers/clear",
+		"/peers/discover",
+		"/peers/status",
+		"/peers/sync",
+		"/reorg/preview",
+		"/reorg/apply",
+		"/chain/common-ancestor",
+		"/fork/inspect-datadir",
+		"/mempool/clear",
+		"/faucet/request",
+		"/wallet/new",
+		"/send",
+		"/mine",
+		"/miner/template",
+		"/miner/submit",
+		"/service/register",
+		"/service/heartbeat",
+		"/service/challenge/create",
+		"/service/challenge/submit",
+		"/stake/lock",
+		"/stake/unlock",
+	}
+	for _, path := range paths {
+		if !mainnetOperationalRPCPath(path) {
+			t.Fatalf("mainnetOperationalRPCPath(%q) = false, want true", path)
+		}
+	}
+}
+
 func TestMainnetLaunchGateAllowsReadOnlyRPC(t *testing.T) {
 	nextCalled := false
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
