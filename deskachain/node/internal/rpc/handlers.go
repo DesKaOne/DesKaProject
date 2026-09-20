@@ -38,6 +38,7 @@ type handler struct {
 	info    NodeInfo
 	limiter *rateLimiter
 	txMu    *sync.Mutex
+	chainMu *sync.Mutex
 }
 
 func (h handler) profile() config.NetworkConfig {
@@ -95,7 +96,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 		info.Mining = mining.NewService()
 	}
 	info = normalizeNodeInfo(info)
-	h := handler{paths: paths, info: info, limiter: newRateLimiter(), txMu: &sync.Mutex{}}
+	h := handler{paths: paths, info: info, limiter: newRateLimiter(), txMu: &sync.Mutex{}, chainMu: &sync.Mutex{}}
 	mux.HandleFunc("GET /health", h.wrap("generic", h.health))
 	mux.HandleFunc("GET /ready", h.wrap("generic", h.ready))
 	mux.HandleFunc("GET /explorer-ui", h.wrap("generic", h.explorerUI))
@@ -1356,6 +1357,8 @@ func (h handler) upstreamStatus(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (h handler) upstreamPush(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockChainMutation()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 	var req struct {
 		Peer string `json:"peer"`
@@ -1375,6 +1378,8 @@ func (h handler) upstreamPush(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) upstreamPushAll(w http.ResponseWriter, _ *http.Request) {
+	unlock := h.lockChainMutation()
+	defer unlock()
 	results := p2p.BackfillToPeers(h.paths, h.info.UpstreamPeers, h.profile(), h.maxReorgDepth())
 	h.refreshState()
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "results": results, "upstream_peer_count": len(h.info.UpstreamPeers)})
@@ -1402,6 +1407,8 @@ func (h handler) reorgPreview(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) reorgApply(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockChainMutation()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 	var req reorgRPCRequest
 	_ = json.NewDecoder(r.Body).Decode(&req)
@@ -1420,6 +1427,8 @@ func (h handler) reorgApply(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) peerSync(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockChainMutation()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 	var req struct {
 		Peer          string `json:"peer"`
@@ -2626,7 +2635,7 @@ func (h handler) minerTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) minerSubmit(w http.ResponseWriter, r *http.Request) {
-	unlock := h.lockBlockSubmission()
+	unlock := h.lockChainMutation()
 	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxBlockBody)
 	var req struct {
@@ -3348,12 +3357,12 @@ func firstN(value string, n int) string {
 	return value[:n]
 }
 
-func (h handler) lockBlockSubmission() func() {
-	if h.txMu == nil {
+func (h handler) lockChainMutation() func() {
+	if h.chainMu == nil {
 		return func() {}
 	}
-	h.txMu.Lock()
-	return h.txMu.Unlock
+	h.chainMu.Lock()
+	return h.chainMu.Unlock
 }
 
 func (h handler) lockTxSubmission() func() {
