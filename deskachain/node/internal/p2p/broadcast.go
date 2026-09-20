@@ -113,7 +113,7 @@ func broadcastBlockToPeers(paths config.Paths, peers []PeerMetadata, block types
 			summary.Failed++
 			summary.Errors = append(summary.Errors, err.Error())
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: err.Error()})
-			adjustBroadcastScore(peerStorePath, peer.URL, -5, "request failed")
+			adjustBroadcastScore(paths.Peers, peer.URL, -5, "request failed")
 			continue
 		}
 		if !response.Accepted {
@@ -121,12 +121,12 @@ func broadcastBlockToPeers(paths config.Paths, peers []PeerMetadata, block types
 			summary.Failed++
 			summary.Errors = append(summary.Errors, response.Error)
 			summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: false, Message: response.Error})
-			adjustBroadcastScore(peerStorePath, peer.URL, -30, "invalid block")
+			adjustBroadcastScore(paths.Peers, peer.URL, -30, "invalid block")
 			continue
 		}
 		summary.Success++
 		summary.Results = append(summary.Results, BroadcastResult{Peer: peer.URL, OK: true, Message: "accepted"})
-		adjustBroadcastScore(peerStorePath, peer.URL, 3, "broadcast block")
+		adjustBroadcastScore(paths.Peers, peer.URL, 3, "broadcast block")
 		log.Printf("block broadcast success peer=%s height=%d", peer.URL, block.Height)
 	}
 	return summary
