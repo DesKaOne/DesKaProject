@@ -168,7 +168,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("POST /faucet/request", h.wrap("faucet", h.faucetRequest))
 	mux.HandleFunc("GET /wallets", h.wrap("wallet", h.walletList))
 	mux.HandleFunc("POST /wallet/new", h.wrap("wallet", h.walletNew))
-	mux.HandleFunc("POST /send", h.wrap("generic", h.send))
+	mux.HandleFunc("POST /send", h.wrap("wallet", h.send))
 	mux.HandleFunc("POST /mine", h.wrap("miner", h.mine))
 	mux.HandleFunc("GET /mine/status", h.wrap("miner", h.mineStatus))
 	mux.HandleFunc("GET /miner/template", h.wrap("miner", h.minerTemplate))
