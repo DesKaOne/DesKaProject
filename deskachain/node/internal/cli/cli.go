@@ -169,8 +169,8 @@ func (a App) Run(args []string) error {
 		if !networkFlagProvided {
 			return errors.New("mainnet requires explicit --network mainnet selection")
 		}
-		if err := config.ValidateNetworkProfile(network); err != nil {
-			return err
+		if network.GenesisHash != config.MainnetGenesisHash {
+			return fmt.Errorf("mainnet genesis hash is not frozen")
 		}
 	} else {
 		network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
