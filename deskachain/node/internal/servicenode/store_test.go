@@ -200,7 +200,7 @@ func TestScoreCollateralEligibility(t *testing.T) {
 		funding = append(funding, types.Block{Height: height})
 	}
 	saveServiceBlocks(t, paths, funding)
-	lock := types.NewStakeLockTransaction(w.Address, config.Localnet().Consensus.Staking.MinServiceStake, config.Localnet().Consensus.CoinbaseMaturity+2)
+	lock := types.NewStakeLockTransaction(w.Address, config.Localnet().Consensus.Staking.MinServiceStake, 1)
 	if err := w.SignTransaction(&lock); err != nil {
 		t.Fatal(err)
 	}
