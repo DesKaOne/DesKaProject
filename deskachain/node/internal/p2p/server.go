@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"deskachain/internal/amount"
@@ -28,6 +29,7 @@ type Server struct {
 	p2pAdvertise string
 	state        *nodestate.Store
 	profile      config.NetworkConfig
+	mutationMu   *sync.Mutex
 }
 
 const (
@@ -55,6 +57,11 @@ func NewServerWithAdvertiseAndProfile(paths config.Paths, listen, advertise stri
 		profile = config.Localnet()
 	}
 	return Server{paths: paths, p2pListen: listen, p2pAdvertise: advertise, profile: profile}
+}
+
+// SetMutationMutex shares the node-level canonical-chain mutation lock with RPC and background sync.
+func (s *Server) SetMutationMutex(mu *sync.Mutex) {
+	s.mutationMu = mu
 }
 
 func NewServerWithState(paths config.Paths, listen, advertise string, state *nodestate.Store) Server {
