@@ -2,7 +2,8 @@ package chain
 
 import (
 	"context"
-	"errors"\n\t"fmt"
+	"errors"
+	"fmt"
 
 	"deskachain/internal/arith"
 	"deskachain/internal/config"
