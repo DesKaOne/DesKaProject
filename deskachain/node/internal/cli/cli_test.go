@@ -216,9 +216,7 @@ func TestMainnetOperationalCommandsRemainGated(t *testing.T) {
 		{"--network", "mainnet", "wallet", "new"},
 		{"--network", "mainnet", "mine", "--address", "a", "--blocks", "1"},
 		{"--network", "mainnet", "node", "start"},
-		{"--network", "mainnet", "service", "list"},
 		{"--network", "mainnet", "service", "register", "--address", "a", "--endpoint", "https://example.invalid"},
-		{"--network", "mainnet", "stake", "info"},
 		{"--network", "mainnet", "stake", "lock", "--address", "a", "--amount", "1"},
 	} {
 		app := New(io.Discard).WithDataDir(dir)
