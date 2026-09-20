@@ -177,7 +177,8 @@ func ValidateStatus(local config.NetworkConfig, peer Status) error {
 	if peer.ChainID != local.ChainID {
 		return errors.New("peer rejected: chain id mismatch")
 	}
-	if peer.GenesisHash != local.GenesisHash {
+	expectedGenesis := chain.GenesisHashForNetwork(local)
+	if peer.GenesisHash != expectedGenesis {
 		return errors.New("peer rejected: genesis hash mismatch")
 	}
 	if peer.ProtocolVersion < local.MinProtocolVersion {
