@@ -42,7 +42,7 @@ func DiscoverFromPeerLimited(paths config.Paths, peer string, profile config.Net
 		profile = config.Localnet()
 	}
 	local := profile
-	local.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+	local.GenesisHash = chain.GenesisHashForNetwork(profile)
 	hs, err := CheckPeerWithProfile(paths, peer, profile)
 	if err != nil {
 		return result, err
