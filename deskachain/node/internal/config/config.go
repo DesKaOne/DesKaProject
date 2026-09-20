@@ -441,7 +441,7 @@ func Testnet() NetworkConfig {
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
 		SeedPeers:                nil,
-		GenesisHash:              MainnetGenesisHash,
+		GenesisHash:              ""
 		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
@@ -525,7 +525,7 @@ func Mainnet() NetworkConfig {
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
 		SeedPeers:                nil,
-		GenesisHash:              "",
+		GenesisHash:              MainnetGenesisHash,
 		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
