@@ -144,6 +144,18 @@ func TestMainnetLaunchGateRejectsUnknownReadOnlyMethod(t *testing.T) {
 	}
 }
 
+func TestNewHTTPServerAppliesMainnetLaunchGate(t *testing.T) {
+	server := NewHTTPServer(":0", config.Paths{}, NodeInfo{Profile: config.Mainnet()})
+
+	req := httptest.NewRequest(http.MethodPost, "/send", nil)
+	rec := httptest.NewRecorder()
+	server.Handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("mainnet server POST /send status = %d, want %d", rec.Code, http.StatusServiceUnavailable)
+	}
+}
+
 func TestNormalizeRPCProfileDefaultsToLocalnet(t *testing.T) {
 	profile := normalizeRPCProfile(NodeInfo{})
 	if profile.Name != config.Localnet().Name {
