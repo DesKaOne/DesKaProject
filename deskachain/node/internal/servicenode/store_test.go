@@ -10,7 +10,6 @@ import (
 	"deskachain/internal/config"
 	"deskachain/internal/ledger"
 	"deskachain/internal/storage"
-	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
