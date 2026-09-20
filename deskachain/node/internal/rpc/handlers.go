@@ -3336,6 +3336,11 @@ func difficultyTarget(difficulty uint32) string {
 }
 
 func (h handler) commitMinedBlock(block types.Block) error {
+	// Mining can run for a long time while sync/reorg operations continue.
+	// Serialize only the final canonical-chain mutation so a stale candidate
+	// fails cleanly instead of racing another chain writer.
+	unlock := h.lockChainMutation()
+	defer unlock()
 	bc, closeFn, err := h.openChain()
 	if err != nil {
 		return err
