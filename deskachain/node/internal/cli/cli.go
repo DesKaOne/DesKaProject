@@ -189,6 +189,9 @@ func (a App) Run(args []string) error {
 	}
 	a.profile = network
 	a.rpcURL = strings.TrimRight(*rpcURL, "/")
+	if a.rpcURL != "" && a.profile.Name == "mainnet" {
+		return errors.New("mainnet is not operational: remote RPC mode is blocked while launch gate is closed")
+	}
 	a.ignoreLock = *ignoreLock
 	if a.rpcURL != "" {
 		return a.runRemote(args)
