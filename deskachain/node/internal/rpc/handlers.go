@@ -96,7 +96,11 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 		info.Mining = mining.NewService()
 	}
 	info = normalizeNodeInfo(info)
-	h := handler{paths: paths, info: info, limiter: newRateLimiter(), txMu: &sync.Mutex{}, chainMu: &sync.Mutex{}}
+	chainMu := info.ChainMutationMu
+	if chainMu == nil {
+		chainMu = &sync.Mutex{}
+	}
+	h := handler{paths: paths, info: info, limiter: newRateLimiter(), txMu: &sync.Mutex{}, chainMu: chainMu}
 	mux.HandleFunc("GET /health", h.wrap("generic", h.health))
 	mux.HandleFunc("GET /ready", h.wrap("generic", h.ready))
 	mux.HandleFunc("GET /explorer-ui", h.wrap("generic", h.explorerUI))
