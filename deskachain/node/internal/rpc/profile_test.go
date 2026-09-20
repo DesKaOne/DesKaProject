@@ -123,6 +123,9 @@ func TestMinerTemplateUsesActiveProfile(t *testing.T) {
 
 func TestRPCReorgUsesActiveProfile(t *testing.T) {
 	profile := config.Testnet()
+	// The fixture peer is an unauthenticated httptest server; disable production
+	// P2P authentication here so the test exercises profile selection/reorg logic.
+	profile.RequireAuthenticatedNode = false
 	local := newProfileRPCTestNode(t, profile)
 	peer := newProfileRPCTestNode(t, profile)
 	mineRPCProfileBlocks(t, peer, profile, 1)
