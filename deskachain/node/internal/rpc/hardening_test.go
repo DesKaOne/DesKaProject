@@ -43,6 +43,18 @@ func TestPublicRPCDisablesWalletButAllowsReadOnly(t *testing.T) {
 	}
 }
 
+func TestPublicRPCSendIsDisabledWithWalletRPC(t *testing.T) {
+	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
+	resp, err := http.Post(server.URL+"/send", "application/json", strings.NewReader(`{"from":"IDR-invalid","to":"IDR-invalid","amount":"1"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("public send status = %d want 403", resp.StatusCode)
+	}
+}
+
 func TestPublicRPCMinerEnableDisable(t *testing.T) {
 	miner := newRPCWallet(t)
 	_, defaultDisabled := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
