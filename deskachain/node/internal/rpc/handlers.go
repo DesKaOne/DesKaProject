@@ -156,7 +156,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /address/", h.wrap("generic", h.address))
 	mux.HandleFunc("GET /asset/info", h.wrap("generic", h.assetInfo))
 	mux.HandleFunc("GET /asset/balance", h.wrap("generic", h.assetBalance))
-	mux.HandleFunc("GET /asset/balances", h.assetBalances)
+	mux.HandleFunc("GET /asset/balances", h.wrap("generic", h.assetBalances))
 	mux.HandleFunc("GET /fee/policy", h.wrap("generic", h.feePolicy))
 	mux.HandleFunc("GET /fee/pool", h.wrap("generic", h.feePool))
 	mux.HandleFunc("POST /fee/estimate", h.wrap("generic", h.feeEstimate))
