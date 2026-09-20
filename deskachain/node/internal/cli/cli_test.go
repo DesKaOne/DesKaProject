@@ -208,6 +208,23 @@ func TestMainnetCLIRequiresExplicitSelection(t *testing.T) {
 	}
 }
 
+func TestMainnetOperationalCommandsRemainGated(t *testing.T) {
+	dir := t.TempDir()
+	for _, args := range [][]string{
+		{"--network", "mainnet", "init"},
+		{"--network", "mainnet", "wallet", "new"},
+		{"--network", "mainnet", "send", "--from", "a", "--to", "b", "--amount", "1"},
+		{"--network", "mainnet", "mine", "--address", "a", "--blocks", "1"},
+		{"--network", "mainnet", "node", "start"},
+	} {
+		app := New(io.Discard).WithDataDir(dir)
+		if err := app.Run(args); err == nil || !strings.Contains(err.Error(), "mainnet is not operational: launch gate is closed") {
+			t.Fatalf("expected mainnet launch gate for %v, got %v", args, err)
+		}
+	}
+}
+
+
 
 func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	dir := t.TempDir()
