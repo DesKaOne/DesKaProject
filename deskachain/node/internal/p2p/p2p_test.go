@@ -184,6 +184,24 @@ func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
 }
 
 
+func TestMainnetStatusValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	local.GenesisHash = "tampered"
+	peer := Status{
+		NetworkID:       local.NetworkID,
+		ChainID:         local.ChainID,
+		GenesisHash:     config.MainnetGenesisHash,
+		ProtocolVersion: local.ProtocolVersion,
+	}
+	if err := ValidateStatus(local, peer); err != nil {
+		t.Fatalf("canonical mainnet status should pass despite tampered local profile, got %v", err)
+	}
+	peer.GenesisHash = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+	if err := ValidateStatus(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
+		t.Fatalf("expected canonical genesis mismatch rejection, got %v", err)
+	}
+}
+
 func TestP2PServerTimeoutConfig(t *testing.T) {
 	server := NewHTTPServer(":0", config.NewPaths(t.TempDir()), nil)
 	if server.ReadHeaderTimeout <= 0 || server.ReadTimeout <= 0 || server.WriteTimeout <= 0 || server.IdleTimeout <= 0 || server.MaxHeaderBytes <= 0 {
