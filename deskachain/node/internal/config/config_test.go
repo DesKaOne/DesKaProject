@@ -194,6 +194,15 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 }
 
 
+func TestMainnetProfileRequiresExplicitNetworkSelection(t *testing.T) {
+	if local := Localnet(); local.Name == "mainnet" {
+		t.Fatal("localnet profile must remain separate from mainnet")
+	}
+	if testnet := Testnet(); testnet.Name == "mainnet" {
+		t.Fatal("testnet profile must remain separate from mainnet")
+	}
+}
+
 func TestMainnetDoesNotAdvertiseAsAvailable(t *testing.T) {
 	profile := Mainnet()
 	if profile.Name != "mainnet" {
