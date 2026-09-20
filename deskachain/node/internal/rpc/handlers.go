@@ -254,7 +254,7 @@ func (h handler) ready(w http.ResponseWriter, _ *http.Request) {
 
 func (h handler) explorerIndexerStatus(w http.ResponseWriter, _ *http.Request) {
 	indexer := newExplorerIndexer(h.paths, h.profile())
-	status, err := indexer.sync()
+	status, err := indexer.status()
 	if err != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": err.Error()}); return }
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "indexer": status})
 }
@@ -270,7 +270,7 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	tip := blocks[len(blocks)-1]
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).Load()
 	indexer := newExplorerIndexer(h.paths, h.profile())
-	indexerStatus, indexerErr := indexer.sync()
+	indexerStatus, indexerErr := indexer.status()
 	if indexerErr != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": indexerErr.Error()}); return }
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":                        true,
