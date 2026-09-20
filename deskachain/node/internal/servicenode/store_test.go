@@ -200,11 +200,13 @@ func TestScoreCollateralEligibility(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, block := range []types.Block{
+	blocks := []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
 		{Height: 2, Transactions: []types.Transaction{lock}},
-	} {
+	}
+	prepareServiceBlocks(blocks)
+	for _, block := range blocks {
 		if err := bolt.SaveBlock(block); err != nil {
 			t.Fatal(err)
 		}
@@ -249,13 +251,7 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	if score.StakeEligible || score.CollateralStatus != "unlocking" || score.ActiveStake != 0 || score.EligibleSimulatedPoints != 0 {
 		t.Fatalf("expected unlocking stake to be ineligible: %+v", score)
 	}
-	saveServiceBlocks(t, paths, []types.Block{
-		{Height: 0},
-		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
-		{Height: 2, Transactions: []types.Transaction{lock}},
-		{Height: 3, Transactions: []types.Transaction{unlock}},
-		{Height: 13},
-	})
+	saveServiceBlocks(t, paths, []types.Block{{Height: 13}})
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
