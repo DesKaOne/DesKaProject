@@ -101,7 +101,15 @@ func NewHTTPServerWithProfileAndMutationMutex(addr string, paths config.Paths, s
 	}
 }
 
-func (s Server) lockMutation() func() {\n\tif s.mutationMu == nil {\n\t\treturn func() {}\n\t}\n\ts.mutationMu.Lock()\n\treturn s.mutationMu.Unlock\n}\n\nfunc (s Server) network() config.NetworkConfig {
+func (s Server) lockMutation() func() {
+	if s.mutationMu == nil {
+		return func() {}
+	}
+	s.mutationMu.Lock()
+	return s.mutationMu.Unlock
+}
+
+func (s Server) network() config.NetworkConfig {
 	if s.profile.Name == "" {
 		return config.Localnet()
 	}
