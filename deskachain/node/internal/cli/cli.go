@@ -274,7 +274,7 @@ func (a App) network(args []string) error {
 }
 
 func (a App) init() error {
-	if err := ensureMainnetOperational(a.profile, false); err != nil {
+	if err := ensureMainnetOperational(a.profile); err != nil {
 		return err
 	}
 	bc, closeFn, err := a.openChain()
@@ -1492,11 +1492,8 @@ func (a App) rpc(args []string) error {
 	return rpc.ListenAndServe(*addr, a.paths)
 }
 
-func ensureMainnetOperational(profile config.NetworkConfig, remote bool) error {
+func ensureMainnetOperational(profile config.NetworkConfig) error {
 	if profile.Name == "mainnet" {
-		if remote {
-			return errors.New("mainnet is not operational: launch gate is closed")
-		}
 		return errors.New("mainnet is not operational: launch gate is closed")
 	}
 	return nil
@@ -2840,9 +2837,6 @@ func (a App) lockedError(args []string) error {
 }
 
 func (a App) runRemote(args []string) error {
-	if err := ensureMainnetOperational(a.profile, true); err != nil {
-		return err
-	}
 	switch args[0] {
 	case "dev":
 		if len(args) > 1 && args[1] == "inspect" {
