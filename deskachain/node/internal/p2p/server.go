@@ -450,6 +450,17 @@ func (s Server) acceptPeerIntroduction(intro PeerIntroduction) error {
 		return nil
 	}
 	net := s.network()
+	if net.RequireAuthenticatedNode {
+		if strings.TrimSpace(intro.NodeID) == "" {
+			return errors.New("peer node id is required")
+		}
+		if strings.TrimSpace(intro.NetworkID) == "" {
+			return errors.New("peer network id is required")
+		}
+		if intro.ChainID == 0 {
+			return errors.New("peer chain id is required")
+		}
+	}
 	if intro.NetworkID != "" && intro.NetworkID != net.NetworkID {
 		return fmt.Errorf("network id mismatch: local=%s peer=%s", net.NetworkID, intro.NetworkID)
 	}
