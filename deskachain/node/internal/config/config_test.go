@@ -347,5 +347,3 @@ func TestEnsureNetworkMatchesMainnetRequiresGenesisMetadata(t *testing.T) {
 	if err := EnsureNetworkMatches(paths, profile); err != nil {
 		t.Fatalf("expected matching mainnet genesis metadata to pass: %v", err)
 	}
-}
-
