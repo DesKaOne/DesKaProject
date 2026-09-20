@@ -2,6 +2,7 @@ package rpc
 
 import (
   "encoding/binary"
+  "context"
   "encoding/json"
   "errors"
   "fmt"
@@ -10,6 +11,7 @@ import (
   "sort"
   "strings"
   "sync"
+  "time"
 
   bolt "go.etcd.io/bbolt"
   "deskachain/internal/asset"
@@ -50,6 +52,25 @@ func indexExplorerBlockTx(tx *bolt.Tx, block types.Block) error {
     for _,e:=range events{r,er:=json.Marshal(e);if er!=nil{return er};if er=tx.Bucket([]byte("addresses")).Put(historyKey(historyAddress(item,e.Role),e.BlockHeight,e.TxID,e.Role),r);er!=nil{return er}}
     if ix.AssetID!=""&&!asset.IsNative(ix.AssetID){e:=explorerIndexedAssetEvent{TxID:item.ID,BlockHeight:block.Height,BlockHash:block.Hash,AssetID:ix.AssetID,From:item.From,To:item.To,Amount:item.Amount,Fee:item.Fee};r,er:=json.Marshal(e);if er!=nil{return er};if er=tx.Bucket([]byte("assets")).Put(assetEventKey(e.AssetID,e.BlockHeight,e.TxID),r);er!=nil{return er}}
   }; return nil
+}
+
+func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
+	if interval <= 0 {
+		interval = 2 * time.Second
+	}
+	_ = func() {
+		_, _ = x.sync()
+	}()
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			_, _ = x.sync()
+		}
+	}
 }
 
 func (x *explorerIndexer) sync() (ExplorerIndexerStatus,error) {
