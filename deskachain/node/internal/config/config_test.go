@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestNetworkProfileRejectsNameMismatch(t *testing.T) {
+	profile := Localnet()
+	profile.NetworkName = "testnet"
+	if err := ValidateNetworkProfile(profile); err == nil || !strings.Contains(err.Error(), "network name mismatch") {
+		t.Fatalf("expected network name mismatch rejection, got %v", err)
+	}
+}
+
 func TestNetworkByName(t *testing.T) {
 	net, err := NetworkByName("localnet")
 	if err != nil {
