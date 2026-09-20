@@ -57,15 +57,34 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 		return err
 	}
 	snapshot, loadErr := ss.LoadState()
-	if loadErr == nil && snapshotMatchesTip(snapshot, tip) {
-		return nil
+	if loadErr != nil {
+		return fmt.Errorf("persisted state unavailable: %w", loadErr)
 	}
+	if !snapshotMatchesTip(snapshot, tip) {
+		return errors.New("persisted state does not match canonical tip")
+	}
+	if err := ss.(storage.StateQueryStore).ValidateChainStateConsistency(); err != nil {
+		return err
+	}
+	return nil
+}
 
+// RebuildStateWithProfile is an explicit recovery operation for operators.
+// Runtime initialization must never silently rewrite state derived from the
+// canonical chain.
+func (bc *Blockchain) RebuildStateWithProfile(profile config.NetworkConfig) error {
+	ss, ok := bc.store.(storage.StateStore)
+	if !ok {
+		return errors.New("state store is not available")
+	}
 	blocks, err := bc.Blocks()
 	if err != nil {
 		return err
 	}
-	snapshot, err = state.SnapshotForBlocks(blocks, profile.Consensus, profile)
+	if len(blocks) == 0 {
+		return errors.New("chain is not initialized")
+	}
+	snapshot, err := state.SnapshotForBlocks(blocks, profile.Consensus, profile)
 	if err != nil {
 		return err
 	}
