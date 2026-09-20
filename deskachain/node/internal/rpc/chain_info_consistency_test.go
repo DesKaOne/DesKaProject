@@ -17,6 +17,7 @@ import (
 
 func TestChainInfoAfterP2PBlockImportReflectsCanonicalTip(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	nodeA := newProfileRPCTestNode(t, profile)
 	nodeB := newProfileRPCTestNode(t, profile)
 	block := mineChainInfoBlock(t, nodeA, profile)
@@ -42,6 +43,7 @@ func TestChainInfoAfterP2PBlockImportReflectsCanonicalTip(t *testing.T) {
 
 func TestChainInfoAfterPeerSyncReflectsCanonicalTip(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	nodeA := newProfileRPCTestNode(t, profile)
 	nodeB := newProfileRPCTestNode(t, profile)
 	block := mineChainInfoBlock(t, nodeA, profile)
@@ -63,6 +65,7 @@ func TestChainInfoAfterPeerSyncReflectsCanonicalTip(t *testing.T) {
 
 func TestChainInfoAfterRestartReflectsCanonicalTip(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileRPCTestNode(t, profile)
 	block := mineChainInfoBlock(t, paths, profile)
 	restartedState, err := nodestate.NewWithProfile(paths, profile)
@@ -78,6 +81,7 @@ func TestChainInfoAfterRestartReflectsCanonicalTip(t *testing.T) {
 
 func TestChainInfoSnapshotConsistentFields(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileRPCTestNode(t, profile)
 	state := staleChainInfoState(t, paths, profile)
 	block := mineChainInfoBlock(t, paths, profile)
@@ -98,6 +102,7 @@ func TestChainInfoSnapshotConsistentFields(t *testing.T) {
 
 func TestPublicRPCChainInfoAfterP2PImport(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	nodeA := newProfileRPCTestNode(t, profile)
 	nodeB := newProfileRPCTestNode(t, profile)
 	block := mineChainInfoBlock(t, nodeA, profile)
