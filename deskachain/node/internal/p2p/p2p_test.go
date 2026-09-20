@@ -88,7 +88,7 @@ func TestSyncBlocksFromPeer(t *testing.T) {
 	b := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, a, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+1)
-	server := newP2PTestServer(a)
+	server := newP2PTestServerWithProfile(a)
 	defer server.Close()
 	var out bytes.Buffer
 	if err := SyncFromPeerWithProfile(b, server.URL, &out, fundedP2PProfile()); err != nil {
@@ -111,9 +111,9 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	miner := newWallet(t)
 	receiver := newWallet(t)
 	mineBlocks(t, a, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+1)
-	serverB := newP2PTestServer(b)
+	serverB := newP2PTestServerWithProfile(b)
 	defer serverB.Close()
-	serverA := newP2PTestServer(a)
+	serverA := newP2PTestServerWithProfile(a)
 	defer serverA.Close()
 	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
@@ -446,7 +446,7 @@ func TestStatusEndpointUsesRuntimeStateFast(t *testing.T) {
 
 func TestStatusEndpointDifficultyFields(t *testing.T) {
 	paths := newTestNode(t)
-	server := newP2PTestServer(paths)
+	server := newP2PTestServerWithProfile(paths)
 	defer server.Close()
 	status := fetchStatus(t, server.URL)
 	if status.Height != 0 || status.TipDifficulty != 0 || status.NextDifficulty != config.InitialDifficulty || status.Difficulty != config.InitialDifficulty {
@@ -504,7 +504,7 @@ func TestHeadersEndpoint(t *testing.T) {
 	a := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, a, miner.Address, 3)
-	server := newP2PTestServer(a)
+	server := newP2PTestServerWithProfile(a)
 	defer server.Close()
 	resp, err := http.Get(server.URL + "/p2p/headers?from=1&limit=999")
 	if err != nil {
@@ -524,7 +524,7 @@ func TestLocatorAndCommonAncestorEndpoints(t *testing.T) {
 	a := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, a, miner.Address, 3)
-	server := newP2PTestServer(a)
+	server := newP2PTestServerWithProfile(a)
 	defer server.Close()
 	client := NewClient()
 	locator, err := client.Locator(server.URL)
@@ -559,7 +559,7 @@ func TestLocatorAndCommonAncestorEndpoints(t *testing.T) {
 
 func TestP2PReceiveTxBodyTooLarge(t *testing.T) {
 	paths := newTestNode(t)
-	server := newP2PTestServer(paths)
+	server := newP2PTestServerWithProfile(paths)
 	defer server.Close()
 	body := `{"id":"` + strings.Repeat("x", 1024*1024+1) + `"}`
 	resp, err := http.Post(server.URL+"/p2p/tx", "application/json", strings.NewReader(body))
@@ -577,7 +577,7 @@ func TestCommonAncestorSameChainAndGenesisFork(t *testing.T) {
 	b := newTestNode(t)
 	minerA := newWallet(t)
 	mineBlocks(t, a, minerA.Address, 3)
-	serverA := newP2PTestServer(a)
+	serverA := newP2PTestServerWithProfile(a)
 	defer serverA.Close()
 	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
@@ -620,7 +620,7 @@ func TestCommonAncestorSameChainAndGenesisFork(t *testing.T) {
 func TestForkCheckScenarios(t *testing.T) {
 	t.Run("in sync", func(t *testing.T) {
 		a := newTestNode(t)
-		server := newP2PTestServer(a)
+		server := newP2PTestServerWithProfile(a)
 		defer server.Close()
 		result, err := CheckFork(a, server.URL)
 		if err != nil {
@@ -635,7 +635,7 @@ func TestForkCheckScenarios(t *testing.T) {
 		peer := newTestNode(t)
 		miner := newWallet(t)
 		mineBlocks(t, peer, miner.Address, 2)
-		server := newP2PTestServer(peer)
+		server := newP2PTestServerWithProfile(peer)
 		defer server.Close()
 		result, err := CheckFork(local, server.URL)
 		if err != nil {
@@ -650,7 +650,7 @@ func TestForkCheckScenarios(t *testing.T) {
 		peer := newTestNode(t)
 		miner := newWallet(t)
 		mineBlocks(t, local, miner.Address, 2)
-		server := newP2PTestServer(peer)
+		server := newP2PTestServerWithProfile(peer)
 		defer server.Close()
 		result, err := CheckFork(local, server.URL)
 		if err != nil {
@@ -665,7 +665,7 @@ func TestForkCheckScenarios(t *testing.T) {
 		peer := newTestNode(t)
 		mineBlocks(t, local, newWallet(t).Address, 1)
 		mineBlocks(t, peer, newWallet(t).Address, 1)
-		server := newP2PTestServer(peer)
+		server := newP2PTestServerWithProfile(peer)
 		defer server.Close()
 		result, err := CheckFork(local, server.URL)
 		if err != nil {
@@ -686,7 +686,7 @@ func TestSyncForkDetected(t *testing.T) {
 	mineBlocks(t, b, minerB.Address, 3)
 	beforeTip := tip(t, b)
 	beforeSupply := totalSupply(t, b)
-	serverA := newP2PTestServer(a)
+	serverA := newP2PTestServerWithProfile(a)
 	defer serverA.Close()
 	err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "sync failed: fork detected") || !strings.Contains(err.Error(), "fork_tie_same_work") {
@@ -707,7 +707,7 @@ func TestSyncSameHeightSameTipUpToDate(t *testing.T) {
 	b := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, a, miner.Address, 3)
-	serverA := newP2PTestServer(a)
+	serverA := newP2PTestServerWithProfile(a)
 	defer serverA.Close()
 	if err := SyncFromPeerWithProfile(b, serverA.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
@@ -726,7 +726,7 @@ func TestSyncLowerPeerMatchingAncestorIsLocalAhead(t *testing.T) {
 	peer := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, peer, miner.Address, 2)
-	serverPeer := newP2PTestServer(peer)
+	serverPeer := newP2PTestServerWithProfile(peer)
 	defer serverPeer.Close()
 	if err := SyncFromPeerWithProfile(local, serverPeer.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
@@ -748,7 +748,7 @@ func TestSyncLowerPeerDifferentTipForkDetected(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 3)
 	mineBlocks(t, peer, newWallet(t).Address, 2)
-	serverPeer := newP2PTestServer(peer)
+	serverPeer := newP2PTestServerWithProfile(peer)
 	defer serverPeer.Close()
 	err := SyncFromPeerWithProfile(local, serverPeer.URL, nil, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "sync failed: fork detected") || !strings.Contains(err.Error(), "local_ahead_more_work") {
@@ -765,7 +765,7 @@ func TestSyncHigherPeerForkReorgsToMoreWork(t *testing.T) {
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, newWallet(t).Address, 3)
 	peerTip := tip(t, peer)
-	serverPeer := newP2PTestServer(peer)
+	serverPeer := newP2PTestServerWithProfile(peer)
 	defer serverPeer.Close()
 	var out bytes.Buffer
 	if err := SyncFromPeerWithProfile(local, serverPeer.URL, &out, fundedP2PProfile()); err != nil {
@@ -786,7 +786,7 @@ func TestSyncAgainDoesNotDuplicate(t *testing.T) {
 	b := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, a, miner.Address, 2)
-	server := newP2PTestServer(a)
+	server := newP2PTestServerWithProfile(a)
 	defer server.Close()
 	if err := SyncFromPeerWithProfile(b, server.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
@@ -806,7 +806,7 @@ func TestUpstreamBackfillPushesMissingBlocks(t *testing.T) {
 	upstream := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, local, miner.Address, 3)
-	server := newP2PTestServer(upstream)
+	server := newP2PTestServerWithProfile(upstream)
 	defer server.Close()
 
 	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
@@ -827,12 +827,12 @@ func TestUpstreamBackfillAlreadyUpToDate(t *testing.T) {
 	upstream := newTestNode(t)
 	miner := newWallet(t)
 	mineBlocks(t, local, miner.Address, 2)
-	localServer := newP2PTestServer(local)
+	localServer := newP2PTestServerWithProfile(local)
 	defer localServer.Close()
 	if err := SyncFromPeerWithProfile(upstream, localServer.URL, nil, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
-	upstreamServer := newP2PTestServer(upstream)
+	upstreamServer := newP2PTestServerWithProfile(upstream)
 	defer upstreamServer.Close()
 
 	result, err := BackfillToPeer(local, upstreamServer.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
@@ -850,7 +850,7 @@ func TestUpstreamHigherWorkSyncsLocal(t *testing.T) {
 	miner := newWallet(t)
 	mineBlocks(t, local, miner.Address, 1)
 	mineBlocks(t, upstream, miner.Address, 3)
-	server := newP2PTestServer(upstream)
+	server := newP2PTestServerWithProfile(upstream)
 	defer server.Close()
 
 	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
@@ -870,7 +870,7 @@ func TestUpstreamForkSameWorkDoesNotForce(t *testing.T) {
 	upstream := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, upstream, newWallet(t).Address, 1)
-	server := newP2PTestServer(upstream)
+	server := newP2PTestServerWithProfile(upstream)
 	defer server.Close()
 
 	result, err := BackfillToPeer(local, server.URL, fundedP2PProfile(), config.DefaultMaxReorgDepth(fundedP2PProfile()))
@@ -889,6 +889,10 @@ func fundedP2PProfile() config.NetworkConfig {
 	return profile
 }
 
+func testP2PProfile() config.NetworkConfig {
+	return config.Localnet()
+}
+
 func newTestNode(t *testing.T) config.Paths {
 	t.Helper()
 	paths := config.NewPaths(t.TempDir())
@@ -901,10 +905,15 @@ func newTestNode(t *testing.T) config.Paths {
 }
 
 func newP2PTestServer(paths config.Paths) *httptest.Server {
+	return newP2PTestServerWithProfile(paths)
+}
+
+func newP2PTestServerWithProfile(paths config.Paths) *httptest.Server {
 	mux := http.NewServeMux()
-	NewServerWithProfile(paths, fundedP2PProfile()).Register(mux)
+	NewServerWithProfile(paths, testP2PProfile()).Register(mux)
 	return httptest.NewServer(mux)
 }
+
 
 func fetchStatus(t *testing.T, baseURL string) Status {
 	t.Helper()
@@ -1034,7 +1043,7 @@ func TestReorgPreviewSameWorkRejected(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, newWallet(t).Address, 1)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, DefaultMaxReorgDepth, fundedP2PProfile())
 	if err != nil {
@@ -1050,7 +1059,7 @@ func TestReorgPreviewPeerMoreWorkAllowed(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, newWallet(t).Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, DefaultMaxReorgDepth, fundedP2PProfile())
 	if err != nil {
@@ -1066,7 +1075,7 @@ func TestReorgApplyRequiresYes(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, newWallet(t).Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	_, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, false, fundedP2PProfile())
 	if err == nil || !strings.Contains(err.Error(), "without --yes") {
@@ -1079,7 +1088,7 @@ func TestReorgApplyPeerMoreWork(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, newWallet(t).Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
@@ -1095,7 +1104,7 @@ func TestReorgDepthLimit(t *testing.T) {
 	peer := newTestNode(t)
 	mineBlocks(t, local, newWallet(t).Address, 2)
 	mineBlocks(t, peer, newWallet(t).Address, 3)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	plan, _, err := BuildReorgPlanWithProfile(local, server.URL, 1, fundedP2PProfile())
 	if err != nil {
@@ -1111,7 +1120,7 @@ func TestReorgRequeuesValidOrphanTx(t *testing.T) {
 	tx := signedTx(t, local, miner, user1.Address, 10)
 	mineBlock(t, local, miner.Address, []types.Transaction{tx})
 	mineBlocks(t, peer, newWallet(t).Address, 3)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
@@ -1136,7 +1145,7 @@ func TestReorgDoesNotRequeueTxConfirmedOnPeer(t *testing.T) {
 	mineBlock(t, local, miner.Address, []types.Transaction{tx})
 	mineBlock(t, peer, peerMiner.Address, []types.Transaction{tx})
 	mineBlocks(t, peer, peerMiner.Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
@@ -1159,7 +1168,7 @@ func TestReorgDropsInvalidOrphanTxDueInsufficientBalance(t *testing.T) {
 	txB := signedTx(t, peer, miner, user2.Address, 120)
 	mineBlock(t, peer, peerMiner.Address, []types.Transaction{txB})
 	mineBlocks(t, peer, peerMiner.Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
@@ -1181,7 +1190,7 @@ func TestReorgRemovesMempoolTxConfirmedByNewBranchAndDeduplicates(t *testing.T) 
 	}
 	mineBlock(t, peer, peerMiner.Address, []types.Transaction{tx})
 	mineBlocks(t, peer, peerMiner.Address, 2)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
@@ -1197,7 +1206,7 @@ func TestReorgCoinbaseNeverRequeued(t *testing.T) {
 	local, peer, _, peerMiner, _, _ := reorgTxFixture(t)
 	mineBlocks(t, local, newWallet(t).Address, 1)
 	mineBlocks(t, peer, peerMiner.Address, 3)
-	server := newP2PTestServer(peer)
+	server := newP2PTestServerWithProfile(peer)
 	defer server.Close()
 	res, err := ApplyReorgWithProfile(local, server.URL, DefaultMaxReorgDepth, true, fundedP2PProfile())
 	if err != nil {
