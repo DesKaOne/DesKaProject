@@ -2558,11 +2558,11 @@ func (a App) knownPeerMetadata() []p2p.PeerMetadata {
 }
 
 func (a App) broadcastTx(tx types.Transaction) {
-	p2p.BroadcastTxToPeers(a.paths.Peers, a.knownPeerMetadata(), tx)
+	p2p.BroadcastTxToPeersWithProfile(a.paths, a.profile(), a.knownPeerMetadata(), tx)
 }
 
 func (a App) broadcastBlock(block types.Block) {
-	p2p.BroadcastBlockToPeers(a.paths.Peers, a.knownPeerMetadata(), block)
+	p2p.BroadcastBlockToPeersWithProfile(a.paths, a.profile(), a.knownPeerMetadata(), block)
 }
 
 func (a App) lockChainMutation() func() {
