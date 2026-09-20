@@ -240,8 +240,6 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	lock, unlock := serviceStakeTxs(t, w, config.Localnet().Consensus.Staking.MinServiceStake)
 	lockHeight := config.Localnet().Consensus.CoinbaseMaturity + 2
 	unlockHeight := lockHeight + 1
-	lock.Nonce = 1
-	unlock.Nonce = 2
 	lockBlock := types.Block{Height: lockHeight, Transactions: []types.Transaction{lock}}
 	unlockBlock := types.Block{Height: unlockHeight, Transactions: []types.Transaction{unlock}}
 	saveServiceBlocks(t, paths, []types.Block{lockBlock, unlockBlock})
