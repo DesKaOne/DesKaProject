@@ -265,7 +265,7 @@ func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) err
 		}
 		peers[i].LastScoreReason = reason
 		peers[i].LastScoreAt = now.Format(time.RFC3339)
-		return s.SaveMetadata(peers)
+		return s.saveMetadataUnlocked(peers)
 	}
 	meta := PeerMetadata{URL: peerURL, Status: PeerStatusUnknown}
 	meta.Score = clampScore(delta)
@@ -276,7 +276,7 @@ func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) err
 	}
 	meta.LastScoreReason = reason
 	meta.LastScoreAt = now.Format(time.RFC3339)
-	return s.SaveMetadata(append(peers, meta))
+	return s.saveMetadataUnlocked(append(peers, meta))
 }
 
 func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string) error {
@@ -321,7 +321,7 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 				peers[i].Status = PeerStatusCooldown
 			}
 		}
-		return s.SaveMetadata(peers)
+		return s.saveMetadataUnlocked(peers)
 	}
 	status := PeerStatusUnknown
 	if errText != "" {
@@ -345,7 +345,7 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 		meta.CooldownUntil = time.Now().Add(time.Minute).Format(time.RFC3339)
 		meta.Status = PeerStatusCooldown
 	}
-	return s.SaveMetadata(append(peers, meta))
+	return s.saveMetadataUnlocked(append(peers, meta))
 }
 
 func (s PeerStore) Remove(peer string) error {
@@ -368,7 +368,7 @@ func (s PeerStore) Remove(peer string) error {
 			filtered = append(filtered, existing)
 		}
 	}
-	return s.SaveMetadata(filtered)
+	return s.saveMetadataUnlocked(filtered)
 }
 
 func (s PeerStore) Clear() error {
@@ -376,7 +376,7 @@ func (s PeerStore) Clear() error {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 	}
-	return s.SaveMetadata(nil)
+	return s.saveMetadataUnlocked(nil)
 }
 
 func (s PeerStore) PruneExpired(ttl time.Duration, now time.Time) (int, error) {
