@@ -349,4 +349,3 @@ func TestEnsureNetworkMatchesMainnetRequiresGenesisMetadata(t *testing.T) {
 	}
 }
 
-}
