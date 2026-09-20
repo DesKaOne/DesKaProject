@@ -227,6 +227,20 @@ func TestV3NetworkProfileRejectsEconomicDrift(t *testing.T) {
 	}
 }
 
+func TestMainnetGenesisHashIsFrozen(t *testing.T) {
+	profile := Mainnet()
+	if profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis hash = %q, want %q", profile.GenesisHash, MainnetGenesisHash)
+	}
+	if MainnetGenesisHash == "" {
+		t.Fatal("mainnet genesis hash must not be empty")
+	}
+	profile.GenesisHash = "deadbeef"
+	if err := ValidateNetworkProfile(profile); err == nil {
+		t.Fatal("expected modified mainnet genesis hash to be rejected")
+	}
+}
+
 func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
 	if Localnet().RequireAuthenticatedNode {
 		t.Fatal("localnet should remain permissive for standalone development")
