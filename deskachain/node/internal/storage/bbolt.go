@@ -392,9 +392,6 @@ func validateReplacementAgainstCanonicalTipTx(tx *bolt.Tx, from uint64, blocks [
 	if err := json.Unmarshal(rawTip, &tip); err != nil {
 		return err
 	}
-	if from > tip.Height {
-		return errors.New("replacement height is beyond canonical tip")
-	}
 	if len(blocks) == 0 {
 		return errors.New("replacement branch is empty")
 	}
@@ -412,11 +409,16 @@ func validateReplacementAgainstCanonicalTipTx(tx *bolt.Tx, from uint64, blocks [
 		}
 	}
 	replacementTip := blocks[len(blocks)-1]
-	if snapshot.Height != replacementTip.Height {
-		return errors.New("replacement state height does not match replacement tip")
+	if snapshot.Version != 0 {
+		if snapshot.Height != replacementTip.Height {
+			return errors.New("replacement state height does not match replacement tip")
+		}
+		if replacementTip.StateRoot != "" && snapshot.StateRoot != replacementTip.StateRoot {
+			return errors.New("replacement state root does not match replacement tip")
+		}
 	}
-	if replacementTip.StateRoot != "" && snapshot.StateRoot != replacementTip.StateRoot {
-		return errors.New("replacement state root does not match replacement tip")
+	if from > tip.Height {
+		return errors.New("replacement height is beyond canonical tip")
 	}
 	return nil
 }
@@ -1196,37 +1198,19 @@ func saveStateTx(tx *bolt.Tx, snapshot state.Snapshot) error {
 	if err := snapshot.Validate(); err != nil {
 		return err
 	}
-	root, err := tx.CreateBucketIfNotExists(stateBucket)
-	if err != nil {
-		return err
+	root := tx.Bucket(stateBucket)
+	if root == nil {
+		return ErrStateNotInitialized
 	}
-	meta, err := root.CreateBucketIfNotExists(stateMetaBucket)
-	if err != nil {
-		return err
-	}
-	accountsBucket, err := root.CreateBucketIfNotExists(stateAccountsBucket)
-	if err != nil {
-		return err
-	}
-	stakesBucket, err := root.CreateBucketIfNotExists(stateStakesBucket)
-	if err != nil {
-		return err
-	}
-	stakesByOwnerBucket, err := root.CreateBucketIfNotExists(stateStakesByOwnerBucket)
-	if err != nil {
-		return err
-	}
-	coinbasesBucket, err := root.CreateBucketIfNotExists(stateCoinbasesBucket)
-	if err != nil {
-		return err
-	}
-	assetsBucket, err := root.CreateBucketIfNotExists(stateAssetsBucket)
-	if err != nil {
-		return err
-	}
-	assetBalancesBucket, err := root.CreateBucketIfNotExists(stateAssetBalancesBucket)
-	if err != nil {
-		return err
+	meta := root.Bucket(stateMetaBucket)
+	accountsBucket := root.Bucket(stateAccountsBucket)
+	stakesBucket := root.Bucket(stateStakesBucket)
+	stakesByOwnerBucket := root.Bucket(stateStakesByOwnerBucket)
+	coinbasesBucket := root.Bucket(stateCoinbasesBucket)
+	assetsBucket := root.Bucket(stateAssetsBucket)
+	assetBalancesBucket := root.Bucket(stateAssetBalancesBucket)
+	if meta == nil || accountsBucket == nil || stakesBucket == nil || stakesByOwnerBucket == nil || coinbasesBucket == nil || assetsBucket == nil || assetBalancesBucket == nil {
+		return ErrStateNotInitialized
 	}
 
 	if err := clearBucket(meta); err != nil {
