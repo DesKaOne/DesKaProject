@@ -387,15 +387,17 @@ func TestPeerSyncNoCompleteOnMismatchAndLocalAheadOutput(t *testing.T) {
 		t.Fatalf("mismatch output must not claim sync complete:\n%s", out.String())
 	}
 
-	localAhead := newProfileTestNode(t, config.Testnet())
-	peer := newProfileTestNode(t, config.Testnet())
-	mineProfileBlocks(t, localAhead, config.Testnet(), 1)
+	localAheadProfile := config.Testnet()
+	localAheadProfile.RequireAuthenticatedNode = false
+	localAhead := newProfileTestNode(t, localAheadProfile)
+	peer := newProfileTestNode(t, localAheadProfile)
+	mineProfileBlocks(t, localAhead, localAheadProfile, 1)
 	mux = http.NewServeMux()
-	NewServerWithAdvertiseAndProfile(peer, ":0", "", config.Testnet()).Register(mux)
+	NewServerWithAdvertiseAndProfile(peer, ":0", "", localAheadProfile).Register(mux)
 	server = httptest.NewServer(mux)
 	defer server.Close()
 	out.Reset()
-	if err := SyncFromPeerWithProfile(localAhead, server.URL, &out, config.Testnet()); err != nil {
+	if err := SyncFromPeerWithProfile(localAhead, server.URL, &out, localAheadProfile); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "local chain ahead of peer") || !strings.Contains(out.String(), "imported blocks: 0") {
