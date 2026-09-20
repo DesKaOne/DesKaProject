@@ -194,6 +194,32 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 }
 
 
+func TestMainnetLaunchCriticalProfile(t *testing.T) {
+	profile := Mainnet()
+	checks := map[string]bool{
+		"network_id": profile.NetworkID == "idr-main-1",
+		"chain_id": profile.ChainID == 777000,
+		"legacy_addresses_disabled": !profile.LegacyAddressAllowed,
+		"authenticated_p2p": profile.RequireAuthenticatedNode,
+		"isolated_mining_disabled": !profile.AllowIsolatedMining,
+		"isolated_writes_disabled": !profile.AllowIsolatedWrites,
+		"token_transfers": profile.Asset.TokenTransfersEnabled,
+		"issued_tokens": profile.Asset.UserIssuedTokensEnabled,
+		"paymaster": profile.Asset.PaymasterEnabled,
+		"fee_enabled": profile.Fee.Enabled,
+		"zero_subsidy": profile.Economic.BlockSubsidy == 0,
+		"fee_only": profile.Economic.FeeOnlyBlocks,
+	}
+	for name, ok := range checks {
+		if !ok {
+			t.Fatalf("mainnet launch profile invariant failed: %s", name)
+		}
+	}
+	if profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis hash = %q, want %q", profile.GenesisHash, MainnetGenesisHash)
+	}
+}
+
 func TestBuiltInNetworkProfilesSatisfyV3Freeze(t *testing.T) {
 	for _, profile := range []NetworkConfig{Localnet(), Testnet(), Mainnet()} {
 		if err := ValidateNetworkProfile(profile); err != nil {
