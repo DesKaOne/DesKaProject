@@ -1652,6 +1652,23 @@ func (a App) node(args []string) error {
 			return errors.New("faucet amount exceeds faucet max per address")
 		}
 	}
+	// Acquire the datadir lock before any startup read/write side effects so
+	// concurrent node starts cannot race on chain or peer-store initialization.
+	advertise := *p2pAdvertise
+	if advertise == "" {
+		advertise = defaultAdvertiseP2P(*p2pAddr)
+	}
+	lock, err := p2p.CreateLock(a.paths.Lock, *rpcAddr, *p2pAddr, advertise)
+	if err != nil {
+		return fmt.Errorf("datadir is locked by running node: %w", err)
+	}
+	lockOwned := true
+	defer func() {
+		if lockOwned {
+			_ = p2p.RemoveLock(a.paths.Lock)
+		}
+	}()
+
 	bc, closeFn, err := a.openInitializedChain()
 	if err != nil {
 		return err
@@ -1687,10 +1704,6 @@ func (a App) node(args []string) error {
 	if err != nil {
 		return err
 	}
-	advertise := *p2pAdvertise
-	if advertise == "" {
-		advertise = defaultAdvertiseP2P(*p2pAddr)
-	}
 	startupPeers, err := addStartupPeers(store, startupPeerInputs{FlagPeers: flagPeers, Bootnodes: bootnodes, SeedPeers: seedPeers, SelfURL: advertise})
 	if err != nil {
 		return err
@@ -1700,7 +1713,6 @@ func (a App) node(args []string) error {
 		return err
 	}
 	peerSource := peerSourceSummary(len(filePeers) > 0, len(flagPeers)+len(bootnodes)+len(seedPeers) > 0)
-	lockOwned = false
 	defer func() {
 		_ = state.Refresh(a.paths)
 		_ = p2p.RemoveLock(a.paths.Lock)
@@ -2547,19 +2559,6 @@ func (a App) inspectAddress(address string) (addressInspection, error) {
 	if err := crypto.ValidateAddressForNetwork(address, a.profile); err != nil {
 		return addressInspection{}, err
 	}
-	// Acquire the datadir lock before any startup read/write side effects so
-	// concurrent node starts cannot race on chain or peer-store initialization.
-	lock, err := p2p.CreateLock(a.paths.Lock, *rpcAddr, *p2pAddr, advertise)
-	if err != nil {
-		return fmt.Errorf("datadir is locked by running node: %w", err)
-	}
-	lockOwned := true
-	defer func() {
-		if lockOwned {
-			_ = p2p.RemoveLock(a.paths.Lock)
-		}
-	}()
-
 	bc, closeFn, err := a.openInitializedChain()
 	if err != nil {
 		return addressInspection{}, err
