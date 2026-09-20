@@ -63,7 +63,11 @@ func (bc *Blockchain) InitWithProfile(profile config.NetworkConfig) error {
 	if !snapshotMatchesTip(snapshot, tip) {
 		return errors.New("persisted state does not match canonical tip")
 	}
-	if err := ss.(storage.StateQueryStore).ValidateChainStateConsistency(); err != nil {
+	q, ok := bc.store.(storage.StateQueryStore)
+	if !ok {
+		return errors.New("state query store is not available")
+	}
+	if err := q.ValidateChainStateConsistency(); err != nil {
 		return err
 	}
 	return nil
