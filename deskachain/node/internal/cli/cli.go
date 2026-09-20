@@ -1639,7 +1639,7 @@ func (a App) node(args []string) error {
 	log.Printf("peer store: %s", a.paths.Peers)
 	log.Printf("service store: %s", a.paths.ServiceNodes)
 	log.Printf("service nodes: %d", len(serviceNodes))
-	p2pServer := p2p.NewHTTPServerWithProfile(*p2pAddr, a.paths, state, a.profile, advertise)
+	p2pServer := p2p.NewHTTPServerWithProfileAndMutationMutex(*p2pAddr, a.paths, state, a.profile, chainMutationMu, advertise)
 	go func() {
 		if err := p2pServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Printf("p2p server stopped: %v", err)
@@ -2561,6 +2561,14 @@ func (a App) broadcastBlock(block types.Block) {
 	p2p.BroadcastBlockToPeers(a.paths.Peers, a.knownPeerMetadata(), block)
 }
 
+func (a App) lockChainMutation() func() {
+	if a.chainMu == nil {
+		return func() {}
+	}
+	a.chainMu.Lock()
+	return a.chainMu.Unlock
+}
+
 func (a App) syncLoop(interval time.Duration, verbose bool, state *nodestate.Store, maxReorgDepth uint64, upstreamPeers []string) {
 	if interval <= 0 {
 		interval = 5 * time.Second
@@ -2580,7 +2588,7 @@ func (a App) syncLoop(interval time.Duration, verbose bool, state *nodestate.Sto
 			}
 			go func(peerURL string) {
 				defer tracker.done(peerURL)
-				if err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, peerURL, nil, a.profile, maxReorgDepth); err != nil {
+				unlock := a.lockChainMutation()\n\t\t\t\tif err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, peerURL, nil, a.profile, maxReorgDepth); err != nil {
 					if tracker.shouldLogError(peerURL, err.Error(), time.Now()) {
 						log.Printf("sync failed peer=%s error=%v", peerURL, err)
 					}
@@ -2630,7 +2638,7 @@ func (a App) bootstrapPeers(seedPeers []string, selfURL string, state *nodestate
 		}
 		accepted++
 		log.Printf("seed accepted seed=%s height=%d tip=%s", normalized, hs.Height, hs.TipHash)
-		if err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth); err != nil {
+		unlock := a.lockChainMutation()\n\t\tif err := p2p.SyncFromPeerWithProfileAndMaxDepth(a.paths, normalized, nil, a.profile, maxReorgDepth); err != nil {
 			log.Printf("seed sync checked seed=%s result=%q", normalized, err.Error())
 		} else {
 			log.Printf("seed sync accepted seed=%s", normalized)
@@ -5384,4 +5392,4 @@ func Main() {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
-}
+}\t\t\t\tunlock()\n
