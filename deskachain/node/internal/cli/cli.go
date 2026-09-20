@@ -143,14 +143,17 @@ func (a App) Run(args []string) error {
 		return nil
 	}
 
-	// Mainnet is a launch-sensitive network: a caller must explicitly select it,
-	// and a test-only injected profile must never be able to masquerade as mainnet.
+	// Mainnet is a launch-sensitive network: it must be explicitly selected,
+	// and only the canonical built-in profile may be used.
 	if network.Name == "mainnet" {
 		if !networkFlagProvided {
 			return errors.New("mainnet requires explicit --network mainnet selection")
 		}
 		if err := config.ValidateNetworkProfile(network); err != nil {
 			return err
+		}
+		if a.profile.Name == "mainnet" && a.profile.GenesisHash != config.MainnetGenesisHash {
+			return errors.New("injected mainnet profile is not canonical")
 		}
 	}
 
