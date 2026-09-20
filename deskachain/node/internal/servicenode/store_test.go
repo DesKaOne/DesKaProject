@@ -192,16 +192,16 @@ func TestScoreCollateralEligibility(t *testing.T) {
 	if score.StakeEligible || score.CollateralStatus != "none" || score.EligibleSimulatedPoints != 0 {
 		t.Fatalf("expected ineligible without stake: %+v", score)
 	}
+	saveServiceBlocks(t, paths, []types.Block{
+		{Height: 0},
+		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
+	})
 	lock := types.NewStakeLockTransaction(w.Address, config.Localnet().Consensus.Staking.MinServiceStake, 1)
 	if err := w.SignTransaction(&lock); err != nil {
 		t.Fatal(err)
 	}
 	lock.StakeID = lock.ID
-	saveServiceBlocks(t, paths, []types.Block{
-		{Height: 0},
-		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
-		{Height: 2, Transactions: []types.Transaction{lock}},
-	})
+	saveServiceBlocks(t, paths, []types.Block{{Height: 2, Transactions: []types.Transaction{lock}}})
 	score, err = store.Score(w.Address)
 	if err != nil {
 		t.Fatal(err)
@@ -225,10 +225,12 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	if _, _, err := store.Heartbeat(w.Address, "", Metadata{}); err != nil {
 		t.Fatal(err)
 	}
-	lock, unlock := serviceStakeTxs(t, w, config.Localnet().Consensus.Staking.MinServiceStake)
 	saveServiceBlocks(t, paths, []types.Block{
 		{Height: 0},
 		{Height: 1, Transactions: []types.Transaction{types.NewCoinbaseTransaction(w.Address, config.InitialBlockReward, 1)}},
+	})
+	lock, unlock := serviceStakeTxs(t, w, config.Localnet().Consensus.Staking.MinServiceStake)
+	saveServiceBlocks(t, paths, []types.Block{
 		{Height: 2, Transactions: []types.Transaction{lock}},
 		{Height: 3, Transactions: []types.Transaction{unlock}},
 	})
