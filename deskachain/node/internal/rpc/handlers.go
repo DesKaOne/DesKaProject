@@ -37,6 +37,7 @@ type handler struct {
 	paths   config.Paths
 	info    NodeInfo
 	limiter *rateLimiter
+	txMu    *sync.Mutex
 }
 
 func (h handler) profile() config.NetworkConfig {
@@ -94,7 +95,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 		info.Mining = mining.NewService()
 	}
 	info = normalizeNodeInfo(info)
-	h := handler{paths: paths, info: info, limiter: newRateLimiter()}
+	h := handler{paths: paths, info: info, limiter: newRateLimiter(), txMu: &sync.Mutex{}}
 	mux.HandleFunc("GET /health", h.wrap("generic", h.health))
 	mux.HandleFunc("GET /ready", h.wrap("generic", h.ready))
 	mux.HandleFunc("GET /explorer-ui", h.wrap("generic", h.explorerUI))
@@ -2354,6 +2355,8 @@ func (h handler) faucetInfo(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (h handler) faucetRequest(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockTxSubmission()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 	var req struct {
 		Address string `json:"address"`
@@ -2531,6 +2534,8 @@ func (h handler) walletList(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (h handler) send(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockTxSubmission()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 	var req struct {
 		From   string `json:"from"`
@@ -3003,6 +3008,8 @@ func (h handler) stakeStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockTxSubmission()
+	defer unlock()
 	var req struct {
 		Address string `json:"address"`
 		Amount  string `json:"amount"`
@@ -3035,6 +3042,8 @@ func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) stakeUnlock(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockTxSubmission()
+	defer unlock()
 	var req struct {
 		Address string `json:"address"`
 		StakeID string `json:"stake_id"`
@@ -3335,6 +3344,14 @@ func firstN(value string, n int) string {
 		return value
 	}
 	return value[:n]
+}
+
+func (h handler) lockTxSubmission() func() {
+	if h.txMu == nil {
+		return func() {}
+	}
+	h.txMu.Lock()
+	return h.txMu.Unlock
 }
 
 func (h handler) admitMempoolTx(tx types.Transaction) error {
