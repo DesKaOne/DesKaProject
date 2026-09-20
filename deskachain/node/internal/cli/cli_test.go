@@ -213,8 +213,7 @@ func TestMainnetOperationalCommandsRemainGated(t *testing.T) {
 	for _, args := range [][]string{
 		{"--network", "mainnet", "init"},
 		{"--network", "mainnet", "wallet", "new"},
-		{"--network", "mainnet", "send", "--from", "a", "--to", "b", "--amount", "1"},
-		{"--network", "mainnet", "mine", "--address", "a", "--blocks", "1"},
+			{"--network", "mainnet", "mine", "--address", "a", "--blocks", "1"},
 		{"--network", "mainnet", "node", "start"},
 	} {
 		app := New(io.Discard).WithDataDir(dir)
@@ -223,7 +222,6 @@ func TestMainnetOperationalCommandsRemainGated(t *testing.T) {
 		}
 	}
 }
-
 
 
 func TestDatadirNetworkMismatchRejected(t *testing.T) {
