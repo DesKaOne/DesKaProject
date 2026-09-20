@@ -165,6 +165,9 @@ func (a App) Run(args []string) error {
 	if !networkFlagProvided && a.profile.Name == network.Name {
 		network = a.profile
 	}
+	if a.profile.Name == "mainnet" && !networkFlagProvided {
+		return errors.New("mainnet requires explicit --network mainnet selection")
+	}
 	if network.Name == "mainnet" {
 		if network.GenesisHash != config.MainnetGenesisHash {
 			return fmt.Errorf("mainnet genesis hash is not frozen")
