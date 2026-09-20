@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"flag"
 	"net/http"
 	"net/http/httptest"
