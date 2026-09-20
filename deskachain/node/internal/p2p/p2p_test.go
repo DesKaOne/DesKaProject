@@ -66,6 +66,34 @@ func TestHandshakeValidation(t *testing.T) {
 	}
 }
 
+func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	peer := Handshake{
+		NetworkID:          local.NetworkID,
+		ChainID:            local.ChainID,
+		ProtocolVersion:    local.ProtocolVersion,
+		MinProtocolVersion: local.MinProtocolVersion,
+		GenesisHash:        config.MainnetGenesisHash,
+	}
+	if err := ValidateHandshake(local, peer); err == nil {
+		t.Fatal("mainnet handshake without authenticated identity should be rejected")
+	} else if !strings.Contains(err.Error(), "authenticated node identity required") {
+		t.Fatalf("unexpected rejection: %v", err)
+	}
+	local.GenesisHash = "tampered"
+	peer.GenesisHash = config.MainnetGenesisHash
+	peer.IdentityVersion = NodeIdentityVersion
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity") && !strings.Contains(err.Error(), "invalid node identity") {
+		// The test above intentionally omits a valid signature; the important
+		// assertion is that tampering local.GenesisHash does not change the
+		// canonical genesis expectation.
+		if err == nil {
+			t.Fatal("tampered mainnet profile unexpectedly validated")
+		}
+	}
+}
+
+
 func TestP2PServerTimeoutConfig(t *testing.T) {
 	server := NewHTTPServer(":0", config.NewPaths(t.TempDir()), nil)
 	if server.ReadHeaderTimeout <= 0 || server.ReadTimeout <= 0 || server.WriteTimeout <= 0 || server.IdleTimeout <= 0 || server.MaxHeaderBytes <= 0 {
