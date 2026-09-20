@@ -160,6 +160,7 @@ func (s Server) handshake(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	net := s.network()
+	net.GenesisHash = chain.GenesisHashForNetwork(net)
 	challenge := strings.TrimSpace(r.URL.Query().Get("challenge"))
 	if challenge != "" {
 		if len(challenge) != 64 {
