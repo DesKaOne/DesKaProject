@@ -1683,6 +1683,7 @@ func (a App) node(args []string) error {
 		AllowIsolatedWrites:      *allowIsolatedWrites,
 		StartedAt:                time.Now(),
 		Profile:                  a.profile,
+		ChainMutationMu:          chainMutationMu,
 	}
 	rpcServer := rpc.NewHTTPServer(*rpcAddr, a.paths, rpcInfo)
 	go func() {
