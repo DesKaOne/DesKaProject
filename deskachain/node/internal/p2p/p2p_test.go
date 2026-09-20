@@ -91,10 +91,7 @@ func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
 		t.Fatalf("expected canonical genesis mismatch rejection, got %v", err)
 	}
 }
-ackage p2p
 
-import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
