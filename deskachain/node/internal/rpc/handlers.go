@@ -2626,6 +2626,8 @@ func (h handler) minerTemplate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) minerSubmit(w http.ResponseWriter, r *http.Request) {
+	unlock := h.lockBlockSubmission()
+	defer unlock()
 	r.Body = http.MaxBytesReader(w, r.Body, maxBlockBody)
 	var req struct {
 		TemplateID string      `json:"template_id"`
@@ -3344,6 +3346,14 @@ func firstN(value string, n int) string {
 		return value
 	}
 	return value[:n]
+}
+
+func (h handler) lockBlockSubmission() func() {
+	if h.txMu == nil {
+		return func() {}
+	}
+	h.txMu.Lock()
+	return h.txMu.Unlock
 }
 
 func (h handler) lockTxSubmission() func() {
