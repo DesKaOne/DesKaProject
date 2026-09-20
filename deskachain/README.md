@@ -71,6 +71,8 @@ Not included yet:
 
 Phase 7 starts from the Phase 6 production-readiness baseline. The goal is to freeze and verify the mainnet identity and launch-critical invariants before any live mainnet operation. Mainnet uses IDR as the native fee-settlement asset with zero block subsidy; issued asset tokens remain separate and may use the IDR fee asset or an authorized paymaster. Phase 7 does not change the native IDR economic model or imply that mainnet is live.
 
+Phase 7 launch-gate status: the mainnet profile is canonical and its genesis identity is frozen, but operational mainnet launch remains intentionally closed. The local CLI rejects mainnet init/node/wallet/send/mining/service/staking operations, the remote CLI rejects `--network mainnet --rpc-url ...`, and the RPC server rejects operational write endpoints on the mainnet profile while keeping read-only introspection available. These controls are launch safeguards, not an indication that mainnet is live.
+
 ## Protocol Basics
 
 DesKaChain Phase 2.6.6 froze the address/key/protocol metadata foundation. Phase 2.7 added dynamic difficulty and more realistic cumulative work. Phase 2.8 added coinbase maturity and mature balance accounting. Phase 2.9 adds a standalone CPU miner that mines RPC block templates without wallet private keys.
