@@ -389,6 +389,25 @@ func TestPeerMaintenancePrunesBackoffAndSubnetLimit(t *testing.T) {
 	}
 }
 
+func TestProductionPeerIntroductionRequiresIdentityMetadata(t *testing.T) {
+	profile := config.Testnet()
+	paths := newTestNodeProfile(t, profile)
+	server := NewServerWithProfile(paths, profile)
+
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441"}); err == nil || !strings.Contains(err.Error(), "peer node id is required") {
+		t.Fatalf("expected node id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a"}); err == nil || !strings.Contains(err.Error(), "peer network id is required") {
+		t.Fatalf("expected network id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a", NetworkID: profile.NetworkID}); err == nil || !strings.Contains(err.Error(), "peer chain id is required") {
+		t.Fatalf("expected chain id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a", NetworkID: profile.NetworkID, ChainID: profile.ChainID}); err != nil {
+		t.Fatalf("complete production peer introduction should pass: %v", err)
+	}
+}
+
 func TestHandshakeAdvertiseAndPeerIntroduction(t *testing.T) {
 	remote := newTestNode(t)
 	local := newTestNode(t)
