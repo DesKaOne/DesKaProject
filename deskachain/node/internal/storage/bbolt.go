@@ -140,6 +140,13 @@ func (s *BoltStore) SaveBlock(block types.Block) error {
 		return err
 	}
 	return s.db.Update(func(tx *bolt.Tx) error {
+		// Keep the legacy block-only API canonical-safe. Production v3 callers
+		// use SaveBlockAndState so block and state commit atomically, while this
+		// path must still never overwrite an existing canonical tip or skip a
+		// predecessor.
+		if err := validateCanonicalCommitPreconditionsTx(tx, block); err != nil {
+			return err
+		}
 		key := heightKey(block.Height)
 		if err := tx.Bucket(blocksBucket).Put(key, raw); err != nil {
 			return err
