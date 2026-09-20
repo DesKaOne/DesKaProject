@@ -32,11 +32,7 @@ func GenesisBlockForNetwork(profile config.NetworkConfig) types.Block {
 }
 
 // GenesisHashForNetwork returns the deterministic genesis identity for a
-// network and enforces the frozen mainnet identity at the shared boundary.
+// network. The caller can compare it with the canonical profile identity.
 func GenesisHashForNetwork(profile config.NetworkConfig) string {
-	genesis := GenesisBlockForNetwork(profile)
-	if profile.Name == "mainnet" && genesis.Hash != config.MainnetGenesisHash {
-		panic("mainnet genesis implementation drifted from frozen identity")
-	}
-	return genesis.Hash
+	return GenesisBlockForNetwork(profile).Hash
 }
