@@ -86,47 +86,69 @@ func normalizeRPCProfile(info NodeInfo) config.NetworkConfig {
 
 func mainnetLaunchGate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost || r.Method == http.MethodDelete {
-			if mainnetOperationalRPCPath(r.URL.Path) {
-				writeJSON(w, http.StatusServiceUnavailable, map[string]any{
-					"ok":    false,
-					"error": "mainnet is not operational: launch gate is closed",
-				})
-				return
-			}
+		if !mainnetReadOnlyRPCMethod(r.Method) || !mainnetReadOnlyRPCPath(r.URL.Path) {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{
+				"ok":    false,
+				"error": "mainnet is not operational: launch gate is closed",
+			})
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
 
-func mainnetOperationalRPCPath(path string) bool {
+func mainnetReadOnlyRPCMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead || method == http.MethodOptions
+}
+
+func mainnetReadOnlyRPCPath(path string) bool {
 	switch strings.TrimRight(path, "/") {
-	case "/debug/p2p/ping",
-		"/upstream/push",
-		"/upstream/push-all",
+	case "/health",
+		"/ready",
+		"/network/info",
+		"/node/id",
+		"/node/compare",
+		"/node/status",
+		"/peer/health",
+		"/peer/list",
+		"/peer/seeds",
+		"/peer/status",
+		"/p2p/peers",
+		"/p2p/reputation",
+		"/p2p/discovery",
+		"/p2p/bootstrap",
+		"/p2p/known-peers",
+		"/upstream/status",
 		"/peers",
-		"/peers/connect",
-		"/peers/clear",
-		"/peers/discover",
-		"/peers/status",
-		"/peers/sync",
-		"/reorg/preview",
-		"/reorg/apply",
-		"/chain/common-ancestor",
-		"/fork/inspect-datadir",
-		"/mempool/clear",
-		"/faucet/request",
-		"/wallet/new",
-		"/send",
-		"/mine",
-		"/miner/template",
-		"/miner/submit",
-		"/service/register",
-		"/service/heartbeat",
-		"/service/challenge/create",
-		"/service/challenge/submit",
-		"/stake/lock",
-		"/stake/unlock":
+		"/chain/info",
+		"/chain/difficulty",
+		"/chain/locator",
+		"/mining/status",
+		"/mining/stats",
+		"/mining/difficulty",
+		"/mining/blocks",
+		"/chain/blocks",
+		"/chain/state",
+		"/chain/validate",
+		"/balance",
+		"/address",
+		"/asset/info",
+		"/asset/balance",
+		"/asset/balances",
+		"/fee/policy",
+		"/fee/pool",
+		"/tx",
+		"/mempool",
+		"/mempool/list",
+		"/faucet/info",
+		"/wallets",
+		"/mine/status",
+		"/service/score",
+		"/service/rewards",
+		"/service/list",
+		"/stake/info",
+		"/stake/list",
+		"/stake/status":
 		return true
 	default:
 		return false
