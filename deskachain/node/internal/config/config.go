@@ -543,6 +543,9 @@ func ValidateNetworkProfile(profile NetworkConfig) error {
 	if profile.Name == "" || profile.NetworkID == "" || profile.NetworkName == "" {
 		return fmt.Errorf("network identity is incomplete")
 	}
+	if profile.Name != profile.NetworkName {
+		return fmt.Errorf("network name mismatch: name=%q network_name=%q", profile.Name, profile.NetworkName)
+	}
 	if profile.ChainID == 0 {
 		return fmt.Errorf("chain id must be non-zero")
 	}
