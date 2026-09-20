@@ -49,6 +49,7 @@ func TestP2PRejectsTestnetPeerFromLocalnet(t *testing.T) {
 
 func TestP2PReorgUsesActiveProfile(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, local, profile, 1)
@@ -83,6 +84,7 @@ func TestP2PReorgRejectsNetworkMismatch(t *testing.T) {
 
 func TestPeerSyncTestnet(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 1)
@@ -114,6 +116,7 @@ func TestPeerSyncTestnet(t *testing.T) {
 
 func TestPeerSyncTestnetHigherWorkForkReorgs(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, local, profile, 1)
@@ -146,6 +149,7 @@ func TestPeerSyncTestnetHigherWorkForkReorgs(t *testing.T) {
 
 func TestPeerSyncTestnetDeepHigherWorkForkHonorsMaxReorgDepth(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	localAllowed := newProfileTestNode(t, profile)
 	localRejected := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
@@ -252,6 +256,7 @@ func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
 
 func TestPeerSyncUpToDateValidPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
@@ -306,6 +311,7 @@ func TestNormalizePeerURLAndPeerStoreDedupesBootnodes(t *testing.T) {
 
 func TestPeerCheckStatusOfflineAndRecovery(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	addr := freeTCPAddr(t)
 	offlineURL := "http://" + addr
@@ -336,6 +342,7 @@ func TestPeerCheckStatusOfflineAndRecovery(t *testing.T) {
 
 func TestPeerSyncAfterRestartUsesPersistedPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 2)
@@ -398,6 +405,7 @@ func TestPeerSyncNoCompleteOnMismatchAndLocalAheadOutput(t *testing.T) {
 
 func TestPeerSyncInvalidBlockPenalizesPeer(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	peer := newProfileTestNode(t, profile)
 	mineProfileBlocks(t, peer, profile, 1)
@@ -448,6 +456,7 @@ func TestPeerSyncInvalidBlockPenalizesPeer(t *testing.T) {
 
 func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	candidate := newProfileTestNode(t, profile)
 	candidateMux := http.NewServeMux()
@@ -502,6 +511,7 @@ func TestP2PPeersEndpointAndDiscovery(t *testing.T) {
 
 func TestDiscoverySkipsSelfInvalidAndWrongNetwork(t *testing.T) {
 	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
 	local := newProfileTestNode(t, profile)
 	wrong := newProfileTestNode(t, config.Localnet())
 	wrongMux := http.NewServeMux()
@@ -580,6 +590,7 @@ func freeTCPAddr(t *testing.T) string {
 
 func newProfileP2PServerOnAddr(t *testing.T, profile config.NetworkConfig, addr string) *httptest.Server {
 	t.Helper()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
 	NewServerWithAdvertiseAndProfile(paths, ":0", "", profile).Register(mux)
@@ -614,6 +625,7 @@ func profileBlocks(t *testing.T, paths config.Paths) []types.Block {
 
 func newProfileP2PServer(t *testing.T, profile config.NetworkConfig) (config.Paths, *httptest.Server) {
 	t.Helper()
+	profile.RequireAuthenticatedNode = false
 	paths := newProfileTestNode(t, profile)
 	mux := http.NewServeMux()
 	NewServerWithAdvertiseAndProfile(paths, ":0", "", profile).Register(mux)
