@@ -33,8 +33,13 @@ func TestNodeIDPersistent(t *testing.T) {
 
 func TestHandshakeValidation(t *testing.T) {
 	local := config.Localnet()
-	local.GenesisHash = "abc"
-	peer := Handshake{NetworkID: local.NetworkID, ChainID: local.ChainID, ProtocolVersion: local.ProtocolVersion, MinProtocolVersion: local.MinProtocolVersion, GenesisHash: local.GenesisHash}
+	peer := Handshake{
+		NetworkID:          local.NetworkID,
+		ChainID:            local.ChainID,
+		ProtocolVersion:    local.ProtocolVersion,
+		MinProtocolVersion: local.MinProtocolVersion,
+		GenesisHash:        chain.GenesisHashForNetwork(local),
+	}
 	if err := ValidateHandshake(local, peer); err != nil { t.Fatal(err) }
 	peer.NetworkID = "other"
 	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") { t.Fatalf("expected network mismatch, got %v", err) }
