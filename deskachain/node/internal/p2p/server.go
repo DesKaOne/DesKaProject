@@ -96,7 +96,7 @@ func NewHTTPServerWithProfile(addr string, paths config.Paths, state *nodestate.
 	}
 }
 
-func (s Server) network() config.NetworkConfig {
+func (s Server) lockMutation() func() {\n\tif s.mutationMu == nil {\n\t\treturn func() {}\n\t}\n\ts.mutationMu.Lock()\n\treturn s.mutationMu.Unlock\n}\n\nfunc (s Server) network() config.NetworkConfig {
 	if s.profile.Name == "" {
 		return config.Localnet()
 	}
@@ -725,4 +725,4 @@ func writeError(w http.ResponseWriter, err error) {
 		return
 	}
 	writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-}
+}\tunlock := s.lockMutation()\n\tdefer unlock()\n
