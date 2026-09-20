@@ -154,7 +154,7 @@ func TestV3SelfPaidTransactionRejectsSponsorMaterial(t *testing.T) {
 
 	tx := types.NewAssetTransferTransaction(owner.Address, receiver.Address, asset.NativeAssetID, 1, 1, 1)
 	signAssetTx(t, owner, &tx, profile)
-	tx.FeePayerPublicKey = owner.PublicKey
+	tx.FeePayerPublicKey = owner.PublicKeyHex
 	tx.FeePayerSignature = tx.Signature
 	if err := tx.ValidateFeePayerAuthorization(profile); err == nil {
 		t.Fatal("expected self-paid transaction with sponsor material to be rejected")
