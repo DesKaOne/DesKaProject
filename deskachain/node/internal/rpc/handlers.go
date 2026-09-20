@@ -106,6 +106,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /explorer-ui", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer-ui/", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer/status", h.wrap("generic", h.explorerStatus))
+	mux.HandleFunc("GET /explorer/indexer", h.wrap("generic", h.explorerIndexerStatus))
 	mux.HandleFunc("GET /explorer/search", h.wrap("generic", h.explorerSearch))
 	mux.HandleFunc("GET /explorer/blocks", h.wrap("generic", h.explorerBlocks))
 	mux.HandleFunc("GET /explorer/blocks/", h.wrap("generic", h.explorerBlockByHeight))
@@ -251,6 +252,13 @@ func (h handler) ready(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
+func (h handler) explorerIndexerStatus(w http.ResponseWriter, _ *http.Request) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.sync()
+	if err != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": err.Error()}); return }
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "indexer": status})
+}
+
 func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	blocks, pending, err := h.chainInfoData()
 	if err != nil {
@@ -261,6 +269,9 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	stats := chain.CalculateChainStatsWithProfile(blocks, net)
 	tip := blocks[len(blocks)-1]
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).Load()
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	indexerStatus, indexerErr := indexer.sync()
+	if indexerErr != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": indexerErr.Error()}); return }
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":                        true,
 		"network":                   net.Name,
@@ -286,7 +297,8 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"service_rpc":               h.info.EnableServiceRPC,
 		"mainnet_available":         false,
 		"testnet_value_warning":     "testnet IDR has no monetary value",
-		"indexer_mode":              "simple_scan",
+		"indexer_mode":              indexerStatus.Mode,
+		"indexer":                   indexerStatus,
 	})
 }
 
