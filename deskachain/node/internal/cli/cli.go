@@ -187,3 +187,63 @@ func (a App) Run(args []string) error {
 	a.profile = network
 	a.rpcURL = strings.TrimRight(*rpcURL, "/")
 	a.ignoreLock = *ignoreLock
+	if a.rpcURL != "" {
+		return a.runRemote(args)
+	}
+	if err := a.checkLock(args); err != nil {
+		return err
+	}
+	switch args[0] {
+	case "version":
+		fmt.Fprint(a.out, version.String("DesKaChain"))
+		return nil
+	case "network":
+		return a.network(args[1:])
+	case "init":
+		return a.init()
+	case "dev":
+		return a.dev(args[1:])
+	case "node":
+		return a.node(args[1:])
+	case "peer":
+		return a.peer(args[1:])
+	case "upstream":
+		return a.upstream(args[1:])
+	case "p2p":
+		return a.p2p(args[1:])
+	case "fork":
+		return a.fork(args[1:])
+	case "reorg":
+		return a.reorg(args[1:])
+	case "debug":
+		return a.debug(args[1:])
+	case "wallet":
+		return a.wallet(args[1:])
+	case "address":
+		return a.address(args[1:])
+	case "balance":
+		return a.balance(args[1:])
+	case "send":
+		return a.send(args[1:])
+	case "faucet":
+		return a.faucet(args[1:])
+	case "tx":
+		return a.tx(args[1:])
+	case "mempool":
+		return a.mempool(args[1:])
+	case "mine":
+		return a.mine(args[1:])
+	case "mining":
+		return a.mining(args[1:])
+	case "service":
+		return a.service(args[1:])
+	case "stake":
+		return a.stake(args[1:])
+	case "chain":
+		return a.chain(args[1:])
+	case "rpc":
+		return a.rpc(args[1:])
+	default:
+		return fmt.Errorf("unknown command %q", args[0])
+	}
+}
