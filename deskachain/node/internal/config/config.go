@@ -182,8 +182,13 @@ func EnsureNetworkMatches(paths Paths, profile NetworkConfig) error {
 	if metadata.Network != profile.Name || metadata.NetworkID != profile.NetworkID || metadata.ChainID != profile.ChainID {
 		return fmt.Errorf("datadir initialized for %s, cannot start as %s", metadata.Network, profile.Name)
 	}
-	if profile.GenesisHash != "" && metadata.GenesisHash != "" && metadata.GenesisHash != profile.GenesisHash {
-		return fmt.Errorf("datadir genesis mismatch for %s", profile.Name)
+	if profile.GenesisHash != "" {
+		if metadata.GenesisHash == "" {
+			return fmt.Errorf("datadir genesis metadata missing; refusing to use as %s", profile.Name)
+		}
+		if metadata.GenesisHash != profile.GenesisHash {
+			return fmt.Errorf("datadir genesis mismatch for %s", profile.Name)
+		}
 	}
 	return nil
 }
