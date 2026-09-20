@@ -249,6 +249,7 @@ func (a App) Run(args []string) error {
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
 	}
+}
 
 func (a App) network(args []string) error {
 	if len(args) != 1 || args[0] != "info" {
