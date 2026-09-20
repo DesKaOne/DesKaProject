@@ -48,6 +48,7 @@ func (s *queryOnlyStore) GetStateStakesForAddress(string) ([]staking.Record, err
 	return s.stakes, nil
 }
 
+func (s *queryOnlyStore) ValidateChainStateConsistency() error { return nil }
 func (s *queryOnlyStore) ValidateStateIndexes() error { return nil }
 
 func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
