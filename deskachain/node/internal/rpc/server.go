@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -55,7 +56,12 @@ func ListenAndServe(addr string, paths config.Paths) error {
 }
 
 func ListenAndServeWithInfo(addr string, paths config.Paths, info NodeInfo) error {
-	return NewHTTPServer(addr, paths, info).ListenAndServe()
+	server := NewHTTPServer(addr, paths, info)
+	indexer := newExplorerIndexer(paths, normalizeRPCProfile(info))
+	ctx, cancel := context.WithCancel(context.Background())
+	go indexer.run(ctx, 2*time.Second)
+	server.RegisterOnShutdown(cancel)
+	return server.ListenAndServe()
 }
 
 func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server {
