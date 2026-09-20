@@ -137,7 +137,7 @@ func (bc *Blockchain) ReplaceFromHeightWithNetwork(from uint64, blocks []types.B
 	full = append(full, prefix...)
 	full = append(full, blocks...)
 
-	if ss, ok := bc.store.(storage.StateStore); ok {
+	if _, ok := bc.store.(storage.StateStore); ok {
 		snapshot, snapshotErr := state.SnapshotForBlocks(full, profile.Consensus, profile)
 		if snapshotErr != nil {
 			return snapshotErr
