@@ -327,6 +327,7 @@ func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
 			t.Fatalf("%s accepted unauthenticated P2P profile", profile.Name)
 		}
 	}
+}
 
 func TestEnsureNetworkMatchesMainnetRequiresGenesisMetadata(t *testing.T) {
 	tmp := t.TempDir()
