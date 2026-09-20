@@ -8,32 +8,45 @@ import (
 	"deskachain/internal/config"
 )
 
-func TestMainnetOperationalRPCPath(t *testing.T) {
+func TestMainnetReadOnlyRPCPath(t *testing.T) {
 	cases := []struct {
 		path string
 		want bool
 	}{
-		{"/send", true},
-		{"/wallet/new", true},
-		{"/mine", true},
-		{"/miner/template", true},
-		{"/peers/", true},
-		{"/stake/lock", true},
-		{"/service/heartbeat", true},
-		{"/network/info", false},
-		{"/health", false},
-		{"/stake/status", false},
-		{"/faucet/info", false},
-		{"/chain/info", false},
+		{"/network/info", true},
+		{"/health", true},
+		{"/chain/info", true},
+		{"/mempool", true},
+		{"/stake/status", true},
+		{"/send", false},
+		{"/wallet/new", false},
+		{"/mine", false},
+		{"/miner/template", false},
+		{"/peers/connect", false},
+		{"/stake/lock", false},
+		{"/service/heartbeat", false},
 	}
 	for _, tc := range cases {
-		if got := mainnetOperationalRPCPath(tc.path); got != tc.want {
-			t.Fatalf("mainnetOperationalRPCPath(%q) = %v, want %v", tc.path, got, tc.want)
+		if got := mainnetReadOnlyRPCPath(tc.path); got != tc.want {
+			t.Fatalf("mainnetReadOnlyRPCPath(%q) = %v, want %v", tc.path, got, tc.want)
 		}
 	}
 }
 
-func TestMainnetLaunchGateBlocksOperationalRPC(t *testing.T) {
+func TestMainnetReadOnlyRPCMethod(t *testing.T) {
+	for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodOptions} {
+		if !mainnetReadOnlyRPCMethod(method) {
+			t.Fatalf("mainnetReadOnlyRPCMethod(%q) = false, want true", method)
+		}
+	}
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		if mainnetReadOnlyRPCMethod(method) {
+			t.Fatalf("mainnetReadOnlyRPCMethod(%q) = true, want false", method)
+		}
+	}
+}
+
+func TestMainnetLaunchGateBlocksNonReadOnlyRPC(t *testing.T) {
 	nextCalled := false
 	next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 		nextCalled = true
@@ -47,42 +60,22 @@ func TestMainnetLaunchGateBlocksOperationalRPC(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusServiceUnavailable)
 	}
 	if nextCalled {
-		t.Fatal("mainnet launch gate allowed an operational RPC request")
+		t.Fatal("mainnet launch gate allowed a non-read-only RPC request")
 	}
 }
 
-func TestMainnetLaunchGateCoversRegisteredMutationEndpoints(t *testing.T) {
-	paths := []string{
-		"/debug/p2p/ping",
-		"/upstream/push",
-		"/upstream/push-all",
-		"/peers",
-		"/peers/connect",
-		"/peers/clear",
-		"/peers/discover",
-		"/peers/status",
-		"/peers/sync",
-		"/reorg/preview",
-		"/reorg/apply",
-		"/chain/common-ancestor",
-		"/fork/inspect-datadir",
-		"/mempool/clear",
-		"/faucet/request",
-		"/wallet/new",
-		"/send",
-		"/mine",
-		"/miner/template",
-		"/miner/submit",
-		"/service/register",
-		"/service/heartbeat",
-		"/service/challenge/create",
-		"/service/challenge/submit",
-		"/stake/lock",
-		"/stake/unlock",
-	}
-	for _, path := range paths {
-		if !mainnetOperationalRPCPath(path) {
-			t.Fatalf("mainnetOperationalRPCPath(%q) = false, want true", path)
+func TestMainnetLaunchGateBlocksMutationMethodsEvenOnUnknownPaths(t *testing.T) {
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete} {
+		nextCalled := false
+		next := http.HandlerFunc(func(http.ResponseWriter, *http.Request) { nextCalled = true })
+		req := httptest.NewRequest(method, "/future/mutation-endpoint", nil)
+		rec := httptest.NewRecorder()
+		mainnetLaunchGate(next).ServeHTTP(rec, req)
+		if rec.Code != http.StatusServiceUnavailable {
+			t.Fatalf("%s status = %d, want %d", method, rec.Code, http.StatusServiceUnavailable)
+		}
+		if nextCalled {
+			t.Fatalf("%s reached downstream handler", method)
 		}
 	}
 }
@@ -103,6 +96,25 @@ func TestMainnetLaunchGateAllowsReadOnlyRPC(t *testing.T) {
 	}
 	if !nextCalled {
 		t.Fatal("mainnet launch gate blocked a read-only RPC request")
+	}
+}
+
+func TestMainnetLaunchGateAllowsReadOnlyMethodsOnReadOnlyPaths(t *testing.T) {
+	for _, method := range []string{http.MethodGet, http.MethodHead, http.MethodOptions} {
+		nextCalled := false
+		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			nextCalled = true
+			w.WriteHeader(http.StatusOK)
+		})
+		req := httptest.NewRequest(method, "/network/info", nil)
+		rec := httptest.NewRecorder()
+		mainnetLaunchGate(next).ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s status = %d, want %d", method, rec.Code, http.StatusOK)
+		}
+		if !nextCalled {
+			t.Fatalf("%s read-only request was blocked", method)
+		}
 	}
 }
 
