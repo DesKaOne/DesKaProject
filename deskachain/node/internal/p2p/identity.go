@@ -45,8 +45,7 @@ func LoadOrCreateNodeID(path string) (string, error) {
 		return "", err
 	}
 	id := hex.EncodeToString(buf)
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
-	if err != nil {
+	if err := atomicCreateFile(path, []byte(id), 0644); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			raw, readErr := os.ReadFile(path)
 			if readErr != nil {
@@ -57,15 +56,6 @@ func LoadOrCreateNodeID(path string) (string, error) {
 			}
 			return string(raw), nil
 		}
-		return "", err
-	}
-	if _, err := file.WriteString(id); err != nil {
-		_ = file.Close()
-		_ = os.Remove(path)
-		return "", err
-	}
-	if err := file.Close(); err != nil {
-		_ = os.Remove(path)
 		return "", err
 	}
 	return id, nil
@@ -107,8 +97,7 @@ func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
 		return NodeIdentity{}, err
 	}
 	encodedPrivateKey := []byte(hex.EncodeToString(privateKey))
-	file, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
-	if err != nil {
+	if err := atomicCreateFile(keyPath, encodedPrivateKey, 0600); err != nil {
 		if errors.Is(err, os.ErrExist) {
 			raw, readErr := os.ReadFile(keyPath)
 			if readErr != nil {
@@ -124,16 +113,42 @@ func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
 		}
 		return NodeIdentity{}, err
 	}
-	if _, err := file.Write(encodedPrivateKey); err != nil {
-		_ = file.Close()
-		_ = os.Remove(keyPath)
-		return NodeIdentity{}, err
-	}
-	if err := file.Close(); err != nil {
-		_ = os.Remove(keyPath)
-		return NodeIdentity{}, err
-	}
 	return NodeIdentity{NodeID: nodeID, PublicKey: publicKey, PrivateKey: privateKey}, nil
+}
+
+func atomicCreateFile(path string, data []byte, perm os.FileMode) error {
+	dir := filepath.Dir(path)
+	tmp, err := os.CreateTemp(dir, ".deskachain-identity-*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	cleanup := func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmpPath)
+	}
+	if err := tmp.Chmod(perm); err != nil {
+		cleanup()
+		return err
+	}
+	if _, err := tmp.Write(data); err != nil {
+		cleanup()
+		return err
+	}
+	if err := tmp.Sync(); err != nil {
+		cleanup()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
+	}
+	if err := os.Link(tmpPath, path); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
+	}
+	_ = os.Remove(tmpPath)
+	return nil
 }
 
 func (identity NodeIdentity) IdentityVersion() uint32 {
