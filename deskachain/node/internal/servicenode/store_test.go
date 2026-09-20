@@ -2,6 +2,7 @@ package servicenode
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -345,8 +346,14 @@ func saveServiceBlocks(t *testing.T, paths config.Paths, blocks []types.Block) {
 		t.Fatal(err)
 	}
 	defer bolt.Close()
-	for _, block := range blocks {
-		if err := bolt.SaveBlock(block); err != nil {
+	for i := range blocks {
+		// Build a minimal canonical chain for the service-node fixture. The
+		// storage layer now enforces predecessor linkage on every block commit.
+		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
+		if i > 0 {
+			blocks[i].PreviousHash = blocks[i-1].Hash
+		}
+		if err := bolt.SaveBlock(blocks[i]); err != nil {
 			t.Fatal(err)
 		}
 	}
