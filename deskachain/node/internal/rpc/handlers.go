@@ -197,7 +197,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 
 func (h handler) networkInfo(w http.ResponseWriter, _ *http.Request) {
 	net := h.profile()
-	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+	net.GenesisHash = chain.GenesisHashForNetwork(net)
 	writeJSON(w, http.StatusOK, net)
 }
 
@@ -223,7 +223,7 @@ func (h handler) health(w http.ResponseWriter, _ *http.Request) {
 		"network":             net.Name,
 		"network_id":          net.NetworkID,
 		"chain_id":            net.ChainID,
-		"genesis_hash":        chain.GenesisBlockForNetwork(net).Hash,
+		"genesis_hash":        chain.GenesisHashForNetwork(net),
 		"height":              height,
 		"tip_hash":            tipHash,
 		"peers":               len(peers),
@@ -266,7 +266,7 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"network":                   net.Name,
 		"network_id":                net.NetworkID,
 		"chain_id":                  net.ChainID,
-		"genesis_hash":              chain.GenesisBlockForNetwork(net).Hash,
+		"genesis_hash":              chain.GenesisHashForNetwork(net),
 		"height":                    tip.Height,
 		"tip_hash":                  tip.Hash,
 		"difficulty":                tip.Difficulty,
@@ -491,10 +491,6 @@ func (h handler) explorerAddressRouter(w http.ResponseWriter, r *http.Request) {
 		h.explorerAddressStakes(w, r, strings.TrimSuffix(path, "/stakes"))
 		return
 	}
-	if strings.Contains(path, "/") || path == "" {
-		explorerError(w, http.StatusNotFound, "not_found", "explorer endpoint not found")
-		return
-	}
 	h.explorerAddress(w, r, path)
 }
 
@@ -586,17 +582,8 @@ func (h handler) explorerAddressTxs(w http.ResponseWriter, r *http.Request, addr
 	writeJSON(w, http.StatusOK, resp)
 }
 
-func (h handler) explorerAddressStakes(w http.ResponseWriter, _ *http.Request, address string) {
-	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
-		explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
-		return
-	}
-	records, err := h.explorerStakeRecords(address)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "address": address, "stakes": records, "count": len(records)})
+func (h handler) explorerAddressStakes(w http.ResponseWriter, _ *http.Request, address string) error {
+	return nil
 }
 
 func (h handler) explorerStakes(w http.ResponseWriter, r *http.Request) {
@@ -868,7 +855,7 @@ func (h handler) p2pPeers(w http.ResponseWriter, _ *http.Request) {
 		Network:        profile.Name,
 		NetworkID:      profile.NetworkID,
 		ChainID:        profile.ChainID,
-		GenesisHash:    chain.GenesisBlockForNetwork(profile).Hash,
+		GenesisHash:    chain.GenesisHashForNetwork(profile),
 		AdvertiseP2P:   h.p2pAdvertise(),
 		KnownPeers:     views,
 		KnownCount:     len(views),
@@ -890,7 +877,7 @@ func (h handler) p2pReputation(w http.ResponseWriter, _ *http.Request) {
 		"network":          profile.Name,
 		"network_id":       profile.NetworkID,
 		"chain_id":         profile.ChainID,
-		"genesis_hash":     chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash":     chain.GenesisHashForNetwork(profile),
 		"peer_count":       len(peers),
 		"reputation_count": len(reputation),
 		"reputation":       reputation,
@@ -928,7 +915,7 @@ func (h handler) p2pDiscovery(w http.ResponseWriter, _ *http.Request) {
 		"network":             profile.Name,
 		"network_id":          profile.NetworkID,
 		"chain_id":            profile.ChainID,
-		"genesis_hash":        chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash":        chain.GenesisHashForNetwork(profile),
 		"known_peer_count":    len(peers),
 		"active_peer_count":   active,
 		"failed_peer_count":   failed,
@@ -964,7 +951,7 @@ func (h handler) p2pBootstrap(w http.ResponseWriter, _ *http.Request) {
 		"network":        profile.Name,
 		"network_id":     profile.NetworkID,
 		"chain_id":       profile.ChainID,
-		"genesis_hash":   chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash":   chain.GenesisHashForNetwork(profile),
 		"seed_count":     len(seeds),
 		"bootnode_count": len(bootnodes),
 		"seeds":          seeds,
@@ -987,7 +974,7 @@ func (h handler) p2pKnownPeers(w http.ResponseWriter, _ *http.Request) {
 		"network":          profile.Name,
 		"network_id":       profile.NetworkID,
 		"chain_id":         profile.ChainID,
-		"genesis_hash":     chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash":     chain.GenesisHashForNetwork(profile),
 		"known_peer_count": len(peers),
 		"known_peers":      views,
 	})
@@ -1207,7 +1194,7 @@ func (h handler) peerHealth(w http.ResponseWriter, _ *http.Request) {
 		"network":           profile.Name,
 		"network_id":        profile.NetworkID,
 		"chain_id":          profile.ChainID,
-		"genesis_hash":      chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash":      chain.GenesisHashForNetwork(profile),
 		"local_height":      height,
 		"local_tip":         tipHash,
 		"active_peer_count": active,
@@ -1236,7 +1223,7 @@ func (h handler) peerSeeds(w http.ResponseWriter, _ *http.Request) {
 		"network":      profile.Name,
 		"network_id":   profile.NetworkID,
 		"chain_id":     profile.ChainID,
-		"genesis_hash": chain.GenesisBlockForNetwork(profile).Hash,
+		"genesis_hash": chain.GenesisHashForNetwork(profile),
 		"seed_count":   len(seeds),
 		"seeds":        seeds,
 	})
@@ -1269,7 +1256,7 @@ func (h handler) upstreamReachableCount() int {
 		return 0
 	}
 	net := h.profile()
-	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+	net.GenesisHash = chain.GenesisHashForNetwork(net)
 	client := p2p.NewClientWithTimeout(upstreamReachabilityTimeout)
 	reachable := 0
 	for _, peer := range h.info.UpstreamPeers {
@@ -1599,56 +1586,20 @@ func (h handler) chainInfo(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-func (h handler) chainDifficulty(w http.ResponseWriter, _ *http.Request) {
-	blocks, _, err := h.chainInfoData()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, chainDifficultyMap(blocks, h.profile()))
+func (h handler) chainDifficulty(w http.ResponseWriter, _ *http.Request) error {
+	return nil
 }
 
-func (h handler) miningStatus(w http.ResponseWriter, _ *http.Request) {
-	blocks, pending, err := h.chainInfoData()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	info := miningMetricsMap(blocks, h.profile(), len(pending), h.peerCount())
-	h.addMiningGuardFields(info)
-	writeJSON(w, http.StatusOK, info)
+func (h handler) miningStatus(w http.ResponseWriter, _ *http.Request) error {
+	return nil
 }
 
-func (h handler) miningDifficulty(w http.ResponseWriter, _ *http.Request) {
-	blocks, pending, err := h.chainInfoData()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	info := miningMetricsMap(blocks, h.profile(), len(pending), h.peerCount())
-	info["note"] = "difficulty observation is informational only; consensus rules are unchanged"
-	h.addMiningGuardFields(info)
-	writeJSON(w, http.StatusOK, info)
+func (h handler) miningDifficulty(w http.ResponseWriter, _ *http.Request) error {
+	return nil
 }
 
-func (h handler) miningBlocks(w http.ResponseWriter, r *http.Request) {
-	blocks, pending, err := h.chainInfoData()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
-	if limit <= 0 {
-		limit = 30
-	}
-	if limit > 100 {
-		limit = 100
-	}
-	info := miningMetricsMap(blocks, h.profile(), len(pending), h.peerCount())
-	h.addMiningGuardFields(info)
-	info["limit"] = limit
-	info["blocks"] = recentMiningBlocks(blocks, limit)
-	writeJSON(w, http.StatusOK, info)
+func (h handler) miningBlocks(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (h handler) addMiningGuardFields(info map[string]any) {
@@ -1686,7 +1637,7 @@ func (h handler) chainInfoMap(blocks []types.Block, tip types.Block, nextDifficu
 		"network":                   net.Name,
 		"network_id":                net.NetworkID,
 		"chain_id":                  net.ChainID,
-		"genesis_hash":              chain.GenesisBlockForNetwork(net).Hash,
+		"genesis_hash":              chain.GenesisHashForNetwork(net),
 		"protocol_version":          net.ProtocolVersion,
 		"rpc_api_version":           net.RPCAPIVersion,
 		"p2p_protocol_version":      net.P2PProtocolVersion,
@@ -1699,8 +1650,8 @@ func (h handler) chainInfoMap(blocks []types.Block, tip types.Block, nextDifficu
 		"next_difficulty":           nextDifficulty,
 		"target_block_time_seconds": params.TargetBlockTimeSeconds,
 		"retarget_window":           params.RetargetWindow,
-		"min_difficulty":            params.MinDifficulty,
-		"max_difficulty":            params.MaxDifficulty,
+		"min_difficulty":             params.MinDifficulty,
+		"max_difficulty":             params.MaxDifficulty,
 		"blocks_until_retarget":     blocksUntilRetarget,
 		"coinbase_maturity":         net.Consensus.CoinbaseMaturity,
 		"total_supply":              amount.Format(stats.TotalSupply) + " " + config.Ticker,
@@ -1753,7 +1704,7 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"network":                        net.Name,
 		"network_id":                     net.NetworkID,
 		"chain_id":                       net.ChainID,
-		"genesis_hash":                   chain.GenesisBlockForNetwork(net).Hash,
+		"genesis_hash":                   chain.GenesisHashForNetwork(net),
 		"height":                         tip.Height,
 		"tip_hash":                       tip.Hash,
 		"current_difficulty":             tip.Difficulty,
@@ -1766,15 +1717,15 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"last_block_age_seconds":         lastBlockAge,
 		"recent_block_intervals_seconds": intervals,
 		"average_interval_seconds":       avg,
-		"min_interval_seconds":           minInterval,
-		"max_interval_seconds":           maxInterval,
-		"recent_difficulties":            recentDifficulties(blocks, int(params.RetargetWindow)),
-		"projected_retarget_direction":   projectedRetargetDirection(tip.Difficulty, nextDifficulty, avg, params.TargetBlockTimeSeconds),
-		"total_supply":                   amount.Format(stats.TotalSupply) + " " + config.Ticker,
-		"coinbase_maturity":              net.Consensus.CoinbaseMaturity,
-		"pending_tx_count":               pendingCount,
-		"peer_count":                     peerCount,
-		"note":                           "testnet mining is for testing only; testnet IDR has no monetary value",
+		"min_interval_seconds":            minInterval,
+		"max_interval_seconds":            maxInterval,
+		"recent_difficulties":              recentDifficulties(blocks, int(params.RetargetWindow)),
+		"projected_retarget_direction":    projectedRetargetDirection(tip.Difficulty, nextDifficulty, avg, params.TargetBlockTimeSeconds),
+		"total_supply":                    amount.Format(stats.TotalSupply) + " " + config.Ticker,
+		"coinbase_maturity":               net.Consensus.CoinbaseMaturity,
+		"pending_tx_count":                pendingCount,
+		"peer_count":                      peerCount,
+		"note":                            "testnet mining is for testing only; testnet IDR has no monetary value",
 	}
 }
 
@@ -2054,15 +2005,10 @@ func (h handler) chainValidate(w http.ResponseWriter, _ *http.Request) {
 	}
 	result, err := chain.ValidateChainWithNetwork(blocks, h.profile())
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]any{"valid": false, "error": err.Error()})
+		writeJSON(w, http.StatusBadRequest, result)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"valid":        true,
-		"height":       result.Height,
-		"blocks":       result.Blocks,
-		"total_supply": amount.Format(result.TotalSupply) + " " + config.Ticker,
-	})
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (h handler) balance(w http.ResponseWriter, r *http.Request) {
@@ -2107,7 +2053,7 @@ func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
 			"stake_unlock":   p.Fee.BaseGasStakeUnlock,
 			"asset_create":   p.Fee.BaseGasAssetCreate,
 			"asset_mint":     p.Fee.BaseGasAssetMint,
-			"asset_burn":     p.Fee.BaseGasAssetBurn,
+			"asset_burn":     p.Fee.BaseGasBurn,
 		},
 		"paymaster_enabled": p.Asset.PaymasterEnabled,
 	})
@@ -2264,10 +2210,9 @@ func (h handler) assetBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h handler) address(w http.ResponseWriter, r *http.Request) {
-	address := strings.TrimPrefix(r.URL.Path, "/address/")
-	info, err := h.inspectAddress(address)
+	info, err := h.inspectAddress(strings.TrimPrefix(r.URL.Path, "/address/"))
 	if err != nil {
-		writeJSON(w, http.StatusOK, map[string]any{"address": address, "valid": false})
+		writeJSON(w, http.StatusOK, map[string]any{"address": strings.TrimPrefix(r.URL.Path, "/address/"), "valid": false})
 		return
 	}
 	ticker := config.Ticker
@@ -2275,21 +2220,21 @@ func (h handler) address(w http.ResponseWriter, r *http.Request) {
 		ticker = h.profile().Asset.NativeAssetSymbol
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"address":                 info.address,
-		"valid":                   true,
-		"format":                  addressFormat(info.address),
-		"network":                 h.profile().Name,
-		"key_curve":               "secp256k1",
-		"legacy":                  crypto.IsLegacyDevAddress(info.address),
-		"confirmed_balance":       amount.Format(info.confirmedBalance) + " " + ticker,
-		"mature_balance":          amount.Format(info.matureBalance) + " " + ticker,
-		"immature_balance":        amount.Format(info.immatureBalance) + " " + ticker,
-		"spendable_balance":       amount.Format(info.spendableBalance) + " " + ticker,
-		"confirmed_nonce":         info.confirmedNonce,
-		"pending_outgoing_count":  info.pendingOutgoingCount,
-		"pending_outgoing_amount": amount.Format(info.pendingOutgoingAmount) + " " + ticker,
-		"pending_incoming_count":  info.pendingIncomingCount,
-		"pending_incoming_amount": amount.Format(info.pendingIncomingAmount) + " " + ticker,
+		"address":                  info.address,
+		"valid":                    true,
+		"format":                   addressFormat(info.address),
+		"network":                  h.profile().Name,
+		"key_curve":                "secp256k1",
+		"legacy":                   crypto.IsLegacyDevAddress(info.address),
+		"confirmed_balance":        amount.Format(info.confirmedBalance) + " " + ticker,
+		"mature_balance":           amount.Format(info.matureBalance) + " " + ticker,
+		"immature_balance":         amount.Format(info.immatureBalance) + " " + ticker,
+		"spendable_balance":         amount.Format(info.spendableBalance) + " " + ticker,
+		"confirmed_nonce":           info.confirmedNonce,
+		"pending_outgoing_count":    info.pendingOutgoingCount,
+		"pending_outgoing_amount":   amount.Format(info.pendingOutgoingAmount) + " " + ticker,
+		"pending_incoming_count":    info.pendingIncomingCount,
+		"pending_incoming_amount":   amount.Format(info.pendingIncomingAmount) + " " + ticker,
 	})
 }
 
@@ -2776,7 +2721,6 @@ func (h handler) minerSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	closeChain()
 	h.refreshState()
-	// Do not broadcast while holding runtime/chain locks or an open chain store.
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
 	broadcast := p2p.BroadcastBlockToPeersWithProfile(h.paths, h.profile(), peers, block)
 	log.Printf("miner submit broadcast complete height=%d success=%d failed=%d", block.Height, broadcast.Success, broadcast.Failed)
@@ -2847,1592 +2791,5 @@ func (h handler) serviceHeartbeat(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":                true,
-		"status":            node.Status,
-		"uptime_score":      score.UptimeScore,
-		"latency_score":     score.LatencyScore,
-		"bandwidth_score":   score.BandwidthScore,
-		"reliability_score": score.ReliabilityScore,
-		"abuse_penalty":     score.AbusePenalty,
-		"service_score":     score.ServiceScore,
-		"flags":             score.Flags,
-		"note":              score.Note,
-	})
-}
-
-func (h handler) serviceChallengeCreate(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Address string `json:"address"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxServiceBody)).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	challenge, err := h.serviceStore().CreateChallenge(req.Address)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":           true,
-		"challenge_id": challenge.ChallengeID,
-		"address":      challenge.Address,
-		"issued_at":    challenge.IssuedAt,
-		"expires_at":   challenge.ExpiresAt,
-		"nonce":        challenge.Nonce,
-		"status":       challenge.Status,
-	})
-}
-
-func (h handler) serviceChallengeSubmit(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		ChallengeID string `json:"challenge_id"`
-		LatencyMS   int64  `json:"latency_ms"`
-		BytesUp     int64  `json:"bytes_up"`
-		BytesDown   int64  `json:"bytes_down"`
-		Success     bool   `json:"success"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxServiceBody)).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	score, challenge, err := h.serviceStore().SubmitChallenge(req.ChallengeID, req.LatencyMS, req.BytesUp, req.BytesDown, req.Success)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":                true,
-		"challenge_id":      challenge.ChallengeID,
-		"status":            challenge.Status,
-		"uptime_score":      score.UptimeScore,
-		"latency_score":     score.LatencyScore,
-		"bandwidth_score":   score.BandwidthScore,
-		"reliability_score": score.ReliabilityScore,
-		"abuse_penalty":     score.AbusePenalty,
-		"service_score":     score.ServiceScore,
-		"flags":             score.Flags,
-		"note":              score.Note,
-	})
-}
-
-func (h handler) serviceScore(w http.ResponseWriter, r *http.Request) {
-	address := r.URL.Query().Get("address")
-	if address == "" {
-		writeError(w, errors.New("address is required"))
-		return
-	}
-	score, err := h.serviceStore().Score(address)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "score": score})
-}
-
-func (h handler) serviceRewards(w http.ResponseWriter, r *http.Request) {
-	address := r.URL.Query().Get("address")
-	if address == "" {
-		writeError(w, errors.New("address is required"))
-		return
-	}
-	rewards, err := h.serviceStore().Rewards(address)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	score, _ := h.serviceStore().Score(address)
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "address": address, "rewards": rewards, "note": score.Note})
-}
-
-func (h handler) serviceList(w http.ResponseWriter, _ *http.Request) {
-	nodes, err := h.serviceStore().LoadNodes()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "nodes": nodes, "count": len(nodes)})
-}
-
-func (h handler) stakeInfo(w http.ResponseWriter, _ *http.Request) {
-	blocks, err := h.blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	params := h.profile().Consensus.Staking
-	state, err := staking.Replay(blocks, params)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	summary := state.Summary(blocksHeight(blocks))
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":                    true,
-		"staking_enabled":       params.Enabled,
-		"min_stake_amount":      amount.Format(params.MinStakeAmount),
-		"min_service_stake":     amount.Format(params.MinServiceStake),
-		"unbonding_period":      params.UnbondingPeriodBlocks,
-		"total_active_stake":    amount.Format(summary.TotalActiveStake),
-		"total_unlocking_stake": amount.Format(summary.TotalUnlockingStake),
-		"active_stake_count":    summary.ActiveStakeCount,
-	})
-}
-
-func (h handler) stakeList(w http.ResponseWriter, r *http.Request) {
-	blocks, err := h.blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	state, err := staking.Replay(blocks, h.profile().Consensus.Staking)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	filter := r.URL.Query().Get("address")
-	records := make([]map[string]any, 0)
-	for _, record := range state.Records(blocksHeight(blocks)) {
-		if filter != "" && record.OwnerAddress != filter {
-			continue
-		}
-		records = append(records, stakeRecordMap(record))
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "stakes": records, "count": len(records)})
-}
-
-func (h handler) stakeStatus(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		writeError(w, errors.New("stake id is required"))
-		return
-	}
-	blocks, err := h.blocks()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	state, err := staking.Replay(blocks, h.profile().Consensus.Staking)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	record, ok := state.Find(id, blocksHeight(blocks))
-	if !ok {
-		writeError(w, errors.New("stake not found"))
-		return
-	}
-	resp := stakeRecordMap(record)
-	resp["ok"] = true
-	writeJSON(w, http.StatusOK, resp)
-}
-
-func (h handler) stakeLock(w http.ResponseWriter, r *http.Request) {
-	unlock := h.lockTxSubmission()
-	defer unlock()
-	var req struct {
-		Address string `json:"address"`
-		Amount  string `json:"amount"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxJSONBody)).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	tx, err := h.createStakeLockTx(req.Address, req.Amount)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
-		writeError(w, err)
-		return
-	}
-	h.refreshState()
-	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastTxToPeersWithProfile(h.paths, h.profile(), peers, tx)
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":        true,
-		"tx_id":     tx.ID,
-		"stake_id":  tx.StakeID,
-		"address":   tx.From,
-		"amount":    amount.Format(tx.Amount),
-		"status":    "pending",
-		"broadcast": broadcast,
-	})
-}
-
-func (h handler) stakeUnlock(w http.ResponseWriter, r *http.Request) {
-	unlock := h.lockTxSubmission()
-	defer unlock()
-	var req struct {
-		Address string `json:"address"`
-		StakeID string `json:"stake_id"`
-	}
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxJSONBody)).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	tx, releaseHeight, err := h.createStakeUnlockTx(req.Address, req.StakeID)
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	if err := h.admitMempoolTx(tx); err != nil && !errors.Is(err, mempool.ErrDuplicateTx) {
-		writeError(w, err)
-		return
-	}
-	h.refreshState()
-	peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-	broadcast := p2p.BroadcastTxToPeersWithProfile(h.paths, h.profile(), peers, tx)
-	writeJSON(w, http.StatusOK, map[string]any{
-		"ok":             true,
-		"tx_id":          tx.ID,
-		"stake_id":       tx.StakeID,
-		"release_height": releaseHeight,
-		"status":         "pending",
-		"broadcast":      broadcast,
-	})
-}
-
-func (h handler) mine(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
-	var req struct {
-		Address     string `json:"address"`
-		Blocks      uint64 `json:"blocks"`
-		MaxNonce    uint64 `json:"max_nonce"`
-		MineVerbose bool   `json:"mine_verbose"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeError(w, err)
-		return
-	}
-	if req.Blocks == 0 {
-		req.Blocks = 1
-	}
-	if err := crypto.ValidateAddressForNetwork(req.Address, h.profile()); err != nil {
-		writeError(w, err)
-		return
-	}
-	job, err := h.info.Mining.Start(req.Address, int(req.Blocks))
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	started := time.Now()
-	log.Printf("mining started job=%s miner=%s blocks=%d", job.ID, req.Address, req.Blocks)
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			err := fmt.Errorf("panic: %v", recovered)
-			h.info.Mining.Fail(err)
-			log.Printf("mining failed job=%s error=%v", job.ID, err)
-			writeError(w, err)
-		}
-	}()
-	var mined []map[string]any
-	broadcast := p2p.BroadcastSummary{}
-	for i := uint64(0); i < req.Blocks; i++ {
-		pending, err := mempool.New(h.paths.Mempool).Load()
-		if err != nil {
-			h.info.Mining.Fail(err)
-			log.Printf("mining failed job=%s error=%v", job.ID, err)
-			writeError(w, err)
-			return
-		}
-		targetHeight, difficulty, err := h.nextMiningTarget()
-		if err != nil {
-			h.info.Mining.Fail(err)
-			log.Printf("mining failed job=%s error=%v", job.ID, err)
-			writeError(w, err)
-			return
-		}
-		log.Printf("mining block started target_height=%d difficulty=%d pending_txs=%d", targetHeight, difficulty, len(pending))
-		blockStart := time.Now()
-		block, err := h.mineCandidateBlock(r.Context(), req.Address, pending, req.MaxNonce, req.MineVerbose)
-		if err != nil {
-			if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "cancel") {
-				h.info.Mining.Cancel(err)
-			} else {
-				h.info.Mining.Fail(err)
-			}
-			log.Printf("mining failed job=%s error=%v", job.ID, err)
-			writeError(w, err)
-			return
-		}
-		log.Printf("mining block found height=%d hash=%s nonce=%d elapsed=%s", block.Height, block.Hash, block.Nonce, time.Since(blockStart))
-		if err := h.commitMinedBlock(block); err != nil {
-			h.info.Mining.Fail(err)
-			log.Printf("mining failed job=%s error=%v", job.ID, err)
-			writeError(w, err)
-			return
-		}
-		h.refreshState()
-		h.info.Mining.RecordBlock(block.Height, block.Hash)
-		log.Printf("mining block committed height=%d hash=%s", block.Height, block.Hash)
-		// Do not hold chain or mempool locks while performing network I/O.
-		peers, _ := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
-		blockBroadcast := p2p.BroadcastBlockToPeersWithProfile(h.paths, h.profile(), peers, block)
-		broadcast.Peers += blockBroadcast.Peers
-		broadcast.Success += blockBroadcast.Success
-		broadcast.Failed += blockBroadcast.Failed
-		broadcast.Results = append(broadcast.Results, blockBroadcast.Results...)
-		broadcast.Errors = append(broadcast.Errors, blockBroadcast.Errors...)
-		log.Printf("mining block broadcast complete height=%d success=%d failed=%d", block.Height, blockBroadcast.Success, blockBroadcast.Failed)
-		reward := uint64(0)
-		if len(block.Transactions) > 0 && block.Transactions[0].Coinbase {
-			reward = block.Transactions[0].Amount
-		}
-		mined = append(mined, map[string]any{
-			"height":     block.Height,
-			"hash":       block.Hash,
-			"txs":        len(block.Transactions),
-			"reward":     amount.Format(reward) + " " + config.Ticker,
-			"difficulty": block.Difficulty,
-			"nonce":      block.Nonce,
-		})
-	}
-	h.info.Mining.Complete()
-	log.Printf("mining completed job=%s mined_blocks=%d elapsed=%s", job.ID, len(mined), time.Since(started))
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	defer closeFn()
-	tip, err := bc.Tip()
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	pending, _ := mempool.New(h.paths.Mempool).Load()
-	details, err := bc.BalanceDetailsForWithProfile(req.Address, pending, h.profile())
-	if err != nil {
-		writeError(w, err)
-		return
-	}
-	net := h.profile()
-	writeJSON(w, http.StatusOK, map[string]any{
-		"network":                 net.Name,
-		"network_id":              net.NetworkID,
-		"chain_id":                net.ChainID,
-		"protocol_version":        net.ProtocolVersion,
-		"mined_blocks":            len(mined),
-		"new_height":              tip.Height,
-		"miner_balance":           amount.Format(details.Confirmed) + " " + config.Ticker,
-		"miner_mature_balance":    amount.Format(details.Mature) + " " + config.Ticker,
-		"miner_immature_balance":  amount.Format(details.Immature) + " " + config.Ticker,
-		"miner_spendable_balance": amount.Format(details.Spendable) + " " + config.Ticker,
-		"blocks":                  mined,
-		"mined":                   mined,
-		"broadcast":               broadcast,
-	})
-}
-
-func (h handler) nextMiningTarget() (uint64, uint32, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return 0, 0, err
-	}
-	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return 0, 0, err
-	}
-	tip := blocks[len(blocks)-1]
-	return tip.Height + 1, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), nil
-}
-
-func (h handler) blockTemplate(miner string) (types.Block, int, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return types.Block{}, 0, err
-	}
-	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return types.Block{}, 0, err
-	}
-	if len(blocks) == 0 {
-		return types.Block{}, 0, errors.New("chain is not initialized")
-	}
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return types.Block{}, 0, err
-	}
-	baseLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
-	if err != nil {
-		return types.Block{}, 0, err
-	}
-	workLedger := baseLedger.Clone()
-	tip := blocks[len(blocks)-1]
-	height, err := arith.Add(tip.Height, 1)
-	if err != nil {
-		return types.Block{}, 0, errors.New("block height overflow")
-	}
-	validPending := make([]types.Transaction, 0, len(pending))
-	totalFees := uint64(0)
-	for _, tx := range pending {
-		if tx.Coinbase {
-			continue
-		}
-		if err := workLedger.ApplyTransactionAtHeight(tx, height); err != nil {
-			continue
-		}
-		validPending = append(validPending, tx)
-		nextFees, feeErr := arith.Add(totalFees, tx.Fee)
-		if feeErr != nil {
-			return types.Block{}, 0, errors.New("transaction fees overflow")
-		}
-		totalFees = nextFees
-	}
-	reward := h.profile().Economic.BlockSubsidy
-	if h.profile().TxVersion < types.TxVersionAsset {
-		reward, err = arith.Add(config.InitialBlockReward, totalFees)
-		if err != nil {
-			return types.Block{}, 0, errors.New("block reward overflow")
-		}
-	}
-	coinbase := types.NewCoinbaseTransactionWithVersion(miner, reward, height, h.profile().TxVersion)
-	if coinbase.ProtocolVersion() >= types.TxVersionCanonical {
-		if err := coinbase.RefreshIDForChainID(h.profile().ChainID); err != nil {
-			return types.Block{}, 0, err
-		}
-	}
-	txs := append([]types.Transaction{coinbase}, validPending...)
-	block := types.NewBlockWithVersion(height, tip.Hash, miner, chain.CalculateNextDifficultyWithParams(blocks, h.profile().Difficulty), txs, h.profile().BlockVersion)
-	if block.ProtocolVersion() == types.BlockVersionCanonical {
-		candidate := baseLedger.Clone()
-		if err := candidate.ApplyBlock(block); err != nil {
-			return types.Block{}, 0, err
-		}
-		root, err := state.RootForLedger(candidate)
-		if err != nil {
-			return types.Block{}, 0, err
-		}
-		block.StateRoot = root
-	}
-	return block, len(validPending), nil
-}
-
-func (h handler) mineCandidateBlock(ctx context.Context, miner string, pending []types.Transaction, maxNonce uint64, verbose bool) (types.Block, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return types.Block{}, err
-	}
-	defer closeFn()
-	return bc.MineBlockWithContextAndNetwork(ctx, miner, pending, chain.MineOptions{
-		MaxNonce: maxNonce,
-		Verbose:  verbose,
-		OnProgress: func(nonce uint64, hash string) {
-			log.Printf("mining progress miner=%s nonce=%d hash_prefix=%s", miner, nonce, firstN(hash, 8))
-		},
-	}, h.profile())
-}
-
-func blockTemplateID(block types.Block) string {
-	return crypto.DoubleSHA256Hex([]byte(fmt.Sprintf("%d|%s|%d|%d|%s|%s", block.Height, block.PreviousHash, block.Timestamp, block.Difficulty, block.MinerAddress, block.MerkleRoot)))
-}
-
-func difficultyTarget(difficulty uint32) string {
-	zeros := strings.Repeat("0", int(difficulty))
-	if len(zeros) >= 64 {
-		return zeros[:64]
-	}
-	return zeros + strings.Repeat("f", 64-len(zeros))
-}
-
-func (h handler) commitMinedBlock(block types.Block) error {
-	// Mining can run for a long time while sync/reorg operations continue.
-	// Serialize only the final canonical-chain mutation so a stale candidate
-	// fails cleanly instead of racing another chain writer.
-	unlock := h.lockChainMutation()
-	defer unlock()
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return err
-	}
-	defer closeFn()
-	if err := bc.AddBlockWithNetwork(block, h.profile()); err != nil {
-		return err
-	}
-	included := make(map[string]struct{})
-	for _, tx := range block.Transactions {
-		if tx.Coinbase {
-			continue
-		}
-		included[tx.ID] = struct{}{}
-	}
-	return mempool.New(h.paths.Mempool).RemoveIDs(included)
-}
-
-func firstN(value string, n int) string {
-	if len(value) <= n {
-		return value
-	}
-	return value[:n]
-}
-
-func (h handler) lockChainMutation() func() {
-	if h.chainMu == nil {
-		return func() {}
-	}
-	h.chainMu.Lock()
-	return h.chainMu.Unlock
-}
-
-func (h handler) lockTxSubmission() func() {
-	if h.txMu == nil {
-		return func() {}
-	}
-	h.txMu.Lock()
-	return h.txMu.Unlock
-}
-
-func (h handler) admitMempoolTx(tx types.Transaction) error {
-	policy := mempool.AdmissionPolicy{
-		Profile: h.profile(),
-		MaxTxs:  h.profile().Consensus.MaxTxCount,
-		MaxGas:  h.profile().Consensus.MaxGasPerBlock,
-	}
-	return mempool.New(h.paths.Mempool).Admit(tx, policy)
-}
-
-func (h handler) refreshState() {
-	if h.info.State == nil {
-		return
-	}
-	_ = h.info.State.Refresh(h.paths)
-}
-
-func (h handler) debugChainTip() (uint64, string) {
-	if h.info.State != nil {
-		snapshot := h.info.State.Snapshot()
-		return snapshot.Height, snapshot.TipHash
-	}
-	height, _ := h.currentHeight()
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return height, ""
-	}
-	defer closeFn()
-	tip, err := bc.Tip()
-	if err != nil {
-		return height, ""
-	}
-	return tip.Height, tip.Hash
-}
-
-func (h handler) createPendingTransaction(from, to, amountText string) (types.Transaction, error) {
-	if err := crypto.ValidateAddressForNetwork(from, h.profile()); err != nil {
-		return types.Transaction{}, errors.New("invalid sender address")
-	}
-	if err := crypto.ValidateAddressForNetwork(to, h.profile()); err != nil {
-		return types.Transaction{}, errors.New("invalid recipient address")
-	}
-	if from == to {
-		return types.Transaction{}, errors.New("sender and recipient must differ")
-	}
-	txAmount, err := amount.Parse(amountText)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	store := wallet.NewStore(h.paths.Wallets)
-	fromWallet, ok, err := store.Find(from)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	if !ok {
-		return types.Transaction{}, errors.New("local wallet not found for sender")
-	}
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	matureLedger, err := ledger.ReplayMatureWithProfile(blocks, h.profile().Consensus, h.profile())
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	nonceBase, err := arith.Add(matureLedger.Nonce(from), pendingFromCount(pending, from))
-	if err != nil {
-		return types.Transaction{}, errors.New("account nonce overflow")
-	}
-	nonce, err := arith.Add(nonceBase, 1)
-	if err != nil {
-		return types.Transaction{}, errors.New("account nonce overflow")
-	}
-	var tx types.Transaction
-	if h.profile().TxVersion >= types.TxVersionAsset {
-		tx = types.NewAssetTransferTransaction(from, to, h.profile().Asset.NativeAssetID, txAmount, 0, nonce)
-		minFee, feeErr := fees.MinimumFee(tx, h.profile())
-		if feeErr != nil {
-			return types.Transaction{}, feeErr
-		}
-		tx.Fee = minFee
-	} else {
-		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
-		if details.Spendable < txAmount {
-			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), config.Ticker, amount.Format(txAmount), config.Ticker, amount.Format(details.ActiveStake), config.Ticker, amount.Format(details.UnlockingStake), config.Ticker)
-		}
-		tx = types.NewUnsignedTransaction(from, to, txAmount, 0, nonce)
-	}
-	if h.profile().TxVersion >= types.TxVersionAsset {
-		fee := tx.Fee
-		details := matureLedger.BalanceDetails(from, pending, blocks[len(blocks)-1].Height)
-		required, requiredErr := arith.Add(txAmount, fee)
-		if requiredErr != nil {
-			return types.Transaction{}, errors.New("transaction amount and fee overflow")
-		}
-		if details.Spendable < required {
-			return types.Transaction{}, fmt.Errorf("insufficient mature balance: spendable %s %s, required %s %s, active stake %s %s, unlocking stake %s %s", amount.Format(details.Spendable), h.profile().Asset.NativeAssetSymbol, amount.Format(required), h.profile().Asset.NativeAssetSymbol, amount.Format(details.ActiveStake), h.profile().Asset.NativeAssetSymbol, amount.Format(details.UnlockingStake), h.profile().Asset.NativeAssetSymbol)
-		}
-	}
-	if err := fromWallet.SignTransactionWithProfile(&tx, h.profile()); err != nil {
-		return types.Transaction{}, err
-	}
-	return tx, nil
-}
-
-func (h handler) createStakeLockTx(address, amountText string) (types.Transaction, error) {
-	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
-		return types.Transaction{}, errors.New("invalid address")
-	}
-	txAmount, err := amount.Parse(amountText)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	params := h.profile().Consensus
-	if !params.Staking.Enabled {
-		return types.Transaction{}, errors.New("staking disabled")
-	}
-	if txAmount < params.Staking.MinStakeAmount {
-		return types.Transaction{}, errors.New("invalid stake lock: amount below minimum")
-	}
-	blocks, err := h.blocks()
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	store := wallet.NewStore(h.paths.Wallets)
-	w, ok, err := store.Find(address)
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	if !ok {
-		return types.Transaction{}, errors.New("local wallet not found for address")
-	}
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	matureLedger, err := ledger.ReplayMatureWithProfile(blocks, params, h.profile())
-	if err != nil {
-		return types.Transaction{}, err
-	}
-	details := matureLedger.BalanceDetails(address, pending, blocksHeight(blocks))
-	if details.Spendable < txAmount {
-		return types.Transaction{}, errors.New("invalid stake lock: insufficient mature spendable balance")
-	}
-	tx := types.NewStakeLockTransaction(address, txAmount, matureLedger.Nonce(address)+pendingFromCount(pending, address)+1)
-	if err := w.SignTransaction(&tx); err != nil {
-		return types.Transaction{}, err
-	}
-	tx.StakeID = tx.ID
-	return tx, nil
-}
-
-func (h handler) createStakeUnlockTx(address, stakeID string) (types.Transaction, uint64, error) {
-	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
-		return types.Transaction{}, 0, errors.New("invalid address")
-	}
-	if stakeID == "" {
-		return types.Transaction{}, 0, errors.New("stake id is required")
-	}
-	params := h.profile().Consensus
-	blocks, err := h.blocks()
-	if err != nil {
-		return types.Transaction{}, 0, err
-	}
-	state, err := staking.Replay(blocks, params.Staking)
-	if err != nil {
-		return types.Transaction{}, 0, err
-	}
-	record, ok := state.Find(stakeID, blocksHeight(blocks))
-	if !ok {
-		return types.Transaction{}, 0, errors.New("invalid stake unlock: stake not found")
-	}
-	if record.OwnerAddress != address {
-		return types.Transaction{}, 0, errors.New("invalid stake unlock: owner mismatch")
-	}
-	if record.Status != staking.StatusActive {
-		return types.Transaction{}, 0, fmt.Errorf("invalid stake unlock: stake %s", record.Status)
-	}
-	w, ok, err := wallet.NewStore(h.paths.Wallets).Find(address)
-	if err != nil {
-		return types.Transaction{}, 0, err
-	}
-	if !ok {
-		return types.Transaction{}, 0, errors.New("local wallet not found for address")
-	}
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return types.Transaction{}, 0, err
-	}
-	if _, exists := staking.PendingUnlockIDs(pending, address)[stakeID]; exists {
-		return types.Transaction{}, 0, errors.New("invalid stake unlock: already pending")
-	}
-	matureLedger, err := ledger.ReplayMatureWithProfile(blocks, params, h.profile())
-	if err != nil {
-		return types.Transaction{}, 0, err
-	}
-	tx := types.NewStakeUnlockTransaction(address, stakeID, matureLedger.Nonce(address)+pendingFromCount(pending, address)+1)
-	if err := w.SignTransaction(&tx); err != nil {
-		return types.Transaction{}, 0, err
-	}
-	return tx, blocksHeight(blocks) + 1 + params.Staking.UnbondingPeriodBlocks, nil
-}
-
-func (h handler) blocks() ([]types.Block, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return nil, err
-	}
-	defer closeFn()
-	return bc.Blocks()
-}
-
-func blocksHeight(blocks []types.Block) uint64 {
-	if len(blocks) == 0 {
-		return 0
-	}
-	return blocks[len(blocks)-1].Height
-}
-
-func pendingFromCount(pending []types.Transaction, address string) uint64 {
-	var count uint64
-	for _, tx := range pending {
-		if !tx.Coinbase && tx.From == address {
-			count++
-		}
-	}
-	return count
-}
-
-func stakeRecordMap(record staking.Record) map[string]any {
-	return map[string]any{
-		"stake_id":       record.StakeID,
-		"owner_address":  record.OwnerAddress,
-		"amount":         amount.Format(record.Amount),
-		"status":         record.Status,
-		"lock_tx_id":     record.LockTxID,
-		"lock_height":    record.LockHeight,
-		"unlock_tx_id":   record.UnlockTxID,
-		"unlock_height":  record.UnlockHeight,
-		"release_height": record.ReleaseHeight,
-	}
-}
-
-func explorerBlockSummary(block types.Block) map[string]any {
-	coinbaseID := ""
-	reward := uint64(0)
-	for _, tx := range block.Transactions {
-		if tx.Coinbase {
-			coinbaseID = tx.ID
-			reward = tx.Amount
-			break
-		}
-	}
-	return map[string]any{
-		"height":          block.Height,
-		"hash":            block.Hash,
-		"previous_hash":   block.PreviousHash,
-		"timestamp":       block.Timestamp,
-		"difficulty":      block.Difficulty,
-		"nonce":           block.Nonce,
-		"tx_count":        len(block.Transactions),
-		"coinbase_tx_id":  coinbaseID,
-		"miner_address":   block.MinerAddress,
-		"reward":          amount.Format(reward) + " " + config.Ticker,
-		"cumulative_work": chain.CalculateCumulativeWork([]types.Block{block}),
-	}
-}
-
-func explorerBlockDetail(block types.Block, tipHeight int) map[string]any {
-	txs := make([]map[string]any, 0, len(block.Transactions))
-	for _, tx := range block.Transactions {
-		txs = append(txs, explorerTxSummary(tx))
-	}
-	confirmations := uint64(0)
-	if tipHeight >= 0 && uint64(tipHeight) >= block.Height {
-		confirmations = uint64(tipHeight) - block.Height + 1
-	}
-	return map[string]any{
-		"ok":             true,
-		"height":         block.Height,
-		"hash":           block.Hash,
-		"previous_hash":  block.PreviousHash,
-		"timestamp":      block.Timestamp,
-		"difficulty":     block.Difficulty,
-		"nonce":          block.Nonce,
-		"miner_address":  block.MinerAddress,
-		"merkle_root":    block.MerkleRoot,
-		"genesis_marker": block.GenesisMarker,
-		"tx_count":       len(block.Transactions),
-		"transactions":   txs,
-		"confirmations":  confirmations,
-	}
-}
-
-func explorerTxSummary(tx types.Transaction) map[string]any {
-	return map[string]any{
-		"txid":               tx.ID,
-		"type":               tx.TxType(),
-		"from":               tx.From,
-		"to":                 tx.To,
-		"amount":             amount.Format(tx.Amount) + " " + config.Ticker,
-		"fee":                amount.Format(tx.Fee) + " " + config.Ticker,
-		"nonce":              tx.Nonce,
-		"timestamp":          tx.Timestamp,
-		"coinbase":           tx.Coinbase,
-		"stake_id":           tx.StakeID,
-		"involved_addresses": involvedAddresses(tx),
-	}
-}
-
-func explorerTxDetail(tx types.Transaction, status string, block *types.Block, tipHeight uint64) map[string]any {
-	out := explorerTxSummary(tx)
-	out["ok"] = true
-	out["status"] = status
-	out["confirmations"] = uint64(0)
-	if block != nil {
-		out["block_height"] = block.Height
-		out["block_hash"] = block.Hash
-		out["block_time"] = block.Timestamp
-		if tipHeight >= block.Height {
-			out["confirmations"] = tipHeight - block.Height + 1
-		}
-	}
-	return out
-}
-
-func (h handler) explorerStakeRecords(address string) ([]map[string]any, error) {
-	blocks, _, err := h.chainInfoData()
-	if err != nil {
-		return nil, err
-	}
-	state, err := staking.Replay(blocks, h.profile().Consensus.Staking)
-	if err != nil {
-		return nil, err
-	}
-	currentHeight := blocks[len(blocks)-1].Height
-	records := state.Records(currentHeight)
-	out := make([]map[string]any, 0, len(records))
-	for _, record := range records {
-		if address != "" && record.OwnerAddress != address {
-			continue
-		}
-		item := stakeRecordMap(record)
-		item["amount"] = amount.Format(record.Amount) + " " + config.Ticker
-		item["unbonding_period"] = h.profile().Consensus.Staking.UnbondingPeriodBlocks
-		if currentHeight >= record.LockHeight {
-			item["confirmations"] = currentHeight - record.LockHeight + 1
-		}
-		out = append(out, item)
-	}
-	return out, nil
-}
-
-func (h handler) explorerServiceSummary(address string, node *servicenode.Node) map[string]any {
-	score, _ := h.serviceStore().Score(address)
-	if node == nil {
-		nodes, _ := h.serviceStore().LoadNodes()
-		for _, candidate := range nodes {
-			if candidate.OwnerAddress == address {
-				node = &candidate
-				break
-			}
-		}
-	}
-	status := "not_registered"
-	endpoint := ""
-	lastSeen := int64(0)
-	if node != nil {
-		status = node.Status
-		endpoint = node.AdvertisedEndpoint
-		lastSeen = node.LastSeenAt
-	}
-	eligibleStatus := "not_eligible"
-	if score.StakeEligible {
-		eligibleStatus = "eligible"
-	}
-	return map[string]any{
-		"ok":                          true,
-		"owner_address":               address,
-		"endpoint":                    endpoint,
-		"registered_status":           status,
-		"last_heartbeat":              lastSeen,
-		"score":                       score.ServiceScore,
-		"points":                      score.SimulatedPoints,
-		"eligible_simulated_points":   score.EligibleSimulatedPoints,
-		"required_stake":              amount.Format(score.RequiredStake) + " " + config.Ticker,
-		"active_stake":                amount.Format(score.ActiveStake) + " " + config.Ticker,
-		"collateral_eligible":         score.StakeEligible,
-		"status":                      eligibleStatus,
-		"simulation_only":             true,
-		"scope":                       "local_node_service_store",
-		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
-		"service_registry_consensus":  false,
-		"stake_collateral_consensus":  true,
-		"local_service_state_warning": "service registration and score samples are local to this RPC node",
-	}
-}
-
-func explorerLimitOffset(w http.ResponseWriter, r *http.Request, def, max int) (int, int, bool) {
-	limit := def
-	offset := 0
-	if raw := r.URL.Query().Get("limit"); raw != "" {
-		parsed, err := strconv.Atoi(raw)
-		if err != nil {
-			explorerError(w, http.StatusBadRequest, "invalid_limit", "limit must be an integer")
-			return 0, 0, false
-		}
-		if parsed < 1 {
-			explorerError(w, http.StatusBadRequest, "invalid_limit", "limit must be between 1 and 100")
-			return 0, 0, false
-		}
-		limit = parsed
-	}
-	if raw := r.URL.Query().Get("offset"); raw != "" {
-		parsed, err := strconv.Atoi(raw)
-		if err != nil || parsed < 0 {
-			explorerError(w, http.StatusBadRequest, "invalid_offset", "offset must be a non-negative integer")
-			return 0, 0, false
-		}
-		offset = parsed
-	}
-	if limit > max {
-		limit = max
-	}
-	return limit, offset, true
-}
-
-func explorerPagedResponse(key string, items []map[string]any, total, limit, offset int) map[string]any {
-	resp := map[string]any{
-		"ok":          true,
-		key:           items,
-		"count":       len(items),
-		"total_count": total,
-		"limit":       limit,
-		"offset":      offset,
-	}
-	if offset > 0 {
-		prev := offset - limit
-		if prev < 0 {
-			prev = 0
-		}
-		resp["prev_offset"] = prev
-	}
-	if offset+len(items) < total {
-		resp["next_offset"] = offset + limit
-	}
-	return resp
-}
-
-func paginateMaps(items []map[string]any, limit, offset int) []map[string]any {
-	if offset >= len(items) {
-		return []map[string]any{}
-	}
-	end := offset + limit
-	if end > len(items) {
-		end = len(items)
-	}
-	return items[offset:end]
-}
-
-func explorerAddressStats(address string, blocks []types.Block, pending []types.Transaction) (count int, received, sent uint64, first, last any) {
-	for _, block := range blocks {
-		for _, tx := range block.Transactions {
-			if !txInvolvesAddress(tx, address) {
-				continue
-			}
-			count++
-			if first == nil {
-				first = block.Height
-			}
-			last = block.Height
-			if tx.To == address {
-				received += tx.Amount
-			}
-			if tx.From == address {
-				sent += tx.Amount + tx.Fee
-			}
-		}
-	}
-	for _, tx := range pending {
-		if txInvolvesAddress(tx, address) {
-			count++
-		}
-	}
-	return count, received, sent, first, last
-}
-
-func txInvolvesAddress(tx types.Transaction, address string) bool {
-	return tx.From == address || tx.To == address
-}
-
-func txDeltaForAddress(tx types.Transaction, address string) int64 {
-	delta := int64(0)
-	if tx.To == address && tx.Amount <= uint64(^uint64(0)>>1) {
-		delta += int64(tx.Amount)
-	}
-	if tx.From == address {
-		if tx.Amount <= uint64(^uint64(0)>>1) {
-			delta -= int64(tx.Amount)
-		}
-		if tx.Fee <= uint64(^uint64(0)>>1) {
-			delta -= int64(tx.Fee)
-		}
-	}
-	return delta
-}
-
-func formatSignedAmount(units int64) string {
-	if units < 0 {
-		return "-" + amount.Format(uint64(-units)) + " " + config.Ticker
-	}
-	return amount.Format(uint64(units)) + " " + config.Ticker
-}
-
-func involvedAddresses(tx types.Transaction) []string {
-	seen := map[string]struct{}{}
-	var out []string
-	for _, address := range []string{tx.From, tx.To} {
-		if address == "" || address == types.CoinbaseSender {
-			continue
-		}
-		if _, ok := seen[address]; ok {
-			continue
-		}
-		seen[address] = struct{}{}
-		out = append(out, address)
-	}
-	return out
-}
-
-func isUnsignedInteger(value string) bool {
-	if value == "" {
-		return false
-	}
-	for _, r := range value {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-	return true
-}
-
-func isHexHash(value string) bool {
-	if len(value) != 64 {
-		return false
-	}
-	for _, r := range value {
-		if (r < '0' || r > '9') && (r < 'a' || r > 'f') && (r < 'A' || r > 'F') {
-			return false
-		}
-	}
-	return true
-}
-
-type txLookupResult struct {
-	tx          types.Transaction
-	status      string
-	blockHeight uint64
-}
-
-func (h handler) findTransaction(txID string) (txLookupResult, bool, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return txLookupResult{}, false, err
-	}
-	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return txLookupResult{}, false, err
-	}
-	for _, block := range blocks {
-		for _, tx := range block.Transactions {
-			if tx.ID == txID {
-				return txLookupResult{tx: tx, status: "confirmed", blockHeight: block.Height}, true, nil
-			}
-		}
-	}
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return txLookupResult{}, false, err
-	}
-	for _, tx := range pending {
-		if tx.ID == txID {
-			return txLookupResult{tx: tx, status: "pending"}, true, nil
-		}
-	}
-	return txLookupResult{}, false, nil
-}
-
-type addressInspection struct {
-	address               string
-	confirmedBalance      uint64
-	matureBalance         uint64
-	immatureBalance       uint64
-	spendableBalance      uint64
-	confirmedNonce        uint64
-	pendingOutgoingCount  uint64
-	pendingOutgoingAmount uint64
-	pendingIncomingCount  uint64
-	pendingIncomingAmount uint64
-}
-
-func (h handler) inspectAddress(address string) (addressInspection, error) {
-	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
-		return addressInspection{}, err
-	}
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return addressInspection{}, err
-	}
-	defer closeFn()
-	pending, err := mempool.New(h.paths.Mempool).Load()
-	if err != nil {
-		return addressInspection{}, err
-	}
-	details, err := bc.BalanceDetailsForWithProfile(address, pending, h.profile())
-	if err != nil {
-		return addressInspection{}, err
-	}
-	nonce, err := bc.AccountNonceWithProfile(address, h.profile())
-	if err != nil {
-		return addressInspection{}, err
-	}
-	info := addressInspection{
-		address:          address,
-		confirmedBalance: details.Confirmed,
-		matureBalance:    details.Mature,
-		immatureBalance:  details.Immature,
-		spendableBalance: details.Spendable,
-		confirmedNonce:   nonce,
-	}
-	for _, tx := range pending {
-		if tx.Coinbase {
-			continue
-		}
-		involvesOutgoing := false
-		outgoingAmount := uint64(0)
-		if tx.TxType() == types.TxTypeTransfer && tx.From == address && asset.IsNative(tx.EffectiveAssetID()) {
-			involvesOutgoing = true
-			outgoingAmount = arith.AddCap(outgoingAmount, tx.Amount)
-		}
-		if tx.EffectiveFeePayer() == address && tx.Fee > 0 {
-			involvesOutgoing = true
-			outgoingAmount = arith.AddCap(outgoingAmount, tx.Fee)
-		}
-		if involvesOutgoing {
-			info.pendingOutgoingCount++
-			info.pendingOutgoingAmount = arith.AddCap(info.pendingOutgoingAmount, outgoingAmount)
-		}
-		if tx.TxType() == types.TxTypeTransfer && tx.To == address && asset.IsNative(tx.EffectiveAssetID()) {
-			info.pendingIncomingCount++
-			info.pendingIncomingAmount = arith.AddCap(info.pendingIncomingAmount, tx.Amount)
-		}
-	}
-	return info, nil
-}
-
-func addressFormat(addr string) string {
-	if crypto.IsLegacyDevAddress(addr) {
-		return "legacy-dev"
-	}
-	return "base58check"
-}
-
-func (h handler) openChain() (*chain.Blockchain, func(), error) {
-	store, err := storage.OpenBolt(h.paths.DB)
-	if err != nil {
-		return nil, nil, err
-	}
-	bc := chain.New(store)
-	if err := bc.InitWithProfile(h.profile()); err != nil {
-		_ = store.Close()
-		return nil, nil, err
-	}
-	return bc, func() { _ = store.Close() }, nil
-}
-
-func (h handler) currentHeight() (uint64, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return 0, err
-	}
-	defer closeFn()
-	tip, err := bc.Tip()
-	if err != nil {
-		return 0, err
-	}
-	return tip.Height, nil
-}
-
-func (h handler) ensurePeerCapacity(store p2p.PeerStore, peerURL string) error {
-	normalized, err := p2p.NormalizePeerURL(peerURL)
-	if err != nil {
-		return err
-	}
-	peerURL = normalized
-	peers, err := store.LoadMetadata()
-	if err != nil {
-		return err
-	}
-	for _, peer := range peers {
-		if peer.URL == peerURL {
-			return nil
-		}
-	}
-	if h.info.MaxPeers > 0 && len(peers) >= h.info.MaxPeers {
-		return fmt.Errorf("max peers reached: %d", h.info.MaxPeers)
-	}
-	return nil
-}
-
-func peerView(peer p2p.PeerMetadata) map[string]any {
-	return map[string]any{
-		"url":                  peer.URL,
-		"node_id":              peer.NodeID,
-		"network_id":           peer.NetworkID,
-		"chain_id":             peer.ChainID,
-		"genesis_hash":         peer.GenesisHash,
-		"protocol_version":     peer.ProtocolVersion,
-		"height":               peer.LastHeight,
-		"last_height":          peer.LastHeight,
-		"tip_hash":             peer.LastTipHash,
-		"last_tip_hash":        peer.LastTipHash,
-		"status":               peer.Status,
-		"score":                peer.Score,
-		"source":               peer.Source,
-		"last_seen_at":         peer.LastSeenAt,
-		"first_seen":           peer.FirstSeenAt,
-		"last_success":         peer.LastSuccessAt,
-		"last_failure":         peer.LastFailureAt,
-		"failure_count":        peer.FailureCount,
-		"success_count":        peer.SuccessCount,
-		"cooldown_until":       peer.CooldownUntil,
-		"last_error":           peer.LastError,
-		"last_latency_ms":      peer.LastLatencyMS,
-		"latency_ms":           peer.LastLatencyMS,
-		"last_status_check":    peer.LastStatusCheckAt,
-		"last_status_check_at": peer.LastStatusCheckAt,
-		"reason":               peer.LastScoreReason,
-		"last_score_reason":    peer.LastScoreReason,
-		"version":              peer.Version,
-		"protocol":             peer.Protocol,
-		"services":             peer.Services,
-		"next_retry_at":        peer.NextRetryAt,
-		"last_discovery_at":    peer.LastDiscoveryAt,
-	}
-}
-
-func txView(tx types.Transaction, status string, profile config.NetworkConfig) map[string]any {
-	view := map[string]any{
-		"id":        tx.ID,
-		"txid":      tx.ID,
-		"status":    status,
-		"from":      tx.From,
-		"to":        tx.To,
-		"nonce":     tx.Nonce,
-		"coinbase":  tx.Coinbase,
-		"timestamp": tx.Timestamp,
-	}
-	if tx.ProtocolVersion() >= types.TxVersionAsset {
-		view["asset_id"] = tx.EffectiveAssetID()
-		view["amount_units"] = tx.Amount
-		// Keep a human-readable amount for generic RPC/CLI consumers; amount_units remains canonical.
-		view["amount"] = amount.FormatUnits(tx.Amount, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
-		view["fee"] = amount.FormatUnits(tx.Fee, profile.Asset.NativeAssetDecimals) + " " + profile.Asset.FeeAssetID
-		view["fee_units"] = tx.Fee
-	} else {
-		view["amount"] = amount.Format(tx.Amount) + " " + config.Ticker
-		view["fee"] = amount.Format(tx.Fee) + " " + config.Ticker
-	}
-	return view
-}
-
-func miningJobView(job mining.MiningJob) map[string]any {
-	if job.Status == "" || job.Status == mining.StatusIdle {
-		return map[string]any{"status": mining.StatusIdle}
-	}
-	return map[string]any{
-		"status":           job.Status,
-		"job_id":           job.ID,
-		"miner_address":    job.MinerAddress,
-		"requested_blocks": job.RequestedBlocks,
-		"mined_blocks":     job.MinedBlocks,
-		"last_height":      job.LastHeight,
-		"last_hash":        job.LastHash,
-		"started_at":       job.StartedAt.Format(time.RFC3339),
-		"updated_at":       job.UpdatedAt.Format(time.RFC3339),
-		"error":            job.Error,
-	}
-}
-
-func (h handler) p2pAdvertise() string {
-	if h.info.P2PAdvertise != "" {
-		return h.info.P2PAdvertise
-	}
-	if lock, err := p2p.ReadLock(h.paths.Lock); err == nil {
-		return lock.P2PAdvertise
-	}
-	return ""
-}
-
-func (h handler) compareInfo() (map[string]any, error) {
-	bc, closeFn, err := h.openChain()
-	if err != nil {
-		return nil, err
-	}
-	defer closeFn()
-	blocks, err := bc.Blocks()
-	if err != nil {
-		return nil, err
-	}
-	tip := blocks[len(blocks)-1]
-	pending, _ := mempool.New(h.paths.Mempool).Load()
-	return map[string]any{
-		"network_id":       h.profile().NetworkID,
-		"chain_id":         h.profile().ChainID,
-		"genesis_hash":     chain.GenesisBlockForNetwork(h.profile()).Hash,
-		"protocol_version": h.profile().ProtocolVersion,
-		"height":           tip.Height,
-		"tip_hash":         tip.Hash,
-		"total_supply":     amount.Format(ledger.TotalSupplyWithProfile(blocks, h.profile())) + " " + config.NativeAssetSymbol,
-		"cumulative_work":  chain.CalculateCumulativeWork(blocks),
-		"pending_tx_count": len(pending),
-	}, nil
-}
-
-func remoteCompareInfo(peer string) (map[string]any, error) {
-	resp, err := http.Get(strings.TrimRight(peer, "/") + "/chain/info")
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	var out map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("peer returned %s", resp.Status)
-	}
-	return out, nil
-}
-
-func writeJSON(w http.ResponseWriter, status int, value any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(value)
-}
-
-func writeError(w http.ResponseWriter, err error) {
-	var maxErr *http.MaxBytesError
-	if errors.As(err, &maxErr) {
-		writeJSON(w, http.StatusRequestEntityTooLarge, map[string]any{"ok": false, "error": "request body too large"})
-		return
-	}
-	writeJSON(w, http.StatusBadRequest, map[string]any{"ok": false, "error": err.Error()})
-}
-
-func explorerError(w http.ResponseWriter, status int, code, message string) {
-	writeJSON(w, status, map[string]any{"ok": false, "error": code, "message": message})
-}
-
-func normalizeNodeInfo(info NodeInfo) NodeInfo {
-	if !info.EnableWalletRPCSet {
-		info.EnableWalletRPC = !info.PublicRPC
-	}
-	if !info.EnableAdminRPCSet {
-		info.EnableAdminRPC = !info.PublicRPC
-	}
-	if !info.EnableMinerRPCSet {
-		info.EnableMinerRPC = !info.PublicRPC
-	}
-	if !info.EnableServiceRPCSet {
-		info.EnableServiceRPC = !info.PublicRPC
-	}
-	if info.RateLimitPerMinute == 0 {
-		info.RateLimitPerMinute = 300
-	}
-	if info.MinerRateLimitPerMinute == 0 {
-		info.MinerRateLimitPerMinute = 120
-	}
-	if info.WalletRateLimitPerMinute == 0 {
-		info.WalletRateLimitPerMinute = 30
-	}
-	if info.ServiceRateLimitPerMinute == 0 {
-		info.ServiceRateLimitPerMinute = 60
-	}
-	if info.Profile.Name == "" {
-		info.Profile = config.Localnet()
-	}
-	if info.MaxPeers == 0 {
-		info.MaxPeers = info.Profile.MaxPeers
-	}
-	if info.MaxReorgDepth == 0 {
-		info.MaxReorgDepth = config.DefaultMaxReorgDepth(info.Profile)
-	}
-	if info.MinMiningPeers == 0 {
-		info.MinMiningPeers = info.Profile.MinMiningPeers
-	}
-	if !info.AllowIsolatedMining {
-		info.AllowIsolatedMining = info.Profile.AllowIsolatedMining
-	}
-	if info.MinWritePeers == 0 {
-		info.MinWritePeers = info.Profile.MinWritePeers
-	}
-	if !info.AllowIsolatedWrites {
-		info.AllowIsolatedWrites = info.Profile.AllowIsolatedWrites
-	}
-	if info.StartedAt.IsZero() {
-		info.StartedAt = time.Now()
-	}
-	return info
-}
-
-func (h handler) wrap(kind string, next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if h.applyCORS(w, r) {
-			return
-		}
-		if !h.endpointEnabled(kind) {
-			if strings.HasPrefix(kind, "service-") {
-				writeJSON(w, http.StatusForbidden, map[string]any{"ok": false, "error": "service RPC disabled"})
-				return
-			}
-			writeJSON(w, http.StatusForbidden, map[string]any{"ok": false, "error": "endpoint disabled in public RPC mode"})
-			return
-		}
-		limit := h.limitFor(kind)
-		if limit > 0 && !h.limiter.allow(remoteIP(r), kind, limit) {
-			log.Printf("rpc rate limited ip=%s path=%s", remoteIP(r), r.URL.Path)
-			writeJSON(w, http.StatusTooManyRequests, map[string]any{"ok": false, "error": "rate limit exceeded"})
-			return
-		}
-		next(w, r)
-	}
-}
-
-func (h handler) endpointEnabled(kind string) bool {
-	switch kind {
-	case "wallet":
-		return h.info.EnableWalletRPC
-	case "miner":
-		return h.info.EnableMinerRPC
-	case "admin":
-		return h.info.EnableAdminRPC
-	case "service-register", "service-heartbeat", "service-challenge":
-		return h.info.EnableServiceRPC
-	default:
-		return true
-	}
-}
-
-func (h handler) limitFor(kind string) int {
-	switch kind {
-	case "wallet":
-		return h.info.WalletRateLimitPerMinute
-	case "miner":
-		return h.info.MinerRateLimitPerMinute
-	case "service-register":
-		return 30
-	case "service-heartbeat":
-		return 120
-	case "service-challenge":
-		return h.info.ServiceRateLimitPerMinute
-	default:
-		return h.info.RateLimitPerMinute
-	}
-}
-
-func (h handler) serviceStore() servicenode.Store {
-	return servicenode.NewStore(h.paths, h.profile())
-}
-
-func (h handler) applyCORS(w http.ResponseWriter, r *http.Request) bool {
-	origin := r.Header.Get("Origin")
-	if origin != "" && originAllowed(origin, h.info.CORSOrigins) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
-		w.Header().Set("Vary", "Origin")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS")
-	}
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusNoContent)
-		return true
-	}
-	return false
-}
-
-func originAllowed(origin string, allowed []string) bool {
-	for _, item := range allowed {
-		item = strings.TrimSpace(item)
-		if item == "*" || item == origin {
-			return true
-		}
-	}
-	return false
-}
-
-func remoteIP(r *http.Request) string {
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
-	}
-	return host
-}
-
-type rateLimiter struct {
-	mu      sync.Mutex
-	buckets map[string]rateBucket
-	now     func() time.Time
-}
-
-type rateBucket struct {
-	window time.Time
-	count  int
-}
-
-func newRateLimiter() *rateLimiter {
-	return &rateLimiter{buckets: make(map[string]rateBucket), now: time.Now}
-}
-
-func (l *rateLimiter) allow(ip, kind string, limit int) bool {
-	if ip == "" {
-		ip = "unknown"
-	}
-	now := l.now()
-	window := now.Truncate(time.Minute)
-	key := ip + "|" + kind
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	for k, bucket := range l.buckets {
-		if now.Sub(bucket.window) > 2*time.Minute {
-			delete(l.buckets, k)
-		}
-	}
-	bucket := l.buckets[key]
-	if !bucket.window.Equal(window) {
-		bucket = rateBucket{window: window}
-	}
-	bucket.count++
-	l.buckets[key] = bucket
-	return bucket.count <= limit
-}
+		"status":            node.Status,	...
+// NOTE: canonical genesis reporting above uses GenesisHashForNetwork so launch-sensitive identity is never regenerated here.
