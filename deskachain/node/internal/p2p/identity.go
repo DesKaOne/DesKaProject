@@ -45,7 +45,30 @@ func LoadOrCreateNodeID(path string) (string, error) {
 		return "", err
 	}
 	id := hex.EncodeToString(buf)
-	return id, os.WriteFile(path, []byte(id), 0644)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			raw, readErr := os.ReadFile(path)
+			if readErr != nil {
+				return "", readErr
+			}
+			if len(raw) == 0 {
+				return "", errors.New("node id file is empty")
+			}
+			return string(raw), nil
+		}
+		return "", err
+	}
+	if _, err := file.WriteString(id); err != nil {
+		_ = file.Close()
+		_ = os.Remove(path)
+		return "", err
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(path)
+		return "", err
+	}
+	return id, nil
 }
 
 func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
@@ -83,7 +106,31 @@ func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
 	if err != nil {
 		return NodeIdentity{}, err
 	}
-	if err := os.WriteFile(keyPath, []byte(hex.EncodeToString(privateKey)), 0600); err != nil {
+	encodedPrivateKey := []byte(hex.EncodeToString(privateKey))
+	file, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			raw, readErr := os.ReadFile(keyPath)
+			if readErr != nil {
+				return NodeIdentity{}, readErr
+			}
+			privateKeyRaw, decodeErr := hex.DecodeString(string(raw))
+			if decodeErr != nil || len(privateKeyRaw) != ed25519.PrivateKeySize {
+				return NodeIdentity{}, errors.New("invalid node identity private key")
+			}
+			privateKey := ed25519.PrivateKey(append([]byte(nil), privateKeyRaw...))
+			publicKey := privateKey.Public().(ed25519.PublicKey)
+			return NodeIdentity{NodeID: nodeID, PublicKey: append(ed25519.PublicKey(nil), publicKey...), PrivateKey: privateKey}, nil
+		}
+		return NodeIdentity{}, err
+	}
+	if _, err := file.Write(encodedPrivateKey); err != nil {
+		_ = file.Close()
+		_ = os.Remove(keyPath)
+		return NodeIdentity{}, err
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(keyPath)
 		return NodeIdentity{}, err
 	}
 	return NodeIdentity{NodeID: nodeID, PublicKey: publicKey, PrivateKey: privateKey}, nil
