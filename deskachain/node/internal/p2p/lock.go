@@ -3,6 +3,7 @@ package p2p
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -20,9 +21,7 @@ func CreateLock(path, rpcAddr, p2pAddr string, advertise ...string) (LockInfo, e
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return LockInfo{}, err
 	}
-	if existing, err := ReadLock(path); err == nil {
-		return existing, errors.New("datadir is already locked")
-	}
+
 	info := LockInfo{
 		PID:          os.Getpid(),
 		RPC:          rpcAddr,
@@ -34,7 +33,25 @@ func CreateLock(path, rpcAddr, p2pAddr string, advertise ...string) (LockInfo, e
 	if err != nil {
 		return LockInfo{}, err
 	}
-	return info, os.WriteFile(path, raw, 0644)
+
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		if errors.Is(err, os.ErrExist) {
+			existing, readErr := ReadLock(path)
+			if readErr == nil {
+				return existing, errors.New("datadir is already locked")
+			}
+			return LockInfo{}, fmt.Errorf("datadir lock already exists: %w", readErr)
+		}
+		return LockInfo{}, err
+	}
+	defer file.Close()
+
+	if _, err := file.Write(raw); err != nil {
+		_ = os.Remove(path)
+		return LockInfo{}, err
+	}
+	return info, nil
 }
 
 func firstString(values []string) string {
