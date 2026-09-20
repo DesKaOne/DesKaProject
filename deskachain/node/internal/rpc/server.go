@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"deskachain/internal/config"
@@ -45,6 +46,7 @@ type NodeInfo struct {
 	AllowIsolatedWrites       bool
 	StartedAt                 time.Time
 	Profile                   config.NetworkConfig
+	ChainMutationMu           *sync.Mutex
 }
 
 func ListenAndServe(addr string, paths config.Paths) error {
