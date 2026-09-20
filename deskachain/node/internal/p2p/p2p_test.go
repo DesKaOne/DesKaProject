@@ -391,7 +391,7 @@ func TestPeerMaintenancePrunesBackoffAndSubnetLimit(t *testing.T) {
 
 func TestProductionPeerIntroductionRequiresIdentityMetadata(t *testing.T) {
 	profile := config.Testnet()
-	paths := newTestNodeProfile(t, profile)
+	paths := config.NewPaths(t.TempDir())
 	server := NewServerWithProfile(paths, profile)
 
 	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441"}); err == nil || !strings.Contains(err.Error(), "peer node id is required") {
