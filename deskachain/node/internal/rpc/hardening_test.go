@@ -117,6 +117,28 @@ func TestRPCRateLimitAndCORS(t *testing.T) {
 	}
 }
 
+func TestAssetBalancesRPCUsesGenericRateLimit(t *testing.T) {
+	address := newRPCWallet(t).Address
+	_, server := newHardeningRPCServer(t, NodeInfo{RateLimitPerMinute: 1})
+	url := server.URL + "/asset/balances?address=" + address
+	resp, err := http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("first asset balances status = %d want 200", resp.StatusCode)
+	}
+	resp, err = http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("second asset balances status = %d want 429", resp.StatusCode)
+	}
+}
+
 func TestRPCBodyLimit(t *testing.T) {
 	_, server := newHardeningRPCServer(t, NodeInfo{})
 	body := `{"from":"` + strings.Repeat("x", 1024*1024+1) + `"}`
