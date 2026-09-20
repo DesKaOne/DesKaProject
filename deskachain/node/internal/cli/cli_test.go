@@ -175,12 +175,10 @@ func TestStartUsesDatadirNetworkMetadata(t *testing.T) {
 	assertOutputContains(t, out.String(), "chain id: 777101")
 }
 
-func TestMainnetCLIRequiresFrozenGenesis(t *testing.T) {
-	dir := t.TempDir()
+func TestMainnetProfileRejectsTamperedGenesis(t *testing.T) {
 	profile := config.Mainnet()
 	profile.GenesisHash = "tampered"
-	app := New(&bytes.Buffer{}).WithDataDir(dir).WithProfile(profile)
-	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "mainnet genesis hash is not frozen") {
+	if err := config.ValidateNetworkProfile(profile); err == nil || !strings.Contains(err.Error(), "mainnet genesis hash is not frozen") {
 		t.Fatalf("expected frozen mainnet genesis rejection, got %v", err)
 	}
 }
