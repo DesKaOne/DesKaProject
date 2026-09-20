@@ -50,6 +50,7 @@ func TestP2PBlockAndHeaderResponsesHonorNetworkLimits(t *testing.T) {
 func TestSyncRejectsRemoteRangeBeforeHeaderFetch(t *testing.T) {
 	profile := config.Testnet()
 	profile.NetworkLimits.MaxSyncBlocks = 2
+	profile.RequireAuthenticatedNode = false
 	profile.NetworkLimits.MaxHeaderBatch = 2
 	paths := config.NewPaths(t.TempDir())
 	genesis := chain.GenesisBlockForNetwork(profile)
@@ -102,6 +103,7 @@ func TestSyncRejectsRemoteRangeBeforeHeaderFetch(t *testing.T) {
 func TestReorgRejectsOversizedRemoteBranchBeforeBlockFetch(t *testing.T) {
 	profile := config.Testnet()
 	profile.NetworkLimits.MaxReorgFetchBlocks = 2
+	profile.RequireAuthenticatedNode = false
 	paths := config.NewPaths(t.TempDir())
 	genesis := chain.GenesisBlockForNetwork(profile)
 	blockRequests := 0
