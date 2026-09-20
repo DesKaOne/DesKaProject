@@ -12,7 +12,7 @@ import (
 	"deskachain/internal/storage"
 )
 
-func TestInitRebuildsMissingStateDB(t *testing.T) {
+func TestInitRejectsMissingStateDBWithoutRepair(t *testing.T) {
 	profile := config.Localnet()
 	store, err := storage.OpenBolt(t.TempDir() + "/chain.db")
 	if err != nil {
@@ -32,7 +32,11 @@ func TestInitRebuildsMissingStateDB(t *testing.T) {
 		t.Fatalf("expected missing state after delete, got %v", err)
 	}
 
-	if err := bc.InitWithProfile(profile); err != nil {
+	if err := bc.InitWithProfile(profile); err == nil || !strings.Contains(err.Error(), "persisted state unavailable") {
+		t.Fatalf("expected fail-closed init on missing state, got %v", err)
+	}
+
+	if err := bc.RebuildStateWithProfile(profile); err != nil {
 		t.Fatal(err)
 	}
 	snapshot, err := store.LoadState()
