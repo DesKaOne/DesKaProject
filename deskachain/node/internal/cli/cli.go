@@ -47,6 +47,7 @@ type App struct {
 	profile    config.NetworkConfig
 	rpcURL     string
 	ignoreLock bool
+	chainMu   *sync.Mutex
 }
 
 type multiStringFlag []string
@@ -1593,6 +1594,8 @@ func (a App) node(args []string) error {
 		return err
 	}
 	miningService := mining.NewService()
+	chainMutationMu := &sync.Mutex{}
+	a.chainMu = chainMutationMu
 	flagPeers := parsePeers(*peerText)
 	bootnodes := parsePeers(strings.Join([]string{*bootnode, *bootnodesText}, ","))
 	seedPeers, err := collectSeedPeers(a.profile, strings.Join(seedPeer, ","), *seedPeersText, *seedFile)
