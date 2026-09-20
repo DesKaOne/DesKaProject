@@ -14,6 +14,7 @@ import (
 	"deskachain/internal/ledger"
 	"deskachain/internal/mempool"
 	"deskachain/internal/storage"
+	"deskachain/internal/state"
 	"deskachain/internal/types"
 	"deskachain/internal/wallet"
 )
@@ -344,6 +345,9 @@ func fundFaucetFixture(t *testing.T, paths config.Paths, address string, profile
 		}
 		prior = append(prior, block)
 	}
+	snapshot, err := state.SnapshotForBlocks(prior, profile.Consensus, profile)
+	if err != nil { t.Fatal(err) }
+	if err := store.SaveState(snapshot); err != nil { t.Fatal(err) }
 }
 
 func minePendingFixture(t *testing.T, paths config.Paths, miner string, profile config.NetworkConfig) {
@@ -369,6 +373,10 @@ func minePendingFixture(t *testing.T, paths config.Paths, miner string, profile 
 	if err := store.SaveBlock(block); err != nil {
 		t.Fatal(err)
 	}
+	prior = append(prior, block)
+	snapshot, err := state.SnapshotForBlocks(prior, profile.Consensus, profile)
+	if err != nil { t.Fatal(err) }
+	if err := store.SaveState(snapshot); err != nil { t.Fatal(err) }
 	ids := map[string]struct{}{}
 	for _, tx := range pending {
 		ids[tx.ID] = struct{}{}
