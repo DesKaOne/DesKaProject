@@ -2562,7 +2562,7 @@ func (a App) broadcastTx(tx types.Transaction) {
 }
 
 func (a App) broadcastBlock(block types.Block) {
-	p2p.BroadcastBlockToPeersWithProfile(a.paths, a.profile(), a.knownPeerMetadata(), block)
+	p2p.BroadcastBlockToPeersWithProfile(a.paths, a.profile, a.knownPeerMetadata(), block)
 }
 
 func (a App) lockChainMutation() func() {
