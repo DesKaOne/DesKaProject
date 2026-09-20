@@ -58,9 +58,7 @@ func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
 	if interval <= 0 {
 		interval = 2 * time.Second
 	}
-	_ = func() {
-		_, _ = x.sync()
-	}()
+	_, _ = x.sync()
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
