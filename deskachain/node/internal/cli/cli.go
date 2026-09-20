@@ -1485,6 +1485,9 @@ func (a App) debug(args []string) error {
 }
 
 func (a App) rpc(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("rpc", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	addr := fs.String("addr", ":8332", "listen address")
