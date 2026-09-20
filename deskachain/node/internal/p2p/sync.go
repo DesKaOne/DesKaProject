@@ -43,7 +43,7 @@ func SyncFromPeerWithProfileAndMaxDepth(paths config.Paths, peer string, out io.
 		maxReorgDepth = config.DefaultMaxReorgDepth(profile)
 	}
 	localNet := profile
-	localNet.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+	localNet.GenesisHash = chain.GenesisHashForNetwork(profile)
 	handshake, err := statusClient.Handshake(peer)
 	if err != nil {
 		_ = notePeerFailure(paths, peer, err.Error(), -5, "request failed")

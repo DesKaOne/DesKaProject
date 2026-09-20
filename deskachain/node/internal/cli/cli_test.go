@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"flag"
 	"net/http"
 	"net/http/httptest"
@@ -175,6 +176,70 @@ func TestStartUsesDatadirNetworkMetadata(t *testing.T) {
 	assertOutputContains(t, out.String(), "chain id: 777101")
 }
 
+func TestMainnetProfileRejectsTamperedGenesis(t *testing.T) {
+	profile := config.Mainnet()
+	profile.GenesisHash = "tampered"
+	if err := config.ValidateNetworkProfile(profile); err == nil || !strings.Contains(err.Error(), "mainnet genesis hash is not frozen") {
+		t.Fatalf("expected frozen mainnet genesis rejection, got %v", err)
+	}
+}
+
+func TestMainnetCLIMetadataGenesisMismatchRejected(t *testing.T) {
+	dir := t.TempDir()
+	profile := config.Mainnet()
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := config.WriteNetworkMetadata(config.NewPaths(dir), profile, "tampered"); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "datadir genesis mismatch for mainnet") {
+		t.Fatalf("expected mainnet metadata genesis mismatch rejection, got %v", err)
+	}
+}
+
+func TestMainnetCLIMetadataGenesisMissingRejected(t *testing.T) {
+	dir := t.TempDir()
+	profile := config.Mainnet()
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := config.WriteNetworkMetadata(config.NewPaths(dir), profile, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err == nil || !strings.Contains(err.Error(), "datadir genesis metadata missing for mainnet") {
+		t.Fatalf("expected missing mainnet genesis metadata rejection, got %v", err)
+	}
+}
+
+func TestMainnetCLIRequiresExplicitSelection(t *testing.T) {
+	dir := t.TempDir()
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := app.Run([]string{"--network", "mainnet", "network", "info"}); err != nil {
+		t.Fatalf("explicit mainnet selection should pass profile validation: %v", err)
+	}
+	if !strings.Contains(out.String(), "network name: mainnet") || !strings.Contains(out.String(), "genesis hash: "+config.MainnetGenesisHash) {
+		t.Fatalf("unexpected mainnet network info: %s", out.String())
+	}
+}
+
+func TestMainnetOperationalCommandsRemainGated(t *testing.T) {
+	dir := t.TempDir()
+	for _, args := range [][]string{
+		{"--network", "mainnet", "init"},
+		{"--network", "mainnet", "wallet", "new"},
+		{"--network", "mainnet", "mine", "--address", "a", "--blocks", "1"},
+		{"--network", "mainnet", "node", "start"},
+		{"--network", "mainnet", "service", "register", "--address", "a", "--endpoint", "https://example.invalid"},
+		{"--network", "mainnet", "stake", "lock", "--address", "a", "--amount", "1"},
+	} {
+		app := New(io.Discard).WithDataDir(dir)
+		if err := app.Run(args); err == nil || !strings.Contains(err.Error(), "mainnet is not operational: launch gate is closed") {
+			t.Fatalf("expected mainnet launch gate for %v, got %v", args, err)
+		}
+	}
+}
+
+
 func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	dir := t.TempDir()
 	var out bytes.Buffer
@@ -185,6 +250,24 @@ func TestDatadirNetworkMismatchRejected(t *testing.T) {
 	err := app.Run([]string{"--network", "testnet", "node", "start", "--rpc", ":0", "--p2p", ":0"})
 	if err == nil || !strings.Contains(err.Error(), "datadir initialized for localnet, cannot start as testnet") {
 		t.Fatalf("expected network mismatch, got %v", err)
+	}
+}
+
+func TestMainnetStandaloneRPCIsGated(t *testing.T) {
+	app := New(io.Discard).WithDataDir(t.TempDir())
+	err := app.Run([]string{"--network", "mainnet", "rpc", "--addr", ":0"})
+	if err == nil || !strings.Contains(err.Error(), "mainnet is not operational: launch gate is closed") {
+		t.Fatalf("expected standalone mainnet RPC launch gate, got %v", err)
+	}
+}
+
+func TestMainnetOperationalCommandsRemainGatedWhenOverridesAreSet(t *testing.T) {
+	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "true")
+	t.Setenv("IDR_ALLOW_ISOLATED_WRITES", "true")
+	app := New(io.Discard).WithDataDir(t.TempDir())
+	err := app.Run([]string{"--network", "mainnet", "node", "start"})
+	if err == nil || !strings.Contains(err.Error(), "mainnet is not operational: launch gate is closed") {
+		t.Fatalf("expected mainnet launch gate to take precedence, got %v", err)
 	}
 }
 
@@ -939,6 +1022,30 @@ func TestAddressValidateCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertOutputContains(t, out.String(), "address invalid")
+}
+
+func TestNodeStartLockAcquiredBeforeStartupSideEffects(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	var out bytes.Buffer
+	app := New(&out).WithDataDir(dir)
+	if err := app.Run([]string{"init"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := p2p.CreateLock(paths.Lock, ":8331", ":9331"); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = p2p.RemoveLock(paths.Lock) }()
+
+	// A second node start must fail on the lock before opening chain state or
+	// touching peer metadata, even if startup peers are supplied.
+	err := app.Run([]string{"node", "start", "--rpc", ":0", "--p2p", ":0", "--peers", "http://127.0.0.1:9999"})
+	if err == nil || !strings.Contains(err.Error(), "datadir is locked by running node") {
+		t.Fatalf("expected startup lock rejection, got %v", err)
+	}
+	if _, err := os.Stat(paths.Peers); !os.IsNotExist(err) {
+		t.Fatalf("startup lock rejection created or modified peer store: stat=%v", err)
+	}
 }
 
 func TestLockRejectsWriteAllowsRead(t *testing.T) {
@@ -1946,6 +2053,18 @@ func TestPeerSyncTrackerSkipThrottleAndRecovery(t *testing.T) {
 	if tracker.markRecovered(peer) {
 		t.Fatal("second recovery should not be reported")
 	}
+}
+
+func TestRemoteMainnetCLIIsBlocked(t *testing.T) {
+	var out bytes.Buffer
+	app := New(&out)
+	app = app.WithProfile(config.Mainnet())
+	err := app.Run([]string{"--network", "mainnet", "--rpc-url", "http://127.0.0.1:8332", "chain", "info"})
+	if err == nil {
+		t.Fatal("expected remote mainnet mode to be blocked")
+	}
+	assertOutputContains(t, err.Error(), "mainnet is not operational")
+	assertOutputContains(t, err.Error(), "remote RPC mode is blocked")
 }
 
 func TestLockedPeerSyncSuggestsRemoteCommand(t *testing.T) {

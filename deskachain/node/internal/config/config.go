@@ -35,6 +35,11 @@ const (
 
 	GenesisTimestamp int64 = 1717200000
 	GenesisMessage         = "DesKaChain Genesis - fair CPU mining starts here"
+
+	// MainnetGenesisHash is the frozen deterministic genesis hash for the
+	// production mainnet profile. Any mismatch must stop startup rather than
+	// silently accepting a different mainnet history.
+	MainnetGenesisHash = "b01cbf6a3b04f3a9e374cad6adfb5cd8d24f5b2ef9723c3f7f440eb7fe53bde4"
 )
 
 type Paths struct {
@@ -177,8 +182,13 @@ func EnsureNetworkMatches(paths Paths, profile NetworkConfig) error {
 	if metadata.Network != profile.Name || metadata.NetworkID != profile.NetworkID || metadata.ChainID != profile.ChainID {
 		return fmt.Errorf("datadir initialized for %s, cannot start as %s", metadata.Network, profile.Name)
 	}
-	if profile.GenesisHash != "" && metadata.GenesisHash != "" && metadata.GenesisHash != profile.GenesisHash {
-		return fmt.Errorf("datadir genesis mismatch for %s", profile.Name)
+	if profile.GenesisHash != "" {
+		if metadata.GenesisHash == "" {
+			return fmt.Errorf("datadir genesis metadata missing; refusing to use as %s", profile.Name)
+		}
+		if metadata.GenesisHash != profile.GenesisHash {
+			return fmt.Errorf("datadir genesis mismatch for %s", profile.Name)
+		}
 	}
 	return nil
 }
@@ -520,7 +530,7 @@ func Mainnet() NetworkConfig {
 		MinWritePeers:       1,
 		AllowIsolatedWrites: false,
 		SeedPeers:                nil,
-		GenesisHash:              "",
+		GenesisHash:              MainnetGenesisHash,
 		RequireAuthenticatedNode: true,
 		NetworkLimits: NetworkLimits{
 			MaxHeaderBatch:      500,
@@ -537,6 +547,9 @@ func Mainnet() NetworkConfig {
 func ValidateNetworkProfile(profile NetworkConfig) error {
 	if profile.Name == "" || profile.NetworkID == "" || profile.NetworkName == "" {
 		return fmt.Errorf("network identity is incomplete")
+	}
+	if profile.Name != profile.NetworkName {
+		return fmt.Errorf("network name mismatch: name=%q network_name=%q", profile.Name, profile.NetworkName)
 	}
 	if profile.ChainID == 0 {
 		return fmt.Errorf("chain id must be non-zero")
@@ -573,6 +586,9 @@ func ValidateNetworkProfile(profile NetworkConfig) error {
 	}
 	if profile.Name != "localnet" && !profile.RequireAuthenticatedNode {
 		return fmt.Errorf("production network requires authenticated P2P nodes")
+	}
+	if profile.Name == "mainnet" && profile.GenesisHash != MainnetGenesisHash {
+		return fmt.Errorf("mainnet genesis hash is not frozen")
 	}
 	return nil
 }

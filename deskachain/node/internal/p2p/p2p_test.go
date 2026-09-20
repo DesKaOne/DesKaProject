@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -22,48 +23,69 @@ import (
 	"deskachain/internal/wallet"
 )
 
+func TestCreateLockIsExclusive(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "node.lock")
+	first, err := CreateLock(path, ":8331", ":9331", "http://127.0.0.1:9331")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := CreateLock(path, ":8332", ":9332", "http://127.0.0.1:9332")
+	if err == nil || !strings.Contains(err.Error(), "datadir is already locked") {
+		t.Fatalf("expected exclusive lock rejection, got %v", err)
+	}
+	if second.PID != first.PID || second.RPC != first.RPC || second.P2P != first.P2P {
+		t.Fatalf("existing lock details were not preserved: first=%+v second=%+v", first, second)
+	}
+	if err := RemoveLock(path); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestNodeIDPersistent(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "node_id")
 	first, err := LoadOrCreateNodeID(path)
-	if err != nil {
-		t.Fatal(err)
-	}
+	if err != nil { t.Fatal(err) }
 	second, err := LoadOrCreateNodeID(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if first == "" || first != second {
-		t.Fatalf("node id not persistent: %q %q", first, second)
-	}
+	if err != nil { t.Fatal(err) }
+	if first == "" || first != second { t.Fatalf("node id not persistent: %q %q", first, second) }
 }
 
 func TestHandshakeValidation(t *testing.T) {
 	local := config.Localnet()
-	local.GenesisHash = "abc"
 	peer := Handshake{
 		NetworkID:          local.NetworkID,
 		ChainID:            local.ChainID,
 		ProtocolVersion:    local.ProtocolVersion,
 		MinProtocolVersion: local.MinProtocolVersion,
-		GenesisHash:        local.GenesisHash,
+		GenesisHash:        chain.GenesisHashForNetwork(local),
 	}
-	if err := ValidateHandshake(local, peer); err != nil {
-		t.Fatal(err)
-	}
+	if err := ValidateHandshake(local, peer); err != nil { t.Fatal(err) }
 	peer.NetworkID = "other"
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") {
-		t.Fatalf("expected network mismatch, got %v", err)
-	}
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") { t.Fatalf("expected network mismatch, got %v", err) }
 	peer.NetworkID = local.NetworkID
 	peer.GenesisHash = "other"
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
-		t.Fatalf("expected genesis mismatch, got %v", err)
-	}
-	peer.GenesisHash = local.GenesisHash
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected genesis mismatch, got %v", err) }
+	peer.GenesisHash = chain.GenesisHashForNetwork(local)
 	peer.ProtocolVersion = 0
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") {
-		t.Fatalf("expected protocol mismatch, got %v", err)
-	}
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") { t.Fatalf("expected protocol mismatch, got %v", err) }
+}
+
+func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	local.GenesisHash = "tampered"
+	peer := Handshake{NetworkName: local.NetworkName, NetworkID: local.NetworkID, ChainID: local.ChainID, ProtocolVersion: local.ProtocolVersion, P2PProtocolVersion: local.P2PProtocolVersion, MinProtocolVersion: local.MinProtocolVersion, GenesisHash: config.MainnetGenesisHash}
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity required") { t.Fatalf("unexpected canonical genesis result: %v", err) }
+	peer.GenesisHash = strings.Repeat("f", 64)
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
+}
+
+func TestMainnetStatusValidationUsesCanonicalGenesis(t *testing.T) {
+	local := config.Mainnet()
+	local.GenesisHash = "tampered"
+	peer := Status{NetworkID: local.NetworkID, ChainID: local.ChainID, GenesisHash: config.MainnetGenesisHash, ProtocolVersion: local.ProtocolVersion}
+	if err := ValidateStatus(local, peer); err != nil { t.Fatalf("canonical mainnet status should pass despite tampered local profile, got %v", err) }
+	peer.GenesisHash = strings.Repeat("f", 64)
+	if err := ValidateStatus(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
 }
 
 func TestP2PServerTimeoutConfig(t *testing.T) {
@@ -157,6 +179,38 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	l := ledgerFor(t, b)
 	if got := l.Balance(receiver.Address); got != 10*config.UnitsPerCoin {
 		t.Fatalf("receiver balance = %d", got)
+	}
+}
+
+func TestPeerStoreAtomicReplacementAndConcurrentUpsert(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "peers.json")
+	store := NewPeerStore(path)
+	if err := store.SaveMetadata([]PeerMetadata{{URL: "http://127.0.0.1:9331", Status: PeerStatusActive}}); err != nil {
+		t.Fatal(err)
+	}
+
+	const writers = 12
+	errCh := make(chan error, writers)
+	for i := 0; i < writers; i++ {
+		go func(i int) {
+			peer := PeerMetadata{URL: fmt.Sprintf("http://127.0.0.1:%d", 9400+i), Status: PeerStatusActive, Score: i}
+			errCh <- store.Upsert(peer)
+		}(i)
+	}
+	for i := 0; i < writers; i++ {
+		if err := <-errCh; err != nil {
+			t.Fatal(err)
+		}
+	}
+	peers, err := store.LoadMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(peers) != writers+1 {
+		t.Fatalf("concurrent upserts lost metadata: got %d peers, want %d: %#v", len(peers), writers+1, peers)
+	}
+	if _, err := os.Stat(path); err != nil {
+		t.Fatalf("peer store path missing after concurrent writes: %v", err)
 	}
 }
 
@@ -365,6 +419,25 @@ func TestPeerMaintenancePrunesBackoffAndSubnetLimit(t *testing.T) {
 	next := time.Now().Add(time.Minute).Format(time.RFC3339)
 	if peerRetryDue(PeerMetadata{NextRetryAt: next}, time.Now()) {
 		t.Fatalf("retry should not be due before next_retry_at")
+	}
+}
+
+func TestProductionPeerIntroductionRequiresIdentityMetadata(t *testing.T) {
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+	server := NewServerWithProfile(paths, profile)
+
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441"}); err == nil || !strings.Contains(err.Error(), "peer node id is required") {
+		t.Fatalf("expected node id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a"}); err == nil || !strings.Contains(err.Error(), "peer network id is required") {
+		t.Fatalf("expected network id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a", NetworkID: profile.NetworkID}); err == nil || !strings.Contains(err.Error(), "peer chain id is required") {
+		t.Fatalf("expected chain id requirement, got %v", err)
+	}
+	if err := server.acceptPeerIntroduction(PeerIntroduction{URL: "http://127.0.0.1:9441", NodeID: "node-a", NetworkID: profile.NetworkID, ChainID: profile.ChainID}); err != nil {
+		t.Fatalf("complete production peer introduction should pass: %v", err)
 	}
 }
 

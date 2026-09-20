@@ -6,6 +6,14 @@ import (
 	"testing"
 )
 
+func TestNetworkProfileRejectsNameMismatch(t *testing.T) {
+	profile := Localnet()
+	profile.NetworkName = "testnet"
+	if err := ValidateNetworkProfile(profile); err == nil || !strings.Contains(err.Error(), "network name mismatch") {
+		t.Fatalf("expected network name mismatch rejection, got %v", err)
+	}
+}
+
 func TestNetworkByName(t *testing.T) {
 	net, err := NetworkByName("localnet")
 	if err != nil {
@@ -194,6 +202,70 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 }
 
 
+func TestMainnetProfileRequiresExplicitNetworkSelection(t *testing.T) {
+	if local := Localnet(); local.Name == "mainnet" {
+		t.Fatal("localnet profile must remain separate from mainnet")
+	}
+	if testnet := Testnet(); testnet.Name == "mainnet" {
+		t.Fatal("testnet profile must remain separate from mainnet")
+	}
+}
+
+func TestNetworkByNameMainnetIsExplicit(t *testing.T) {
+	mainnet, err := NetworkByName("mainnet")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if mainnet.Name != "mainnet" || mainnet.ChainID != 777000 {
+		t.Fatalf("unexpected mainnet selection: %#v", mainnet)
+	}
+	for _, name := range []string{"", "localnet", "testnet"} {
+		profile, err := NetworkByName(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if profile.Name == "mainnet" {
+			t.Fatalf("non-mainnet selector %q returned mainnet", name)
+		}
+	}
+}
+
+func TestMainnetDoesNotAdvertiseAsAvailable(t *testing.T) {
+	profile := Mainnet()
+	if profile.Name != "mainnet" {
+		t.Fatalf("unexpected mainnet profile: %q", profile.Name)
+	}
+	if profile.GenesisHash == "" || profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis identity is not frozen: %q", profile.GenesisHash)
+	}
+}
+
+func TestMainnetLaunchCriticalProfile(t *testing.T) {
+	profile := Mainnet()
+	checks := map[string]bool{
+		"network_id": profile.NetworkID == "idr-main-1",
+		"chain_id": profile.ChainID == 777000,
+		"legacy_addresses_disabled": !profile.LegacyAddressAllowed,
+		"authenticated_p2p": profile.RequireAuthenticatedNode,
+		"isolated_mining_disabled": !profile.AllowIsolatedMining,
+		"isolated_writes_disabled": !profile.AllowIsolatedWrites,
+		"token_transfers": profile.Asset.TokenTransfersEnabled,
+		"issued_tokens": profile.Asset.UserIssuedTokensEnabled,
+		"paymaster": profile.Asset.PaymasterEnabled,
+		"fee_enabled": profile.Fee.Enabled,
+		"zero_subsidy": profile.Economic.BlockSubsidy == 0,
+		"fee_only": profile.Economic.FeeOnlyBlocks,
+	}
+	for name, ok := range checks {
+		if !ok {
+			t.Fatalf("mainnet launch profile invariant failed: %s", name)
+		}
+	}
+	if profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis hash = %q, want %q", profile.GenesisHash, MainnetGenesisHash)
+	}
+}
+
 func TestBuiltInNetworkProfilesSatisfyV3Freeze(t *testing.T) {
 	for _, profile := range []NetworkConfig{Localnet(), Testnet(), Mainnet()} {
 		if err := ValidateNetworkProfile(profile); err != nil {
@@ -227,6 +299,20 @@ func TestV3NetworkProfileRejectsEconomicDrift(t *testing.T) {
 	}
 }
 
+func TestMainnetGenesisHashIsFrozen(t *testing.T) {
+	profile := Mainnet()
+	if profile.GenesisHash != MainnetGenesisHash {
+		t.Fatalf("mainnet genesis hash = %q, want %q", profile.GenesisHash, MainnetGenesisHash)
+	}
+	if MainnetGenesisHash == "" {
+		t.Fatal("mainnet genesis hash must not be empty")
+	}
+	profile.GenesisHash = "deadbeef"
+	if err := ValidateNetworkProfile(profile); err == nil {
+		t.Fatal("expected modified mainnet genesis hash to be rejected")
+	}
+}
+
 func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
 	if Localnet().RequireAuthenticatedNode {
 		t.Fatal("localnet should remain permissive for standalone development")
@@ -240,5 +326,25 @@ func TestProductionProfilesRequireAuthenticatedP2P(t *testing.T) {
 		if err := ValidateNetworkProfile(insecure); err == nil {
 			t.Fatalf("%s accepted unauthenticated P2P profile", profile.Name)
 		}
+	}
+}
+
+func TestEnsureNetworkMatchesMainnetRequiresGenesisMetadata(t *testing.T) {
+	tmp := t.TempDir()
+	paths := NewPaths(tmp)
+	profile := Mainnet()
+
+	if err := WriteNetworkMetadata(paths, profile, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsureNetworkMatches(paths, profile); err == nil || !strings.Contains(err.Error(), "genesis") {
+		t.Fatalf("expected missing mainnet genesis metadata to be rejected, got %v", err)
+	}
+
+	if err := WriteNetworkMetadata(paths, profile, MainnetGenesisHash); err != nil {
+		t.Fatal(err)
+	}
+	if err := EnsureNetworkMatches(paths, profile); err != nil {
+		t.Fatalf("expected matching mainnet genesis metadata to pass: %v", err)
 	}
 }

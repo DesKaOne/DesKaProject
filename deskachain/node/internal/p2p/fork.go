@@ -22,7 +22,7 @@ func CheckForkWithProfile(paths config.Paths, peer string, profile config.Networ
 		profile = config.Localnet()
 	}
 	localNet := profile
-	localNet.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+	localNet.GenesisHash = chain.GenesisHashForNetwork(profile)
 	handshake, err := client.Handshake(peer)
 	if err != nil {
 		return ForkCheckResult{}, err

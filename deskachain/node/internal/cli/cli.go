@@ -71,7 +71,7 @@ func isHelpArg(arg string) bool {
 
 func printHelp(out io.Writer) {
 	fmt.Fprintln(out, "DesKaChain")
-	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet] <command> [args]")
+	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet|mainnet] <command> [args]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "commands:")
 	fmt.Fprintln(out, "  version")
@@ -121,9 +121,13 @@ func (a App) Run(args []string) error {
 			networkFlagProvided = true
 		}
 	})
-	network, err := config.NetworkByName(*networkName)
+	selectedNetwork, err := config.NetworkByName(*networkName)
 	if err != nil {
 		return err
+	}
+	network := selectedNetwork
+	if network.Name == "mainnet" && !networkFlagProvided {
+		return errors.New("mainnet requires explicit --network mainnet selection")
 	}
 	a.paths = config.NewPaths(*datadir)
 	args = fs.Args()
@@ -138,6 +142,18 @@ func (a App) Run(args []string) error {
 		printHelp(a.out)
 		return nil
 	}
+
+	// Mainnet is a launch-sensitive network: it must be explicitly selected,
+	// and only the canonical built-in profile may be used.
+	if network.Name == "mainnet" {
+		if err := config.ValidateNetworkProfile(network); err != nil {
+			return err
+		}
+		if a.profile.Name == "mainnet" && a.profile.GenesisHash != config.MainnetGenesisHash {
+			return errors.New("injected mainnet profile is not canonical")
+		}
+	}
+
 	skipMetadataCheck := len(args) >= 2 && args[0] == "dev" && args[1] == "reset"
 	if !skipMetadataCheck {
 		if metadata, ok, err := config.ReadNetworkMetadata(a.paths); err != nil {
@@ -151,23 +167,36 @@ func (a App) Run(args []string) error {
 				return fmt.Errorf("datadir network metadata mismatch: %s chain_id=%d network_id=%s", metadata.Network, metadata.ChainID, metadata.NetworkID)
 			}
 			if networkFlagProvided {
-				if network.Name != metadataNetwork.Name || network.NetworkID != metadata.NetworkID || network.ChainID != metadata.ChainID {
+				if network.Name != metadataNetwork.Name || network.NetworkID != metadata.NetworkID || network.ChainID != metadataNetwork.ChainID {
 					return fmt.Errorf("datadir initialized for %s, cannot start as %s", metadata.Network, network.Name)
 				}
 			} else {
 				network = metadataNetwork
 			}
+			if network.Name == "mainnet" {
+				if metadata.GenesisHash == "" {
+					return errors.New("datadir genesis metadata missing for mainnet")
+				}
+				if metadata.GenesisHash != config.MainnetGenesisHash {
+					return errors.New("datadir genesis mismatch for mainnet")
+				}
+			}
 		}
 	}
-	// Keep an explicitly injected profile (used by integration tests) when the
-	// selected network identity matches it. CLI flags and persisted metadata still
-	// control the network identity; the injected profile only overrides economics.
-	if !networkFlagProvided && a.profile.Name == network.Name {
+
+	// Preserve injected economics for non-mainnet integration tests only. Mainnet
+	// always uses the canonical built-in profile above.
+	if !networkFlagProvided && network.Name != "mainnet" && a.profile.Name == network.Name {
 		network = a.profile
 	}
-	network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
+	if network.Name != "mainnet" {
+		network.GenesisHash = chain.GenesisBlockForNetwork(network).Hash
+	}
 	a.profile = network
 	a.rpcURL = strings.TrimRight(*rpcURL, "/")
+	if a.rpcURL != "" && a.profile.Name == "mainnet" {
+		return errors.New("mainnet is not operational: remote RPC mode is blocked while launch gate is closed")
+	}
 	a.ignoreLock = *ignoreLock
 	if a.rpcURL != "" {
 		return a.runRemote(args)
@@ -235,7 +264,10 @@ func (a App) network(args []string) error {
 		return errors.New("usage: network info")
 	}
 	net := a.profile
-	net.GenesisHash = chain.GenesisBlockForNetwork(net).Hash
+	if net.Name != "mainnet" {
+		net.GenesisHash = chain.GenesisHashForNetwork(net)
+	}
+
 	fmt.Fprintf(a.out, "network name: %s\n", net.NetworkName)
 	fmt.Fprintf(a.out, "network id: %s\n", net.NetworkID)
 	fmt.Fprintf(a.out, "chain id: %d\n", net.ChainID)
@@ -250,6 +282,9 @@ func (a App) network(args []string) error {
 }
 
 func (a App) init() error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	bc, closeFn, err := a.openChain()
 	if err != nil {
 		return err
@@ -644,6 +679,9 @@ func printForkSimSummary(out io.Writer, label string, summary forkSimSummary) {
 }
 
 func (a App) wallet(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("wallet command is required")
 	}
@@ -777,6 +815,9 @@ func (a App) balance(args []string) error {
 }
 
 func (a App) send(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("send", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	from := fs.String("from", "", "sender address")
@@ -879,6 +920,9 @@ func (a App) tx(args []string) error {
 }
 
 func (a App) mine(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) > 0 && args[0] == "status" {
 		fmt.Fprintln(a.out, "mining status: idle")
 		return nil
@@ -967,6 +1011,9 @@ func (a App) mine(args []string) error {
 }
 
 func (a App) service(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("service command is required")
 	}
@@ -1101,6 +1148,9 @@ func (a App) serviceChallenge(args []string, store servicenode.Store) error {
 }
 
 func (a App) stake(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("stake command is required")
 	}
@@ -1440,6 +1490,9 @@ func (a App) debug(args []string) error {
 }
 
 func (a App) rpc(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("rpc", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	addr := fs.String("addr", ":8332", "listen address")
@@ -1450,7 +1503,19 @@ func (a App) rpc(args []string) error {
 	return rpc.ListenAndServe(*addr, a.paths)
 }
 
+func ensureMainnetOperational(profile config.NetworkConfig) error {
+	if profile.Name == "mainnet" {
+		return errors.New("mainnet is not operational: launch gate is closed")
+	}
+	return nil
+}
+
 func (a App) node(args []string) error {
+	if len(args) > 0 && args[0] == "start" {
+		if err := ensureMainnetOperational(a.profile); err != nil {
+			return err
+		}
+	}
 	if len(args) == 0 {
 		return errors.New("node command is required")
 	}
@@ -1502,6 +1567,17 @@ func (a App) node(args []string) error {
 	if err != nil {
 		return err
 	}
+	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedMining {
+		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_MINING")); raw != "" {
+			return errors.New("mainnet cannot override isolated mining guard while launch gate is closed")
+		}
+	}
+	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedWrites {
+		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_WRITES")); raw != "" {
+			return errors.New("mainnet cannot override isolated writes guard while launch gate is closed")
+		}
+	}
+
 	defaultAllowIsolatedMining, err := config.AllowIsolatedMiningFromEnv(a.profile)
 	if err != nil {
 		return err
@@ -1576,6 +1652,23 @@ func (a App) node(args []string) error {
 			return errors.New("faucet amount exceeds faucet max per address")
 		}
 	}
+	// Acquire the datadir lock before any startup read/write side effects so
+	// concurrent node starts cannot race on chain or peer-store initialization.
+	advertise := *p2pAdvertise
+	if advertise == "" {
+		advertise = defaultAdvertiseP2P(*p2pAddr)
+	}
+	lock, err := p2p.CreateLock(a.paths.Lock, *rpcAddr, *p2pAddr, advertise)
+	if err != nil {
+		return fmt.Errorf("datadir is locked by running node: %w", err)
+	}
+	lockOwned := true
+	defer func() {
+		if lockOwned {
+			_ = p2p.RemoveLock(a.paths.Lock)
+		}
+	}()
+
 	bc, closeFn, err := a.openInitializedChain()
 	if err != nil {
 		return err
@@ -1611,10 +1704,6 @@ func (a App) node(args []string) error {
 	if err != nil {
 		return err
 	}
-	advertise := *p2pAdvertise
-	if advertise == "" {
-		advertise = defaultAdvertiseP2P(*p2pAddr)
-	}
 	startupPeers, err := addStartupPeers(store, startupPeerInputs{FlagPeers: flagPeers, Bootnodes: bootnodes, SeedPeers: seedPeers, SelfURL: advertise})
 	if err != nil {
 		return err
@@ -1624,10 +1713,6 @@ func (a App) node(args []string) error {
 		return err
 	}
 	peerSource := peerSourceSummary(len(filePeers) > 0, len(flagPeers)+len(bootnodes)+len(seedPeers) > 0)
-	lock, err := p2p.CreateLock(a.paths.Lock, *rpcAddr, *p2pAddr, advertise)
-	if err != nil {
-		return fmt.Errorf("datadir is locked by running node: %w", err)
-	}
 	defer func() {
 		_ = state.Refresh(a.paths)
 		_ = p2p.RemoveLock(a.paths.Lock)
@@ -1635,7 +1720,7 @@ func (a App) node(args []string) error {
 	}()
 	serviceStore := servicenode.NewStore(a.paths, a.profile)
 	serviceNodes, _ := serviceStore.LoadNodes()
-	log.Printf("node started network=%s network_id=%s chain_id=%d genesis=%s protocol=%d datadir=%s rpc=%s p2p=%s advertise=%s bootnodes=%d seed_peers=%d upstream_peers=%d skipped_self=%d public_rpc=%t wallet_rpc=%t miner_rpc=%t admin_rpc=%t service_rpc=%t faucet_rpc=%t max_peers=%d max_reorg_depth=%d min_mining_peers=%d allow_isolated_mining=%t height=%d tip=%s pid=%d", a.profile.Name, a.profile.NetworkID, a.profile.ChainID, chain.GenesisBlockForNetwork(a.profile).Hash, a.profile.ProtocolVersion, a.paths.DataDir, lock.RPC, lock.P2P, lock.P2PAdvertise, startupPeers.BootnodesAdded, startupPeers.SeedsAdded, len(upstreamPeers), startupPeers.SkippedSelf, *publicRPC, *enableWalletRPC, *enableMinerRPC, *enableAdminRPC, *enableServiceRPC, *enableFaucetRPC, maxPeers, *maxReorgDepth, *minMiningPeers, *allowIsolatedMining, tip.Height, tip.Hash, lock.PID)
+	log.Printf("node started network=%s network_id=%s chain_id=%d genesis=%s protocol=%d datadir=%s rpc=%s p2p=%s advertise=%s bootnodes=%d seed_peers=%d upstream_peers=%d skipped_self=%d public_rpc=%t wallet_rpc=%t miner_rpc=%t admin_rpc=%t service_rpc=%t faucet_rpc=%t max_peers=%d max_reorg_depth=%d min_mining_peers=%d allow_isolated_mining=%t height=%d tip=%s pid=%d", a.profile.Name, a.profile.NetworkID, a.profile.ChainID, chain.GenesisHashForNetwork(a.profile), a.profile.ProtocolVersion, a.paths.DataDir, lock.RPC, lock.P2P, lock.P2PAdvertise, startupPeers.BootnodesAdded, startupPeers.SeedsAdded, len(upstreamPeers), startupPeers.SkippedSelf, *publicRPC, *enableWalletRPC, *enableMinerRPC, *enableAdminRPC, *enableServiceRPC, *enableFaucetRPC, maxPeers, *maxReorgDepth, *minMiningPeers, *allowIsolatedMining, tip.Height, tip.Hash, lock.PID)
 	if *enableMinerRPC && a.profile.Name == "testnet" && !*allowIsolatedMining && *minMiningPeers > 0 {
 		log.Printf("warning: miner RPC enabled; mining templates require at least %d active peer or reachable upstream peer on testnet", *minMiningPeers)
 	}
@@ -1707,7 +1792,7 @@ func (a App) node(args []string) error {
 	fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 	fmt.Fprintf(a.out, "network id: %s\n", a.profile.NetworkID)
 	fmt.Fprintf(a.out, "chain id: %d\n", a.profile.ChainID)
-	fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisBlockForNetwork(a.profile).Hash)
+	fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisHashForNetwork(a.profile))
 	fmt.Fprintf(a.out, "datadir: %s\n", a.paths.DataDir)
 	fmt.Fprintf(a.out, "rpc: %s\n", *rpcAddr)
 	fmt.Fprintf(a.out, "p2p: %s\n", *p2pAddr)
@@ -2006,7 +2091,7 @@ func (a App) peer(args []string) error {
 		}
 		fmt.Fprintf(a.out, "network id: %s\n", a.profile.NetworkID)
 		fmt.Fprintf(a.out, "chain id: %d\n", a.profile.ChainID)
-		fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisBlockForNetwork(a.profile).Hash)
+		fmt.Fprintf(a.out, "genesis hash: %s\n", chain.GenesisHashForNetwork(a.profile))
 		fmt.Fprintf(a.out, "local height: %d\n", tip.Height)
 		fmt.Fprintf(a.out, "local tip: %s\n", tip.Hash)
 		fmt.Fprintf(a.out, "known peers: %d\n", len(meta))
@@ -2193,7 +2278,7 @@ func (a App) localChainInfoMap() (map[string]any, error) {
 	return map[string]any{
 		"network_id":         a.profile.NetworkID,
 		"chain_id":           float64(a.profile.ChainID),
-		"genesis_hash":       chain.GenesisBlockForNetwork(a.profile).Hash,
+		"genesis_hash":       chain.GenesisHashForNetwork(a.profile),
 		"protocol_version":   float64(a.profile.ProtocolVersion),
 		"height":             float64(tip.Height),
 		"tip_hash":           tip.Hash,

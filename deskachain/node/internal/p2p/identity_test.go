@@ -77,6 +77,37 @@ func TestLoadOrCreateNodeIdentityPersistsKeyMaterial(t *testing.T) {
 	}
 }
 
+func TestLoadOrCreateNodeIdentityConcurrentCreation(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "node_id")
+	const creators = 12
+	type result struct {
+		identity NodeIdentity
+		err      error
+	}
+	results := make(chan result, creators)
+	for i := 0; i < creators; i++ {
+		go func() {
+			identity, err := LoadOrCreateNodeIdentity(path)
+			results <- result{identity: identity, err: err}
+		}()
+	}
+	var first NodeIdentity
+	for i := 0; i < creators; i++ {
+		got := <-results
+		if got.err != nil {
+			t.Fatal(got.err)
+		}
+		if first.NodeID == "" {
+			first = got.identity
+			continue
+		}
+		if got.identity.NodeID != first.NodeID || !bytes.Equal(got.identity.PrivateKey, first.PrivateKey) || !bytes.Equal(got.identity.PublicKey, first.PublicKey) {
+			t.Fatalf("concurrent identity creation diverged: first=%q got=%q", first.NodeID, got.identity.NodeID)
+		}
+	}
+}
+
 func TestAuthenticatedHandshakeRoundTrip(t *testing.T) {
 	profile := config.Localnet()
 	identity, err := LoadOrCreateNodeIdentity(filepath.Join(t.TempDir(), "node_id"))
