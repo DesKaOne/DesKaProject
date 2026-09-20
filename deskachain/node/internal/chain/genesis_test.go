@@ -41,3 +41,14 @@ func TestTestnetGenesisStable(t *testing.T) {
 		t.Fatalf("testnet genesis must differ from localnet: %s", first.Hash)
 	}
 }
+
+func TestMainnetGenesisMatchesFrozenHash(t *testing.T) {
+	profile := config.Mainnet()
+	genesis := GenesisBlockForNetwork(profile)
+	if genesis.Hash != config.MainnetGenesisHash {
+		t.Fatalf("mainnet genesis hash = %s, want %s", genesis.Hash, config.MainnetGenesisHash)
+	}
+	if profile.GenesisHash != genesis.Hash {
+		t.Fatalf("mainnet profile genesis hash = %s, generated genesis = %s", profile.GenesisHash, genesis.Hash)
+	}
+}
