@@ -173,6 +173,9 @@ func (a App) Run(args []string) error {
 			} else {
 				network = metadataNetwork
 			}
+			if network.Name == "mainnet" && metadata.GenesisHash != "" && metadata.GenesisHash != network.GenesisHash {
+				return errors.New("datadir genesis mismatch for mainnet")
+			}
 		}
 	}
 
