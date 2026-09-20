@@ -95,6 +95,14 @@ func Mine(ctx context.Context, block types.Block, threads int, totalHashes *atom
 		}
 	case <-ctx.Done():
 		<-done
-		return Result{}, ctx.Err()
+		select {
+		case result := <-results:
+			if totalHashes != nil {
+				result.Hashes = totalHashes.Load()
+			}
+			return result, nil
+		default:
+			return Result{}, ctx.Err()
+		}
 	}
 }
