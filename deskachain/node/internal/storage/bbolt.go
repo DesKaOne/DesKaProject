@@ -311,7 +311,32 @@ func (s *BoltStore) GetBlockByHeight(height uint64) (types.Block, error) {
 
 func (s *BoltStore) DeleteBlockByHeight(height uint64) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		return tx.Bucket(blocksBucket).Delete(heightKey(height))
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		if meta == nil || blocks == nil {
+			return errors.New("chain storage is not initialized")
+		}
+		key := heightKey(height)
+		if blocks.Get(key) == nil {
+			return errors.New("block not found")
+		}
+		tipKeyBytes := meta.Get(tipKey)
+		if tipKeyBytes == nil {
+			return errors.New("chain is not initialized")
+		}
+		// Never expose a mutation path that can remove canonical history while
+		// leaving the tip/state metadata pointing at the removed chain.
+		if bytes.Equal(tipKeyBytes, key) {
+			return errors.New("cannot delete canonical tip block")
+		}
+		// Deleting a block at or below the canonical tip would create a hole in
+		// canonical history. Only non-canonical blocks above the tip may be
+		// removed through this legacy maintenance API.
+		tipHeight := binary.BigEndian.Uint64(tipKeyBytes)
+		if height <= tipHeight {
+			return errors.New("cannot delete canonical chain block")
+		}
+		return blocks.Delete(key)
 	})
 }
 
@@ -450,8 +475,13 @@ func checkedReplacementHeight(from, offset uint64) (uint64, error) {
 
 func (s *BoltStore) SetTip(height uint64, hash string) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(blocksBucket)
-		raw := b.Get(heightKey(height))
+		meta := tx.Bucket(metaBucket)
+		blocks := tx.Bucket(blocksBucket)
+		if meta == nil || blocks == nil {
+			return errors.New("chain storage is not initialized")
+		}
+		key := heightKey(height)
+		raw := blocks.Get(key)
 		if raw == nil {
 			return errors.New("tip block not found")
 		}
@@ -459,11 +489,54 @@ func (s *BoltStore) SetTip(height uint64, hash string) error {
 		if err := json.Unmarshal(raw, &block); err != nil {
 			return err
 		}
+		if block.Height != height {
+			return errors.New("tip block height mismatch")
+		}
 		if block.Hash != hash {
 			return errors.New("tip hash mismatch")
 		}
-		return tx.Bucket(metaBucket).Put(tipKey, heightKey(height))
+
+		currentKey := meta.Get(tipKey)
+		if currentKey == nil {
+			return errors.New("chain is not initialized")
+		}
+		if bytes.Equal(currentKey, key) {
+			// Setting the already-canonical tip is harmless, but still verify the
+			// persisted state before accepting the mutation path.
+			if err := validateTipStateConsistencyTx(tx, block); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		// SetTip is a legacy mutation API. It must not be able to rewind or
+		// advance canonical history without an atomic state update. Production
+		// v3 callers use SaveBlockAndState / ReplaceFromHeightAndState instead.
+		return errors.New("cannot mutate canonical tip without atomic state commit")
 	})
+}
+
+func validateTipStateConsistencyTx(tx *bolt.Tx, tip types.Block) error {
+	root := tx.Bucket(stateBucket)
+	if root == nil {
+		return ErrStateNotInitialized
+	}
+	meta := root.Bucket(stateMetaBucket)
+	if meta == nil {
+		return ErrStateNotInitialized
+	}
+	rawHeight := meta.Get(stateHeightKey)
+	rawRoot := meta.Get(stateRootKey)
+	if len(rawHeight) != 8 || len(rawRoot) == 0 {
+		return ErrStateNotInitialized
+	}
+	if binary.BigEndian.Uint64(rawHeight) != tip.Height {
+		return errors.New("chain tip/state height mismatch")
+	}
+	if tip.StateRoot != "" && string(rawRoot) != tip.StateRoot {
+		return errors.New("chain tip/state root mismatch")
+	}
+	return nil
 }
 
 func (s *BoltStore) GetHeight() (uint64, error) {
