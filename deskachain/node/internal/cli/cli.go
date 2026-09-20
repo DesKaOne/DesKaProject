@@ -1559,6 +1559,17 @@ func (a App) node(args []string) error {
 	if err != nil {
 		return err
 	}
+	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedMining {
+		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_MINING")); raw != "" {
+			return errors.New("mainnet cannot override isolated mining guard while launch gate is closed")
+		}
+	}
+	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedWrites {
+		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_WRITES")); raw != "" {
+			return errors.New("mainnet cannot override isolated writes guard while launch gate is closed")
+		}
+	}
+
 	defaultAllowIsolatedMining, err := config.AllowIsolatedMiningFromEnv(a.profile)
 	if err != nil {
 		return err
