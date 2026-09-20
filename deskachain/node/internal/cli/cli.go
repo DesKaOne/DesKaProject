@@ -146,9 +146,6 @@ func (a App) Run(args []string) error {
 	// Mainnet is a launch-sensitive network: it must be explicitly selected,
 	// and only the canonical built-in profile may be used.
 	if network.Name == "mainnet" {
-		if !networkFlagProvided {
-			return errors.New("mainnet requires explicit --network mainnet selection")
-		}
 		if err := config.ValidateNetworkProfile(network); err != nil {
 			return err
 		}
@@ -176,7 +173,7 @@ func (a App) Run(args []string) error {
 			} else {
 				network = metadataNetwork
 			}
-			if network.Name == "mainnet" && metadata.GenesisHash != "" && metadata.GenesisHash != network.GenesisHash {
+			if network.Name == "mainnet" && metadata.GenesisHash != "" && metadata.GenesisHash != config.MainnetGenesisHash {
 				return errors.New("datadir genesis mismatch for mainnet")
 			}
 		}
