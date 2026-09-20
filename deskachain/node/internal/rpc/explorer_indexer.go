@@ -63,4 +63,35 @@ func (x *explorerIndexer) statusUnlocked()(ExplorerIndexerStatus,error){db,err:=
 func (x *explorerIndexer) status()(ExplorerIndexerStatus,error){x.mu.Lock();defer x.mu.Unlock();return x.statusUnlocked()}
 
 func (x *explorerIndexer) transaction(id string)(explorerIndexedTx,bool,error){db,err:=x.open();if err!=nil{return explorerIndexedTx{},false,err};defer db.Close();var out explorerIndexedTx;err=db.View(func(tx *bolt.Tx)error{r:=tx.Bucket([]byte("txs")).Get([]byte(id));if r==nil{return nil};return json.Unmarshal(r,&out)});return out,out.ID!=""&&err==nil,err}
+func (x *explorerIndexer) blockByHeight(height uint64) (explorerIndexedBlock, bool, error) {
+	db, err := x.open()
+	if err != nil { return explorerIndexedBlock{}, false, err }
+	defer db.Close()
+	var out explorerIndexedBlock
+	err = db.View(func(tx *bolt.Tx) error {
+		raw := tx.Bucket([]byte("blocks")).Get(uint64Key(height))
+		if raw == nil { return nil }
+		return json.Unmarshal(raw, &out)
+	})
+	return out, out.Hash != "" && err == nil, err
+}
+
+func (x *explorerIndexer) blockByHash(hash string) (explorerIndexedBlock, bool, error) {
+	db, err := x.open()
+	if err != nil { return explorerIndexedBlock{}, false, err }
+	defer db.Close()
+	var out explorerIndexedBlock
+	err = db.View(func(tx *bolt.Tx) error {
+		return tx.Bucket([]byte("blocks")).ForEach(func(k, v []byte) error {
+			var item explorerIndexedBlock
+			if err := json.Unmarshal(v, &item); err != nil { return err }
+			if strings.EqualFold(item.Hash, hash) {
+				out = item
+			}
+			return nil
+		})
+	})
+	return out, out.Hash != "" && err == nil, err
+}
+
 func (x *explorerIndexer) addressHistory(address string,limit,offset int)([]explorerIndexedHistory,int,error){db,err:=x.open();if err!=nil{return nil,0,err};defer db.Close();var all []explorerIndexedHistory;err=db.View(func(tx *bolt.Tx)error{return tx.Bucket([]byte("addresses")).ForEach(func(k,v []byte)error{var e explorerIndexedHistory;if err:=json.Unmarshal(v,&e);err!=nil{return err};prefix := []byte(address+"|"); if strings.HasPrefix(string(k), string(prefix)){all=append(all,e)};return nil})});if err!=nil{return nil,0,err};sort.Slice(all,func(i,j int)bool{if all[i].BlockHeight!=all[j].BlockHeight{return all[i].BlockHeight>all[j].BlockHeight};return all[i].TxID>all[j].TxID});total:=len(all);if offset>total{offset=total};end:=offset+limit;if end>total{end=total};return all[offset:end],total,nil}
