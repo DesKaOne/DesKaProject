@@ -373,6 +373,7 @@ func minePendingFixture(t *testing.T, paths config.Paths, miner string, profile 
 	if err := store.SaveBlock(block); err != nil {
 		t.Fatal(err)
 	}
+	prior := append([]types.Block(nil), blocks...)
 	prior = append(prior, block)
 	snapshot, err := state.SnapshotForBlocks(prior, profile.Consensus, profile)
 	if err != nil { t.Fatal(err) }
