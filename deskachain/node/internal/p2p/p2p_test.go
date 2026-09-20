@@ -22,6 +22,24 @@ import (
 	"deskachain/internal/wallet"
 )
 
+func TestCreateLockIsExclusive(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "node.lock")
+	first, err := CreateLock(path, ":8331", ":9331", "http://127.0.0.1:9331")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := CreateLock(path, ":8332", ":9332", "http://127.0.0.1:9332")
+	if err == nil || !strings.Contains(err.Error(), "datadir is already locked") {
+		t.Fatalf("expected exclusive lock rejection, got %v", err)
+	}
+	if second.PID != first.PID || second.RPC != first.RPC || second.P2P != first.P2P {
+		t.Fatalf("existing lock details were not preserved: first=%+v second=%+v", first, second)
+	}
+	if err := RemoveLock(path); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestNodeIDPersistent(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "node_id")
 	first, err := LoadOrCreateNodeID(path)
