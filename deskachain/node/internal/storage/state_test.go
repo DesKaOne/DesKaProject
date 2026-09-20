@@ -341,6 +341,42 @@ func TestOpenBoltRejectsPersistedStateRootMismatch(t *testing.T) {
 }
 
 
+
+func TestSaveBlockAndStateRollsBackBlockOnStateWriteFailure(t *testing.T) {
+	store, err := OpenBolt(t.TempDir() + "/chain.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer store.Close()
+
+	snapshot := emptySnapshot(t)
+	if err := store.db.Update(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket(stateBucket)
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	block := types.Block{
+		Height:    snapshot.Height,
+		Hash:      "genesis",
+		StateRoot: snapshot.StateRoot,
+	}
+	if err := store.SaveBlockAndState(block, snapshot); err == nil {
+		t.Fatal("expected state write failure")
+	}
+
+	hasChain, err := store.HasChain()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hasChain {
+		t.Fatal("block/tip mutation survived failed atomic commit")
+	}
+	if _, err := store.Tip(); err == nil {
+		t.Fatal("tip exists after failed atomic commit")
+	}
+}
+
 func TestSaveBlockAndStateRejectsNonCanonicalCommitWithoutMutation(t *testing.T) {
 	store, err := OpenBolt(t.TempDir() + "/chain.db")
 	if err != nil {
