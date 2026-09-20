@@ -46,7 +46,7 @@ func TestHandshakeValidation(t *testing.T) {
 	peer.NetworkID = local.NetworkID
 	peer.GenesisHash = "other"
 	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected genesis mismatch, got %v", err) }
-	peer.GenesisHash = local.GenesisHash
+	peer.GenesisHash = chain.GenesisHashForNetwork(local)
 	peer.ProtocolVersion = 0
 	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") { t.Fatalf("expected protocol mismatch, got %v", err) }
 }
