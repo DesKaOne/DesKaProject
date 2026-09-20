@@ -136,7 +136,7 @@ func MaintainPeers(paths config.Paths, profile config.NetworkConfig, opts Mainte
 			continue
 		}
 		local := profile
-		local.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
+		local.GenesisHash = chain.GenesisHashForNetwork(profile)
 		if err := ValidateHandshake(local, hs); err != nil {
 			result.Failed++
 			if markErr := markPeerMaintenanceFailure(store, peer, err, now, opts); markErr != nil {
