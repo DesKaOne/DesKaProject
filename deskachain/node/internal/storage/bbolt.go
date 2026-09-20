@@ -75,6 +75,13 @@ func (s *BoltStore) ValidateStartupIntegrity() error {
 	if err := s.ValidateStateIndexes(); err != nil {
 		return err
 	}
+	// LoadState performs full snapshot validation, including recomputing the
+	// state root from persisted accounts, stakes, coinbases, assets, and
+	// balances. Do this during startup so structurally valid indexes cannot
+	// hide a semantically inconsistent persisted snapshot.
+	if _, err := s.LoadState(); err != nil {
+		return err
+	}
 	_, _, _, err = s.GetStateMetadata()
 	return err
 }
