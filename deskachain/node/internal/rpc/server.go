@@ -62,7 +62,7 @@ func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server 
 	mux := http.NewServeMux()
 	RegisterHandlers(mux, paths, info)
 	handler := http.Handler(mux)
-	if normalizeRPCProfile(info).Name == "mainnet" && !mainnetRPCOperational(info) {
+	if normalizeRPCProfile(info).Name == "mainnet" {
 		handler = mainnetLaunchGate(handler)
 	}
 	return &http.Server{
@@ -76,9 +76,6 @@ func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server 
 	}
 }
 
-func mainnetRPCOperational(info NodeInfo) bool {
-	return false
-}
 
 func normalizeRPCProfile(info NodeInfo) config.NetworkConfig {
 	if info.Profile.Name == "" {
