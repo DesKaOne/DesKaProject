@@ -277,6 +277,9 @@ func (a App) network(args []string) error {
 }
 
 func (a App) init() error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	bc, closeFn, err := a.openChain()
 	if err != nil {
 		return err
@@ -671,6 +674,9 @@ func printForkSimSummary(out io.Writer, label string, summary forkSimSummary) {
 }
 
 func (a App) wallet(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) == 0 {
 		return errors.New("wallet command is required")
 	}
@@ -804,6 +810,9 @@ func (a App) balance(args []string) error {
 }
 
 func (a App) send(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("send", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	from := fs.String("from", "", "sender address")
@@ -906,6 +915,9 @@ func (a App) tx(args []string) error {
 }
 
 func (a App) mine(args []string) error {
+	if err := ensureMainnetOperational(a.profile); err != nil {
+		return err
+	}
 	if len(args) > 0 && args[0] == "status" {
 		fmt.Fprintln(a.out, "mining status: idle")
 		return nil
@@ -1485,6 +1497,11 @@ func ensureMainnetOperational(profile config.NetworkConfig) error {
 }
 
 func (a App) node(args []string) error {
+	if len(args) > 0 && args[0] == "start" {
+		if err := ensureMainnetOperational(a.profile); err != nil {
+			return err
+		}
+	}
 	if len(args) == 0 {
 		return errors.New("node command is required")
 	}
