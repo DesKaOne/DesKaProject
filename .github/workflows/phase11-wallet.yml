@@ -43,3 +43,21 @@ jobs:
         run: flutter analyze
       - name: Flutter tests
         run: flutter test
+      - name: Android debug build
+        run: flutter build apk --debug
+
+  ios-mobile:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: indochainwallet/app/indochainwallet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.0"
+          channel: stable
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: iOS no-code-sign build
+        run: flutter build ios --no-codesign
