@@ -191,3 +191,30 @@ The acceptance test also verifies that POST /node/metrics remains rejected with 
 - CI remains green on the final Phase 8.7 commits.
 
 With these criteria satisfied, Phase 8.7 Monitoring & Statistics is complete and the project can advance to Phase 8.8 CI + integration testing.
+
+
+## 8.8 CI + integration testing
+
+Phase 8.8 adds a bounded integration gate that exercises the Phase 8 runtime path as one read-only-safe flow:
+
+- miner RPC creates and commits a canonical block
+- canonical chain validation confirms the committed tip
+- mempool state is visible through monitoring
+- the persistent explorer indexer catches up to the canonical chain
+- Explorer status, indexer statistics, and block views expose the indexed read model
+- /node/metrics exposes the same indexer state together with chain and mempool observations
+- the embedded Explorer UI exposes the Monitoring presentation
+- POST /node/metrics remains rejected with HTTP 405
+
+The integration test is intentionally bounded for CI. It reuses the existing node/RPC/indexer test fixtures instead of starting an unbounded long-running testnet process. Multi-node convergence, soak, restart/recovery, and peer-churn behavior remain covered by their dedicated Phase 8.5/8.6 tests.
+
+### 8.8 acceptance
+
+- The consolidated integration test passes in the existing Go test workflow.
+- The test covers node → chain → mempool → explorer indexer → Explorer API → monitoring → Explorer UI.
+- Canonical chain validation remains part of the integrated path.
+- Explorer monitoring consumes the same /node/metrics contract already covered by the monitoring acceptance tests.
+- The integration test does not introduce consensus state or mutable monitoring state.
+- CI remains green on the Phase 8.8 integration commit.
+
+With these criteria satisfied, Phase 8.8 CI + integration testing is complete and Phase 8 Testnet can proceed to its final readiness/release-gate review.
