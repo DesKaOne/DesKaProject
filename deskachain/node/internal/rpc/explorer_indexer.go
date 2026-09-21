@@ -28,6 +28,13 @@ type explorerIndexCursor struct {
 	Height uint64
 	Hash   string
 }
+type explorerIndexerMetrics struct {
+	SyncCount          uint64  `json:"sync_count"`
+	LastSyncAtUnix     int64   `json:"last_sync_at_unix"`
+	LastSyncDurationMs int64   `json:"last_sync_duration_ms"`
+	LastSyncBlockCount int     `json:"last_sync_block_count"`
+	BlocksPerSecond    float64 `json:"blocks_per_second"`
+}
 type explorerIndexedBlock struct {
 	Height       uint64
 	Hash         string
@@ -94,6 +101,29 @@ func (x *explorerIndexer) open() (*bolt.DB, error) {
 			if _, e := tx.CreateBucketIfNotExists([]byte(n)); e != nil {
 				return e
 			}
+		}
+		metrics := explorerIndexerMetrics{
+			SyncCount:          1,
+			LastSyncAtUnix:     time.Now().Unix(),
+			LastSyncDurationMs: time.Since(syncStarted).Milliseconds(),
+			LastSyncBlockCount: indexedBlocks,
+		}
+		if previous := tx.Bucket([]byte("meta")).Get([]byte("metrics")); previous != nil {
+			_ = json.Unmarshal(previous, &metrics)
+			metrics.SyncCount++
+			metrics.LastSyncAtUnix = time.Now().Unix()
+			metrics.LastSyncDurationMs = time.Since(syncStarted).Milliseconds()
+			metrics.LastSyncBlockCount = indexedBlocks
+		}
+		if metrics.LastSyncDurationMs > 0 {
+			metrics.BlocksPerSecond = float64(metrics.LastSyncBlockCount) / (float64(metrics.LastSyncDurationMs) / 1000)
+		}
+		rawMetrics, err := json.Marshal(metrics)
+		if err != nil {
+			return err
+		}
+		if err := tx.Bucket([]byte("meta")).Put([]byte("metrics"), rawMetrics); err != nil {
+			return err
 		}
 		return nil
 	})
@@ -219,6 +249,7 @@ func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
 func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	x.mu.Lock()
 	defer x.mu.Unlock()
+	syncStarted := time.Now()
 	store, err := storage.OpenBolt(x.paths.DB)
 	if err != nil {
 		return ExplorerIndexerStatus{}, err
@@ -257,6 +288,7 @@ func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	if rebuild {
 		cur = explorerIndexCursor{}
 	}
+	indexedBlocks := 0
 	err = db.Update(func(tx *bolt.Tx) error {
 		if rebuild || cur.Hash == "" {
 			if err := clearExplorerIndexTx(tx); err != nil {
@@ -276,6 +308,7 @@ func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 			if err := indexExplorerBlockTx(tx, b); err != nil {
 				return err
 			}
+			indexedBlocks++
 			cur = explorerIndexCursor{Height: b.Height, Hash: b.Hash}
 			r, _ := json.Marshal(cur)
 			if err := tx.Bucket([]byte("meta")).Put([]byte("cursor"), r); err != nil {
@@ -340,7 +373,13 @@ func (x *explorerIndexer) stats(status ExplorerIndexerStatus) (ExplorerIndexerSt
 		Ready: status.Ready,
 		SchemaVersion: status.SchemaVersion,
 	}
+	var metrics explorerIndexerMetrics
 	err = db.View(func(tx *bolt.Tx) error {
+		if raw := tx.Bucket([]byte("meta")).Get([]byte("metrics")); raw != nil {
+			if err := json.Unmarshal(raw, &metrics); err != nil {
+				return err
+			}
+		}
 		buckets := []struct{name string; dst *int}{
 			{"blocks", &counts.BlockCount},
 			{"txs", &counts.TransactionCount},
@@ -368,6 +407,11 @@ func (x *explorerIndexer) stats(status ExplorerIndexerStatus) (ExplorerIndexerSt
 	default:
 		counts.SyncStatus = "lagging"
 	}
+	counts.SyncCount = metrics.SyncCount
+	counts.LastSyncAtUnix = metrics.LastSyncAtUnix
+	counts.LastSyncDurationMs = metrics.LastSyncDurationMs
+	counts.LastSyncBlockCount = metrics.LastSyncBlockCount
+	counts.BlocksPerSecond = metrics.BlocksPerSecond
 	return counts, nil
 }
 
