@@ -1013,6 +1013,32 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 	mining := miningMetricsMap(blocks, net, len(pending), h.peerCount())
 	h.addMiningGuardFields(mining)
 
+	mempoolStats := map[string]any{
+		"pending_tx_count": len(pending),
+		"pending_fee_total": uint64(0),
+		"pending_native_amount": uint64(0),
+		"pending_issued_asset_amount": uint64(0),
+		"oldest_tx_timestamp": int64(0),
+		"newest_tx_timestamp": int64(0),
+		"type_counts": map[string]int{},
+	}
+	typeCounts := mempoolStats["type_counts"].(map[string]int)
+	for _, tx := range pending {
+		mempoolStats["pending_fee_total"] = mempoolStats["pending_fee_total"].(uint64) + tx.Fee
+		typeCounts[tx.TxType()]++
+		if tx.IsIssuedAssetTransaction() {
+			mempoolStats["pending_issued_asset_amount"] = mempoolStats["pending_issued_asset_amount"].(uint64) + tx.Amount
+		} else {
+			mempoolStats["pending_native_amount"] = mempoolStats["pending_native_amount"].(uint64) + tx.Amount
+		}
+		if tx.Timestamp > 0 && (mempoolStats["oldest_tx_timestamp"].(int64) == 0 || tx.Timestamp < mempoolStats["oldest_tx_timestamp"].(int64)) {
+			mempoolStats["oldest_tx_timestamp"] = tx.Timestamp
+		}
+		if tx.Timestamp > mempoolStats["newest_tx_timestamp"].(int64) {
+			mempoolStats["newest_tx_timestamp"] = tx.Timestamp
+		}
+	}
+
 	indexer := newExplorerIndexer(h.paths, net)
 	indexerStatus, indexerErr := indexer.status()
 	var indexerStats any
@@ -1050,9 +1076,7 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 			"best_lag": bestPeerLag,
 			"status_counts": peerStatusCounts,
 		},
-		"mempool": map[string]any{
-			"pending_tx_count": len(pending),
-		},
+		"mempool": mempoolStats,
 		"mining": mining,
 		"indexer": map[string]any{
 			"status": indexerStatus,
