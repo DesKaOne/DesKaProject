@@ -103,3 +103,24 @@ The node metrics endpoint reads the explorer indexer's existing read model; it d
 - Ready/sync status and schema version are exposed with stable JSON values.
 - Monitoring remains read-only and does not participate in consensus.
 - CI must remain green before advancing to 8.7.7.
+
+## 8.7.7 Soak-test runtime metrics
+
+The /node/metrics endpoint exposes a `runtime` snapshot for bounded and long-running soak observation:
+
+- `observed_at_unix` — wall-clock observation timestamp
+- `uptime_seconds` — current node process uptime
+- `chain_height` — chain height observed at the same metrics request
+- `active_peer_count` — active peer count observed at the same request
+- `mempool_pending_count` — pending transaction count observed at the same request
+
+The runtime snapshot is intentionally lightweight and read-only. It gives operators a consistent point-in-time sample that can be polled during soak tests without introducing a separate mutable consensus metric store.
+
+### Acceptance
+
+- Runtime metrics are present with stable JSON types.
+- Observation timestamps do not move backwards between successive samples.
+- Uptime is non-negative.
+- Chain, peer, and mempool runtime counts reflect the same request snapshot.
+- Runtime monitoring does not alter consensus or node state.
+- CI must remain green before advancing to 8.7.8.
