@@ -68,6 +68,8 @@ For restart/recovery, `TestNodeRestartRecovery` reopens the same persistent path
 
 For peer churn, `TestBoundedPeerChurn` recreates the P2P server for three synchronization cycles, advances the source node between sessions, and verifies that the peer resumes synchronization and converges to the same canonical tip after each reconnect.
 
+For Explorer indexer recovery, `TestExplorerIndexerRecoversAfterRestartAndRebuild` indexes an initial chain, reopens the persistent indexer to catch up after additional blocks, then simulates stale cursor metadata while leaving the canonical chain untouched. The next sync must rebuild the Explorer read model, return to ready state with zero lag, and expose the recovered canonical blocks.
+
 These tests are intentionally bounded for CI. They complement, rather than replace, an extended manual or scheduled soak run.
 
 ## Operator measurements
