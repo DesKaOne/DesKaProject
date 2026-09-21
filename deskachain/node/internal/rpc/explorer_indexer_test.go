@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"indochain/internal/config"
+	"errors"
 	"indochain/internal/types"
 	"testing"
 	"time"
@@ -166,6 +167,8 @@ func TestExplorerIndexerStatsExposePersistedSyncMetrics(t *testing.T) {
 		LastSyncDurationMs: 250,
 		LastSyncBlockCount: 5,
 		BlocksPerSecond: 20,
+		SyncFailureCount: 2,
+		LastSyncError: "canonical parent mismatch at height 4",
 	}
 	err = db.Update(func(tx *bolt.Tx) error {
 		raw, err := json.Marshal(metrics)
@@ -176,7 +179,22 @@ func TestExplorerIndexerStatsExposePersistedSyncMetrics(t *testing.T) {
 	if err != nil { t.Fatal(err) }
 	stats, err := x.stats(ExplorerIndexerStatus{IndexedHeight: 5, ChainHeight: 5, Ready: true, SchemaVersion: explorerIndexerSchemaVersion})
 	if err != nil { t.Fatal(err) }
-	if stats.SyncCount != 7 || stats.LastSyncAtUnix != 123 || stats.LastSyncDurationMs != 250 || stats.LastSyncBlockCount != 5 || stats.BlocksPerSecond != 20 {
+	if stats.SyncCount != 7 || stats.LastSyncAtUnix != 123 || stats.LastSyncDurationMs != 250 || stats.LastSyncBlockCount != 5 || stats.BlocksPerSecond != 20 || stats.SyncFailureCount != 2 || stats.LastSyncError != "canonical parent mismatch at height 4" {
 		t.Fatalf("unexpected sync metrics: %#v", stats)
+	}
+}
+
+
+func TestExplorerIndexerRecordSyncFailurePersistsMetrics(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	x := newExplorerIndexer(paths, config.Localnet())
+	if err := x.recordSyncFailure(errors.New("simulated sync failure")); err != nil {
+		t.Fatal(err)
+	}
+	stats, err := x.stats(ExplorerIndexerStatus{IndexedHeight: 0, ChainHeight: 1, Ready: false, SchemaVersion: explorerIndexerSchemaVersion})
+	if err != nil { t.Fatal(err) }
+	if stats.SyncFailureCount != 1 || stats.LastSyncError != "simulated sync failure" {
+		t.Fatalf("unexpected failure metrics: %#v", stats)
 	}
 }
