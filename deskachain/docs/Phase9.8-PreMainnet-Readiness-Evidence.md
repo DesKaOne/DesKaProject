@@ -106,6 +106,6 @@ No mainnet launch is implied by this document.
 
 ## CI tracking
 
-The Phase 9 branch has not exposed GitHub workflow runs for the recent commits. Project tracking may mark the operational gate green according to the agreed project convention, but this must not be represented as a verified GitHub CI execution.
+The repository contains `.github/workflows/go-test.yml`. The Phase 9 branch now participates in the workflow for push/PR coverage, but this document does not claim a successful run unless GitHub reports a completed passing workflow for the exact commit under review.
 
-This distinction preserves the evidence trail while allowing the project roadmap to advance.
+Project progress status and GitHub Actions execution status remain separate evidence.
