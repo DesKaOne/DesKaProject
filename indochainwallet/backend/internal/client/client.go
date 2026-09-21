@@ -50,8 +50,22 @@ func (c *RPCClient) NetworkInfo(ctx context.Context) (map[string]any, error) {
 
 func (c *RPCClient) Balance(ctx context.Context, address string) (map[string]any, error) {
 	var out map[string]any
-	path := "/balance/" + url.PathEscape(address)
-	return out, c.get(ctx, path, &out)
+	return out, c.get(ctx, "/balance/"+url.PathEscape(address), &out)
+}
+
+func (c *RPCClient) Address(ctx context.Context, address string) (map[string]any, error) {
+	var out map[string]any
+	return out, c.get(ctx, "/address/"+url.PathEscape(address), &out)
+}
+
+func (c *RPCClient) FeePolicy(ctx context.Context) (map[string]any, error) {
+	var out map[string]any
+	return out, c.get(ctx, "/fee/policy", &out)
+}
+
+func (c *RPCClient) FeeEstimate(ctx context.Context, tx any) (map[string]any, error) {
+	var out map[string]any
+	return out, c.postJSON(ctx, "/fee/estimate", tx, &out)
 }
 
 func (c *RPCClient) Send(ctx context.Context, tx any) (map[string]any, error) {
@@ -62,4 +76,14 @@ func (c *RPCClient) Send(ctx context.Context, tx any) (map[string]any, error) {
 func (c *RPCClient) Tx(ctx context.Context, id string) (map[string]any, error) {
 	var out map[string]any
 	return out, c.get(ctx, "/tx/"+url.PathEscape(id), &out)
+}
+
+func (c *RPCClient) ExplorerAddressTxs(ctx context.Context, address string) (map[string]any, error) {
+	var out map[string]any
+	return out, c.get(ctx, "/explorer/address/"+url.PathEscape(address)+"/txs", &out)
+}
+
+func (c *RPCClient) Mempool(ctx context.Context) (map[string]any, error) {
+	var out map[string]any
+	return out, c.get(ctx, "/mempool", &out)
 }
