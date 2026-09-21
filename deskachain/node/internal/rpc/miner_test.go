@@ -408,6 +408,40 @@ func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
 }
 
 
+
+func TestNodeMetricsExposeRuntimeSoakMetrics(t *testing.T) {
+	_, server := newMinerRPCServer(t)
+
+	first := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	runtime, ok := first["runtime"].(map[string]any)
+	if !ok {
+		t.Fatalf("runtime metrics missing or wrong type: %#v", first["runtime"])
+	}
+	for _, key := range []string{"observed_at_unix", "uptime_seconds", "chain_height", "active_peer_count", "mempool_pending_count"} {
+		if _, ok := runtime[key]; !ok {
+			t.Fatalf("runtime metric %q missing: %#v", key, runtime)
+		}
+	}
+	if runtime["observed_at_unix"].(float64) <= 0 {
+		t.Fatalf("observed_at_unix = %#v, want positive timestamp", runtime["observed_at_unix"])
+	}
+	if runtime["uptime_seconds"].(float64) < 0 {
+		t.Fatalf("uptime_seconds = %#v, want non-negative", runtime["uptime_seconds"])
+	}
+	if runtime["chain_height"].(float64) != 0 {
+		t.Fatalf("chain_height = %#v, want genesis height 0", runtime["chain_height"])
+	}
+	if runtime["active_peer_count"].(float64) < 0 || runtime["mempool_pending_count"].(float64) < 0 {
+		t.Fatalf("runtime counts must be non-negative: %#v", runtime)
+	}
+
+	second := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	runtime2 := second["runtime"].(map[string]any)
+	if runtime2["observed_at_unix"].(float64) < runtime["observed_at_unix"].(float64) {
+		t.Fatalf("runtime observation timestamp moved backwards: first=%#v second=%#v", runtime["observed_at_unix"], runtime2["observed_at_unix"])
+	}
+}
+
 func TestNodeMetricsExposeExplorerIndexerStatistics(t *testing.T) {
 	paths, server := newMinerRPCServer(t)
 	miner := newRPCWallet(t)
