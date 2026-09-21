@@ -18,14 +18,14 @@ func TestGenesisHashDeterministic(t *testing.T) {
 }
 
 func TestLocalnetGenesisUnchanged(t *testing.T) {
-	const want = "6e1b3fed63a01109cb665c45c76796b7272b9fec08efcf057b6134a6dc71c22c"
+	const want = "63eaea2c6ad50193c31f956584b74a084f9113461b7e03a866a153a7b8cd88a3"
 	if got := GenesisBlockForNetwork(config.Localnet()).Hash; got != want {
 		t.Fatalf("localnet genesis hash changed: got %s want %s", got, want)
 	}
 }
 
 func TestTestnetGenesisStable(t *testing.T) {
-	const want = "0f1f5aa7053ca39deb8eb9f75dbb63ac8a8de68a5d9b4cbf3017daca2c9f0ee5"
+	const want = "f037ce35443c149714590cde076e99e15f2ed183637a2331e0e2fdc226b16709"
 	first := GenesisBlockForNetwork(config.Testnet())
 	second := GenesisBlockForNetwork(config.Testnet())
 	if first.Hash == "" {

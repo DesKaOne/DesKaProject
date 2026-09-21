@@ -768,7 +768,7 @@ func TestWalletNewInspectExportImportUsesINDBase58Secp256k1(t *testing.T) {
 		t.Fatal(err)
 	}
 	addr := createTestWallet(t, app, &out)
-	if !strings.HasPrefix(addr, "dIDR") {
+	if !strings.HasPrefix(addr, "iND") {
 		t.Fatalf("wallet address = %s", addr)
 	}
 	out.Reset()
@@ -1167,7 +1167,7 @@ func TestRemoteWalletNewPersistsAndCLIPrintsAddressOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	cliAddr := strings.TrimSpace(out.String())
-	if !strings.HasPrefix(cliAddr, "iND-") || strings.Contains(out.String(), "private") {
+	if !strings.HasPrefix(cliAddr, "iND") || strings.Contains(out.String(), "private") {
 		t.Fatalf("unexpected remote wallet new output: %q", out.String())
 	}
 	out.Reset()

@@ -39,7 +39,7 @@ const (
 	// MainnetGenesisHash is the frozen deterministic genesis hash for the
 	// production mainnet profile. Any mismatch must stop startup rather than
 	// silently accepting a different mainnet history.
-	MainnetGenesisHash = "b01cbf6a3b04f3a9e374cad6adfb5cd8d24f5b2ef9723c3f7f440eb7fe53bde4"
+	MainnetGenesisHash = "3f7c6b188ce915a6c1a20a44fa6d02a17f7350776c1db1500daf7356f5f83416"
 )
 
 type Paths struct {

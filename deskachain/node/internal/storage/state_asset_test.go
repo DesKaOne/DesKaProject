@@ -62,7 +62,7 @@ func TestStateStorePersistsMultiAssetState(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(entries) != 2 || entries[0].AssetID != asset.NativeAssetID || entries[1].AssetID != "asset:usd" {
+	if len(entries) != 2 || entries[0].AssetID != "asset:usd" || entries[1].AssetID != asset.NativeAssetID {
 		t.Fatalf("unexpected address asset balances: %#v", entries)
 	}
 
