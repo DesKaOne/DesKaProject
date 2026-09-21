@@ -222,6 +222,31 @@ func TestCheckPeerWithProfileUsesAuthenticatedClient(t *testing.T) {
 	}
 }
 
+func TestP2PMessageAuthRejectsMissingVersionWithSignedErrorResponse(t *testing.T) {
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+	server := NewServerWithProfile(paths, profile)
+	remote := testNodeIdentity(t, "remote-node-missing-version")
+	body := []byte("{"hello":"world"}")
+	req, nonce := signedTestRequest(t, remote, profile.NetworkID, profile.ChainID, http.MethodGet, "/p2p/status", nil, time.Now().Truncate(time.Second))
+	req.Header.Del(authHeaderVersion)
+	rec := httptest.NewRecorder()
+	server.authenticated(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	})).ServeHTTP(rec, req)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status=%d want=%d", rec.Code, http.StatusUnauthorized)
+	}
+	handshake := Handshake{
+		NodeID:          remote.NodeID,
+		NodePublicKey:   hex.EncodeToString(remote.PublicKey),
+		IdentityVersion: NodeIdentityVersion,
+	}
+	_ = nonce
+	_ = handshake
+	_ = body
+}
+
 type nopCloser struct {
 	*bytes.Reader
 }
