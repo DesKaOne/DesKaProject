@@ -23,7 +23,7 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 	}
 
 	js := getText(t, server.URL+"/explorer-ui/assets/app.js", http.StatusOK)
-	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/search") {
+	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") {
 		t.Fatalf("app js missing explorer API references")
 	}
 	if !strings.Contains(js, "data-copy") || !strings.Contains(js, "Copied") {
