@@ -107,6 +107,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /explorer-ui/", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer/status", h.wrap("generic", h.explorerStatus))
 	mux.HandleFunc("GET /explorer/indexer", h.wrap("generic", h.explorerIndexerStatus))
+	mux.HandleFunc("GET /explorer/indexer/stats", h.wrap("generic", h.explorerIndexerStats))
 	mux.HandleFunc("GET /explorer/indexed/search", h.wrap("generic", h.explorerIndexedSearch))
 	mux.HandleFunc("GET /explorer/indexed/tx/", h.wrap("generic", h.explorerIndexedTx))
 	mux.HandleFunc("GET /explorer/indexed/address/", h.wrap("generic", h.explorerIndexedAddressRouter))
@@ -268,6 +269,20 @@ func (h handler) explorerIndexerReady() (*explorerIndexer, ExplorerIndexerStatus
 func (h handler) explorerIndexedUnavailable(w http.ResponseWriter, status ExplorerIndexerStatus) {
 	explorerError(w, http.StatusServiceUnavailable, "indexer_not_ready",
 		fmt.Sprintf("explorer indexer is not ready (indexed_height=%d chain_height=%d lag=%d)", status.IndexedHeight, status.ChainHeight, status.Lag))
+}
+
+func (h handler) explorerIndexerStats(w http.ResponseWriter, _ *http.Request) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	stats, err := indexer.stats()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok": true,
+		"api_version": ExplorerAPIVersion,
+		"stats": stats,
+	})
 }
 
 func (h handler) explorerIndexedTx(w http.ResponseWriter, r *http.Request) {
