@@ -207,6 +207,21 @@ func TestNewClientForProfileBindsNetworkIdentity(t *testing.T) {
 	}
 }
 
+func TestCheckPeerWithProfileUsesAuthenticatedClient(t *testing.T) {
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+	client, err := NewClientForProfile(paths, profile, time.Second)
+	if err != nil {
+		t.Fatalf("create authenticated client: %v", err)
+	}
+	if !client.AuthenticateRequests {
+		t.Fatalf("testnet peer checks must use authenticated client")
+	}
+	if client.NetworkID != profile.NetworkID {
+		t.Fatalf("client network id=%q want=%q", client.NetworkID, profile.NetworkID)
+	}
+}
+
 type nopCloser struct {
 	*bytes.Reader
 }
