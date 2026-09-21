@@ -204,6 +204,35 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	}
 }
 
+func TestThreeNodeSyncConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, nodeA, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+2)
+
+	serverA := newP2PTestServer(nodeA)
+	defer serverA.Close()
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	tipC := tip(t, nodeC)
+	if tipA.Height != tipB.Height || tipA.Hash != tipB.Hash || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
+		t.Fatalf("three-node tips did not converge: A=%d %s B=%d %s C=%d %s", tipA.Height, tipA.Hash, tipB.Height, tipB.Hash, tipC.Height, tipC.Hash)
+	}
+	validateChain(t, nodeB)
+	validateChain(t, nodeC)
+}
+
 func TestPeerStoreAtomicReplacementAndConcurrentUpsert(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "peers.json")
 	store := NewPeerStore(path)
