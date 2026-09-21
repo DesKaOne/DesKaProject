@@ -21,6 +21,8 @@ Options:
   --check-difficulty
   --warn-if-no-recent-block-minutes 10
   --fail-if-no-recent-block-minutes 30
+  --require-indexer-ready
+  --max-indexer-lag 10
   --json
   --timeout-seconds 10
   --bin-dir ./dist/linux-amd64
@@ -50,6 +52,8 @@ CHECK_MINING=0
 CHECK_DIFFICULTY=0
 WARN_IF_NO_RECENT_BLOCK_MINUTES=0
 FAIL_IF_NO_RECENT_BLOCK_MINUTES=0
+REQUIRE_INDEXER_READY=0
+MAX_INDEXER_LAG=0
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -121,6 +125,14 @@ while [ "$#" -gt 0 ]; do
       FAIL_IF_NO_RECENT_BLOCK_MINUTES="$2"
       shift 2
       ;;
+    --require-indexer-ready)
+      REQUIRE_INDEXER_READY=1
+      shift
+      ;;
+    --max-indexer-lag)
+      MAX_INDEXER_LAG="$2"
+      shift 2
+      ;;
     --timeout-seconds)
       TIMEOUT_SECONDS="$2"
       shift 2
@@ -183,6 +195,7 @@ blocks_file="$tmpdir/blocks.json"
 ui_file="$tmpdir/ui.html"
 peer_health_file="$tmpdir/peer_health.json"
 peer_list_file="$tmpdir/peer_list.json"
+indexer_stats_file="$tmpdir/indexer_stats.json"
 mining_status_file="$tmpdir/mining_status.json"
 mining_difficulty_file="$tmpdir/mining_difficulty.json"
 
@@ -211,6 +224,32 @@ if fetch "/explorer/blocks?limit=1" > "$blocks_file" 2>"$tmpdir/blocks.err"; the
   blocks_ok=true
 else
   add_warning "explorer blocks check failed: $(cat "$tmpdir/blocks.err")"
+fi
+
+indexer_ok=false
+if fetch "/explorer/indexer/stats" > "$indexer_stats_file" 2>"$tmpdir/indexer_stats.err"; then
+  indexer_ok=true
+else
+  if [ "$REQUIRE_INDEXER_READY" = "1" ] || [ "$MAX_INDEXER_LAG" -gt 0 ]; then
+    add_error "explorer indexer stats check failed: $(cat "$tmpdir/indexer_stats.err")"
+  else
+    add_warning "explorer indexer stats check failed: $(cat "$tmpdir/indexer_stats.err")"
+  fi
+fi
+if [ "$indexer_ok" = "true" ]; then
+  indexer_ready="$(json_value 'stats.ready' "$indexer_stats_file")"
+  indexer_lag="$(json_value 'stats.lag' "$indexer_stats_file")"
+  [ -n "$indexer_ready" ] || indexer_ready=false
+  [ -n "$indexer_lag" ] || indexer_lag=0
+  if [ "$REQUIRE_INDEXER_READY" = "1" ] && [ "$indexer_ready" != "true" ]; then
+    add_error "explorer indexer is not ready"
+  fi
+  if [ "$MAX_INDEXER_LAG" -gt 0 ] && [ "$indexer_lag" -gt "$MAX_INDEXER_LAG" ]; then
+    add_error "explorer indexer lag exceeds maximum: expected <= $MAX_INDEXER_LAG got $indexer_lag"
+  fi
+else
+  indexer_ready=false
+  indexer_lag=0
 fi
 
 if fetch "/explorer-ui/" > "$ui_file" 2>"$tmpdir/ui.err"; then
@@ -345,7 +384,7 @@ if [ -n "$BIN_DIR" ]; then
 fi
 
 explorer_ok=false
-if [ "$status_ok" = "true" ] && [ "$blocks_ok" = "true" ] && [ "$ui_ok" = "true" ]; then
+if [ "$status_ok" = "true" ] && [ "$blocks_ok" = "true" ] && [ "$ui_ok" = "true" ] && [ "$indexer_ok" = "true" ]; then
   explorer_ok=true
 fi
 
@@ -353,8 +392,8 @@ ok=false
 [ -z "$errors" ] && ok=true
 
 if [ "$JSON_OUT" = "1" ]; then
-  printf '{"ok":%s,"rpc_url":"%s","network":"%s","network_id":"%s","chain_id":%s,"height":%s,"tip_hash":"%s","peer_count":%s,"known_peer_count":%s,"active_peer_count":%s,"pending_tx_count":%s,"public_rpc":%s,"wallet_rpc":%s,"admin_rpc":%s,"explorer_ok":%s,"mining_current_difficulty":"%s","mining_next_difficulty":"%s","mining_last_block_age_seconds":"%s","warnings":"%s","errors":"%s"}\n' \
-    "$ok" "$RPC_URL" "$network" "$network_id" "${chain_id:-0}" "${height:-0}" "$tip_hash" "${peer_count:-0}" "${known_peer_count:-0}" "${active_peer_count:-0}" "${pending_tx_count:-0}" "${public_rpc:-false}" "${wallet_rpc:-false}" "${admin_rpc:-false}" "$explorer_ok" "$mining_current_difficulty" "$mining_next_difficulty" "$mining_last_block_age" "$warnings" "$errors"
+  printf '{"ok":%s,"rpc_url":"%s","network":"%s","network_id":"%s","chain_id":%s,"height":%s,"tip_hash":"%s","peer_count":%s,"known_peer_count":%s,"active_peer_count":%s,"pending_tx_count":%s,"public_rpc":%s,"wallet_rpc":%s,"admin_rpc":%s,"explorer_ok":%s,"indexer_ready":%s,"indexer_lag":%s,"mining_current_difficulty":"%s","mining_next_difficulty":"%s","mining_last_block_age_seconds":"%s","warnings":"%s","errors":"%s"}\n' \
+    "$ok" "$RPC_URL" "$network" "$network_id" "${chain_id:-0}" "${height:-0}" "$tip_hash" "${peer_count:-0}" "${known_peer_count:-0}" "${active_peer_count:-0}" "${pending_tx_count:-0}" "${public_rpc:-false}" "${wallet_rpc:-false}" "${admin_rpc:-false}" "$explorer_ok" "$indexer_ready" "${indexer_lag:-0}" "$mining_current_difficulty" "$mining_next_difficulty" "$mining_last_block_age" "$warnings" "$errors"
 else
   if [ "$ok" = "true" ]; then
     echo "ok: testnet health check passed"
@@ -375,6 +414,8 @@ else
   echo "wallet_rpc: $wallet_rpc"
   echo "admin_rpc: $admin_rpc"
   echo "explorer_ok: $explorer_ok"
+  echo "indexer_ready: ${indexer_ready:-false}"
+  echo "indexer_lag: ${indexer_lag:-0}"
   if [ -n "$mining_current_difficulty" ]; then
     echo "mining_current_difficulty: $mining_current_difficulty"
     echo "mining_next_difficulty: $mining_next_difficulty"
