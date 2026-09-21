@@ -1,0 +1,24 @@
+name: Phase 10 readiness snapshot
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - phase-10-readiness-snapshot
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deskachain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Run readiness snapshot
+        run: bash ./scripts/phase10-readiness-snapshot.sh
