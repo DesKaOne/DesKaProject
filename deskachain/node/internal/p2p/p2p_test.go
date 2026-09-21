@@ -145,7 +145,7 @@ func TestSyncBlocksFromPeer(t *testing.T) {
 	}
 	validateChain(t, b)
 	if !strings.Contains(out.String(), "imported block height=3") {
-		t.Fatalf("sync output missing imported block:\n%s", out.String())
+		t.Fatalf("sync output missing imported block: %s", out.String())
 	}
 }
 
@@ -876,7 +876,7 @@ func TestSyncSameHeightSameTipUpToDate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "local chain already up to date") {
-		t.Fatalf("expected up to date output, got:\n%s", out.String())
+		t.Fatalf("expected up to date output, got: %s", out.String())
 	}
 }
 
@@ -935,7 +935,7 @@ func TestSyncHigherPeerForkReorgsToMoreWork(t *testing.T) {
 		t.Fatalf("sync did not reorg to peer tip: local=%#v peer=%#v", after, peerTip)
 	}
 	if !strings.Contains(out.String(), "reorg applied: true") || !strings.Contains(out.String(), "decision: reorg_apply_higher_work") {
-		t.Fatalf("reorg output missing decision:\n%s", out.String())
+		t.Fatalf("reorg output missing decision: %s", out.String())
 	}
 	validateChain(t, local)
 }
@@ -1065,7 +1065,42 @@ func newP2PTestServer(paths config.Paths) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-type HealthResponse struct {\n\tOK             bool   `json:"ok"`\n\tNetwork        string `json:"network"`\n\tNetworkID      string `json:"network_id"`\n\tChainID        uint64 `json:"chain_id"`\n\tGenesisHash    string `json:"genesis_hash"`\n\tHeight         uint64 `json:"height"`\n\tTipHash        string `json:"tip_hash"`\n\tCumulativeWork uint64 `json:"cumulative_work"`\n}\n\nfunc fetchHealth(t *testing.T, baseURL string) HealthResponse {\n\tt.Helper()\n\tresp, err := http.Get(baseURL + "/p2p/health")\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tdefer resp.Body.Close()\n\tif resp.StatusCode != http.StatusOK {\n\t\tt.Fatalf("health status = %d", resp.StatusCode)\n\t}\n\tvar health HealthResponse\n\tif err := json.NewDecoder(resp.Body).Decode(&health); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tif !health.OK {\n\t\tt.Fatalf("health response not ok: %#v", health)\n\t}\n\treturn health\n}\n\nfunc fetchStatus(t *testing.T, baseURL string) Status {
+type HealthResponse struct {
+	OK             bool   `json:"ok"`
+	Network        string `json:"network"`
+	NetworkID      string `json:"network_id"`
+	ChainID        uint64 `json:"chain_id"`
+	GenesisHash    string `json:"genesis_hash"`
+	Height         uint64 `json:"height"`
+	TipHash        string `json:"tip_hash"`
+	CumulativeWork uint64 `json:"cumulative_work"`
+}
+
+func fetchHealth(t *testing.T, baseURL string) HealthResponse {
+	t.Helper()
+	resp, err := http.Get(baseURL + "/p2p/health")
+	if err != nil {
+
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+
+		t.Fatalf("health status = %d", resp.StatusCode)
+	}
+	var health HealthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
+
+		t.Fatal(err)
+	}
+	if !health.OK {
+
+		t.Fatalf("health response not ok: %#v", health)
+	}
+	return health
+}
+
+func fetchStatus(t *testing.T, baseURL string) Status {
 	t.Helper()
 	resp, err := http.Get(baseURL + "/p2p/status")
 	if err != nil {
