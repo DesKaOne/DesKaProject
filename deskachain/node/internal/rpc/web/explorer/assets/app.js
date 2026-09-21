@@ -287,10 +287,12 @@
         metric("Tx count", b.tx_count),
         metric("Confirmations", b.confirmations)
       ].join("");
-      var rows = (b.transactions || []).map(function (tx) {
+      var rows = (b.transactions || []).map(function (tx, index) {
         return row([
+          escapeHTML(index + 1),
           linkHash("tx", tx.txid),
-          escapeHTML(tx.type),
+          badge(tx.status, "confirmed"),
+          badge(tx.type),
           linkAddress(tx.from),
           linkAddress(tx.to),
           escapeHTML(tx.amount),
@@ -304,7 +306,7 @@
         '<button type="button" data-block-nav="' + (Number.isFinite(height) ? height + 1 : "") + '">Next block</button>' +
         '</div>';
       app.innerHTML = panel("Block detail", navigation + '<div class="grid">' + metrics + "</div>") +
-        panel("Transactions", table(["Txid", "Type", "From", "To", "Amount", "Fee"], rows, "No transactions in this block."));
+        panel("Transactions", table(["#", "Txid", "Status", "Type", "From", "To", "Amount", "Fee"], rows, "No transactions in this block."));
     }).catch(function (err) { setError(friendlyError(err, "Unable to load block.")); });
   }
 
@@ -313,8 +315,8 @@
     jsonFetch("/explorer/tx/" + encodeURIComponent(txid)).then(function (tx) {
       var metrics = [
         metric("Txid", tx.txid),
-        metric("Status", tx.status),
-        metric("Type", tx.type),
+        metric("Status", badge(tx.status)),
+        metric("Type", badge(tx.type)),
         metric("Block height", tx.block_height),
         metric("Block hash", tx.block_hash),
         metric("Confirmations", tx.confirmations),
@@ -359,7 +361,7 @@
       var txRows = txs.map(function (tx) {
         return row([
           linkHash("tx", tx.txid),
-          escapeHTML(tx.type),
+          badge(tx.type),
           tx.block_height == null ? '<span class="muted">pending</span>' : '<a href="#/block/' + encodeURIComponent(tx.block_height) + '">' + escapeHTML(tx.block_height) + "</a>",
           escapeHTML(tx.amount_delta),
           escapeHTML(tx.confirmations)
