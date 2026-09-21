@@ -977,14 +977,27 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 	activePeers := 0
+	failedPeers := 0
 	bestPeerHeight := uint64(0)
 	for _, peer := range peers {
 		if peer.Status == p2p.PeerStatusActive {
 			activePeers++
 		}
+		switch peer.Status {
+		case p2p.PeerStatusOffline, p2p.PeerStatusCooldown, p2p.PeerStatusBad:
+			failedPeers++
+		}
 		if peer.LastHeight > bestPeerHeight {
 			bestPeerHeight = peer.LastHeight
 		}
+	}
+	transactionCount := 0
+	for _, block := range blocks {
+		transactionCount += len(block.Transactions)
+	}
+	bestPeerLag := uint64(0)
+	if tip.Height > bestPeerHeight {
+		bestPeerLag = tip.Height - bestPeerHeight
 	}
 	uptime := int64(0)
 	if !h.info.StartedAt.IsZero() {
@@ -1015,13 +1028,18 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 		"chain": map[string]any{
 			"height": tip.Height,
 			"tip_hash": tip.Hash,
+			"difficulty": tip.Difficulty,
+			"cumulative_work": chain.CalculateCumulativeWork(blocks),
 			"block_count": len(blocks),
+			"transaction_count": transactionCount,
 			"pending_tx_count": len(pending),
 		},
 		"peers": map[string]any{
 			"known": len(peers),
 			"active": activePeers,
+			"failed": failedPeers,
 			"best_height": bestPeerHeight,
+			"best_lag": bestPeerLag,
 		},
 		"mempool": map[string]any{
 			"pending_tx_count": len(pending),
