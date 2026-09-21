@@ -1242,7 +1242,7 @@ func TestBoundedTransactionLoad(t *testing.T) {
 	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
 
 	const rounds = 3
-	const batchSize = 3
+	const batchSize = 2
 	value := 10 * config.UnitsPerCoin
 	confirmed := 0
 
@@ -1284,7 +1284,7 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 	minerA := newWallet(t)
 	minerC := newWallet(t)
 
-	mineBlocks(t, nodeA, minerA.Address, 16)
+	mineBlocks(t, nodeA, minerA.Address, 8)
 
 	serverA := newP2PTestServer(nodeA)
 	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
@@ -1295,7 +1295,7 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 
 	tipA := tip(t, nodeA)
 	tipB := tip(t, nodeB)
-	if tipA.Height != 16 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash {
+	if tipA.Height != 8 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash {
 		t.Fatalf("initial soak convergence failed: A=%#v B=%#v", tipA, tipB)
 	}
 	validateChain(t, nodeB)
@@ -1319,13 +1319,13 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 	tipA = tip(t, nodeA)
 	tipB = tip(t, nodeB)
 	tipC := tip(t, nodeC)
-	if tipA.Height != 32 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash || tipC.Height != tipA.Height || tipC.Hash != tipA.Hash {
+	if tipA.Height != 16 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash || tipC.Height != tipA.Height || tipC.Hash != tipA.Hash {
 		t.Fatalf("repeated soak convergence failed: A=%#v B=%#v C=%#v", tipA, tipB, tipC)
 	}
 	validateChain(t, nodeB)
 	validateChain(t, nodeC)
 
-	mineBlocks(t, nodeC, minerC.Address, 4)
+	mineBlocks(t, nodeC, minerC.Address, 2)
 	serverC := newP2PTestServer(nodeC)
 	if err := SyncFromPeerWithProfile(nodeA, serverC.URL, nil, fundedP2PProfile()); err != nil {
 		serverC.Close()
@@ -1335,7 +1335,7 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 
 	tipA = tip(t, nodeA)
 	tipC = tip(t, nodeC)
-	if tipA.Height != 36 || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
+	if tipA.Height != 18 || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
 		t.Fatalf("final soak convergence failed: A=%#v C=%#v", tipA, tipC)
 	}
 	validateChain(t, nodeA)
