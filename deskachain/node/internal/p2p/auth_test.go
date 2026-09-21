@@ -222,6 +222,29 @@ func TestCheckPeerWithProfileUsesAuthenticatedClient(t *testing.T) {
 	}
 }
 
+func TestP2PClientSurfacesUnsignedAuthRejection(t *testing.T) {
+	serverIdentity := testNodeIdentity(t, "server-auth-error")
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/p2p/handshake" {
+			hs := Handshake{NetworkID: profile.NetworkID, ChainID: profile.ChainID, NodeID: serverIdentity.NodeID, IdentityVersion: NodeIdentityVersion, NodePublicKey: hex.EncodeToString(serverIdentity.PublicKey), AuthChallenge: r.URL.Query().Get("challenge")}
+			writeJSON(w, http.StatusOK, hs)
+			return
+		}
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid p2p message signature"})
+	}))
+	defer server.Close()
+	client, err := NewClientForProfile(paths, profile, time.Second)
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	_, err = client.Status(server.URL)
+	if err == nil || !strings.Contains(err.Error(), "invalid p2p message signature") {
+		t.Fatalf("expected server auth rejection, got %v", err)
+	}
+}
+
 func TestP2PMessageAuthRejectsInvalidRequestBeforeSigning(t *testing.T) {
 	profile := config.Testnet()
 	paths := config.NewPaths(t.TempDir())
