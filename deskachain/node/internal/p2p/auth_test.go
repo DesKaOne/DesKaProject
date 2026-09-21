@@ -38,7 +38,7 @@ func signedTestRequest(t *testing.T, identity NodeIdentity, networkID string, ch
 func TestP2PMessageAuthRequestRoundTripAndReplay(t *testing.T) {
 	identity := testNodeIdentity(t, "node-a")
 	now := time.Unix(1_800_000_000, 0)
-	body := []byte("{"hello":"world"}")
+	body := []byte("{\"hello\":\"world\"}")
 	req, _ := signedTestRequest(t, identity, "ind-testnet-1", 777101, http.MethodPost, "/p2p/tx?x=1", body, now)
 
 	got, err := VerifyP2PRequest("ind-testnet-1", 777101, req, body, now)
@@ -108,7 +108,7 @@ func TestP2PMessageAuthResponseRoundTripAndTampering(t *testing.T) {
 		t.Fatalf("new nonce: %v", err)
 	}
 	now := time.Unix(1_800_000_200, 0)
-	body := []byte("{"ok":true}")
+	body := []byte("{\"ok\":true}")
 	headers, err := SignP2PResponse(serverIdentity, "ind-testnet-1", 777101, requestNonce, http.StatusOK, body, now)
 	if err != nil {
 		t.Fatalf("sign response: %v", err)
@@ -130,7 +130,7 @@ func TestP2PMessageAuthServerMiddleware(t *testing.T) {
 	server := NewServerWithProfile(paths, profile)
 	remote := testNodeIdentity(t, "remote-node")
 	now := time.Now().Truncate(time.Second)
-	body := []byte("{"message":"hello"}")
+	body := []byte("{\"message\":\"hello\"}")
 
 	var next http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Test", "ok")
