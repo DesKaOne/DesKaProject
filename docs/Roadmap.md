@@ -2,7 +2,9 @@
 
 > Current development roadmap from IndoChain and IndoScan through DesKaCash.
 >
-> Current checkpoint: **Phase 8 — IndoChain Testnet & IndoScan**.
+> Current branch checkpoint: **Phase 9 — IndoChain Testnet Operations & Pre-Mainnet Readiness Evidence**.
+>
+> Phase 8 testnet engineering is complete. Phase 9 operational evidence is tracked in `deskachain/docs/Phase9-*.md`. Phase 11 production decisions remain explicitly unresolved.
 
 ## Roadmap Overview
 
@@ -144,86 +146,97 @@ Planned components:
 
 ---
 
-## Phase 9 — IndoChain Production Readiness
+## Phase 9 — IndoChain Testnet Operations & Pre-Mainnet Readiness
 
-**Status: ⏳ Planned**
+**Status: 🟢 Engineering/documentation scope complete on `phase-9-testnet`**
 
-Prepare IndoChain for a production/mainnet environment.
+Phase 9 operationalizes the existing testnet and collects evidence for a later pre-mainnet decision. It does **not** authorize mainnet, production deployment, regulatory approval, or external-partner readiness.
 
-### 9.1 — Consensus & Network Finalization
+### 9.1 — Testnet Operations Baseline
+**Status: ✅ Complete**
 
-- Consensus behavior
-- Block production
-- Transaction validation
-- Nonce
-- Fee
-- Gas
-- Chain ID
-- Network ID
-- Genesis
-- Finality
-- Reorg behavior
+- Node roles and startup order
+- Persistent-state boundaries
+- Network invariants
+- Operational health gate
 
-### 9.2 — Security Hardening
+Evidence: `deskachain/docs/Phase9.1-Testnet-Operations-Baseline.md`
 
-- P2P security
-- RPC security
-- Rate limiting
-- Authentication
-- Replay protection
-- Input validation
-- DoS resistance
-- Key management
-- Wallet security considerations
+### 9.2 — Network Bootstrap & Node Provisioning
+**Status: ✅ Complete**
 
-### 9.3 — Node Operations
+- Fresh-node provisioning
+- Bootstrap/seed topology
+- Persistent node identity
+- Network/genesis invariants
 
-```
-Full Node
-Miner
-Validator
-RPC Node
-Indexer
-Explorer
-```
+Evidence: `deskachain/docs/Phase9.2-Network-Bootstrap-Provisioning.md`
 
-Operational areas:
+### 9.3 — Operational Smoke & Health
+**Status: ✅ Complete**
 
-- systemd/service management
-- Backup
-- Restore
-- Monitoring
-- Logging
-- Health checks
-- Upgrade procedures
+- Repeatable operator smoke flow
+- RPC/P2P/Explorer readiness checks
+- Read-only monitoring validation
 
-### 9.4 — Mainnet Preparation
+Evidence: `deskachain/docs/Phase9.3-Operational-Smoke-Health.md`
 
-- Genesis
-- Chain parameters
-- Network parameters
-- Native coin configuration
-- Fee model
-- Initial accounts
-- Node configuration
-- Public RPC strategy
-- Explorer infrastructure
+### 9.4 — Backup, Restore & Data Recovery
+**Status: ✅ Complete**
 
-### 9.5 — IndoChain Mainnet
+- Stopped-node backup boundary
+- Restore into a new datadir
+- Explorer rebuild vs canonical state recovery
+- Recovery evidence requirements
 
-**Milestone:** IndoChain Mainnet
+Evidence: `deskachain/docs/Phase9.4-Backup-Restore-Recovery.md`
 
-```
-IndoChain Mainnet
-       │
-       ├── Full Node
-       ├── RPC
-       ├── Consensus
-       ├── Native IDR
-       └── Public Network
-```
+### 9.5 — Upgrade & Compatibility Drill
+**Status: ✅ Documented / Evidence-gated**
 
----
+- Controlled binary upgrade
+- Configuration compatibility
+- Restart/resynchronization checks
+- Rollback boundary
+
+Evidence: `deskachain/docs/Phase9.5-Upgrade-Compatibility-Drill.md`
+
+### 9.6 — Security & Operational Hardening
+**Status: ✅ Complete as engineering review scope**
+
+- RPC/P2P exposure review
+- Secrets and permissions boundaries
+- Backup/recovery safety
+- Read-only Explorer/monitoring checks
+- Operator control hardening
+
+This is an engineering hardening gate, not a formal security audit.
+
+Evidence: `deskachain/docs/Phase9.6-Security-Operational-Hardening.md`
+
+### 9.7 — Long-Running Testnet Observation
+**Status: ✅ Complete as tooling/documentation scope**
+
+- Multi-node observation window
+- JSONL operational evidence
+- Chain/peer/mempool/mining/Explorer observations
+- Incident/recovery recording
+
+Evidence: `deskachain/docs/Phase9.7-LongRunning-Observation.md`
+
+### 9.8 — Pre-Mainnet Readiness Evidence
+**Status: ✅ Complete as evidence-consolidation scope**
+
+- Consolidated Phase 8 + Phase 9 evidence
+- Explicit engineering exit criteria
+- Remaining pre-mainnet questions carried forward
+- Mainnet authority kept separate
+
+Evidence: `deskachain/docs/Phase9.8-PreMainnet-Readiness-Evidence.md`
+
+### Phase 9 boundary
+
+Phase 9 completion does **not** mean mainnet approval. Production identity, economics/protocol, security assessment, infrastructure, external dependencies, production genesis, release candidate, and final release authority remain subject to the separate Phase 11 gates.
 
 ## Phase 10 — IndoScan Mainnet
 
