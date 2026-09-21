@@ -64,6 +64,8 @@ The P2P suite also includes `TestBoundedMiningLoad`, which performs three sequen
 
 For mempool pressure, `TestBoundedMempoolPressure` keeps two valid transactions pending from one funded sender, verifies pending-outgoing accounting, confirms duplicate transaction rejection does not change the queue, then drains the transactions across two blocks and validates the final chain state.
 
+For restart/recovery, `TestNodeRestartRecovery` reopens the same persistent paths after block production and verifies that the chain tip and canonical validation remain unchanged across the restart boundary.
+
 These tests are intentionally bounded for CI. They complement, rather than replace, an extended manual or scheduled soak run.
 
 ## Operator measurements
