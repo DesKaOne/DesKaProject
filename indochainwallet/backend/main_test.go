@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"indochainwallet/internal/client"
@@ -30,5 +31,27 @@ func TestBackendWalletSendRelayShape(t *testing.T) {
 	}
 	if got, ok := out["tx_id"].(string); !ok || got != "abc" {
 		t.Fatalf("unexpected response: %v", out)
+	}
+}
+
+func TestBackendRejectsPrivateKeyPayload(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/send" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"ok":true}`))
+	}))
+	defer srv.Close()
+
+	// The client itself is intentionally generic; the rejection belongs to the
+	// backend HTTP handler and is covered by the handler-level integration test.
+	s := &server{rpc: client.New(srv.URL)}
+	req := httptest.NewRequest(http.MethodPost, "/v1/tx/send", strings.NewReader(`{"private_key":"secret","from":"A","to":"B"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	s.send(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
 	}
 }
