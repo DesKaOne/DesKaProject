@@ -24,8 +24,9 @@ class IndoChainApi {
   }
 
   Future<NetworkInfo> network() async => NetworkInfo.fromJson(await _get('/v1/network'));
-
   Future<Map<String, dynamic>> balance(String address) async => _get('/v1/wallet/balance?address=${Uri.encodeQueryComponent(address)}');
+  Future<Map<String, dynamic>> addressInfo(String address) async => _get('/v1/wallet/address?address=${Uri.encodeQueryComponent(address)}');
+  Future<Map<String, dynamic>> feePolicy() async => _get('/v1/wallet/fee-policy');
 
   Future<List<WalletTransaction>> history(String address) async {
     final data = await _get('/v1/wallet/history?address=${Uri.encodeQueryComponent(address)}');
