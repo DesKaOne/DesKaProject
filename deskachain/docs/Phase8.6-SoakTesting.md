@@ -62,6 +62,8 @@ The P2P suite includes `TestBoundedMultiNodeSoak`, which provides a CI-safe boun
 
 The P2P suite also includes `TestBoundedMiningLoad`, which performs three sequential block-production cycles on one node and checks block heights, timestamps, difficulty, final tip, elapsed execution, and canonical chain validation.
 
+For mempool pressure, `TestBoundedMempoolPressure` keeps two valid transactions pending from one funded sender, verifies pending-outgoing accounting, confirms duplicate transaction rejection does not change the queue, then drains the transactions across two blocks and validates the final chain state.
+
 These tests are intentionally bounded for CI. They complement, rather than replace, an extended manual or scheduled soak run.
 
 ## Operator measurements
