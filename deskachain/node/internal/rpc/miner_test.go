@@ -349,6 +349,10 @@ func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
 		t.Fatalf("submit rejected: %#v", submit)
 	}
 
+	if err := mempool.New(paths.Mempool).Add(types.NewUnsignedTransaction(miner.Address, "receiver", 7, 2, 1)); err != nil {
+		t.Fatal(err)
+	}
+
 	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
 	mining, ok := metrics["mining"].(map[string]any)
 	if !ok {
@@ -381,6 +385,23 @@ func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
 	}
 	if _, ok := mining["recent_difficulties"].([]any); !ok {
 		t.Fatalf("recent difficulties has unexpected type: %#v", mining["recent_difficulties"])
+	}
+
+	mempoolStats, ok := metrics["mempool"].(map[string]any)
+	if !ok {
+		t.Fatalf("mempool metrics missing or wrong type: %#v", metrics["mempool"])
+	}
+	if got, ok := mempoolStats["pending_tx_count"].(float64); !ok || got != 1 {
+		t.Fatalf("pending tx count = %#v, want 1", mempoolStats["pending_tx_count"])
+	}
+	if got, ok := mempoolStats["pending_fee_total"].(float64); !ok || got != 2 {
+		t.Fatalf("pending fee total = %#v, want 2", mempoolStats["pending_fee_total"])
+	}
+	if got, ok := mempoolStats["pending_native_amount"].(float64); !ok || got != 7 {
+		t.Fatalf("pending native amount = %#v, want 7", mempoolStats["pending_native_amount"])
+	}
+	if got, ok := mempoolStats["type_counts"].(map[string]any); !ok || got["transfer"] != float64(1) {
+		t.Fatalf("mempool type counts = %#v", mempoolStats["type_counts"])
 	}
 
 	_ = paths
