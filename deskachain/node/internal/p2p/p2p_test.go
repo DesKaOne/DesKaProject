@@ -1188,6 +1188,18 @@ func signedTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, v
 	return tx
 }
 
+func signedLoadTestTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, value uint64) types.Transaction {
+	t.Helper()
+	l := ledgerFor(t, paths)
+	pending, _ := mempool.New(paths.Mempool).Load()
+	pendingCount, _, _ := mempool.PendingOutgoing(pending, from.Address)
+	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount)
+	if err := from.SignTransaction(&tx); err != nil {
+		t.Fatal(err)
+	}
+	return tx
+}
+
 func ledgerFor(t *testing.T, paths config.Paths) *ledger.Ledger {
 	t.Helper()
 	bc, closeFn := openTestChain(t, paths)
@@ -1226,16 +1238,12 @@ func validateChain(t *testing.T, paths config.Paths) {
 
 func TestBoundedTransactionLoad(t *testing.T) {
 	node := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
+
 	const rounds = 3
 	const batchSize = 4
 	value := 10 * config.UnitsPerCoin
-	miners := make([]wallet.Wallet, 0, batchSize)
-	for i := 0; i < batchSize; i++ {
-		miner := newWallet(t)
-		miners = append(miners, miner)
-		mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
-	}
-
 	confirmed := 0
 
 	for round := 0; round < rounds; round++ {
@@ -1244,45 +1252,29 @@ func TestBoundedTransactionLoad(t *testing.T) {
 		for i := 0; i < batchSize; i++ {
 			receiver := newWallet(t)
 			receivers = append(receivers, receiver)
-			tx := signedTx(t, node, miners[i], receiver.Address, value)
+			tx := signedLoadTestTx(t, node, miner, receiver.Address, value)
 			if err := mempool.New(node.Mempool).Add(tx); err != nil {
 				t.Fatalf("round %d tx %d rejected: %v", round, i, err)
 			}
 			pending = append(pending, tx)
 		}
-
 		stored, err := mempool.New(node.Mempool).Load()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(stored) != batchSize {
-			t.Fatalf("round %d pending tx count = %d, want %d", round, len(stored), batchSize)
-		}
-
-		block := mineBlock(t, node, miners[0].Address, pending)
-		if got := len(block.Transactions) - 1; got != batchSize {
-			t.Fatalf("round %d confirmed tx count = %d, want %d", round, got, batchSize)
-		}
+		if err != nil { t.Fatal(err) }
+		if len(stored) != batchSize { t.Fatalf("round %d pending tx count = %d, want %d", round, len(stored), batchSize) }
+		block := mineBlock(t, node, miner.Address, pending)
+		if got := len(block.Transactions) - 1; got != batchSize { t.Fatalf("round %d confirmed tx count = %d, want %d", round, got, batchSize) }
 		stored, err = mempool.New(node.Mempool).Load()
-		if err != nil {
-			t.Fatal(err)
-		}
-		if len(stored) != 0 {
-			t.Fatalf("round %d mempool not drained: %#v", round, stored)
-		}
-
+		if err != nil { t.Fatal(err) }
+		if len(stored) != 0 { t.Fatalf("round %d mempool not drained: %#v", round, stored) }
 		for _, receiver := range receivers {
-			if got := ledgerFor(t, node).Balance(receiver.Address); got != value {
-				t.Fatalf("round %d receiver balance = %d, want %d", round, got, value)
-			}
+			if got := ledgerFor(t, node).Balance(receiver.Address); got != value { t.Fatalf("round %d receiver balance = %d, want %d", round, got, value) }
 		}
 		confirmed += batchSize
 	}
-	if confirmed != rounds*batchSize {
-		t.Fatalf("confirmed transaction count = %d, want %d", confirmed, rounds*batchSize)
-	}
+	if confirmed != rounds*batchSize { t.Fatalf("confirmed transaction count = %d, want %d", confirmed, rounds*batchSize) }
 	validateChain(t, node)
 }
+
 
 func TestBoundedMultiNodeSoak(t *testing.T) {
 	t.Helper()
