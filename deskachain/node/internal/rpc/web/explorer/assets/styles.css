@@ -272,6 +272,11 @@ tr:last-child td {
   overflow-wrap: anywhere;
 }
 
+.tx-badge {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
