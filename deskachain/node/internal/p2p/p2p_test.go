@@ -1259,7 +1259,7 @@ func TestBoundedTransactionLoad(t *testing.T) {
 			t.Fatalf("round %d pending tx count = %d, want %d", round, len(stored), batchSize)
 		}
 
-		block := mineBlock(t, node, miner.Address, pending)
+		block := mineBlock(t, node, miners[0].Address, pending)
 		if got := len(block.Transactions) - 1; got != batchSize {
 			t.Fatalf("round %d confirmed tx count = %d, want %d", round, got, batchSize)
 		}
