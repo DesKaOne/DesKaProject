@@ -131,3 +131,23 @@ func TestExplorerIndexerRunStopsOnContextCancellation(t *testing.T) {
 		t.Fatal("explorer indexer did not stop after context cancellation")
 	}
 }
+
+func TestExplorerIndexerStatsCountsIndexedRecords(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	x := newExplorerIndexer(paths, config.Localnet())
+	db, err := x.open()
+	if err != nil { t.Fatal(err) }
+	block := types.Block{Height: 3, Hash: "block3", Transactions: []types.Transaction{
+		{ID: "tx-stats-1", From: "INDfrom", To: "INDto", Amount: 10},
+		{ID: "tx-stats-2", From: "INDfrom2", To: "INDto2", Amount: 20, AssetID: "asset-stats"},
+	}}
+	err = db.Update(func(tx *bolt.Tx) error { return indexExplorerBlockTx(tx, block) })
+	_ = db.Close()
+	if err != nil { t.Fatal(err) }
+	stats, err := x.stats()
+	if err != nil { t.Fatal(err) }
+	if stats.BlockCount != 1 || stats.TransactionCount != 2 || stats.AddressHistoryCount != 4 || stats.AssetEventCount != 1 {
+		t.Fatalf("unexpected index stats: %#v", stats)
+	}
+}
