@@ -173,14 +173,14 @@ func hasSignedTransaction(req map[string]any) bool {
 	to, okTo := req["to"].(string)
 	version, okVersion := numericField(req["version"])
 	fee, okFee := numericField(req["fee"])
-	_, okNonce := numericField(req["nonce"])
+	nonce, okNonce := numericField(req["nonce"])
 	return okSig && strings.TrimSpace(signature) != "" &&
 		okKey && strings.TrimSpace(publicKey) != "" &&
 		okFrom && strings.TrimSpace(from) != "" &&
 		okTo && strings.TrimSpace(to) != "" &&
 		okVersion && version >= 1 &&
-		okFee &&
-		okNonce
+		okFee && fee >= 0 &&
+		okNonce && nonce >= 0
 }
 
 func numericField(value any) (uint64, bool) {
