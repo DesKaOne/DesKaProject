@@ -18,6 +18,23 @@ void main() {
     );
   });
 
+  test('rejects fee below network minimum', () {
+    expect(
+      TransactionGuard.validateSend(
+        selectedNetworkId: 'ind-testnet-1',
+        selectedChainId: 777101,
+        activeNetworkId: 'ind-testnet-1',
+        activeChainId: 777101,
+        sender: 'A',
+        recipient: 'B',
+        amount: 10,
+        fee: 0,
+        minimumFee: 1,
+      ),
+      'Fee is below the network minimum',
+    );
+  });
+
   test('accepts valid local review input', () {
     expect(
       TransactionGuard.validateSend(
@@ -29,6 +46,7 @@ void main() {
         recipient: 'B',
         amount: 10,
         fee: 1,
+        minimumFee: 1,
       ),
       isNull,
     );
