@@ -20,6 +20,7 @@ type Client struct {
 	NodeID               string
 	P2PURL               string
 	NetworkID            string
+	ChainID              uint64
 	NodeIdentity         NodeIdentity
 	AuthenticateRequests bool
 }
@@ -38,6 +39,7 @@ func NewClientForProfile(paths config.Paths, profile config.NetworkConfig, timeo
 		profile = config.Localnet()
 	}
 	client.NetworkID = profile.NetworkID
+	client.ChainID = profile.ChainID
 	if !profile.RequireAuthenticatedNode {
 		return client, nil
 	}
@@ -170,6 +172,12 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if c.NetworkID != handshake.NetworkID {
 			return fmt.Errorf("peer handshake network id mismatch")
 		}
+		if c.ChainID == 0 {
+			return fmt.Errorf("authenticated client chain id is required")
+		}
+		if handshake.ChainID != c.ChainID {
+			return fmt.Errorf("peer handshake chain id mismatch")
+		}
 	}
 	var bodyReader io.Reader
 	if raw != nil {
@@ -189,7 +197,7 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if err != nil {
 			return err
 		}
-		if err := SignP2PRequest(c.NodeIdentity, c.NetworkID, handshake.ChainID, req, raw, time.Now(), requestNonce); err != nil {
+		if err := SignP2PRequest(c.NodeIdentity, c.NetworkID, c.ChainID, req, raw, time.Now(), requestNonce); err != nil {
 			return err
 		}
 	}
@@ -207,7 +215,7 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if len(responseBody) > p2pMessageAuthResponseLimit {
 			return fmt.Errorf("peer authenticated response too large")
 		}
-		if err := VerifyP2PResponse(handshake, c.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+		if err := VerifyP2PResponse(handshake, c.NetworkID, c.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
 			if resp.StatusCode >= 400 && resp.Header.Get(authHeaderVersion) == "" {
 				var remote map[string]string
 				if json.Unmarshal(responseBody, &remote) == nil && strings.TrimSpace(remote["error"]) != "" {
