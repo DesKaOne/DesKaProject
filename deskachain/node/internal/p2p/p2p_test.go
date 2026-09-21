@@ -1223,6 +1223,52 @@ func validateChain(t *testing.T, paths config.Paths) {
 	}
 }
 
+func TestThreeNodeControlledForkConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+
+	mineBlocks(t, nodeA, newWallet(t).Address, 2)
+	mineBlocks(t, nodeB, newWallet(t).Address, 3)
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	if tipA.Height != 2 || tipB.Height != 3 || tipA.Hash == tipB.Hash {
+		t.Fatalf("expected divergent tips before convergence: A=%#v B=%#v", tipA, tipB)
+	}
+
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+
+	var out bytes.Buffer
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, &out, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	tipC := tip(t, nodeC)
+	if tipC.Height != tipB.Height || tipC.Hash != tipB.Hash {
+		t.Fatalf("node C did not converge to higher-work branch: B=%#v C=%#v", tipB, tipC)
+	}
+	if !strings.Contains(out.String(), "imported block height=3") {
+		t.Fatalf("sync output missing higher-work branch import: %s", out.String())
+	}
+	validateChain(t, nodeC)
+
+	serverC := newP2PTestServer(nodeC)
+	defer serverC.Close()
+	var reorgOut bytes.Buffer
+	if err := SyncFromPeerWithProfile(nodeA, serverC.URL, &reorgOut, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	afterA := tip(t, nodeA)
+	if afterA.Height != tipC.Height || afterA.Hash != tipC.Hash {
+		t.Fatalf("node A did not converge after controlled fork: A=%#v C=%#v", afterA, tipC)
+	}
+	if !strings.Contains(reorgOut.String(), "reorg applied: true") {
+		t.Fatalf("controlled fork did not report reorg application: %s", reorgOut.String())
+	}
+	validateChain(t, nodeA)
+}
+
 func TestReorgPreviewSameWorkRejected(t *testing.T) {
 	local := newTestNode(t)
 	peer := newTestNode(t)
