@@ -130,6 +130,8 @@ The wallet must never:
 
 ## Current state
 
-**Phase 11 specification started.**
+**Phase 11 active development.**
+
+Workflow rule: all 11.1–11.5 work remains on `phase-11-indochain-wallet` and the single Phase 11 PR until the complete Phase 11 acceptance gate is satisfied.
 
 Implementation work should proceed from the actual IndoChain transaction/address primitives and existing RPC contracts; no new consensus rules should be invented solely for the wallet layer.
