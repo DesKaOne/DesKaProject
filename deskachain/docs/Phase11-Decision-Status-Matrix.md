@@ -16,8 +16,14 @@ This matrix is a tracking artifact. It does not approve mainnet and does not rep
 | 11.4 Security | OPEN | Phase11.4 | Obtain/record required security assessment and close or own findings |
 | 11.5 Infrastructure | OPEN | Phase11.5 | Confirm production hosts, roles, ownership, access and recovery |
 | 11.6 External dependencies | OPEN | Phase11.6 | Resolve each critical dependency state |
-| 11.7 Release candidate | BLOCKED by upstream gates | Phase11.7 | Assemble candidate after sufficient evidence exists |
+| 11.7 Release candidate | BLOCKED by upstream gates | Phase11.7 + Phase9.8 evidence index | Assemble candidate after sufficient evidence exists |
 | 11.8 Final decision | READY FOR REVIEW framework | Phase11.8 | Assemble evidence, blockers, exceptions and release authority |
+
+## Phase 9 handoff
+
+Phase 9.8 is the operational evidence handoff into Phase 11. In particular, the Phase 9.5 upgrade evidence record is an execution template and becomes evidence only after an actual drill is performed and archived.
+
+Phase 9 completion must not be used to mark any Phase 11 production gate approved.
 
 ## Explicitly unresolved production values
 
