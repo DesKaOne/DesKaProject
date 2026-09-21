@@ -1,9 +1,11 @@
 package rpc
 
 import (
+	"context"
 	"indochain/internal/config"
 	"indochain/internal/types"
 	"testing"
+	"time"
 
 	bolt "go.etcd.io/bbolt"
 )
@@ -68,5 +70,23 @@ func TestExplorerIndexerAddressHistoryIsAddressScoped(t *testing.T) {
 	}
 	if total != 0 || len(missing) != 0 {
 		t.Fatalf("unexpected missing history: total=%d items=%#v", total, missing)
+	}
+}
+
+func TestExplorerIndexerRunStopsOnContextCancellation(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	x := newExplorerIndexer(paths, config.Localnet())
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	go func() {
+		x.run(ctx, time.Millisecond)
+		close(done)
+	}()
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("explorer indexer did not stop after context cancellation")
 	}
 }
