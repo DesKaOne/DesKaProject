@@ -161,6 +161,42 @@ select {
   gap: 12px;
 }
 
+.dashboard-summary {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.status-card {
+  flex: 1 1 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.status-card strong {
+  font-size: 20px;
+}
+
+.status-card small {
+  color: var(--muted);
+}
+
+.status-ok {
+  border-color: var(--accent);
+}
+
+.status-warn {
+  border-color: var(--warn-text);
+}
+
 .metric {
   background: var(--surface-soft);
   border: 1px solid var(--line);
