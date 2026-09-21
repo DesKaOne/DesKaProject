@@ -23,10 +23,10 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 	}
 
 	js := getText(t, server.URL+"/explorer-ui/assets/app.js", http.StatusOK)
-	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") {
+	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") || !strings.Contains(js, "/node/metrics") {
 		t.Fatalf("app js missing explorer API references")
 	}
-	for _, item := range []string{"dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block", "tx-badge", "Status", "Type", "pagerHTML(\"asset\"", "selectLimit(\"asset\"", "Asset events", "address-header", "address-value", "error-state", "indexed asset ID"} {
+	for _, item := range []string{"renderMonitoring", "monitoring", "data-refresh=\"monitoring\"", "dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block", "tx-badge", "Status", "Type", "pagerHTML(\"asset\"", "selectLimit(\"asset\"", "Asset events", "address-header", "address-value", "error-state", "indexed asset ID"} {
 		if !strings.Contains(js, item) {
 			t.Fatalf("app js missing dashboard presentation feature %q", item)
 		}
