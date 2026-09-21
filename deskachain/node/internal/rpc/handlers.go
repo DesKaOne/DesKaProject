@@ -978,14 +978,21 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 	}
 	activePeers := 0
 	failedPeers := 0
+	seedPeers := 0
+	peerStatusCounts := map[string]int{}
 	bestPeerHeight := uint64(0)
 	for _, peer := range peers {
+		status := string(peer.Status)
+		peerStatusCounts[status]++
 		if peer.Status == p2p.PeerStatusActive {
 			activePeers++
 		}
 		switch peer.Status {
 		case p2p.PeerStatusOffline, p2p.PeerStatusCooldown, p2p.PeerStatusBad:
 			failedPeers++
+		}
+		if strings.Contains(peer.Source, "seed") {
+			seedPeers++
 		}
 		if peer.LastHeight > bestPeerHeight {
 			bestPeerHeight = peer.LastHeight
@@ -1038,8 +1045,10 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 			"known": len(peers),
 			"active": activePeers,
 			"failed": failedPeers,
+			"seed_count": seedPeers,
 			"best_height": bestPeerHeight,
 			"best_lag": bestPeerLag,
+			"status_counts": peerStatusCounts,
 		},
 		"mempool": map[string]any{
 			"pending_tx_count": len(pending),
