@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	indochainaddress "indochain/internal/address"
 	"indochain/internal/config"
 	indrypto "indochain/internal/crypto"
 	"indochain/internal/types"
@@ -103,7 +104,7 @@ func validateRecipient(profile config.NetworkConfig, to, from string) error {
 	if to == "" || to == from {
 		return ErrInvalidRecipient
 	}
-	if err := validateAddressForNetwork(to, profile); err != nil {
+	if !indochainaddress.ValidateAddress(to, profile) {
 		return ErrInvalidRecipient
 	}
 	return nil

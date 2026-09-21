@@ -40,12 +40,12 @@ class _WalletHomePageState extends State<WalletHomePage> {
       var b = '—';
       final a = address.text.trim();
       if (a.isNotEmpty) {
-        final data = await getJSON('/v1/wallet/balance?address=' + Uri.encodeQueryComponent(a));
+        final data = await getJSON('/v1/wallet/balance?address=${Uri.encodeQueryComponent(a)}');
         b = jsonEncode(data);
       }
       if (!mounted) return;
       setState(() {
-        network = n['network_id'].toString() + ' / chain ' + n['chain_id'].toString();
+        network = '${n['network_id']} / chain ${n['chain_id']}';
         balance = b;
       });
     } catch (e) {

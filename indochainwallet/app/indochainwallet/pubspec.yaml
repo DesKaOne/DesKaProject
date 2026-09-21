@@ -3,12 +3,12 @@ description: "IndoChainWallet mobile application"
 publish_to: "none"
 version: 0.1.0+1
 environment:
-  sdk: ^3.11.4
+  sdk: ">=3.9.0 <4.0.0"
 dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  http: ^1.5.0
+  http: ^1.6.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
