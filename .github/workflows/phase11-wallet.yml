@@ -1,0 +1,45 @@
+name: Phase 11 Wallet
+
+on:
+  push:
+    branches:
+      - phase-11-indochain-wallet
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "deskachain/**"
+      - "indochainwallet/**"
+
+jobs:
+  go-wallet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - name: Test IndoChain
+        working-directory: deskachain/node
+        run: go test ./...
+      - name: Test Wallet Backend
+        working-directory: indochainwallet/backend
+        run: go test ./...
+
+  flutter-mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: indochainwallet/app/indochainwallet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.0"
+          channel: stable
+      - name: Flutter pub get
+        run: flutter pub get
+      - name: Flutter analyze
+        run: flutter analyze
+      - name: Flutter tests
+        run: flutter test
