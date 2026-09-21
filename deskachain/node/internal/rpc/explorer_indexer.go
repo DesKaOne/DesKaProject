@@ -346,23 +346,17 @@ func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	if err != nil {
 		return ExplorerIndexerStatus{}, err
 	}
-	return x.statusUnlocked()
+	return x.statusFromDB(db)
 }
-func (x *explorerIndexer) statusUnlocked() (ExplorerIndexerStatus, error) {
-	db, err := x.open()
-	if err != nil {
-		return ExplorerIndexerStatus{}, err
-	}
-	defer db.Close()
+func (x *explorerIndexer) statusFromDB(db *bolt.DB) (ExplorerIndexerStatus, error) {
 	var c explorerIndexCursor
-	err = db.View(func(tx *bolt.Tx) error {
+	if err := db.View(func(tx *bolt.Tx) error {
 		r := tx.Bucket([]byte("meta")).Get([]byte("cursor"))
 		if r != nil {
 			return json.Unmarshal(r, &c)
 		}
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return ExplorerIndexerStatus{}, err
 	}
 	s, err := storage.OpenBolt(x.paths.DB)
@@ -380,6 +374,16 @@ func (x *explorerIndexer) statusUnlocked() (ExplorerIndexerStatus, error) {
 	}
 	return ExplorerIndexerStatus{Mode: "persistent", IndexedHeight: c.Height, ChainHeight: tip.Height, Lag: lag, Ready: c.Hash != "" && c.Height == tip.Height && c.Hash == tip.Hash, LastIndexedHash: c.Hash, SchemaVersion: explorerIndexerSchemaVersion}, nil
 }
+
+func (x *explorerIndexer) statusUnlocked() (ExplorerIndexerStatus, error) {
+	db, err := x.open()
+	if err != nil {
+		return ExplorerIndexerStatus{}, err
+	}
+	defer db.Close()
+	return x.statusFromDB(db)
+}
+
 func (x *explorerIndexer) status() (ExplorerIndexerStatus, error) {
 	x.mu.Lock()
 	defer x.mu.Unlock()
