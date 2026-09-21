@@ -39,3 +39,26 @@ These values are derived from local chain, mempool, and peer-store state at requ
 - Monitoring fields are derived from the node's current canonical chain and local peer state.
 - Monitoring failures do not mutate consensus state.
 - CI must remain green before advancing to the next 8.7 subphase.
+
+## 8.7.4 Mining statistics
+
+The existing mining observation data is included in `/node/metrics` under `mining` and is derived from the canonical chain and current network profile. It includes:
+
+- current and next difficulty
+- target block time and retarget window
+- blocks remaining until retarget
+- latest block timestamp and age
+- recent block intervals with average/minimum/maximum interval
+- recent difficulty samples
+- projected retarget direction
+- pending transaction and peer counts relevant to mining
+- mining guard state added by the RPC handler
+
+The mining statistics are observational only. They do not alter difficulty, mining eligibility, block production, or consensus rules.
+
+### Acceptance
+
+- A mined block is reflected by the `/node/metrics` mining height and latest-block fields.
+- Difficulty/retarget and interval fields are present with stable JSON types.
+- Mining statistics are derived from canonical chain state rather than fabricated counters.
+- CI must remain green before advancing to 8.7.5.
