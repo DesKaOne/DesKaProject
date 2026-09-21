@@ -1470,6 +1470,42 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 	validateChain(t, nodeC)
 }
 
+func TestBoundedPeerChurn(t *testing.T) {
+\tnodeA := newTestNode(t)
+\tnodeB := newTestNode(t)
+\tminer := newWallet(t)
+
+\tmineBlocks(t, nodeA, miner.Address, 2)
+
+\tfor cycle := 0; cycle < 3; cycle++ {
+\t\tserverA := newP2PTestServer(nodeA)
+\t\tif err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+\t\t\tserverA.Close()
+\t\t\tt.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
+\t\t}
+\t\tserverA.Close()
+
+\t\tgot := tip(t, nodeB)
+\t\twant := tip(t, nodeA)
+\t\tif got.Height != want.Height || got.Hash != want.Hash {
+\t\t\tt.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
+\t\t}
+\t\tvalidateChain(t, nodeB)
+
+\t\tif cycle < 2 {
+\t\t\tmineBlocks(t, nodeA, miner.Address, 1)
+\t\t}
+\t}
+
+\tfinalA := tip(t, nodeA)
+\tfinalB := tip(t, nodeB)
+\tif finalA.Height != 4 || finalB.Height != finalA.Height || finalB.Hash != finalA.Hash {
+\t\tt.Fatalf("final peer churn convergence failed: A=%#v B=%#v", finalA, finalB)
+\t}
+\tvalidateChain(t, nodeA)
+\tvalidateChain(t, nodeB)
+}
+
 func TestThreeNodeControlledForkConvergence(t *testing.T) {
 	nodeA := newTestNode(t)
 	nodeB := newTestNode(t)
