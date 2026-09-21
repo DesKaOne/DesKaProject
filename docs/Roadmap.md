@@ -2,9 +2,9 @@
 
 > Current development roadmap from IndoChain and IndoScan through DesKaCash.
 >
-> Current branch checkpoint: **Phase 9 — IndoChain Testnet Operations & Pre-Mainnet Readiness Evidence**.
+> Current branch checkpoint: **Phase 10 — Pre-Mainnet / Mainnet Readiness Evidence**.
 >
-> Phase 8 testnet engineering is complete. Phase 9 operational evidence is tracked in `deskachain/docs/Phase9-*.md`. Phase 11 production decisions remain explicitly unresolved.
+> Phase 8 testnet engineering and Phase 9 testnet operations are complete as documented engineering/evidence scope. Phase 10 consolidates the production-readiness gates without authorizing mainnet. Phase 11 production decisions remain explicitly unresolved.
 
 ## Roadmap Overview
 
@@ -35,7 +35,7 @@ DesKaPay
 
 ## Phase 8 — IndoChain + IndoScan
 
-**Status: 🟡 Current**
+**Status: ✅ Complete**
 
 Focus: testnet development, IndoScan integration, network hardening, and preparation for a usable public testnet.
 
@@ -238,55 +238,109 @@ Evidence: `deskachain/docs/Phase9.8-PreMainnet-Readiness-Evidence.md`
 
 Phase 9 completion does **not** mean mainnet approval. Production identity, economics/protocol, security assessment, infrastructure, external dependencies, production genesis, release candidate, and final release authority remain subject to the separate Phase 11 gates.
 
-## Phase 10 — IndoScan Mainnet
+## Phase 10 — Pre-Mainnet / Mainnet Readiness
 
-**Status: ⏳ Planned**
+**Status: 🟡 Current**
 
-Move IndoScan from Testnet to Mainnet.
+Phase 10 prepares the production-readiness evidence and decision gates after testnet operations. It does **not** launch mainnet and does not create production identifiers by assumption.
 
-### 10.1 — Mainnet Explorer
+### 10.1 — Network Identity & Genesis Decision
+**Status: 🔒 Approval-gated**
 
-- Mainnet network integration
-- Public explorer deployment
+- Mainnet network ID
+- Mainnet chain ID
+- Production genesis artifact/hash
+- Protocol/release version
+- Testnet/mainnet isolation
 
-### 10.2 — Production Indexer
+Evidence: `deskachain/docs/Phase10.1-Network-Identity-Genesis-Decision.md`
 
-- Block indexing
-- Transaction indexing
-- Address indexing
-- Validator indexing
-- Statistics
-- Search
-- Caching
-- Database optimization
+### 10.2 — Production Topology & Roles
+**Status: ✅ Documented / Review-gated**
 
-### 10.3 — Public IndoScan
+- Seed/bootstrap
+- Full nodes
+- Miner/operator
+- Explorer/indexer
+- Public RPC
+- Recovery ownership
 
-Potential production domain:
+Evidence: `deskachain/docs/Phase10.2-Production-Topology-Roles.md`
 
-```
-indoscan.net
-```
+### 10.3 — Release & Artifact Control
+**Status: ✅ Documented / Review-gated**
 
-Development/staging may continue under the DesKa Ecosystem domain.
+- Traceable release identity
+- Reproducible-build expectations
+- Checksums/signing boundary
+- Configuration provenance
+- Migration and rollback
 
-### 10.4 — Explorer API
+Evidence: `deskachain/docs/Phase10.3-Release-Artifact-Control.md`
 
-IndoScan API can later be consumed by:
+### 10.4 — Security & Threat-Model Gate
+**Status: 🟡 Review-gated**
 
-- IndoChainWallet
-- DesKaPay
-- DesKaCash
-- Partners
-- Developers
+- Trust boundaries
+- RPC/P2P exposure
+- Key and backup custody
+- Threat evidence lifecycle
+- Independent review requirements
 
-**Milestone:** IndoChain + IndoScan Production
+Evidence: `deskachain/docs/Phase10.4-Security-Threat-Model-Gate.md`
 
----
+### 10.5 — Economic & Protocol Assumptions
+**Status: 🟡 Review-gated**
+
+- Consensus assumptions
+- Mining/difficulty
+- Fee behavior
+- dIDR accounting
+- Issued-asset boundaries
+
+Evidence: `deskachain/docs/Phase10.5-Economic-Protocol-Assumptions.md`
+
+### 10.6 — Operational Readiness
+**Status: 🟡 Review-gated**
+
+- Provisioning
+- Health/smoke
+- Backup/restore
+- Upgrade/rollback
+- Monitoring
+- Incident response
+
+Evidence: `deskachain/docs/Phase10.6-Operational-Readiness.md`
+
+### 10.7 — External Dependencies
+**Status: 🟡 Review-gated**
+
+- Infrastructure
+- DNS/RPC/hosting
+- Monitoring/backups
+- Wallet/payment integrations
+- Legal/regulatory dependencies
+
+Evidence: `deskachain/docs/Phase10.7-External-Dependencies.md`
+
+### 10.8 — Mainnet Release Gate
+**Status: 🔒 Approval-gated**
+
+- Consolidated evidence package
+- Explicit blockers
+- Release authority
+- Controlled release/rollback
+- Post-release verification
+
+Evidence: `deskachain/docs/Phase10.8-Mainnet-Release-Gate.md`
+
+**Milestone:** Pre-Mainnet / Mainnet Readiness Evidence
+
+> Important: Phase 10 completion is not mainnet approval or release. Mainnet identifiers, genesis, security decisions, production infrastructure, dependencies, and release authority remain separately gated.
 
 ## Phase 11 — IndoChainWallet
 
-**Status: ⏳ Planned**
+**Status: ⏳ Next after Phase 10 readiness gates**
 
 Build the native blockchain wallet after the chain and explorer foundations are stable.
 
