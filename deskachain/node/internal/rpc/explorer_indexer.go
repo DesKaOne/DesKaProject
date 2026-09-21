@@ -320,6 +320,30 @@ func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	if err != nil {
 		return ExplorerIndexerStatus{}, err
 	}
+	elapsedMs := time.Since(syncStarted).Milliseconds()
+	metrics := explorerIndexerMetrics{SyncCount: 1, LastSyncAtUnix: time.Now().Unix(), LastSyncDurationMs: elapsedMs, LastSyncBlockCount: indexedBlocks}
+	err = db.Update(func(tx *bolt.Tx) error {
+		if raw := tx.Bucket([]byte("meta")).Get([]byte("metrics")); raw != nil {
+			if err := json.Unmarshal(raw, &metrics); err != nil {
+				return err
+			}
+			metrics.SyncCount++
+			metrics.LastSyncAtUnix = time.Now().Unix()
+			metrics.LastSyncDurationMs = elapsedMs
+			metrics.LastSyncBlockCount = indexedBlocks
+		}
+		if elapsedMs > 0 {
+			metrics.BlocksPerSecond = float64(indexedBlocks) / (float64(elapsedMs) / 1000)
+		}
+		raw, err := json.Marshal(metrics)
+		if err != nil {
+			return err
+		}
+		return tx.Bucket([]byte("meta")).Put([]byte("metrics"), raw)
+	})
+	if err != nil {
+		return ExplorerIndexerStatus{}, err
+	}
 	return x.statusUnlocked()
 }
 func (x *explorerIndexer) statusUnlocked() (ExplorerIndexerStatus, error) {
