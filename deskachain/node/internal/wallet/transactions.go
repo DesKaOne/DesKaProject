@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"indochain/internal/config"
+	indrypto "indochain/internal/crypto"
 	"indochain/internal/types"
 )
 
@@ -88,7 +89,7 @@ func ValidateWalletNetwork(w Wallet, profile config.NetworkConfig) error {
 	if w.Address == "" || w.PublicKeyHex == "" || w.PrivateKeyHex == "" {
 		return errors.New("wallet credentials are incomplete")
 	}
-	address, err := indochainAddressFromPublicKey(w.PublicKeyHex, profile)
+	address, err := indrypto.AddressFromPublicKeyForNetwork(w.PublicKeyHex, profile)
 	if err != nil {
 		return fmt.Errorf("wallet public key is invalid for network: %w", err)
 	}
