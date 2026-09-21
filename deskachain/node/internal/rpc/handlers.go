@@ -125,6 +125,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /node/id", h.wrap("generic", h.nodeID))
 	mux.HandleFunc("GET /node/compare", h.wrap("generic", h.nodeCompare))
 	mux.HandleFunc("GET /node/status", h.wrap("generic", h.nodeStatus))
+	mux.HandleFunc("GET /node/metrics", h.wrap("generic", h.nodeMetrics))
 	mux.HandleFunc("GET /debug/p2p", h.wrap("admin", h.debugP2P))
 	mux.HandleFunc("POST /debug/p2p/ping", h.wrap("admin", h.debugP2PPing))
 	mux.HandleFunc("GET /peer/health", h.wrap("generic", h.peerHealth))
@@ -956,6 +957,85 @@ func (h handler) nodeCompare(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprint(local["height"]) == fmt.Sprint(remote["height"]) &&
 		fmt.Sprint(local["tip_hash"]) == fmt.Sprint(remote["tip_hash"])
 	writeJSON(w, http.StatusOK, map[string]any{"in_sync": inSync, "local": local, "peer": remote})
+}
+
+func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
+	blocks, pending, err := h.chainInfoData()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if len(blocks) == 0 {
+		writeError(w, errors.New("chain has no blocks"))
+		return
+	}
+	net := h.profile()
+	tip := blocks[len(blocks)-1]
+	peers, err := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	activePeers := 0
+	bestPeerHeight := uint64(0)
+	for _, peer := range peers {
+		if peer.Status == p2p.PeerStatusActive {
+			activePeers++
+		}
+		if peer.LastHeight > bestPeerHeight {
+			bestPeerHeight = peer.LastHeight
+		}
+	}
+	uptime := int64(0)
+	if !h.info.StartedAt.IsZero() {
+		uptime = int64(time.Since(h.info.StartedAt).Seconds())
+	}
+	mining := miningMetricsMap(blocks, net, len(pending), h.peerCount())
+	h.addMiningGuardFields(mining)
+
+	indexer := newExplorerIndexer(h.paths, net)
+	indexerStatus, indexerErr := indexer.status()
+	var indexerStats any
+	if indexerErr == nil {
+		stats, err := indexer.stats(indexerStatus)
+		if err == nil {
+			indexerStats = stats
+		} else {
+			indexerErr = err
+		}
+	}
+
+	response := map[string]any{
+		"schema_version": "v1",
+		"network": net.Name,
+		"network_id": net.NetworkID,
+		"chain_id": net.ChainID,
+		"genesis_hash": chain.GenesisBlockForNetwork(net).Hash,
+		"uptime_seconds": uptime,
+		"chain": map[string]any{
+			"height": tip.Height,
+			"tip_hash": tip.Hash,
+			"block_count": len(blocks),
+			"pending_tx_count": len(pending),
+		},
+		"peers": map[string]any{
+			"known": len(peers),
+			"active": activePeers,
+			"best_height": bestPeerHeight,
+		},
+		"mempool": map[string]any{
+			"pending_tx_count": len(pending),
+		},
+		"mining": mining,
+		"indexer": map[string]any{
+			"status": indexerStatus,
+			"stats": indexerStats,
+		},
+	}
+	if indexerErr != nil {
+		response["indexer"].(map[string]any)["error"] = indexerErr.Error()
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (h handler) nodeStatus(w http.ResponseWriter, _ *http.Request) {
