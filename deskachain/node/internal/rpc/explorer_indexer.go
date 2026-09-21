@@ -382,6 +382,47 @@ func (x *explorerIndexer) blockByHash(hash string) (explorerIndexedBlock, bool, 
 	return out, out.Hash != "" && err == nil, err
 }
 
+func (x *explorerIndexer) assetEvents(assetID string, limit, offset int) ([]explorerIndexedAssetEvent, int, error) {
+	db, err := x.open()
+	if err != nil {
+		return nil, 0, err
+	}
+	defer db.Close()
+	var all []explorerIndexedAssetEvent
+	err = db.View(func(tx *bolt.Tx) error {
+		prefix := []byte(assetID + "|")
+		return tx.Bucket([]byte("assets")).ForEach(func(k, v []byte) error {
+			if !strings.HasPrefix(string(k), string(prefix)) {
+				return nil
+			}
+			var e explorerIndexedAssetEvent
+			if err := json.Unmarshal(v, &e); err != nil {
+				return err
+			}
+			all = append(all, e)
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, 0, err
+	}
+	sort.Slice(all, func(i, j int) bool {
+		if all[i].BlockHeight != all[j].BlockHeight {
+			return all[i].BlockHeight > all[j].BlockHeight
+		}
+		return all[i].TxID > all[j].TxID
+	})
+	total := len(all)
+	if offset > total {
+		offset = total
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	return all[offset:end], total, nil
+}
+
 func (x *explorerIndexer) addressHistory(address string, limit, offset int) ([]explorerIndexedHistory, int, error) {
 	db, err := x.open()
 	if err != nil {
