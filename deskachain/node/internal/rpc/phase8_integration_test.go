@@ -72,7 +72,8 @@ func TestPhase8IntegrationNodeChainExplorerMonitoring(t *testing.T) {
 		t.Fatalf("explorer status height = %#v, want 1", explorerStatus["height"])
 	}
 	indexedStats := getRPCMap(t, server.URL+"/explorer/indexer/stats", http.StatusOK)
-	if indexedStats["indexed_height"] != float64(1) || indexedStats["lag"] != float64(0) {
+	indexedStatsBody, ok := indexedStats["stats"].(map[string]any)
+	if !ok || indexedStatsBody["indexed_height"] != float64(1) || indexedStatsBody["lag"] != float64(0) {
 		t.Fatalf("explorer API stats mismatch: %#v", indexedStats)
 	}
 	blocksView := getRPCMap(t, server.URL+"/explorer/blocks?limit=2", http.StatusOK)
