@@ -130,7 +130,12 @@ The wallet must never:
 
 ## Current state
 
-**Phase 11 active development.**
+**Phase 11 implementation in progress.**
+
+Implemented in the current Phase 11 branch: native wallet key/address/signing primitives, encrypted Go secure store, network guards, transaction builders/tests, Go wallet backend RPC gateway, Flutter Android/iOS app shell, secure mobile storage dependency, wallet dashboard, balance/nonce/history/fee reads, transaction review confirmation UI, and IndoScan URL helpers.
+
+Still required before the Phase 11 acceptance gate is complete: real mobile key/seed generation and restore, local signing implementation, end-to-end signed transaction relay test, explicit backup/restore test evidence, and release/build evidence for Android/iOS.
+
 
 Workflow rule: all 11.1–11.5 work remains on `phase-11-indochain-wallet` and the single Phase 11 PR until the complete Phase 11 acceptance gate is satisfied.
 
