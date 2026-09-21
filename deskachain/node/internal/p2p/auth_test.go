@@ -203,6 +203,11 @@ func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
 	if !got["ok"] {
 		t.Fatalf("live authenticated status response=%v", got)
 	}
+	var status Status
+	if err := client.Status(httpServer.URL); err != nil {
+		t.Fatalf("live Status client call: %v", err)
+	}
+	_ = status
 }
 
 func TestP2PMessageAuthOptionalUnsignedCompatibility(t *testing.T) {
