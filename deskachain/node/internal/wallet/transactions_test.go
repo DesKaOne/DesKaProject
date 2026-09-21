@@ -38,3 +38,18 @@ func TestTransferRejectsWrongNetworkRecipient(t *testing.T) {
 		t.Fatal("wrong-network recipient unexpectedly accepted")
 	}
 }
+
+
+func TestNewStakeLockUsesNetworkMinimumFee(t *testing.T) {
+	profile := config.Testnet()
+	w, err := NewWithProfile(profile)
+	if err != nil { t.Fatal(err) }
+	tx, err := w.NewStakeLock(profile, profile.Consensus.Staking.MinStakeAmount, 2)
+	if err != nil { t.Fatal(err) }
+	if tx.Fee != profile.Fee.MinFee {
+		t.Fatalf("fee=%d, want %d", tx.Fee, profile.Fee.MinFee)
+	}
+	if tx.From != w.Address || tx.To != w.Address {
+		t.Fatal("stake transaction sender/recipient mismatch")
+	}
+}
