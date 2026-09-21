@@ -30,18 +30,22 @@ type ExplorerIndexerStatus struct {
 	SchemaVersion string `json:"schema_version"`
 }
 
-
 type ExplorerIndexerStats struct {
-	BlockCount          int    `json:"block_count"`
-	TransactionCount    int    `json:"transaction_count"`
-	AddressHistoryCount int    `json:"address_history_count"`
-	AssetEventCount     int    `json:"asset_event_count"`
-	IndexedHeight       uint64 `json:"indexed_height"`
-	ChainHeight         uint64 `json:"chain_height"`
-	Lag                 uint64 `json:"lag"`
-	Ready               bool   `json:"ready"`
-	SyncStatus          string `json:"sync_status"`
-	SchemaVersion       string `json:"schema_version"`
+	BlockCount          int     `json:"block_count"`
+	TransactionCount    int     `json:"transaction_count"`
+	AddressHistoryCount int     `json:"address_history_count"`
+	AssetEventCount     int     `json:"asset_event_count"`
+	IndexedHeight       uint64  `json:"indexed_height"`
+	ChainHeight         uint64  `json:"chain_height"`
+	Lag                 uint64  `json:"lag"`
+	Ready               bool    `json:"ready"`
+	SyncStatus          string  `json:"sync_status"`
+	SchemaVersion       string  `json:"schema_version"`
+	SyncCount           uint64  `json:"sync_count"`
+	LastSyncAtUnix      int64   `json:"last_sync_at_unix"`
+	LastSyncDurationMs  int64   `json:"last_sync_duration_ms"`
+	LastSyncBlockCount  int     `json:"last_sync_block_count"`
+	BlocksPerSecond     float64 `json:"blocks_per_second"`
 }
 
 type ExplorerContract struct {
