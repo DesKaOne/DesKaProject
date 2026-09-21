@@ -1,10 +1,10 @@
 # IndoChain Explorer — Phase 8 Contract
 
-Phase 8 upgrades the existing read-only explorer toward the future DesKaScan surface without changing consensus, transaction rules, wallet behavior, or the native dIDR economic model.
+Phase 8 upgrades the existing read-only explorer toward the future IndoScan surface without changing consensus, transaction rules, wallet behavior, or the native dIDR economic model.
 
 ## 8.1 Contract goals
 
-chain / mempool → explorer read model → explorer API → Explorer UI / future DesKaScan
+chain / mempool → explorer read model → explorer API → Explorer UI / future IndoScan
 
 The explorer is derived data. Deleting or rebuilding explorer data must never invalidate the chain.
 
