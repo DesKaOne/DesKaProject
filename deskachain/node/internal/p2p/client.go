@@ -164,7 +164,8 @@ func (c Client) postJSON(peer, path string, body, target any) error {
 func (c Client) doJSON(peer, method, path string, raw []byte, target any, authenticated, rejectClientError bool) error {
 	var handshake Handshake
 	if authenticated {
-		handshake, err := c.Handshake(peer)
+		var err error
+		handshake, err = c.Handshake(peer)
 		if err != nil {
 			return err
 		}
