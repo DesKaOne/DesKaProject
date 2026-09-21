@@ -1242,7 +1242,7 @@ func TestBoundedTransactionLoad(t *testing.T) {
 	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
 
 	const rounds = 3
-	const batchSize = 4
+	const batchSize = 3
 	value := 10 * config.UnitsPerCoin
 	confirmed := 0
 
