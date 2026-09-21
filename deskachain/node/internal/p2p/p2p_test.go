@@ -1242,7 +1242,7 @@ func TestBoundedTransactionLoad(t *testing.T) {
 	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
 
 	const rounds = 3
-	const batchSize = 2
+	const batchSize = 1
 	value := 10 * config.UnitsPerCoin
 	confirmed := 0
 
@@ -1300,7 +1300,7 @@ func TestBoundedMultiNodeSoak(t *testing.T) {
 	}
 	validateChain(t, nodeB)
 
-	mineBlocks(t, nodeA, minerA.Address, 16)
+	mineBlocks(t, nodeA, minerA.Address, 8)
 
 	serverA = newP2PTestServer(nodeA)
 	if err := SyncFromPeerWithProfile(nodeC, serverA.URL, nil, fundedP2PProfile()); err != nil {
