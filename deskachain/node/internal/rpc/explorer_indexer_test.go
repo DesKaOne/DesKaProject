@@ -73,6 +73,47 @@ func TestExplorerIndexerAddressHistoryIsAddressScoped(t *testing.T) {
 	}
 }
 
+func TestExplorerIndexerAssetEventsAreScoped(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	x := newExplorerIndexer(paths, config.Localnet())
+	db, err := x.open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	block := types.Block{Height: 2, Hash: "block2", Transactions: []types.Transaction{
+		{ID: "tx-asset-1", From: "INDfrom", To: "INDto", Amount: 7, AssetID: "asset-a"},
+		{ID: "tx-native", From: "INDfrom", To: "INDto", Amount: 9},
+		{ID: "tx-asset-2", From: "INDother", To: "INDto", Amount: 11, AssetID: "asset-b"},
+	}}
+	err = db.Update(func(tx *bolt.Tx) error { return indexExplorerBlockTx(tx, block) })
+	_ = db.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, total, err := x.assetEvents("asset-a", 10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if total != 1 || len(items) != 1 || items[0].TxID != "tx-asset-1" {
+		t.Fatalf("unexpected asset-a history: total=%d items=%#v", total, items)
+	}
+	items, total, err = x.assetEvents("asset-b", 10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if total != 1 || len(items) != 1 || items[0].TxID != "tx-asset-2" {
+		t.Fatalf("unexpected asset-b history: total=%d items=%#v", total, items)
+	}
+	items, total, err = x.assetEvents("asset-missing", 10, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if total != 0 || len(items) != 0 {
+		t.Fatalf("unexpected missing asset history: total=%d items=%#v", total, items)
+	}
+}
+
 func TestExplorerIndexerRunStopsOnContextCancellation(t *testing.T) {
 	dir := t.TempDir()
 	paths := config.NewPaths(dir)
