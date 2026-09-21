@@ -38,7 +38,7 @@ func signedTestRequest(t *testing.T, identity NodeIdentity, networkID string, ch
 func TestP2PMessageAuthRequestRoundTripAndReplay(t *testing.T) {
 	identity := testNodeIdentity(t, "node-a")
 	now := time.Unix(1_800_000_000, 0)
-	body := []byte("{\"hello\":\"world\"}")
+	body := []byte("{"hello":"world"}")
 	req, _ := signedTestRequest(t, identity, "ind-testnet-1", 777101, http.MethodPost, "/p2p/tx?x=1", body, now)
 
 	got, err := VerifyP2PRequest("ind-testnet-1", 777101, req, body, now)
@@ -108,7 +108,7 @@ func TestP2PMessageAuthResponseRoundTripAndTampering(t *testing.T) {
 		t.Fatalf("new nonce: %v", err)
 	}
 	now := time.Unix(1_800_000_200, 0)
-	body := []byte("{\"ok\":true}")
+	body := []byte("{"ok":true}")
 	headers, err := SignP2PResponse(serverIdentity, "ind-testnet-1", 777101, requestNonce, http.StatusOK, body, now)
 	if err != nil {
 		t.Fatalf("sign response: %v", err)
@@ -130,7 +130,7 @@ func TestP2PMessageAuthServerMiddleware(t *testing.T) {
 	server := NewServerWithProfile(paths, profile)
 	remote := testNodeIdentity(t, "remote-node")
 	now := time.Now().Truncate(time.Second)
-	body := []byte("{\"message\":\"hello\"}")
+	body := []byte("{"message":"hello"}")
 
 	var next http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Test", "ok")
@@ -179,6 +179,31 @@ func TestP2PMessageAuthOptionalUnsignedCompatibility(t *testing.T) {
 	}
 	if rec.Header().Get(authHeaderSignature) != "" {
 		t.Fatalf("unsigned compatibility response should not claim authentication")
+	}
+}
+
+func TestNewClientForProfileBindsNetworkIdentity(t *testing.T) {
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+
+	client, err := NewClientForProfile(paths, profile, time.Second)
+	if err != nil {
+		t.Fatalf("create authenticated client: %v", err)
+	}
+	if !client.AuthenticateRequests {
+		t.Fatalf("testnet client must authenticate requests")
+	}
+	if client.NetworkID != profile.NetworkID {
+		t.Fatalf("client network id=%q want=%q", client.NetworkID, profile.NetworkID)
+	}
+	if client.NodeIdentity.IdentityVersion() != NodeIdentityVersion {
+		t.Fatalf("client node identity is not initialized")
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "http://peer.example/p2p/status", nil)
+	client.addHeaders(req)
+	if got := req.Header.Get(authHeaderNetworkID); got != profile.NetworkID {
+		t.Fatalf("auth network header=%q want=%q", got, profile.NetworkID)
 	}
 }
 
