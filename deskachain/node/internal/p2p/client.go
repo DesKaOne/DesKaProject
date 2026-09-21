@@ -89,6 +89,11 @@ func (c Client) Handshake(peer string) (Handshake, error) {
 			return Handshake{}, err
 		}
 	}
+	if c.AuthenticateRequests {
+		if handshake.IdentityVersion != NodeIdentityVersion || strings.TrimSpace(handshake.NodeID) == "" || strings.TrimSpace(handshake.NodePublicKey) == "" || strings.TrimSpace(handshake.NodeSignature) == "" {
+			return Handshake{}, fmt.Errorf("peer handshake authenticated identity incomplete")
+		}
+	}
 	return handshake, nil
 }
 
