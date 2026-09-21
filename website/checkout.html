@@ -1,9 +1,36 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Checkout layanan DesKa Ecosystem."><title>Checkout — DesKa Ecosystem</title><link rel="stylesheet" href="styles.css"></head><body>
-<header class="nav"><a class="brand" href="index.html"><span class="brand-mark">D</span><span>DesKa<span>Ecosystem</span></span></a><nav><a href="index.html#services">Katalog</a><a href="terms.html">Syarat</a><a href="contact.html">Hubungi Kami</a></nav></header>
-<main class="page"><p class="eyebrow">CHECKOUT</p><h1>Pesan layanan digital.</h1><p class="page-intro">Isi detail kebutuhan Anda. Checkout ini mengumpulkan permintaan order; nominal final dan instruksi pembayaran dikonfirmasi sebelum pembayaran dilakukan.</p>
-<div class="checkout-layout"><section class="panel"><div class="notice">Pembayaran hanya dilakukan setelah Anda menerima konfirmasi order dan instruksi pembayaran resmi. Jangan transfer berdasarkan pesan dari pihak lain.</div>
-<form id="orderForm"><div class="field"><label for="service">Layanan</label><select id="service" name="service" required><option value="software">Pengembangan Software</option><option value="website">Website & Landing Page</option><option value="api">API & Backend</option><option value="integration">Integrasi Digital</option><option value="cloud">Deployment & Infrastruktur</option><option value="consulting">Konsultasi Teknologi</option></select></div>
-<div class="field"><label for="name">Nama</label><input id="name" name="name" required autocomplete="name"></div><div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required autocomplete="email"></div><div class="field"><label for="description">Detail kebutuhan</label><textarea id="description" name="description" required placeholder="Jelaskan kebutuhan, fitur, target, atau informasi lain yang relevan."></textarea></div><button class="button primary" type="submit">Kirim Order</button></form>
-<div id="success" class="success"><b>Order siap dikonfirmasi.</b><p id="successText"></p><p class="summary-note">Untuk order produksi, tim akan mengonfirmasi ruang lingkup, harga, jadwal, dan metode pembayaran sebelum transaksi.</p></div></section>
-<aside class="panel summary"><p class="eyebrow">RINGKASAN</p><div class="summary-row"><span>Layanan</span><b id="serviceSummary">Pengembangan Software</b></div><p class="summary-note">Harga tidak ditampilkan sebagai angka tetap karena layanan bersifat custom. Nilai invoice mengikuti ruang lingkup pekerjaan yang telah disepakati.</p><hr style="border-color:#273142;border-width:1px 0 0;margin:22px 0"><b>Alur pembayaran</b><ol class="summary-note"><li>Order dikirim</li><li>Detail & harga dikonfirmasi</li><li>Instruksi pembayaran/payment link diberikan</li><li>Pembayaran diverifikasi</li><li>Pengerjaan dimulai</li></ol></aside></div></main>
-<footer><div><b>DesKa Ecosystem</b><span>Solusi dan produk digital.</span></div><nav><a href="terms.html">Syarat & Ketentuan</a><a href="refund.html">Kebijakan Pengembalian</a><a href="contact.html">Hubungi Kami</a></nav><span>© <span id="year"></span></span></footer><script src="script.js"></script></body></html>
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Ajukan minat produk dan kebutuhan integrasi DesKa Ecosystem.">
+<title>Mulai — DesKa Ecosystem</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<header class="nav"><a class="brand" href="index.html"><span class="brand-mark">D</span><span>DesKa<span>Ecosystem</span></span></a><nav><a href="index.html#products">Produk</a><a href="index.html#ecosystem">Ekosistem</a><a href="contact.html">Hubungi Kami</a></nav></header>
+<main class="page">
+<p class="eyebrow">MULAI</p><h1>Ajukan minat atau kebutuhan.</h1>
+<p class="page-intro">Gunakan formulir ini untuk menyampaikan minat terhadap produk DesKa Ecosystem atau kebutuhan integrasi. Formulir ini belum merupakan transaksi pembayaran otomatis.</p>
+<div class="checkout-layout">
+<section class="panel">
+<div class="notice">Produk seperti DesKaCash, DesKaPay, IndoChain, IndoScan, dan IndoChainWallet dikembangkan bertahap. Status ketersediaan dan detail komersial akan dikonfirmasi sebelum ada transaksi.</div>
+<form id="orderForm">
+<div class="field"><label for="service">Produk / kebutuhan</label><select id="service" name="service" required>
+<option value="deska-cash">DesKaCash — Digital Wallet</option>
+<option value="deska-pay">DesKaPay — Payment Layer</option>
+<option value="indochain">IndoChain — Blockchain Infrastructure</option>
+<option value="indoscan">IndoScan — Explorer</option>
+<option value="indochain-wallet">IndoChainWallet — Blockchain Wallet</option>
+<option value="integration">Integrasi Digital / API / Backend</option>
+</select></div>
+<div class="field"><label for="name">Nama</label><input id="name" name="name" required autocomplete="name"></div>
+<div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required autocomplete="email"></div>
+<div class="field"><label for="description">Kebutuhan / pertanyaan</label><textarea id="description" name="description" required placeholder="Contoh: ingin mengetahui status DesKaCash, kebutuhan integrasi DesKaPay, atau kebutuhan API."></textarea></div>
+<button class="button primary" type="submit">Kirim Pengajuan</button>
+</form>
+<div id="success" class="success"><b>Pengajuan siap dikonfirmasi.</b><p id="successText"></p><p class="summary-note">Tim akan menindaklanjuti status produk, kebutuhan, ketersediaan, dan jika relevan detail komersial sebelum transaksi dilakukan.</p></div>
+</section>
+<aside class="panel summary"><p class="eyebrow">RINGKASAN</p><div class="summary-row"><span>Pilihan</span><b id="serviceSummary">DesKaCash — Digital Wallet</b></div>
+<p class="summary-note">Tidak ada pembayaran otomatis pada halaman ini. Jika suatu layanan sudah tersedia untuk transaksi, instruksi pembayaran resmi diberikan setelah detail order dikonfirmasi.</p>
+<hr style="border-color:#273142;border-width:1px 0 0;margin:22px 0">
+<b>Alur</b><ol class="summary-note"><li>Pilih produk/kebutuhan</li><li>Kirim pengajuan</li><li>Status & detail dikonfirmasi</li><li>Jika berbayar, instruksi pembayaran resmi diberikan</li><li>Proses dilanjutkan sesuai kesepakatan</li></ol>
+</aside></div></main>
+<footer><div><b>DesKa Ecosystem</b><span>Digital wallet, payment, blockchain, dan infrastructure.</span></div><nav><a href="terms.html">Syarat & Ketentuan</a><a href="refund.html">Kebijakan Pengembalian</a><a href="contact.html">Hubungi Kami</a></nav><span>© <span id="year"></span></span></footer>
+<script src="script.js"></script></body></html>
