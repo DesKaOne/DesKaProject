@@ -141,3 +141,26 @@ The public monitoring contract is hardened around `GET /node/metrics`:
 - `POST /node/metrics` is rejected with HTTP 405.
 - Monitoring remains observational and does not alter consensus state.
 - CI must remain green before advancing to 8.7.9.
+
+## 8.7.9 Explorer monitoring dashboard
+
+The read-only IndoChain Explorer now exposes a dedicated Monitoring view backed by `GET /node/metrics`.
+
+The dashboard presents the consolidated operational snapshot for:
+
+- node runtime and metrics schema
+- canonical chain height, tip, block/transaction counts, difficulty, and cumulative work
+- peer health counts and best-peer lag
+- mempool pending counts and aggregate native/issued-asset amounts
+- mining difficulty/retarget observations
+- explorer indexer status, readiness, height, lag, and sync failures
+
+The view is observational only and does not expose wallet, admin, faucet, staking, mining, or service write actions.
+
+### Acceptance
+
+- Explorer navigation exposes a Monitoring view.
+- Monitoring reads the versioned `/node/metrics` contract rather than duplicating monitoring state.
+- The dashboard remains read-only.
+- Monitoring errors use the existing explorer error/recovery presentation.
+- CI must remain green before advancing to 8.7.10.
