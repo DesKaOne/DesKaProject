@@ -1181,7 +1181,7 @@ func signedTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, v
 	l := ledgerFor(t, paths)
 	pending, _ := mempool.New(paths.Mempool).Load()
 	pendingCount, _, _ := mempool.PendingOutgoing(pending, from.Address)
-	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount+1)
+	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount)
 	if err := from.SignTransaction(&tx); err != nil {
 		t.Fatal(err)
 	}
