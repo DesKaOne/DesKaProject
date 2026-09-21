@@ -106,6 +106,7 @@ func (l *Ledger) ApplyTransaction(tx types.Transaction) error {
 			return fmt.Errorf("recipient balance overflow: %w", err)
 		}
 		from.Balance = balance
+		from.Nonce = tx.Nonce
 		to.Balance = toBalance
 		l.accounts[tx.From] = from
 		l.accounts[tx.To] = to
