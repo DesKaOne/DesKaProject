@@ -236,7 +236,7 @@ Evidence: `deskachain/docs/Phase9.8-PreMainnet-Readiness-Evidence.md`
 
 ### Phase 9 boundary
 
-Phase 9 completion does **not** mean mainnet approval. Production identity, economics/protocol, security assessment, infrastructure, external dependencies, production genesis, release candidate, and final release authority remain subject to the separate Phase 11 gates.
+Phase 9 completion does **not** mean mainnet approval. Production identity, economics/protocol, security assessment, infrastructure, external dependencies, production genesis, release candidate, and final release authority remain subject to the separate Phase 10 production-readiness gates.
 
 ## Phase 10 — Pre-Mainnet / Mainnet Readiness
 
