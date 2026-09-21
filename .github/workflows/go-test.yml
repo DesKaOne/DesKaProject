@@ -6,10 +6,12 @@ on:
       - main
       - phase-5-consensus-hardening
       - phase-8-testnet
+      - phase-9-testnet
   pull_request:
     branches:
       - main
       - phase-8-testnet
+      - phase-9-testnet
 
 jobs:
   test:
