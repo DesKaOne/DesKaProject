@@ -218,6 +218,15 @@ select {
   overflow-wrap: anywhere;
 }
 
+.block-navigation {
+  margin-bottom: 14px;
+}
+
+.block-navigation .muted {
+  flex: 1;
+  text-align: center;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
