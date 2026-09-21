@@ -1276,6 +1276,48 @@ func TestBoundedTransactionLoad(t *testing.T) {
 }
 
 
+func TestBoundedMiningLoad(t *testing.T) {
+	t.Helper()
+	node := newTestNode(t)
+	miner := newWallet(t)
+
+	const blocks = 3
+	start := time.Now()
+	mined := make([]types.Block, 0, blocks)
+	for i := 0; i < blocks; i++ {
+		block := mineBlock(t, node, miner.Address, nil)
+		mined = append(mined, block)
+	}
+
+	if len(mined) != blocks {
+		t.Fatalf("mined block count = %d, want %d", len(mined), blocks)
+	}
+	for i, block := range mined {
+		wantHeight := uint64(i + 1)
+		if block.Height != wantHeight {
+			t.Fatalf("mined block %d height = %d, want %d", i, block.Height, wantHeight)
+		}
+		if block.Difficulty != config.InitialDifficulty {
+			t.Fatalf("mined block %d difficulty = %d, want initial difficulty %d", i, block.Difficulty, config.InitialDifficulty)
+		}
+		if i > 0 && block.Timestamp < mined[i-1].Timestamp {
+			t.Fatalf("block timestamps regressed: previous=%d current=%d", mined[i-1].Timestamp, block.Timestamp)
+		}
+	}
+
+	status := fetchExplorerStatus(t, node)
+	if status.Height != blocks {
+		t.Fatalf("mining load final height = %d, want %d", status.Height, blocks)
+	}
+	if status.TipDifficulty != config.InitialDifficulty || status.Difficulty != config.InitialDifficulty || status.NextDifficulty != config.InitialDifficulty {
+		t.Fatalf("unexpected mining difficulty status: %#v", status)
+	}
+	if time.Since(start) <= 0 {
+		t.Fatal("mining load elapsed time was not recorded")
+	}
+	validateChain(t, node)
+}
+
 func TestBoundedMultiNodeSoak(t *testing.T) {
 	t.Helper()
 	nodeA := newTestNode(t)
