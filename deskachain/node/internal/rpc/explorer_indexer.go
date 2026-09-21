@@ -102,29 +102,6 @@ func (x *explorerIndexer) open() (*bolt.DB, error) {
 				return e
 			}
 		}
-		metrics := explorerIndexerMetrics{
-			SyncCount:          1,
-			LastSyncAtUnix:     time.Now().Unix(),
-			LastSyncDurationMs: time.Since(syncStarted).Milliseconds(),
-			LastSyncBlockCount: indexedBlocks,
-		}
-		if previous := tx.Bucket([]byte("meta")).Get([]byte("metrics")); previous != nil {
-			_ = json.Unmarshal(previous, &metrics)
-			metrics.SyncCount++
-			metrics.LastSyncAtUnix = time.Now().Unix()
-			metrics.LastSyncDurationMs = time.Since(syncStarted).Milliseconds()
-			metrics.LastSyncBlockCount = indexedBlocks
-		}
-		if metrics.LastSyncDurationMs > 0 {
-			metrics.BlocksPerSecond = float64(metrics.LastSyncBlockCount) / (float64(metrics.LastSyncDurationMs) / 1000)
-		}
-		rawMetrics, err := json.Marshal(metrics)
-		if err != nil {
-			return err
-		}
-		if err := tx.Bucket([]byte("meta")).Put([]byte("metrics"), rawMetrics); err != nil {
-			return err
-		}
 		return nil
 	})
 	if err != nil {
