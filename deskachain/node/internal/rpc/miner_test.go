@@ -507,6 +507,30 @@ func TestNodeMetricsExposeExplorerIndexerStatistics(t *testing.T) {
 	}
 }
 
+
+func TestNodeMetricsPublicReadOnlyContract(t *testing.T) {
+	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	if metrics["schema_version"] != "v1" {
+		t.Fatalf("metrics schema_version = %#v, want v1", metrics["schema_version"])
+	}
+	for _, key := range []string{"network", "chain", "peers", "mempool", "mining", "indexer", "runtime"} {
+		if metrics[key] == nil {
+			t.Fatalf("public node metrics missing %q: %#v", key, metrics)
+		}
+	}
+
+	resp, err := http.Post(server.URL+"/node/metrics", "application/json", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /node/metrics status = %d, want 405", resp.StatusCode)
+	}
+}
+
 func TestMiningObservationEndpointsPublicReadOnly(t *testing.T) {
 	paths, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
 	for _, path := range []string{"/mining/status", "/mining/stats", "/mining/difficulty", "/mining/blocks?limit=5"} {
