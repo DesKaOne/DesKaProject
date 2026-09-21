@@ -327,6 +327,54 @@ func (x *explorerIndexer) status() (ExplorerIndexerStatus, error) {
 	return x.statusUnlocked()
 }
 
+func (x *explorerIndexer) stats() (ExplorerIndexerStats, error) {
+	status, err := x.statusUnlocked()
+	if err != nil {
+		return ExplorerIndexerStats{}, err
+	}
+	db, err := x.open()
+	if err != nil {
+		return ExplorerIndexerStats{}, err
+	}
+	defer db.Close()
+	counts := ExplorerIndexerStats{
+		IndexedHeight: status.IndexedHeight,
+		ChainHeight: status.ChainHeight,
+		Lag: status.Lag,
+		Ready: status.Ready,
+		SchemaVersion: status.SchemaVersion,
+	}
+	err = db.View(func(tx *bolt.Tx) error {
+		buckets := []struct{name string; dst *int}{
+			{"blocks", &counts.BlockCount},
+			{"txs", &counts.TransactionCount},
+			{"addresses", &counts.AddressHistoryCount},
+			{"assets", &counts.AssetEventCount},
+		}
+		for _, item := range buckets {
+			b := tx.Bucket([]byte(item.name))
+			if b == nil { continue }
+			if err := b.ForEach(func(k, v []byte) error {
+				if v != nil { *item.dst = *item.dst + 1 }
+				return nil
+			}); err != nil { return err }
+		}
+		return nil
+	})
+	if err != nil {
+		return ExplorerIndexerStats{}, err
+	}
+	switch {
+	case status.Ready:
+		counts.SyncStatus = "ready"
+	case status.IndexedHeight == 0 && status.ChainHeight > 0:
+		counts.SyncStatus = "initializing"
+	default:
+		counts.SyncStatus = "lagging"
+	}
+	return counts, nil
+}
+
 func (x *explorerIndexer) transaction(id string) (explorerIndexedTx, bool, error) {
 	db, err := x.open()
 	if err != nil {
