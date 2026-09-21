@@ -51,3 +51,7 @@ The UI consumes explorer endpoints rather than scanning raw RPC responses. Futur
 ### Phase 8.3 lifecycle
 
 The persistent explorer indexer runs in the RPC server lifecycle and advances its durable cursor in the background. Indexed read endpoints remain read-only and return an explicit not-ready response until the index catches up.
+
+### Phase 8.4 soak metrics
+
+The persistent indexer exposes `GET /explorer/indexer/stats` with indexed/chain height, lag, readiness, record counts, sync count, last sync timestamp, last sync duration, last sync block count, and blocks-per-second. Sync metrics are persisted in the explorer `meta` bucket so they survive RPC restarts and can be used during testnet soak monitoring. Metrics describe the explorer read model only and do not participate in consensus.
