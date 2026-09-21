@@ -464,8 +464,21 @@ func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or iND address")
-		return
+		events, _, err := indexer.assetEvents(query, 1, 0)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if len(events) > 0 {
+			results = append(results, map[string]any{
+				"type": "asset", "id": query, "label": "Asset " + query,
+				"path": "/explorer-ui/#/asset/" + query, "api_path": "/explorer/indexed/asset/" + query + "/txs",
+				"event_count": 1,
+			})
+		} else {
+			explorerError(w, http.StatusNotFound, "not_found", "no indexed explorer result found")
+			return
+		}
 	}
 	if len(results) == 0 {
 		explorerError(w, http.StatusNotFound, "not_found", "no indexed explorer result found")
