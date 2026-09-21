@@ -4,7 +4,7 @@
 >
 > Current branch checkpoint: **Phase 10 — Pre-Mainnet / Mainnet Readiness Evidence**.
 >
-> Phase 8 testnet engineering and Phase 9 testnet operations are complete as documented engineering/evidence scope. Phase 10 consolidates the production-readiness gates without authorizing mainnet. Phase 11 production decisions remain explicitly unresolved.
+> Phase 8 testnet engineering and IndoScan foundations are complete. Phase 9 testnet operations/evidence scope is complete. Phase 10 readiness controls and reproducible snapshot validation are complete as an engineering gate; production/mainnet approval, release authority, and final production identifiers remain separately gated.
 
 ## Roadmap Overview
 
@@ -51,7 +51,7 @@ Focus: testnet development, IndoScan integration, network hardening, and prepara
 - Initial API layer
 
 ### 8.2 — IndoScan Core
-**Status: 🚧 In Progress**
+**Status: ✅ Complete — engineering scope**
 
 - Block explorer
 - Transaction explorer
@@ -77,7 +77,7 @@ IndoScan
 ```
 
 ### 8.3 — IndoScan UI / UX
-**Status: 🚧 In Progress**
+**Status: ✅ Complete — engineering/UI foundation scope**
 
 - Dashboard
 - Latest blocks
@@ -90,7 +90,7 @@ IndoScan
 - Responsive UI
 
 ### 8.4 — IndoScan Testnet Integration
-**Status: 🟡 Current / Next**
+**Status: ✅ Complete — integration foundation/evidence scope**
 
 Connect IndoScan to real IndoChain Testnet data through RPC/API.
 
@@ -107,7 +107,7 @@ Validation areas:
 - API failure handling
 
 ### 8.5 — Testnet Hardening
-**Status: ⏳ Planned**
+**Status: ✅ Complete — engineering hardening scope**
 
 - P2P stability
 - Node synchronization
@@ -121,7 +121,7 @@ Validation areas:
 - CI regression testing
 
 ### 8.6 — Public Testnet
-**Status: ⏳ Planned**
+**Status: ✅ Complete — documented/testnet operations scope**
 
 Target topology:
 
@@ -240,18 +240,18 @@ Phase 9 completion does **not** mean mainnet approval. Production identity, econ
 
 ## Phase 10 — Pre-Mainnet / Mainnet Readiness
 
-**Status: 🟡 Current**
+**Status: ✅ Engineering gate complete / production decision-gated**
 
-Phase 10 prepares the production-readiness evidence and decision gates after testnet operations. It does **not** launch mainnet and does not create production identifiers by assumption.
+Phase 10 prepares and mechanically validates the production-readiness evidence and decision gates after testnet operations. It does **not** launch mainnet and does not create production identifiers by assumption.
 
 ### 10.1 — Network Identity & Genesis Decision
-**Status: 🔒 Approval-gated**
+**Status: 🟡 Open — explicit production decision still required**
 
-- Mainnet network ID
-- Mainnet chain ID
-- Production genesis artifact/hash
-- Protocol/release version
-- Testnet/mainnet isolation
+- Mainnet network ID remains TBD
+- Mainnet chain ID remains TBD
+- Production genesis artifact/hash remains TBD
+- Protocol/release version remains TBD until approved
+- Testnet/mainnet isolation guard is enforced
 
 Evidence: `deskachain/docs/Phase10.1-Network-Identity-Genesis-Decision.md`
 
@@ -389,7 +389,7 @@ IndoChain
 - Network validation
 - Transaction confirmation
 
-**Milestone:** IndoChainWallet usable
+**Milestone:** IndoChainWallet usable on IndoChain Testnet first, with production/mainnet network selection kept explicit and isolated.
 
 ---
 
