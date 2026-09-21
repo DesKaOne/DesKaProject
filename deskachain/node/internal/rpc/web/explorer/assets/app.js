@@ -297,7 +297,13 @@
           escapeHTML(tx.fee)
         ]);
       });
-      app.innerHTML = panel("Block detail", '<div class="grid">' + metrics + "</div>") +
+      var height = Number(b.height);
+      var navigation = '<div class="toolbar block-navigation">' +
+        '<button type="button" data-block-nav="' + (Number.isFinite(height) && height > 0 ? height - 1 : "") + '"' + (height > 0 ? "" : " disabled") + '>Previous block</button>' +
+        '<span class="muted">Block ' + escapeHTML(b.height) + '</span>' +
+        '<button type="button" data-block-nav="' + (Number.isFinite(height) ? height + 1 : "") + '">Next block</button>' +
+        '</div>';
+      app.innerHTML = panel("Block detail", navigation + '<div class="grid">' + metrics + "</div>") +
         panel("Transactions", table(["Txid", "Type", "From", "To", "Amount", "Fee"], rows, "No transactions in this block."));
     }).catch(function (err) { setError(friendlyError(err, "Unable to load block.")); });
   }
@@ -502,6 +508,12 @@
       } else {
         done();
       }
+    }
+    var blockNav = event.target.closest("[data-block-nav]");
+    if (blockNav && blockNav.getAttribute("data-block-nav")) {
+      event.preventDefault();
+      window.location.hash = "#/block/" + encodeURIComponent(blockNav.getAttribute("data-block-nav"));
+      return;
     }
     var refresh = event.target.closest("[data-refresh]");
     if (refresh && refresh.getAttribute("data-refresh") === "dashboard") {
