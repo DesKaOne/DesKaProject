@@ -150,13 +150,30 @@
     });
   }
 
+  function dashboardSection(title, metrics) {
+    return panel(title, '<div class="grid">' + metrics + "</div>");
+  }
+
   function renderDashboard() {
     setLoading("Dashboard");
     Promise.all([jsonFetch("/explorer/status"), jsonFetch("/health"), jsonFetch("/explorer/indexer/stats")]).then(function (results) {
       var s = results[0];
       var health = results[1];
       var indexer = results[2].stats || {};
-      var metrics = [
+      var ready = indexer.ready === true;
+      var healthOK = health.ok === true;
+      var lag = Number(indexer.lag || 0);
+      var statusClass = ready && healthOK && lag === 0 ? "status-ok" : "status-warn";
+      var statusText = ready && healthOK && lag === 0 ? "Synced" : (ready ? "Catching up" : "Indexer not ready");
+      var summary = '<div class="dashboard-summary">' +
+        '<div class="status-card ' + statusClass + '">' +
+        '<span class="muted">Explorer status</span><strong>' + escapeHTML(statusText) + '</strong>' +
+        '<small>Health ' + escapeHTML(String(health.ok)) + ' · Indexer height ' + escapeHTML(indexer.indexed_height) + ' · Chain height ' + escapeHTML(indexer.chain_height) + '</small>' +
+        '</div>' +
+        '<button class="primary" type="button" data-refresh="dashboard">Refresh</button>' +
+        '</div>';
+
+      var chainMetrics = [
         metric("Network", s.network),
         metric("Network ID", s.network_id),
         metric("Chain ID", s.chain_id),
@@ -165,28 +182,44 @@
         metric("Difficulty", s.difficulty),
         metric("Next difficulty", s.next_difficulty),
         metric("Total supply", s.total_supply),
-        metric("Circulating supply", s.circulating_supply),
+        metric("Circulating supply", s.circulating_supply)
+      ].join("");
+
+      var networkMetrics = [
         metric("Pending tx", s.pending_tx_count),
         metric("Peers", s.peer_count),
         metric("Public RPC", s.public_rpc),
         metric("Wallet RPC", s.wallet_rpc),
         metric("Admin RPC", s.admin_rpc),
         metric("Mainnet available", s.mainnet_available),
-        metric("Health", health.ok),
+        metric("Health", health.ok)
+      ].join("");
+
+      var indexerMetrics = [
         metric("Indexer ready", indexer.ready),
         metric("Indexed height", indexer.indexed_height),
+        metric("Chain height", indexer.chain_height),
         metric("Indexer lag", indexer.lag),
         metric("Indexed blocks", indexer.block_count),
         metric("Indexed transactions", indexer.transaction_count),
         metric("Address histories", indexer.address_history_count),
-        metric("Asset events", indexer.asset_event_count),
+        metric("Asset events", indexer.asset_event_count)
+      ].join("");
+
+      var syncMetrics = [
         metric("Sync count", indexer.sync_count),
         metric("Sync failures", indexer.sync_failure_count),
         metric("Last sync duration", String(indexer.last_sync_duration_ms || 0) + " ms"),
-        metric("Blocks / second", Number(indexer.blocks_per_second || 0).toFixed(2))
+        metric("Blocks / second", Number(indexer.blocks_per_second || 0).toFixed(2)),
+        metric("Last sync", timestamp(indexer.last_sync_at_unix))
       ].join("");
+
       var syncError = indexer.last_sync_error ? '<p class="error">Latest indexer sync error: ' + escapeHTML(indexer.last_sync_error) + "</p>" : "";
-      app.innerHTML = panel("Dashboard", '<div class="grid">' + metrics + "</div>" + syncError);
+      app.innerHTML = panel("Dashboard", summary) +
+        dashboardSection("Chain", chainMetrics) +
+        dashboardSection("Network & RPC", networkMetrics) +
+        dashboardSection("Explorer indexer", indexerMetrics) +
+        dashboardSection("Indexer sync", syncMetrics + syncError);
     }).catch(setError);
   }
 
