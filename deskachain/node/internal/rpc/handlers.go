@@ -1013,6 +1013,15 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 	mining := miningMetricsMap(blocks, net, len(pending), h.peerCount())
 	h.addMiningGuardFields(mining)
 
+	observedAt := time.Now().Unix()
+	runtimeMetrics := map[string]any{
+		"observed_at_unix":      observedAt,
+		"uptime_seconds":        uptime,
+		"chain_height":          tip.Height,
+		"active_peer_count":     activePeers,
+		"mempool_pending_count": len(pending),
+	}
+
 	mempoolStats := map[string]any{
 		"pending_tx_count": len(pending),
 		"pending_fee_total": uint64(0),
@@ -1058,6 +1067,7 @@ func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
 		"chain_id": net.ChainID,
 		"genesis_hash": chain.GenesisBlockForNetwork(net).Hash,
 		"uptime_seconds": uptime,
+		"runtime": runtimeMetrics,
 		"chain": map[string]any{
 			"height": tip.Height,
 			"tip_hash": tip.Hash,
