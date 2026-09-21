@@ -1223,6 +1223,72 @@ func validateChain(t *testing.T, paths config.Paths) {
 	}
 }
 
+func TestBoundedMultiNodeSoak(t *testing.T) {
+	t.Helper()
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	minerA := newWallet(t)
+	minerC := newWallet(t)
+
+	mineBlocks(t, nodeA, minerA.Address, 16)
+
+	serverA := newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	if tipA.Height != 16 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash {
+		t.Fatalf("initial soak convergence failed: A=%#v B=%#v", tipA, tipB)
+	}
+	validateChain(t, nodeB)
+
+	mineBlocks(t, nodeA, minerA.Address, 16)
+
+	serverA = newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeC, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	serverA = newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	tipA = tip(t, nodeA)
+	tipB = tip(t, nodeB)
+	tipC := tip(t, nodeC)
+	if tipA.Height != 32 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash || tipC.Height != tipA.Height || tipC.Hash != tipA.Hash {
+		t.Fatalf("repeated soak convergence failed: A=%#v B=%#v C=%#v", tipA, tipB, tipC)
+	}
+	validateChain(t, nodeB)
+	validateChain(t, nodeC)
+
+	mineBlocks(t, nodeC, minerC.Address, 4)
+	serverC := newP2PTestServer(nodeC)
+	if err := SyncFromPeerWithProfile(nodeA, serverC.URL, nil, fundedP2PProfile()); err != nil {
+		serverC.Close()
+		t.Fatal(err)
+	}
+	serverC.Close()
+
+	tipA = tip(t, nodeA)
+	tipC = tip(t, nodeC)
+	if tipA.Height != 36 || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
+		t.Fatalf("final soak convergence failed: A=%#v C=%#v", tipA, tipC)
+	}
+	validateChain(t, nodeA)
+	validateChain(t, nodeC)
+}
+
 func TestThreeNodeControlledForkConvergence(t *testing.T) {
 	nodeA := newTestNode(t)
 	nodeB := newTestNode(t)
