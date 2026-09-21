@@ -6,7 +6,7 @@ cd "$root/node"
 
 printf '%s\n' 'Phase 10 readiness snapshot'
 printf 'go=%s\n' "$(go version)"
-printf 'module=%s\n' "$(awk '/^module /{print $2; exit}' go.mod)"
+printf 'module=%s\n' "$(awk '/^module / {print $2; exit}' go.mod)"
 echo 'tests=go test ./...'
 go test ./...
 
