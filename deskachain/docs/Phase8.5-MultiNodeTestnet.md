@@ -65,3 +65,37 @@ Use `/health`, `/explorer/status`, `/explorer/indexer/stats`, `/peer/health`, an
 Phase 8.5 is ready to move to Phase 8.6 when three-node synchronization converges in automated tests; peer identity and network/genesis validation remain green; the intended LAN/Tailscale/VPS topology works; restart recovery preserves node/peer state; controlled fork/reorg observations converge; public-safe nodes keep wallet/admin RPC disabled; and health plus explorer metrics provide sufficient evidence for soak testing.
 
 Phase 8.6 will use this topology as the baseline for long-running soak, transaction load, mining load, mempool pressure, restart/recovery, peer churn, and explorer indexer recovery.
+## 8.5.4 Operator health/runbook validation
+
+The testnet health scripts are the operator-facing acceptance check for a running node. In addition to chain, peer, RPC-safety, mining, and Explorer checks, they now validate the Explorer indexer through `/explorer/indexer/stats`.
+
+Recommended acceptance command:
+
+```sh
+./scripts/testnet-health.sh http://127.0.0.1:9311 \\
+  --expected-network testnet \\
+  --expected-network-id ind-testnet-1 \\
+  --expected-chain-id 777101 \\
+  --min-peers 2 \\
+  --check-peer-list \\
+  --require-indexer-ready \\
+  --max-indexer-lag 2
+```
+
+The PowerShell equivalent exposes `-RequireIndexerReady` and `-MaxIndexerLag`.
+
+The indexer check is intentionally operational/read-model validation: indexer readiness or lag does not alter consensus state. A node can therefore be healthy at the chain layer while its Explorer read model is still catching up; operators can make readiness/lag a hard acceptance gate when required.
+
+### 8.5.4 exit criteria
+
+- `/health` succeeds and reports the expected network identity.
+- `/explorer/status` succeeds.
+- Public RPC safety is preserved; wallet/admin RPC are not exposed unless explicitly allowed by the operator check.
+- Peer health/list checks can confirm the expected topology.
+- `/explorer/indexer/stats` is reachable and, for acceptance, reports `ready=true` with lag within the configured threshold.
+- The same checks are available from both shell and PowerShell runbooks.
+- Controlled fork/reorg and three-node convergence tests remain green in CI.
+
+## 8.5.5 Phase completion
+
+Phase 8.5 is considered complete after the operator/runbook checks above are validated in CI and the multi-node acceptance matrix covers convergence, health identity, restart/recovery, and controlled fork/reorg behavior. The next stage is Phase 8.6 soak testing.
