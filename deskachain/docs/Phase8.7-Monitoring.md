@@ -62,3 +62,23 @@ The mining statistics are observational only. They do not alter difficulty, mini
 - Difficulty/retarget and interval fields are present with stable JSON types.
 - Mining statistics are derived from canonical chain state rather than fabricated counters.
 - CI must remain green before advancing to 8.7.5.
+
+## 8.7.5 Transaction and mempool statistics
+
+`/node/metrics` now exposes read-only mempool statistics:
+
+- pending transaction count
+- aggregate pending fees
+- aggregate native dIDR amount pending
+- aggregate issued-asset amount pending, kept separate because issued assets are distinct from native dIDR
+- oldest and newest pending transaction timestamps
+- pending transaction counts by transaction type
+
+The endpoint derives these values directly from the persisted mempool snapshot at request time. It does not mutate, reorder, admit, reject, or clear mempool transactions.
+
+### Acceptance
+
+- A pending transaction is reflected in the mempool count, fee total, native amount, and type count.
+- Issued-asset amounts remain separated from native dIDR amounts.
+- Empty mempool remains represented by zero counts/totals without requiring special endpoint behavior.
+- CI must remain green before advancing to 8.7.6.
