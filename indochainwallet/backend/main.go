@@ -173,13 +173,13 @@ func hasSignedTransaction(req map[string]any) bool {
 	to, okTo := req["to"].(string)
 	version, okVersion := numericField(req["version"])
 	fee, okFee := numericField(req["fee"])
-	nonce, okNonce := numericField(req["nonce"])
+	_, okNonce := numericField(req["nonce"])
 	return okSig && strings.TrimSpace(signature) != "" &&
 		okKey && strings.TrimSpace(publicKey) != "" &&
 		okFrom && strings.TrimSpace(from) != "" &&
 		okTo && strings.TrimSpace(to) != "" &&
 		okVersion && version >= 1 &&
-		okFee && fee >= 0 &&
+		okFee &&
 		okNonce
 }
 
@@ -221,6 +221,7 @@ func jsonMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
