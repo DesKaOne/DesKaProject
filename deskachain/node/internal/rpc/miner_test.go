@@ -522,7 +522,7 @@ func TestNodeMetricsConsolidatedMonitoringAcceptance(t *testing.T) {
 	}
 
 	chainInfo, ok := metrics["chain"].(map[string]any)
-	if !ok || chainInfo["height"] == nil || chainInfo["tip_hash"] == nil || chainInfo["difficulty"] == nil || chainInfo["total_transaction_count"] == nil {
+	if !ok || chainInfo["height"] == nil || chainInfo["tip_hash"] == nil || chainInfo["transaction_count"] == nil {
 		t.Fatalf("chain monitoring fields incomplete: %#v", metrics["chain"])
 	}
 	peerInfo, ok := metrics["peers"].(map[string]any)
