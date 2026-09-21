@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"errors"
 	"bytes"
 	"context"
 	"encoding/json"
