@@ -234,6 +234,74 @@
     }).catch(setError);
   }
 
+  function renderMonitoring() {
+    setLoading("Monitoring");
+    jsonFetch("/node/metrics").then(function (data) {
+      var chain = data.chain || {};
+      var peers = data.peers || {};
+      var mempool = data.mempool || {};
+      var mining = data.mining || {};
+      var indexer = data.indexer || {};
+      var indexerStats = indexer.stats || {};
+      var runtime = data.runtime || {};
+
+      var nodeMetrics = [
+        metric("Schema", data.schema_version),
+        metric("Network", data.network),
+        metric("Uptime", String(runtime.uptime_seconds == null ? data.uptime_seconds : runtime.uptime_seconds) + "s"),
+        metric("Observed", timestamp(runtime.observed_at_unix))
+      ].join("");
+      var chainMetrics = [
+        metric("Height", chain.height),
+        metric("Tip hash", chain.tip_hash),
+        metric("Blocks", chain.block_count),
+        metric("Transactions", chain.transaction_count),
+        metric("Difficulty", chain.difficulty),
+        metric("Cumulative work", chain.cumulative_work)
+      ].join("");
+      var peerMetrics = [
+        metric("Known", peers.known),
+        metric("Active", peers.active),
+        metric("Failed", peers.failed),
+        metric("Best height", peers.best_height),
+        metric("Best lag", peers.best_lag)
+      ].join("");
+      var mempoolMetrics = [
+        metric("Pending", mempool.pending_tx_count),
+        metric("Fees", mempool.pending_fee_total),
+        metric("Native dIDR", mempool.pending_native_amount),
+        metric("Issued assets", mempool.pending_issued_asset_amount),
+        metric("Oldest", timestamp(mempool.oldest_tx_timestamp)),
+        metric("Newest", timestamp(mempool.newest_tx_timestamp))
+      ].join("");
+      var indexerMetrics = [
+        metric("Status", indexer.status),
+        metric("Ready", indexerStats.ready),
+        metric("Indexed height", indexerStats.indexed_height),
+        metric("Chain height", indexerStats.chain_height),
+        metric("Lag", indexerStats.lag),
+        metric("Sync failures", indexerStats.sync_failure_count)
+      ].join("");
+      var miningMetrics = [
+        metric("Height", mining.height),
+        metric("Current difficulty", mining.current_difficulty),
+        metric("Next difficulty", mining.next_difficulty),
+        metric("Blocks until retarget", mining.blocks_until_retarget),
+        metric("Average interval", mining.average_interval_seconds),
+        metric("Retarget direction", mining.projected_retarget_direction)
+      ].join("");
+
+      app.innerHTML = panel("Monitoring", '<p class="muted">Read-only node observability. These values do not participate in consensus.</p>' +
+        '<div class="toolbar"><button class="primary" type="button" data-refresh="monitoring">Refresh</button></div>') +
+        dashboardSection("Node runtime", nodeMetrics) +
+        dashboardSection("Chain", chainMetrics) +
+        dashboardSection("Peers", peerMetrics) +
+        dashboardSection("Mempool", mempoolMetrics) +
+        dashboardSection("Mining", miningMetrics) +
+        dashboardSection("Explorer indexer", indexerMetrics);
+    }).catch(function (err) { setError(friendlyError(err, "Unable to load monitoring metrics.")); });
+  }
+
   function renderBlocks() {
     setLoading("Blocks");
     jsonFetch("/explorer/blocks?limit=" + blockLimit + "&offset=" + blockOffset).then(function (data) {
@@ -475,6 +543,7 @@
       return renderBlocks();
     }
     if (parts[0] === "mining") return renderMining();
+    if (parts[0] === "monitoring") return renderMonitoring();
     if (parts[0] === "block" && parts[1]) return renderBlock(parts[1]);
     if (parts[0] === "tx" && parts[1]) return renderTx(parts[1]);
     if (parts[0] === "address" && parts[1]) return renderAddress(parts[1]);
@@ -537,10 +606,10 @@
       return;
     }
     var refresh = event.target.closest("[data-refresh]");
-    if (refresh && refresh.getAttribute("data-refresh") === "dashboard") {
+    if (refresh && (refresh.getAttribute("data-refresh") === "dashboard" || refresh.getAttribute("data-refresh") === "monitoring")) {
       event.preventDefault();
-      window.location.hash = "#/";
-      renderDashboard();
+      window.location.hash = refresh.getAttribute("data-refresh") === "monitoring" ? "#/monitoring" : "#/";
+      if (refresh.getAttribute("data-refresh") === "monitoring") renderMonitoring(); else renderDashboard();
       return;
     }
     var page = event.target.closest("[data-page]");
