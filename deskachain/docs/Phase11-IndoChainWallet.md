@@ -130,6 +130,24 @@ The wallet must never:
 
 ## Current state
 
-**Phase 11 specification started.**
+**Phase 11 implementation in progress.**
+
+Implemented in the current Phase 11 branch: native wallet key/address/signing primitives, encrypted Go secure store, network guards, transaction builders/tests, Go wallet backend RPC gateway, Flutter Android/iOS app shell, secure mobile storage dependency, wallet dashboard, balance/nonce/history/fee reads, transaction review confirmation UI, IndoScan URL helpers, mobile private-key normalization, and client-side network/minimum-fee transaction guards.
+
+Current hardening note: mnemonic generation and BIP39 seed conversion are implemented, but the repository does not yet define an official IndoChain mnemonic-to-private-key derivation path. The mobile wallet therefore fails closed instead of inventing a derivation rule. Local signing must use an explicitly supplied/known 32-byte IndoChain private key until that derivation contract is frozen.
+
+Still required before the Phase 11 acceptance gate is complete: official mnemonic/key derivation contract, real mobile key/seed restore integration, end-to-end signed transaction relay test, explicit backup/restore test evidence, and release/build evidence for Android/iOS.
+
+Workflow rule: all 11.1–11.5 work remains on `phase-11-indochain-wallet` and the single Phase 11 PR until the complete Phase 11 acceptance gate is satisfied.
 
 Implementation work should proceed from the actual IndoChain transaction/address primitives and existing RPC contracts; no new consensus rules should be invented solely for the wallet layer.
+
+## Implementation layout
+
+The implementation is split into:
+
+- `deskachain/node/internal/wallet` — native IndoChain wallet core, transaction builders, signing, secure storage and network guards;
+- `indochainwallet/backend` — Go backend gateway to IndoChain RPC;
+- `indochainwallet/app/indochainwallet` — Flutter Android/iOS application.
+
+The mobile app talks to the wallet backend for chain read/relay operations. Private-key material is not placed in the backend gateway.
