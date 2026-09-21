@@ -110,6 +110,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /explorer/indexed/search", h.wrap("generic", h.explorerIndexedSearch))
 	mux.HandleFunc("GET /explorer/indexed/tx/", h.wrap("generic", h.explorerIndexedTx))
 	mux.HandleFunc("GET /explorer/indexed/address/", h.wrap("generic", h.explorerIndexedAddressRouter))
+	mux.HandleFunc("GET /explorer/indexed/asset/", h.wrap("generic", h.explorerIndexedAssetRouter))
 	mux.HandleFunc("GET /explorer/search", h.wrap("generic", h.explorerSearch))
 	mux.HandleFunc("GET /explorer/blocks", h.wrap("generic", h.explorerBlocks))
 	mux.HandleFunc("GET /explorer/blocks/", h.wrap("generic", h.explorerBlockByHeight))
@@ -340,6 +341,55 @@ func (h handler) explorerIndexedAddressTxs(w http.ResponseWriter, r *http.Reques
 	}
 	resp := explorerPagedResponse("transactions", items, total, limit, offset)
 	resp["address"] = address
+	resp["api_version"] = ExplorerAPIVersion
+	resp["indexer"] = status
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h handler) explorerIndexedAssetRouter(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/asset/")
+	if strings.HasSuffix(path, "/txs") {
+		h.explorerIndexedAssetTxs(w, r, strings.TrimSuffix(path, "/txs"))
+		return
+	}
+	explorerError(w, http.StatusNotFound, "not_found", "indexed asset endpoint not found")
+}
+
+func (h handler) explorerIndexedAssetTxs(w http.ResponseWriter, r *http.Request, assetID string) {
+	assetID = strings.TrimSpace(assetID)
+	if assetID == "" || len(assetID) > 128 {
+		explorerError(w, http.StatusBadRequest, "invalid_asset_id", "asset id is required")
+		return
+	}
+	limit, offset, ok := explorerLimitOffset(w, r, 20, 100)
+	if !ok {
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	events, total, err := indexer.assetEvents(assetID, limit, offset)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(events))
+	for _, item := range events {
+		items = append(items, map[string]any{
+			"txid": item.TxID,
+			"block_height": item.BlockHeight,
+			"block_hash": item.BlockHash,
+			"asset_id": item.AssetID,
+			"from": item.From,
+			"to": item.To,
+			"amount": item.Amount,
+			"fee": item.Fee,
+		})
+	}
+	resp := explorerPagedResponse("events", items, total, limit, offset)
+	resp["asset_id"] = assetID
 	resp["api_version"] = ExplorerAPIVersion
 	resp["indexer"] = status
 	writeJSON(w, http.StatusOK, resp)
