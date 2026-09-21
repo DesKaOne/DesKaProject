@@ -1,6 +1,6 @@
-# DesKaChain RC2 Planning
+# IndoChain RC2 Planning
 
-Testnet IDR has no monetary value. Mainnet is not available.
+Testnet dIDR has no monetary value. Mainnet is not available.
 
 ## RC2 Goal
 

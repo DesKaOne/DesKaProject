@@ -9,7 +9,7 @@ import (
 
 const (
 	canonicalBlockCodecVersion uint8 = 1
-	canonicalBlockHeaderDomain       = "DesKaChain/block-header/v2"
+	canonicalBlockHeaderDomain       = "IndoChain/block-header/v2"
 )
 
 var ErrInvalidCanonicalBlockHeader = errors.New("invalid canonical block header")

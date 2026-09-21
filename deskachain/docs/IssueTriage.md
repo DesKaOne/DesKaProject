@@ -1,6 +1,6 @@
-# DesKaChain RC1 Issue Triage
+# IndoChain RC1 Issue Triage
 
-Testnet IDR has no monetary value. Mainnet is not available. Never ask testers to paste private keys, wallet files, or secrets.
+Testnet dIDR has no monetary value. Mainnet is not available. Never ask testers to paste private keys, wallet files, or secrets.
 
 ## Severity
 
@@ -27,7 +27,7 @@ Testnet IDR has no monetary value. Mainnet is not available. Never ask testers t
 
 ## Triage Flow
 
-1. Confirm version with `deskachain version`.
+1. Confirm version with `indochain version`.
 2. Confirm network/genesis with `/health`, `/explorer/status`, or `chain info`.
 3. Ask for the exact command, OS, artifact name, and redacted logs.
 4. Reproduce locally when possible.
@@ -43,7 +43,7 @@ Testnet IDR has no monetary value. Mainnet is not available. Never ask testers t
 - Do not request secrets, tokens, systemd private env files, or SSH keys.
 - Ask testers to redact IPs if needed.
 - Keep public RPC advice read-only by default.
-- Do not imply testnet IDR has price, profit, APY, or guaranteed future value.
+- Do not imply testnet dIDR has price, profit, APY, or guaranteed future value.
 
 ## Close Rules
 

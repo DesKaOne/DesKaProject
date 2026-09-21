@@ -1,6 +1,6 @@
 package main
 
-import "deskachain/internal/cli"
+import "indochain/internal/cli"
 
 func main() {
 	cli.Main()

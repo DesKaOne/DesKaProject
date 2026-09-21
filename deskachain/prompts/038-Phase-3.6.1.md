@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status:
 
@@ -15,7 +15,7 @@ On Node B:
 chain info:
 height: 0
 tip hash: genesis
-total supply: 50 IDR
+total supply: 50 dIDR
 blocks: 2
 coinbase blocks: 1
 
@@ -23,21 +23,21 @@ chain validate:
 chain valid
 height: 1
 blocks: 2
-total supply: 50 IDR
+total supply: 50 dIDR
 
 This is inconsistent.
 
 Expected:
-If blocks=2 and total supply=50 IDR after importing height 1, then chain info must report:
+If blocks=2 and total supply=50 dIDR after importing height 1, then chain info must report:
 height: 1
 tip hash: imported block hash
 tip difficulty: 4
-total supply: 50 IDR
+total supply: 50 dIDR
 blocks: 2
 chain validate agrees with chain info
 
 Patch name:
-DesKaChain Phase 3.6.1 — Chain Info Snapshot Consistency After P2P Import
+IndoChain Phase 3.6.1 — Chain Info Snapshot Consistency After P2P Import
 
 Goal:
 Ensure `/chain/info` and CLI `chain info` always report a consistent canonical chain snapshot after:
@@ -139,7 +139,7 @@ Required tests:
   * height == 1
   * tip hash == imported block hash
   * blocks == 2
-  * total supply == 50 IDR
+  * total supply == 50 dIDR
   * coinbase blocks == 1
 * call B chain validate.
 * assert validate height == chain info height.
@@ -195,35 +195,35 @@ go test ./node/internal/chain -run "Tip|Snapshot|Validate|Supply" -count=1 -v
 Manual reproduction:
 
 Clean:
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/seed_miner dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/seed_a dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/seed_b dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/seed_miner dev reset --yes
 
 Init:
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/seed_miner --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_a --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_b --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_miner --network testnet init
 
 Start A:
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a node start --rpc :9111 --p2p :10111 --advertise-p2p http://127.0.0.1:10111 --public-rpc --enable-miner-rpc
+go run ./node/cmd/indochain --datadir ./testdata/seed_a node start --rpc :9111 --p2p :10111 --advertise-p2p http://127.0.0.1:10111 --public-rpc --enable-miner-rpc
 
 Start B with seed peer:
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b node start --rpc :9112 --p2p :10112 --advertise-p2p http://127.0.0.1:10112 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10111/
+go run ./node/cmd/indochain --datadir ./testdata/seed_b node start --rpc :9112 --p2p :10112 --advertise-p2p http://127.0.0.1:10112 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10111/
 
 Create miner wallet:
-go run ./node/cmd/deskachain --datadir ./testdata/seed_miner wallet new
+go run ./node/cmd/indochain --datadir ./testdata/seed_miner wallet new
 
 Mine on A:
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
 
 Check B:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 chain validate
 
 Expected B:
 height: 1
 tip hash: mined block hash
-total supply: 50 IDR
+total supply: 50 dIDR
 blocks: 2
 coinbase blocks: 1
 chain valid height: 1

@@ -19,7 +19,7 @@ func TestNetworkByName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if net.NetworkID != "idr-local-1" || net.ChainID != 777001 {
+	if net.NetworkID != "ind-local-1" || net.ChainID != 777001 {
 		t.Fatalf("unexpected localnet: %#v", net)
 	}
 	if _, err := NetworkByName("badnet"); err == nil {
@@ -70,7 +70,7 @@ func TestMaxReorgDepthDefaultsAndEnv(t *testing.T) {
 	if got := DefaultMaxReorgDepth(Testnet()); got != 128 {
 		t.Fatalf("testnet max reorg depth = %d, want 128", got)
 	}
-	t.Setenv("IDR_MAX_REORG_DEPTH", "26")
+	t.Setenv("IND_MAX_REORG_DEPTH", "26")
 	got, err := MaxReorgDepthFromEnv(Testnet())
 	if err != nil {
 		t.Fatal(err)
@@ -78,7 +78,7 @@ func TestMaxReorgDepthDefaultsAndEnv(t *testing.T) {
 	if got != 26 {
 		t.Fatalf("env max reorg depth = %d, want 26", got)
 	}
-	t.Setenv("IDR_MAX_REORG_DEPTH", "bad")
+	t.Setenv("IND_MAX_REORG_DEPTH", "bad")
 	if _, err := MaxReorgDepthFromEnv(Testnet()); err == nil {
 		t.Fatal("expected invalid env max reorg depth")
 	}
@@ -93,10 +93,10 @@ func TestIsolatedMiningAndWriteDefaultsAndEnv(t *testing.T) {
 	if testnet.MinMiningPeers != 1 || testnet.AllowIsolatedMining || testnet.MinWritePeers != 1 || testnet.AllowIsolatedWrites {
 		t.Fatalf("unexpected testnet isolation defaults: %#v", testnet)
 	}
-	t.Setenv("IDR_MIN_MINING_PEERS", "2")
-	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "true")
-	t.Setenv("IDR_MIN_WRITE_PEERS", "3")
-	t.Setenv("IDR_ALLOW_ISOLATED_WRITES", "true")
+	t.Setenv("IND_MIN_MINING_PEERS", "2")
+	t.Setenv("IND_ALLOW_ISOLATED_MINING", "true")
+	t.Setenv("IND_MIN_WRITE_PEERS", "3")
+	t.Setenv("IND_ALLOW_ISOLATED_WRITES", "true")
 	if got, err := MinMiningPeersFromEnv(testnet); err != nil || got != 2 {
 		t.Fatalf("min mining peers env = %d, %v", got, err)
 	}
@@ -109,7 +109,7 @@ func TestIsolatedMiningAndWriteDefaultsAndEnv(t *testing.T) {
 	if got, err := AllowIsolatedWritesFromEnv(testnet); err != nil || !got {
 		t.Fatalf("allow isolated writes env = %t, %v", got, err)
 	}
-	t.Setenv("IDR_ALLOW_ISOLATED_MINING", "maybe")
+	t.Setenv("IND_ALLOW_ISOLATED_MINING", "maybe")
 	if _, err := AllowIsolatedMiningFromEnv(testnet); err == nil {
 		t.Fatal("expected invalid isolated mining env")
 	}
@@ -136,7 +136,7 @@ func TestLocalnetHasNoDefaultPublicSeeds(t *testing.T) {
 
 func TestTestnetSeedPeersDoNotChangeGenesisOrNetworkID(t *testing.T) {
 	testnet := Testnet()
-	if testnet.NetworkID != "idr-testnet-1" || testnet.ChainID != 777101 || testnet.GenesisHash != "" {
+	if testnet.NetworkID != "ind-testnet-1" || testnet.ChainID != 777101 || testnet.GenesisHash != "" {
 		t.Fatalf("unexpected testnet identity after seed support: %#v", testnet)
 	}
 	withoutSeeds := Testnet()
@@ -151,7 +151,7 @@ func TestTestnetGenesisCandidateProfileStable(t *testing.T) {
 	if testnet.Name != "testnet" {
 		t.Fatalf("network name changed: %s", testnet.Name)
 	}
-	if testnet.NetworkID != "idr-testnet-1" {
+	if testnet.NetworkID != "ind-testnet-1" {
 		t.Fatalf("network id changed: %s", testnet.NetworkID)
 	}
 	if testnet.ChainID != 777101 {
@@ -201,7 +201,6 @@ func TestPathsStayUnderDataDir(t *testing.T) {
 	}
 }
 
-
 func TestMainnetProfileRequiresExplicitNetworkSelection(t *testing.T) {
 	if local := Localnet(); local.Name == "mainnet" {
 		t.Fatal("localnet profile must remain separate from mainnet")
@@ -243,18 +242,18 @@ func TestMainnetDoesNotAdvertiseAsAvailable(t *testing.T) {
 func TestMainnetLaunchCriticalProfile(t *testing.T) {
 	profile := Mainnet()
 	checks := map[string]bool{
-		"network_id": profile.NetworkID == "idr-main-1",
-		"chain_id": profile.ChainID == 777000,
+		"network_id":                profile.NetworkID == "ind-main-1",
+		"chain_id":                  profile.ChainID == 777000,
 		"legacy_addresses_disabled": !profile.LegacyAddressAllowed,
-		"authenticated_p2p": profile.RequireAuthenticatedNode,
-		"isolated_mining_disabled": !profile.AllowIsolatedMining,
-		"isolated_writes_disabled": !profile.AllowIsolatedWrites,
-		"token_transfers": profile.Asset.TokenTransfersEnabled,
-		"issued_tokens": profile.Asset.UserIssuedTokensEnabled,
-		"paymaster": profile.Asset.PaymasterEnabled,
-		"fee_enabled": profile.Fee.Enabled,
-		"zero_subsidy": profile.Economic.BlockSubsidy == 0,
-		"fee_only": profile.Economic.FeeOnlyBlocks,
+		"authenticated_p2p":         profile.RequireAuthenticatedNode,
+		"isolated_mining_disabled":  !profile.AllowIsolatedMining,
+		"isolated_writes_disabled":  !profile.AllowIsolatedWrites,
+		"token_transfers":           profile.Asset.TokenTransfersEnabled,
+		"issued_tokens":             profile.Asset.UserIssuedTokensEnabled,
+		"paymaster":                 profile.Asset.PaymasterEnabled,
+		"fee_enabled":               profile.Fee.Enabled,
+		"zero_subsidy":              profile.Economic.BlockSubsidy == 0,
+		"fee_only":                  profile.Economic.FeeOnlyBlocks,
 	}
 	for name, ok := range checks {
 		if !ok {
@@ -289,7 +288,7 @@ func TestV3NetworkProfileRejectsEconomicDrift(t *testing.T) {
 	profile = Localnet()
 	profile.Asset.FeeAssetID = "USDT"
 	if err := ValidateNetworkProfile(profile); err == nil {
-		t.Fatal("expected non-IDR fee asset to be rejected")
+		t.Fatal("expected non-dIDR fee asset to be rejected")
 	}
 
 	profile = Localnet()

@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestMainnetReadOnlyRPCPath(t *testing.T) {

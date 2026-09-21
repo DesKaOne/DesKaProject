@@ -4,13 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 const (
-	stakeOwner = "IDR1111111111111111111111111111111111"
-	otherOwner = "IDR2222222222222222222222222222222222"
+	stakeOwner = "IND1111111111111111111111111111111111"
+	otherOwner = "IND2222222222222222222222222222222222"
 )
 
 func TestLocalnetStakingParams(t *testing.T) {
@@ -97,7 +97,7 @@ func TestStakeBelowMinimumRejected(t *testing.T) {
 	}
 }
 
-func TestDuplicateStakeIDRejected(t *testing.T) {
+func TestDuplicateStakeINDejected(t *testing.T) {
 	state := NewState(testParams())
 	if err := state.ApplyLock(stakeLockTx("stake1", stakeOwner, 10*config.UnitsPerCoin, 1), 1); err != nil {
 		t.Fatal(err)

@@ -5,9 +5,9 @@ import (
 	"math/big"
 	"sort"
 
-	"deskachain/internal/config"
-	"deskachain/internal/fees"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/fees"
+	"indochain/internal/types"
 )
 
 // AdmissionPolicy applies deterministic consensus fee/resource rules to

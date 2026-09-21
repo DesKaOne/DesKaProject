@@ -1,4 +1,4 @@
-module deskachain
+module indochain
 
 go 1.22
 

@@ -222,7 +222,7 @@
           linkAddress(b.miner_address)
         ]);
       });
-      app.innerHTML = panel("Mining / Difficulty", '<div class="grid">' + metrics + "</div><p class=\"muted\">Difficulty observation is informational only. Testnet IDR has no monetary value.</p>") +
+      app.innerHTML = panel("Mining / Difficulty", '<div class="grid">' + metrics + "</div><p class=\"muted\">Difficulty observation is informational only. Testnet dIDR has no monetary value.</p>") +
         panel("Recent mined blocks", table(["Height", "Hash", "Time", "Interval", "Difficulty", "Txs", "Miner"], rows, "No mined blocks found."));
     }).catch(function (err) { setError(friendlyError(err, "Unable to load mining metrics.")); });
   }
@@ -323,7 +323,7 @@
           escapeHTML(s.release_height)
         ]);
       });
-      app.innerHTML = panel("Address detail", '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable IDR.</p>") +
+      app.innerHTML = panel("Address detail", '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable dIDR.</p>") +
         panel("Recent transactions", pagerHTML("address", txData, addressTxLimit) + table(["Txid", "Type", "Block", "Delta", "Confirmations"], txRows, "No recent transactions for this address.")) +
         panel("Stake records", table(["Stake id", "Amount", "Status", "Lock height", "Unlock height", "Release height"], stakeRows, "Stake records not found."));
       selectLimit("address", addressTxLimit);
@@ -364,7 +364,7 @@
           escapeHTML(s.simulation_only)
         ]);
       });
-      app.innerHTML = panel("Service nodes", '<p class="muted">Service points are simulation-only and are not spendable IDR. Service state is local to this RPC node.</p>' +
+      app.innerHTML = panel("Service nodes", '<p class="muted">Service points are simulation-only and are not spendable dIDR. Service state is local to this RPC node.</p>' +
         pagerHTML("services", data, serviceLimit) + table(["Owner", "Endpoint", "Score", "Points", "Required stake", "Active stake", "Eligibility", "Simulation only"], rows, "Service records not found."));
       selectLimit("services", serviceLimit);
     }).catch(function (err) { setError(friendlyError(err, "Unable to load service records.")); });
@@ -393,7 +393,7 @@
   function runSearch(q) {
     q = String(q || "").trim();
     if (!q) {
-      setError("Enter a block height, block hash, transaction id, or IDR address.");
+      setError("Enter a block height, block hash, transaction id, or iND address.");
       return;
     }
     input.value = q;

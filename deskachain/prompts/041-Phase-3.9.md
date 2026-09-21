@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -14,14 +14,14 @@ Status saat ini:
 * Faucet testnet valid.
 * Faucet -> stake 1000 -> service eligible E2E valid.
 * Binary release smoke test valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 * PoW remains the only block-production consensus.
 
 Patch name:
-DesKaChain Phase 3.9 — Public Testnet Genesis Candidate & Seed Node Deployment Prep
+IndoChain Phase 3.9 — Public Testnet Genesis Candidate & Seed Node Deployment Prep
 
 Goal:
 Prepare a clean public testnet candidate deployment using release artifacts, with a reproducible seed node setup, operator checklist, deployment docs, and final safety validation before running on VPS or external devices.
@@ -58,7 +58,7 @@ docs/TestnetGenesis.md
 It should include:
 
 * network: testnet
-* network_id: idr-testnet-1
+* network_id: ind-testnet-1
 * chain_id: 777101
 * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * target block time: 30s
@@ -66,18 +66,18 @@ It should include:
 * min difficulty: 1
 * max difficulty: 12
 * coinbase maturity: 100
-* min stake amount: 100 IDR
-* min service stake: 1000 IDR
+* min stake amount: 100 dIDR
+* min service stake: 1000 dIDR
 * unbonding period: 100
 * block reward if defined in code/docs
-* note: testnet IDR has no monetary value
+* note: testnet dIDR has no monetary value
 * note: mainnet not available
 
 Add command examples to verify:
 
-deskachain --datadir ./data/testnet --network testnet init
-deskachain --datadir ./data/testnet chain info
-deskachain --datadir ./data/testnet chain validate
+indochain --datadir ./data/testnet --network testnet init
+indochain --datadir ./data/testnet chain info
+indochain --datadir ./data/testnet chain validate
 
 If local CLI cannot call chain info without node start, document the correct command.
 
@@ -105,16 +105,16 @@ examples/testnet/service-node.env
 
 Seed node env should include:
 
-* IDR_DATADIR
-* IDR_NETWORK=testnet
-* IDR_RPC_ADDR=:9011 or :8811
-* IDR_P2P_ADDR=:10011 or :9811
-* IDR_ADVERTISE_P2P=http://<PUBLIC_HOST>:10011
-* IDR_PUBLIC_RPC=true
-* IDR_ENABLE_MINER_RPC=true or false depending recommended role
-* IDR_ENABLE_FAUCET_RPC=false by default
-* IDR_ENABLE_SERVICE_RPC=false by default
-* IDR_SEED_PEERS optional
+* IND_DATADIR
+* IND_NETWORK=testnet
+* IND_RPC_ADDR=:9011 or :8811
+* IND_P2P_ADDR=:10011 or :9811
+* IND_ADVERTISE_P2P=http://<PUBLIC_HOST>:10011
+* IND_PUBLIC_RPC=true
+* IND_ENABLE_MINER_RPC=true or false depending recommended role
+* IND_ENABLE_FAUCET_RPC=false by default
+* IND_ENABLE_SERVICE_RPC=false by default
+* IND_SEED_PEERS optional
 
 Do not include private keys.
 Do not include real wallet addresses unless placeholder.
@@ -139,13 +139,13 @@ Include Linux/VPS deployment using release artifact:
 
 1. Download release archive.
 2. Verify SHA256.
-3. Extract to `/opt/deskachain`.
+3. Extract to `/opt/indochain`.
 4. Create system user if desired.
 5. Create datadir:
-   `/var/lib/deskachain/testnet`
+   `/var/lib/indochain/testnet`
 6. Init testnet.
 7. Configure env:
-   `/etc/deskachain/testnet.env`
+   `/etc/indochain/testnet.env`
 8. Install systemd unit.
 9. Start node.
 10. Check logs.
@@ -155,9 +155,9 @@ Include Linux/VPS deployment using release artifact:
 
 Commands should support Linux binary workflow:
 
-./deskachain version
-./deskachain --datadir /var/lib/deskachain/testnet --network testnet init
-./deskachain --datadir /var/lib/deskachain/testnet node start ...
+./indochain version
+./indochain --datadir /var/lib/indochain/testnet --network testnet init
+./indochain --datadir /var/lib/indochain/testnet node start ...
 
 Systemd example:
 
@@ -204,12 +204,12 @@ Checklist:
 * chain validate passes.
 * `/health` reachable.
 * `chain info` shows expected network and chain id.
-* testnet IDR has no monetary value.
+* testnet dIDR has no monetary value.
 * mainnet not available.
 
 Optional CLI command:
 
-deskachain --datadir <dir> node preflight
+indochain --datadir <dir> node preflight
 
 If implemented, it should check:
 
@@ -235,7 +235,7 @@ config/testnet-seeds.example.txt
 
 Content:
 
-# DesKaChain public testnet seed peers
+# IndoChain public testnet seed peers
 
 # Replace placeholders with real public seed nodes before publishing.
 
@@ -252,7 +252,7 @@ Update docs to show:
 
 * `--seed-file config/testnet-seeds.txt`
 * `--seed-peer http://<HOST>:<P2P_PORT>`
-* `IDR_SEED_PEERS=http://host1:port,http://host2:port`
+* `IND_SEED_PEERS=http://host1:port,http://host2:port`
 
 ==================================================
 6. Public faucet operator prep
@@ -265,11 +265,11 @@ Update docs/Faucet.md and docs/DeployTestnet.md:
 * faucet is disabled by default.
 * faucet RPC should only be enabled deliberately.
 * faucet wallet must have mature balance.
-* recommended faucet amount for service collateral testing: 1000 IDR only for controlled dev/testnet.
+* recommended faucet amount for service collateral testing: 1000 dIDR only for controlled dev/testnet.
 * max per address and min interval should be configured.
 * faucet uses normal tx, no silent mint.
 * faucet state must be backed up if operator wants rate-limit continuity.
-* testnet IDR has no monetary value.
+* testnet dIDR has no monetary value.
 
 Add config example:
 
@@ -283,8 +283,8 @@ Do not include private key or real faucet address.
 
 Update docs/ServiceNode.md and docs/DeployTestnet.md:
 
-* service node requires testnet IDR collateral for eligibility.
-* min service stake: 1000 IDR.
+* service node requires testnet dIDR collateral for eligibility.
+* min service stake: 1000 dIDR.
 * service points are simulation-only and not spendable.
 * staking is collateral-only, no APY.
 * service agent should use its own state file.
@@ -309,7 +309,7 @@ Linux:
 sha256sum -c SHA256SUMS.txt
 
 Windows:
-Get-FileHash .\deskachain-v0.3.8-testnet-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.3.8-testnet-windows-amd64.zip -Algorithm SHA256
 
 Explain:
 
@@ -324,7 +324,7 @@ Explain:
 Ensure docs and startup summary clearly state:
 
 * Testnet only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet not available.
 * Do not expose wallet/admin RPC.
 * Back up wallets.
@@ -365,22 +365,22 @@ Using release binary from Phase 3.7 or rebuilt binary:
 
 Clean:
 
-deskachain --datadir ./testdata/deploy_seed dev reset --yes
+indochain --datadir ./testdata/deploy_seed dev reset --yes
 
 Init:
 
-deskachain --datadir ./testdata/deploy_seed --network testnet init
+indochain --datadir ./testdata/deploy_seed --network testnet init
 
 Start seed candidate:
 
-deskachain --datadir ./testdata/deploy_seed node start --rpc :9311 --p2p :10311 --advertise-p2p http://127.0.0.1:10311 --public-rpc --enable-miner-rpc
+indochain --datadir ./testdata/deploy_seed node start --rpc :9311 --p2p :10311 --advertise-p2p http://127.0.0.1:10311 --public-rpc --enable-miner-rpc
 
 Check:
 
-deskachain --rpc-url http://127.0.0.1:9311 version
-deskachain --rpc-url http://127.0.0.1:9311 chain info
-deskachain --rpc-url http://127.0.0.1:9311 chain validate
-deskachain --rpc-url http://127.0.0.1:9311 wallet new
+indochain --rpc-url http://127.0.0.1:9311 version
+indochain --rpc-url http://127.0.0.1:9311 chain info
+indochain --rpc-url http://127.0.0.1:9311 chain validate
+indochain --rpc-url http://127.0.0.1:9311 wallet new
 
 Expected:
 
@@ -391,24 +391,24 @@ Expected:
 
 Start second node with seed peer:
 
-deskachain --datadir ./testdata/deploy_node_b --network testnet init
+indochain --datadir ./testdata/deploy_node_b --network testnet init
 
-deskachain --datadir ./testdata/deploy_node_b node start --rpc :9312 --p2p :10312 --advertise-p2p http://127.0.0.1:10312 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10311/
+indochain --datadir ./testdata/deploy_node_b node start --rpc :9312 --p2p :10312 --advertise-p2p http://127.0.0.1:10312 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10311/
 
 Check B:
-deskachain --rpc-url http://127.0.0.1:9312 peer list
-deskachain --rpc-url http://127.0.0.1:9312 peer check http://127.0.0.1:10311
+indochain --rpc-url http://127.0.0.1:9312 peer list
+indochain --rpc-url http://127.0.0.1:9312 peer check http://127.0.0.1:10311
 
 Mine on A and ensure B imports/broadcasts:
 
-deskachain --datadir ./testdata/deploy_miner --network testnet init
-deskachain --datadir ./testdata/deploy_miner wallet new
+indochain --datadir ./testdata/deploy_miner --network testnet init
+indochain --datadir ./testdata/deploy_miner wallet new
 
-idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
+indominer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
 
 Check B:
-deskachain --rpc-url http://127.0.0.1:9312 chain info
-deskachain --rpc-url http://127.0.0.1:9312 chain validate
+indochain --rpc-url http://127.0.0.1:9312 chain info
+indochain --rpc-url http://127.0.0.1:9312 chain validate
 
 Expected:
 

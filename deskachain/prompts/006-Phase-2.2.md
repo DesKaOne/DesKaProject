@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -12,7 +12,7 @@ Status saat ini:
 * go test ./... harus tetap pass.
 
 Nama patch:
-DesKaChain Phase 2.2 — P2P Handshake, Network Guard, Header Sync, dan Fork Safety
+IndoChain Phase 2.2 — P2P Handshake, Network Guard, Header Sync, dan Fork Safety
 
 Tujuan utama:
 Memperkuat P2P sebelum masuk ke phase discovery publik atau mining pool. Node harus bisa:
@@ -36,7 +36,7 @@ Aturan penting:
 * Semua tetap harus lolos:
   go mod tidy
   go test ./...
-  go run ./node/cmd/deskachain
+  go run ./node/cmd/indochain
 
 ==================================================
 
@@ -55,8 +55,8 @@ Field wajib:
 * MinProtocolVersion
 
 Default localnet:
-NetworkName: "deskachain-local"
-NetworkID: "idr-local-1"
+NetworkName: "indochain-local"
+NetworkID: "ind-local-1"
 ChainID: 777001
 ProtocolVersion: 1
 MinProtocolVersion: 1
@@ -65,8 +65,8 @@ Command:
 network info
 
 Output:
-network name: deskachain-local
-network id: idr-local-1
+network name: indochain-local
+network id: ind-local-1
 chain id: 777001
 protocol version: 1
 min protocol version: 1
@@ -94,8 +94,8 @@ GET /p2p/handshake
 
 Response:
 {
-"network_name": "deskachain-local",
-"network_id": "idr-local-1",
+"network_name": "indochain-local",
+"network_id": "ind-local-1",
 "chain_id": 777001,
 "protocol_version": 1,
 "min_protocol_version": 1,
@@ -147,7 +147,7 @@ Format baru:
 {
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "idr-local-1",
+"network_id": "ind-local-1",
 "chain_id": 777001,
 "last_height": 6,
 "last_tip_hash": "...",
@@ -202,7 +202,7 @@ Response:
 "difficulty": 4,
 "merkle_root": "...",
 "tx_count": 1,
-"miner_address": "idr1..."
+"miner_address": "iND1..."
 }
 ]
 }
@@ -330,7 +330,7 @@ Output sukses:
 peer ok
 url: http://127.0.0.1:9331
 node id: <id>
-network id: idr-local-1
+network id: ind-local-1
 chain id: 777001
 height: 6
 tip hash: ...
@@ -384,7 +384,7 @@ Agar juga membandingkan:
 
 Output jika sama:
 nodes in sync
-network id: idr-local-1
+network id: ind-local-1
 chain id: 777001
 height: 6
 tip hash: ...
@@ -531,19 +531,19 @@ Tambahkan penjelasan:
 
 Tambahkan command contoh:
 
-go run ./node/cmd/deskachain network info
+go run ./node/cmd/indochain network info
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node status
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer add http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer add http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer status
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer status
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 
 Tambahkan test sync ulang:
 peer sync
@@ -567,31 +567,31 @@ go test ./...
 
 Setup bersih:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
-go run ./node/cmd/deskachain network info
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
+go run ./node/cmd/indochain network info
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain validate
 
 Expected:
 

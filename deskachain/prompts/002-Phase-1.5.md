@@ -1,4 +1,4 @@
-Anda sedang mengerjakan proyek Go yang sudah ada: **DesKaChain**.
+Anda sedang mengerjakan proyek Go yang sudah ada: **IndoChain**.
 
 ## Status Saat Ini
 
@@ -27,7 +27,7 @@ Mengimplementasikan **Patch Stabilisasi Fase 1.5** sebelum menambahkan fitur P2P
 
 ```bash
 go test ./...
-go run ./node/cmd/deskachain
+go run ./node/cmd/indochain
 ```
 
 ## Sasaran Utama
@@ -61,10 +61,10 @@ Default:
 Contoh:
 
 ```bash
-go run ./node/cmd/deskachain --datadir ./data init
-go run ./node/cmd/deskachain --datadir ./testdata/dev1 init
-go run ./node/cmd/deskachain --datadir ./testdata/dev1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/dev1 mine --address <addr> --blocks 3
+go run ./node/cmd/indochain --datadir ./data init
+go run ./node/cmd/indochain --datadir ./testdata/dev1 init
+go run ./node/cmd/indochain --datadir ./testdata/dev1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/dev1 mine --address <addr> --blocks 3
 ```
 
 Aturan:
@@ -94,7 +94,7 @@ Perilaku:
 * Wajib menggunakan flag konfirmasi:
 
 ```bash
-go run ./node/cmd/deskachain dev reset --yes
+go run ./node/cmd/indochain dev reset --yes
 ```
 
 Tanpa `--yes`, tampilkan peringatan dan batalkan proses.
@@ -102,7 +102,7 @@ Tanpa `--yes`, tampilkan peringatan dan batalkan proses.
 Contoh:
 
 ```text
-This will delete local DesKaChain dev data under ./data.
+This will delete local IndoChain dev data under ./data.
 Re-run with --yes to confirm.
 ```
 
@@ -165,7 +165,7 @@ Melakukan replay blockchain dari genesis hingga tip dan memvalidasi:
 Contoh:
 
 ```bash
-go run ./node/cmd/deskachain chain validate
+go run ./node/cmd/indochain chain validate
 ```
 
 Jika sukses:
@@ -174,7 +174,7 @@ Jika sukses:
 chain valid
 height: 4
 blocks: 5
-total supply: 200 IDR
+total supply: 200 dIDR
 ```
 
 Jika gagal:
@@ -198,7 +198,7 @@ mined block 2 <hash>
 Ubah menjadi:
 
 ```text
-mined block height=2 hash=<hash> txs=1 reward=50 IDR difficulty=4 nonce=<nonce>
+mined block height=2 hash=<hash> txs=1 reward=50 dIDR difficulty=4 nonce=<nonce>
 ```
 
 Jika menambang beberapa block, tampilkan informasi setiap block.
@@ -209,7 +209,7 @@ Setelah selesai:
 mining complete
 mined blocks: 3
 new height: 4
-miner balance: 150 IDR
+miner balance: 150 dIDR
 ```
 
 Saldo miner harus dihitung setelah seluruh proses mining selesai.
@@ -327,8 +327,8 @@ tx created
 id: <txid>
 from: <from>
 to: <to>
-amount: 1.25 IDR
-fee: 0 IDR
+amount: 1.25 dIDR
+fee: 0 dIDR
 nonce: <nonce>
 status: pending
 ```
@@ -410,9 +410,9 @@ Formatter harus konsisten.
 Contoh:
 
 ```text
-100000000   => 1 IDR
-15000000000 => 150 IDR
-1           => 0.00000001 IDR
+100000000   => 1 dIDR
+15000000000 => 150 dIDR
+1           => 0.00000001 dIDR
 ```
 
 Rekomendasi:
@@ -486,7 +486,7 @@ Response valid:
   "valid": true,
   "height": 4,
   "blocks": 5,
-  "total_supply": "200 IDR"
+  "total_supply": "200 dIDR"
 }
 ```
 
@@ -514,7 +514,7 @@ Tambahkan:
 ## Warning
 
 ```text
-DesKaChain is experimental local blockchain software.
+IndoChain is experimental local blockchain software.
 Do not use Phase 1.5 wallets for real funds.
 ```
 
@@ -538,13 +538,13 @@ Do not use Phase 1.5 wallets for real funds.
 ## Contoh Alur Penggunaan
 
 ```bash
-go run ./node/cmd/deskachain dev reset --yes
-go run ./node/cmd/deskachain init
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain mine --address <addr> --blocks 3
-go run ./node/cmd/deskachain balance <addr>
-go run ./node/cmd/deskachain chain info
-go run ./node/cmd/deskachain chain validate
+go run ./node/cmd/indochain dev reset --yes
+go run ./node/cmd/indochain init
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain mine --address <addr> --blocks 3
+go run ./node/cmd/indochain balance <addr>
+go run ./node/cmd/indochain chain info
+go run ./node/cmd/indochain chain validate
 ```
 
 Jelaskan juga bahwa:
@@ -563,30 +563,30 @@ Setelah patch selesai, seluruh command berikut harus berfungsi:
 go mod tidy
 go test ./...
 
-go run ./node/cmd/deskachain dev reset --yes
+go run ./node/cmd/indochain dev reset --yes
 
-go run ./node/cmd/deskachain init
-go run ./node/cmd/deskachain init
+go run ./node/cmd/indochain init
+go run ./node/cmd/indochain init
 
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain wallet list
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain wallet list
 
-go run ./node/cmd/deskachain mine --address <addr> --blocks 3
+go run ./node/cmd/indochain mine --address <addr> --blocks 3
 
-go run ./node/cmd/deskachain balance <addr>
+go run ./node/cmd/indochain balance <addr>
 
-go run ./node/cmd/deskachain chain info
-go run ./node/cmd/deskachain chain validate
-go run ./node/cmd/deskachain chain print
+go run ./node/cmd/indochain chain info
+go run ./node/cmd/indochain chain validate
+go run ./node/cmd/indochain chain print
 ```
 
 Pengujian custom datadir:
 
 ```bash
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node1 chain info
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 chain info
 ```
 
 Jangan melakukan over-engineering.

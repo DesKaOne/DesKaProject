@@ -15,7 +15,7 @@ if (Test-Path $ReleaseDir) {
 }
 New-Item -ItemType Directory -Force -Path $ReleaseDir | Out-Null
 
-$Forbidden = @("wallets.json", "chain.db", "mempool.json", "peers.json", "node.lock", "node_id", "faucet_state.json", "idrservice-state.json", "idrservice-states.json", "*.key", "*.pem")
+$Forbidden = @("wallets.json", "chain.db", "mempool.json", "peers.json", "node.lock", "node_id", "faucet_state.json", "indoservice-state.json", "indoservice-states.json", "*.key", "*.pem")
 $ForbiddenDirs = @("testdata", "data", "wallets", ".git", "dist")
 $Targets = @("windows-amd64", "linux-amd64", "linux-arm64")
 
@@ -92,10 +92,10 @@ foreach ($Target in $Targets) {
     }
 
     if ($Target -eq "windows-amd64") {
-        $Archive = Join-Path $ReleaseDir "deskachain-$Version-$Target.zip"
+        $Archive = Join-Path $ReleaseDir "indochain-$Version-$Target.zip"
         Compress-Archive -Path (Join-Path $Stage "*") -DestinationPath $Archive -Force
     } else {
-        $Archive = Join-Path $ReleaseDir "deskachain-$Version-$Target.tar.gz"
+        $Archive = Join-Path $ReleaseDir "indochain-$Version-$Target.tar.gz"
         Push-Location $Stage
         tar -czf $Archive .
         Pop-Location
@@ -114,7 +114,7 @@ foreach ($Target in $Targets) {
     foreach ($Entry in $ArchiveEntries) {
         $Normalized = $Entry -replace "\\", "/"
         if ($Normalized -match "(^|/)(testdata|data|wallets|\.git|dist)(/|$)" -or
-            $Normalized -match "(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|idrservice-state\.json|idrservice-states\.json)$" -or
+            $Normalized -match "(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|indoservice-state\.json|indoservice-states\.json)$" -or
             ($Normalized -match "\.env$" -and $Normalized -notmatch "^(\./)?examples/(systemd|testnet)/") -or
             $Normalized -match "\.(key|pem)$") {
             throw "refusing archive with runtime/private contents: $Entry"

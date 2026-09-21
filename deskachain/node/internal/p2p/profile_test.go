@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestP2PHandshakeUsesActiveProfile(t *testing.T) {

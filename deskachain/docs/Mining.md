@@ -1,6 +1,6 @@
-# DesKaChain Mining
+# IndoChain Mining
 
-DesKaChain public testnet mining is for testing only. Testnet IDR has no monetary value, mainnet is not available, and no mining profit is promised.
+IndoChain public testnet mining is for testing only. Testnet dIDR has no monetary value, mainnet is not available, and no mining profit is promised.
 
 PoW is the only block-production consensus. Staking is collateral-only and does not produce blocks. Service points are simulation-only and are not spendable.
 
@@ -9,25 +9,25 @@ PoW is the only block-production consensus. Staking is collateral-only and does 
 Windows:
 
 ```powershell
-.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
+.\indominer.exe --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2
 ```
 
 Linux:
 
 ```sh
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2
 ```
 
 Mine one accepted block:
 
 ```sh
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2 --once
 ```
 
 Stop after a bounded run:
 
 ```sh
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --max-blocks 5
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2 --max-blocks 5
 ```
 
 The miner retries temporary RPC failures in continuous mode. Use `--duration`, `--retry-delay`, `--max-retry-delay`, `--submit-timeout`, `--job-refresh-interval`, and `--log-interval` to bound runtime and logging.
@@ -45,7 +45,7 @@ Coinbase maturity is 100 blocks on testnet. A mined reward can be visible as con
 Use `--seed-peer` for pull/sync/discovery and `--upstream-peer` for push/backfill. A mining node can seed from the VPS and also push accepted blocks back to it:
 
 ```sh
-./deskachain --datadir ./data/testnet --network testnet node start \
+./indochain --datadir ./data/testnet --network testnet node start \
   --public-rpc --enable-miner-rpc \
   --seed-peer http://100.86.152.39:10311 \
   --upstream-peer http://100.86.152.39:10311 \

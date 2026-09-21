@@ -4,11 +4,11 @@ import "testing"
 
 func TestNativeAssetAndFeePolicy(t *testing.T) {
 	for _, profile := range []NetworkConfig{Localnet(), Testnet(), Mainnet()} {
-		if profile.Asset.NativeAssetID != "IDR" || profile.Asset.NativeAssetSymbol != "IDR" {
+		if profile.Asset.NativeAssetID != "dIDR" || profile.Asset.NativeAssetSymbol != "dIDR" {
 			t.Fatalf("%s native asset = %#v", profile.Name, profile.Asset)
 		}
 		const expectedDecimals = 8
-		if profile.Asset.NativeAssetDecimals != expectedDecimals || profile.Asset.FeeAssetID != "IDR" {
+		if profile.Asset.NativeAssetDecimals != expectedDecimals || profile.Asset.FeeAssetID != "dIDR" {
 			t.Fatalf("%s native decimals/fee asset = %#v", profile.Name, profile.Asset)
 		}
 		if !profile.Fee.Enabled || profile.Fee.MinFee == 0 || profile.Fee.BytesPerGas == 0 || profile.Fee.MaxGasPerTx == 0 {

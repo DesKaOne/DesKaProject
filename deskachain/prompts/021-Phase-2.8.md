@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address migration sudah selesai:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address final: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address final: `iND` + Base58Check
   * private key raw 32-byte hex
   * remote wallet new valid
 * Difficulty adjustment sudah valid:
@@ -56,14 +56,14 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * IDR Base58Check address,
+  * iND Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * dynamic difficulty,
   * realistic cumulative work.
 
 Nama patch:
-DesKaChain Phase 2.8 — Coinbase Maturity & Mature Balance
+IndoChain Phase 2.8 — Coinbase Maturity & Mature Balance
 
 Tujuan:
 Menambahkan aturan coinbase maturity supaya reward mining tidak langsung bisa dibelanjakan sebelum mencapai jumlah konfirmasi tertentu.
@@ -82,7 +82,7 @@ Fitur utama:
 
 Aturan penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -248,12 +248,12 @@ Ubah menjadi:
 if spendable_balance < amount+fee => insufficient mature funds
 
 Error harus jelas:
-insufficient mature balance: spendable X IDR, required Y IDR, immature Z IDR
+insufficient mature balance: spendable X dIDR, required Y dIDR, immature Z dIDR
 
 Contoh:
 
 * Miner baru mine 3 block localnet.
-* confirmed balance 150 IDR.
+* confirmed balance 150 dIDR.
 * maturity 10.
 * mature balance 0.
 * immature balance 150.
@@ -262,7 +262,7 @@ Contoh:
 
 Setelah mine sampai height 11:
 
-* reward height 1 mature 50 IDR.
+* reward height 1 mature 50 dIDR.
 * send 10 harus berhasil.
 
 ==================================================
@@ -279,18 +279,18 @@ Tapi output mining harus lebih jelas.
 
 Setelah mining:
 
-miner confirmed balance: 150 IDR
-miner mature balance: 0 IDR
-miner immature balance: 150 IDR
-miner spendable balance: 0 IDR
+miner confirmed balance: 150 dIDR
+miner mature balance: 0 dIDR
+miner immature balance: 150 dIDR
+miner spendable balance: 0 dIDR
 
 Jika ingin tetap mempertahankan output lama:
-miner balance: 150 IDR
+miner balance: 150 dIDR
 
 Tambahkan field tambahan di bawahnya:
-mature: 0 IDR
-immature: 150 IDR
-spendable: 0 IDR
+mature: 0 dIDR
+immature: 150 dIDR
+spendable: 0 dIDR
 
 Jangan membuat mining gagal hanya karena reward belum mature.
 
@@ -304,22 +304,22 @@ balance <address>
 
 Local dan remote harus menampilkan:
 
-address: IDR...
-confirmed balance: 150 IDR
-mature balance: 0 IDR
-immature balance: 150 IDR
-spendable balance: 0 IDR
-pending outgoing: 0 IDR
-pending incoming: 0 IDR
+address: iND...
+confirmed balance: 150 dIDR
+mature balance: 0 dIDR
+immature balance: 150 dIDR
+spendable balance: 0 dIDR
+pending outgoing: 0 dIDR
+pending incoming: 0 dIDR
 coinbase maturity: 10
 current height: 3
 
 Jika address punya mature coinbase:
 
-confirmed balance: 550 IDR
-mature balance: 50 IDR
-immature balance: 500 IDR
-spendable balance: 50 IDR
+confirmed balance: 550 dIDR
+mature balance: 50 dIDR
+immature balance: 500 dIDR
+spendable balance: 50 dIDR
 
 Jangan hapus output lama jika test lama bergantung pada string tertentu, tapi tambahkan field baru.
 
@@ -336,7 +336,7 @@ Wallet inspect:
 
 * Tampilkan address format tetap:
   base58check
-  IDR
+  iND
   secp256k1
 * Tidak perlu balance detail jika belum ada.
 
@@ -354,7 +354,7 @@ GET /wallet/balance?address=...
 Tambahkan response fields:
 
 {
-"address": "IDR...",
+"address": "iND...",
 "confirmed_balance": "150",
 "mature_balance": "0",
 "immature_balance": "150",
@@ -391,8 +391,8 @@ network: localnet
 chain id: 777001
 height: 3
 coinbase maturity: 10
-total supply: 150 IDR
-circulating supply: 0 IDR
+total supply: 150 dIDR
+circulating supply: 0 dIDR
 
 ==================================================
 11. Circulating supply
@@ -513,7 +513,7 @@ Solusi:
 
 Output dev sim harus tetap jelas:
 funding blocks mined: 11
-spendable balance: 50 IDR
+spendable balance: 50 dIDR
 
 ==================================================
 17. Tests wajib
@@ -666,16 +666,16 @@ Tambahkan penjelasan:
 Tambahkan contoh:
 
 Mine 3 blocks:
-confirmed: 150 IDR
-mature: 0 IDR
-immature: 150 IDR
-spendable: 0 IDR
+confirmed: 150 dIDR
+mature: 0 dIDR
+immature: 150 dIDR
+spendable: 0 dIDR
 
 Mine 11 blocks:
-confirmed: 550 IDR
-mature: 50 IDR
-immature: 500 IDR
-spendable: 50 IDR
+confirmed: 550 dIDR
+mature: 50 dIDR
+immature: 500 dIDR
+spendable: 50 dIDR
 
 ==================================================
 19. Expected final commands
@@ -689,56 +689,56 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/maturity dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/maturity init
-go run ./node/cmd/deskachain --datadir ./testdata/maturity wallet new
+go run ./node/cmd/indochain --datadir ./testdata/maturity dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/maturity init
+go run ./node/cmd/indochain --datadir ./testdata/maturity wallet new
 
 Expected:
-IDR...
+iND...
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/maturity node start --rpc :8391 --p2p :9391 --advertise-p2p http://127.0.0.1:9391
+go run ./node/cmd/indochain --datadir ./testdata/maturity node start --rpc :8391 --p2p :9391 --advertise-p2p http://127.0.0.1:9391
 
 Mine 3:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 3
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
 
 Expected:
-confirmed balance: 150 IDR
-mature balance: 0 IDR
-immature balance: 150 IDR
-spendable balance: 0 IDR
+confirmed balance: 150 dIDR
+mature balance: 0 dIDR
+immature balance: 150 dIDR
+spendable balance: 0 dIDR
 
 Try send:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 wallet new
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 send --from <ADDR_A> --to <ADDR_B> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 send --from <ADDR_A> --to <ADDR_B> --amount 10
 
 Expected:
 error: insufficient mature balance
 
 Mine until 11:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 8
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 8
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 balance <ADDR_A>
 
 Expected:
-confirmed balance: 550 IDR
-mature balance: 50 IDR
-immature balance: 500 IDR
-spendable balance: 50 IDR
+confirmed balance: 550 dIDR
+mature balance: 50 dIDR
+immature balance: 500 dIDR
+spendable balance: 50 dIDR
 
 Send after maturity:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 send --from <ADDR_A> --to <ADDR_B> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 send --from <ADDR_A> --to <ADDR_B> --amount 10
 
 Expected:
 tx created
@@ -746,40 +746,40 @@ status: pending
 
 Mempool:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 mempool list --detail
 
 Balance sender before mining tx:
-mature balance: 50 IDR
-pending outgoing: 10 IDR
-spendable balance: 40 IDR
+mature balance: 50 dIDR
+pending outgoing: 10 dIDR
+spendable balance: 40 dIDR
 
 Mine tx:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 mine --address <ADDR_A> --blocks 1
 
 Balance receiver:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 balance <ADDR_B>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 balance <ADDR_B>
 
 Expected:
-confirmed balance: 10 IDR
-mature balance: 10 IDR
-spendable balance: 10 IDR
+confirmed balance: 10 dIDR
+mature balance: 10 dIDR
+spendable balance: 10 dIDR
 
 Chain info:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 chain info
 
 Expected:
 coinbase maturity: 10
-total supply: 600 IDR
-circulating supply: 100 IDR or sesuai maturity rule after height 12:
-mature coinbase height 1-2 = 100 IDR
+total supply: 600 dIDR
+circulating supply: 100 dIDR or sesuai maturity rule after height 12:
+mature coinbase height 1-2 = 100 dIDR
 normal transactions: 1
 
 Validate:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8391 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8391 chain validate
 
 Expected:
 chain valid

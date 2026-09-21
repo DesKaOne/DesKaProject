@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
+	"indochain/internal/asset"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 )
 
 const (
-	CoinbaseSender        = "COINBASE"
+	CoinbaseSender               = "COINBASE"
 	MaxSupportedTxVersion uint32 = TxVersionAsset
 )
 
@@ -32,31 +32,31 @@ const (
 )
 
 type Transaction struct {
-	Version   uint32 `json:"version,omitempty"`
-	ID        string `json:"id"`
-	From      string `json:"from"`
-	To        string `json:"to"`
-	Amount    uint64 `json:"amount"`
-	Fee       uint64 `json:"fee"`
-	Nonce     uint64 `json:"nonce"`
-	Timestamp int64  `json:"timestamp"`
-	Signature string `json:"signature"`
-	PublicKey string `json:"public_key"`
-	Coinbase  bool   `json:"coinbase"`
-	Type      string `json:"type,omitempty"`
-	StakeID   string `json:"stake_id,omitempty"`
-	AssetID   string `json:"asset_id,omitempty"`
-	FeePayer  string `json:"fee_payer,omitempty"`
+	Version           uint32 `json:"version,omitempty"`
+	ID                string `json:"id"`
+	From              string `json:"from"`
+	To                string `json:"to"`
+	Amount            uint64 `json:"amount"`
+	Fee               uint64 `json:"fee"`
+	Nonce             uint64 `json:"nonce"`
+	Timestamp         int64  `json:"timestamp"`
+	Signature         string `json:"signature"`
+	PublicKey         string `json:"public_key"`
+	Coinbase          bool   `json:"coinbase"`
+	Type              string `json:"type,omitempty"`
+	StakeID           string `json:"stake_id,omitempty"`
+	AssetID           string `json:"asset_id,omitempty"`
+	FeePayer          string `json:"fee_payer,omitempty"`
 	FeePayerPublicKey string `json:"fee_payer_public_key,omitempty"`
 	FeePayerSignature string `json:"fee_payer_signature,omitempty"`
-	AssetName string `json:"asset_name,omitempty"`
-	AssetSymbol string `json:"asset_symbol,omitempty"`
-	AssetDecimals uint8 `json:"asset_decimals,omitempty"`
-	AssetMaxSupply uint64 `json:"asset_max_supply,omitempty"`
-	AssetMintable bool `json:"asset_mintable,omitempty"`
-	AssetBurnable bool `json:"asset_burnable,omitempty"`
-	AssetPausable bool `json:"asset_pausable,omitempty"`
-	AssetPermissioned bool `json:"asset_permissioned,omitempty"`
+	AssetName         string `json:"asset_name,omitempty"`
+	AssetSymbol       string `json:"asset_symbol,omitempty"`
+	AssetDecimals     uint8  `json:"asset_decimals,omitempty"`
+	AssetMaxSupply    uint64 `json:"asset_max_supply,omitempty"`
+	AssetMintable     bool   `json:"asset_mintable,omitempty"`
+	AssetBurnable     bool   `json:"asset_burnable,omitempty"`
+	AssetPausable     bool   `json:"asset_pausable,omitempty"`
+	AssetPermissioned bool   `json:"asset_permissioned,omitempty"`
 }
 
 func NewUnsignedTransaction(from, to string, amount, fee, nonce uint64) Transaction {
@@ -103,7 +103,7 @@ func NewStakeUnlockTransaction(address, stakeID string, nonce uint64) Transactio
 }
 
 // NewAssetTransferTransaction creates a v3 transfer whose amount is denominated
-// in AssetID while Fee is always denominated in native IDR.
+// in AssetID while Fee is always denominated in native dIDR.
 func NewAssetTransferTransaction(from, to, assetID string, amount, fee, nonce uint64) Transaction {
 	tx := newAssetTransaction(TxTypeTransfer, from, to, assetID, amount, fee, nonce)
 	return tx
@@ -362,7 +362,6 @@ func (tx *Transaction) RefreshID() {
 	tx.ID = tx.CalculateID()
 }
 
-
 // FeePayerSigningBytesWithChainID returns the payload a paymaster signs.
 // Sponsor signature material is intentionally excluded so it can be added
 // after the sender has signed without changing tx.ID.
@@ -409,18 +408,18 @@ func (tx Transaction) FeePayerSigningBytesWithChainID(chainID uint64) ([]byte, e
 	// relevant to the fee obligation. Sponsor material stays outside the
 	// payload so it can be attached after the sender signs.
 	payload := struct {
-		Domain string `json:"domain"`
-		ChainID uint64 `json:"chain_id"`
-		TxID string `json:"tx_id"`
-		From string `json:"from"`
-		To string `json:"to"`
-		Amount uint64 `json:"amount"`
-		Fee uint64 `json:"fee"`
-		Nonce uint64 `json:"nonce"`
-		Timestamp int64 `json:"timestamp"`
-		Type string `json:"type"`
-		AssetID string `json:"asset_id"`
-		FeePayer string `json:"fee_payer"`
+		Domain    string `json:"domain"`
+		ChainID   uint64 `json:"chain_id"`
+		TxID      string `json:"tx_id"`
+		From      string `json:"from"`
+		To        string `json:"to"`
+		Amount    uint64 `json:"amount"`
+		Fee       uint64 `json:"fee"`
+		Nonce     uint64 `json:"nonce"`
+		Timestamp int64  `json:"timestamp"`
+		Type      string `json:"type"`
+		AssetID   string `json:"asset_id"`
+		FeePayer  string `json:"fee_payer"`
 	}{
 		Domain: "deska-paymaster-v1", ChainID: chainID, TxID: tx.ID,
 		From: tx.From, To: tx.To, Amount: tx.Amount, Fee: tx.Fee,

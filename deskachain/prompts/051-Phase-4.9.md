@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -15,7 +15,7 @@ Status saat ini:
 
   * RPC: http://100.86.152.39:9311
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * height: 1049
   * public_rpc: true
@@ -24,14 +24,14 @@ Status saat ini:
   * explorer_ok: true
 * Explorer API/UI read-only sudah valid.
 * Public RPC safety valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.9 — Public Testnet Multi-Seed & Peer Discovery Hardening
+IndoChain Phase 4.9 — Public Testnet Multi-Seed & Peer Discovery Hardening
 
 Goal:
 Harden public testnet peer connectivity by supporting multi-seed bootstrap, better peer discovery, peer health scoring, retry/backoff behavior, and operator-visible peer diagnostics.
@@ -61,7 +61,7 @@ Non-goals:
 * Do not accept blocks without network/genesis validation.
 * Do not expose wallet/admin RPC publicly.
 * Do not promise price/profit/rewards.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not add staking APY.
 * Do not make service points spendable.
 
@@ -325,16 +325,16 @@ Improve CLI commands if not already available.
 
 Recommended:
 
-deskachain peer list
-deskachain peer list --json
-deskachain peer check <url>
-deskachain peer sync <url>
-deskachain peer add <url>
-deskachain peer remove <url>
-deskachain peer clear
-deskachain peer discover
-deskachain peer health
-deskachain peer seeds
+indochain peer list
+indochain peer list --json
+indochain peer check <url>
+indochain peer sync <url>
+indochain peer add <url>
+indochain peer remove <url>
+indochain peer clear
+indochain peer discover
+indochain peer health
+indochain peer seeds
 
 Behavior:
 
@@ -367,7 +367,7 @@ Add optional peer checks:
 PowerShell examples:
 
 powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcUrl http://100.86.152.39:9311`
--ExpectedNetwork testnet `    -ExpectedNetworkID idr-testnet-1`
+-ExpectedNetwork testnet `    -ExpectedNetworkID ind-testnet-1`
 -ExpectedChainID 777101
 
 powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcUrl http://100.86.152.39:9311`
@@ -519,7 +519,7 @@ Known Tailscale/public nodes:
   * P2P expected: http://100.83.159.107:10312
 
 A. Start VPS seed:
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.86.152.39:10311 
@@ -527,7 +527,7 @@ A. Start VPS seed:
 --enable-miner-rpc
 
 B. Start Mini PC seed:
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -536,17 +536,17 @@ B. Start Mini PC seed:
 --seed-peer http://100.86.152.39:10311
 
 C. Start Windows peer with two seeds:
-.\deskachain.exe --datadir .\data\testnet --network testnet node start `    --rpc 127.0.0.1:9312`
+.\indochain.exe --datadir .\data\testnet --network testnet node start `    --rpc 127.0.0.1:9312`
 --p2p 0.0.0.0:10312 `    --advertise-p2p http://100.83.159.107:10312`
 --public-rpc `    --enable-miner-rpc`
 --seed-peer http://100.86.152.39:10311 `
 --seed-peer http://100.101.251.7:10311
 
 D. Validate:
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer list
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer health
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain info
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain validate
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer list
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer health
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain info
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain validate
 
 E. Failover test:
 

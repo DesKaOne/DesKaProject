@@ -1,4 +1,4 @@
-# DesKaChain public testnet RC1 seed peers
+# IndoChain public testnet RC1 seed peers
 #
 # Replace with operator-published seeds.
 # Seeds are not trusted authorities. Nodes still validate network ID,

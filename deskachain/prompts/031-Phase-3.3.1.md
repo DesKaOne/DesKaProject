@@ -1,4 +1,4 @@
-DesKaChain Phase 3.3.1 — Peer Sync Network Guard Fix
+IndoChain Phase 3.3.1 — Peer Sync Network Guard Fix
 
 Context:
 Phase 3.3 testnet multi-node bootstrap sudah berjalan:
@@ -69,7 +69,7 @@ Expected manual after patch:
 
 Testnet node -> localnet peer:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9621
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9621
 
 Expected:
 
@@ -81,7 +81,7 @@ error: peer rejected: chain id mismatch
 
 Testnet node -> testnet peer:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9611
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9611
 
 Expected:
 

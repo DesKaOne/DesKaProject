@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/wallet"
 )
 
 func TestAgentStateLoadMissingSaveLoadAndCorrupt(t *testing.T) {
@@ -33,7 +33,7 @@ func TestAgentStateLoadMissingSaveLoadAndCorrupt(t *testing.T) {
 		LastScore:               80,
 		TotalSimulatedBytesUp:   1,
 		TotalSimulatedBytesDown: 2,
-		ClientVersion:           "idrservice/test",
+		ClientVersion:           "indoservice/test",
 		Platform:                "test/os",
 	}
 	if err := SaveState(path, want); err != nil {
@@ -153,7 +153,7 @@ func TestAgentOnceWorkflow(t *testing.T) {
 			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "challenge_id": "ch_1", "status": "passed", "service_score": 94})
 		case "/service/score":
 			scoreCalls.Add(1)
-			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "score": map[string]any{"address": address, "service_score": 94, "simulated_points": 940, "note": "service points are simulation only and are not spendable IDR"}})
+			_ = json.NewEncoder(w).Encode(map[string]any{"ok": true, "score": map[string]any{"address": address, "service_score": 94, "simulated_points": 940, "note": "service points are simulation only and are not spendable dIDR"}})
 		default:
 			http.NotFound(w, r)
 		}
@@ -174,7 +174,7 @@ func TestAgentOnceWorkflow(t *testing.T) {
 			Once:                 true,
 			SafeMode:             true,
 			MaxBytesPerChallenge: 100_000_000,
-			ClientVersion:        "idrservice/test",
+			ClientVersion:        "indoservice/test",
 			Platform:             "test/os",
 		},
 		Client: NewClient(server.URL),

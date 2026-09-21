@@ -1,19 +1,19 @@
-# DesKaChain Tester Response Snippets
+# IndoChain Tester Response Snippets
 
-Testnet IDR has no monetary value. Mainnet is not available. Do not paste private keys, wallet files, or secrets into issues.
+Testnet dIDR has no monetary value. Mainnet is not available. Do not paste private keys, wallet files, or secrets into issues.
 
 ## Ask For Version
 
 Please run:
 
 ```powershell
-.\deskachain.exe version
+.\indochain.exe version
 ```
 
 Linux:
 
 ```sh
-./deskachain version
+./indochain version
 ```
 
 Paste the output, but do not include private keys or wallet files.
@@ -35,25 +35,25 @@ Invoke-RestMethod http://127.0.0.1:9311/health
 ## Ask For Chain Info
 
 ```powershell
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 chain info
+.\indochain.exe --rpc-url http://127.0.0.1:9311 chain info
 ```
 
 Linux:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain info
 ```
 
 ## Ask For Peer List
 
 ```powershell
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 peer list
+.\indochain.exe --rpc-url http://127.0.0.1:9311 peer list
 ```
 
 Linux:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 peer list
+./indochain --rpc-url http://127.0.0.1:9311 peer list
 ```
 
 ## Ask For Logs
@@ -63,7 +63,7 @@ PowerShell terminal output is enough for most local runs. Please redact public I
 Systemd:
 
 ```sh
-journalctl -u deskachain-testnet -n 200 --no-pager
+journalctl -u indochain-testnet -n 200 --no-pager
 ```
 
 ## Private Key Warning
@@ -72,7 +72,7 @@ Please do not paste private keys, `wallets.json`, full datadirs, `.env` files wi
 
 ## No Monetary Value
 
-Testnet IDR has no monetary value. It is only for testing network, wallet, explorer, faucet, mining, staking-collateral, and service-node simulation workflows. Mainnet is not available.
+Testnet dIDR has no monetary value. It is only for testing network, wallet, explorer, faucet, mining, staking-collateral, and service-node simulation workflows. Mainnet is not available.
 
 ## Coinbase Maturity
 
@@ -84,7 +84,7 @@ Please confirm the node reports:
 
 ```text
 network: testnet
-network_id: idr-testnet-1
+network_id: ind-testnet-1
 chain_id: 777101
 ```
 

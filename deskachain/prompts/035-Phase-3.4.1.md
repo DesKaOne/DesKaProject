@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -22,23 +22,23 @@ Status saat ini:
 * testnet params:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * coinbase maturity: 100
-  * min stake amount: 100 IDR
-  * min service stake: 1000 IDR
+  * min stake amount: 100 dIDR
+  * min service stake: 1000 dIDR
   * unbonding period: 100 blocks
 * Staking tetap collateral-only.
 * Service points tetap simulation-only.
 * PoW tetap satu-satunya consensus block production.
 
 Nama patch:
-DesKaChain Phase 3.4.1 — Faucet → Stake 1000 → Service Eligible E2E Scenario
+IndoChain Phase 3.4.1 — Faucet → Stake 1000 → Service Eligible E2E Scenario
 
 Tujuan:
 Menambahkan skenario end-to-end testnet:
-faucet funding -> recipient receives testnet IDR -> stake lock 1000 IDR -> mine stake tx -> service register -> idrservice once -> service score eligible.
+faucet funding -> recipient receives testnet dIDR -> stake lock 1000 dIDR -> mine stake tx -> service register -> indoservice once -> service score eligible.
 
 Fokus:
 
@@ -64,7 +64,7 @@ Non-goals:
 * Jangan bypass mempool/chain validation.
 * Jangan membuat faucet auto-mint.
 * Jangan membuat service points spendable.
-* Jangan ubah address format IDR.
+* Jangan ubah address format iND.
 
 ==================================================
 
@@ -81,30 +81,30 @@ Buat skenario resmi:
 6. Request faucet funds to service owner.
 7. Mine one block to confirm faucet tx.
 8. Verify service owner balance.
-9. Repeat faucet request or use configured amount until owner has at least 1000 IDR spendable.
-10. Stake lock 1000 IDR from service owner.
+9. Repeat faucet request or use configured amount until owner has at least 1000 dIDR spendable.
+10. Stake lock 1000 dIDR from service owner.
 11. Mine one block to confirm stake tx.
 12. Verify stake status active.
 13. Verify balance shows active stake 1000 and spendable reduced.
 14. Register service node for service owner.
-15. Run idrservice --once or equivalent service agent flow.
+15. Run indoservice --once or equivalent service agent flow.
 16. Check service score.
 17. Expected:
 
-    * required stake: 1000 IDR
-    * active stake: 1000 IDR
+    * required stake: 1000 dIDR
+    * active stake: 1000 dIDR
     * stake eligible: true
     * collateral status: eligible
     * eligible simulated points > 0
-    * service points are simulation only and are not spendable IDR
+    * service points are simulation only and are not spendable dIDR
 18. Verify total supply changed only from mined coinbase blocks, not from faucet/stake/service.
 
 ==================================================
 2. Faucet funding amount UX
 ===========================
 
-Current faucet default amount may be 100 IDR.
-Testnet min service stake is 1000 IDR.
+Current faucet default amount may be 100 dIDR.
+Testnet min service stake is 1000 dIDR.
 
 Options:
 A. Keep faucet amount 100 and request 10 times with test helper/time control.
@@ -149,7 +149,7 @@ Required tests:
 * create testnet node/runtime in test.
 * create faucet address and owner address using testnet profile.
 * fund faucet with mature balance using helper or mined blocks.
-* call faucet request to owner for 1000 IDR.
+* call faucet request to owner for 1000 dIDR.
 * mine/commit block containing faucet tx.
 * assert owner confirmed/spendable >= 1000.
 * call stake lock 1000.
@@ -159,8 +159,8 @@ Required tests:
 * run service challenge/score path or service agent once equivalent.
 * assert service score response:
 
-  * required stake = 1000 IDR
-  * active stake = 1000 IDR
+  * required stake = 1000 dIDR
+  * active stake = 1000 dIDR
   * stake_eligible = true
   * collateral_status = eligible
   * eligible_simulated_points > 0
@@ -180,7 +180,7 @@ Required tests:
 
 3. TestServiceNotEligibleWithInsufficientStakeE2E
 
-* owner stakes 100 IDR only.
+* owner stakes 100 dIDR only.
 * service score:
 
   * active stake 100
@@ -242,8 +242,8 @@ Output assertions:
 * stake list status active.
 * service score shows:
 
-  * required stake: 1000 IDR
-  * active stake: 1000 IDR
+  * required stake: 1000 dIDR
+  * active stake: 1000 dIDR
   * stake eligible: true
   * collateral status: eligible
   * eligible simulated points.
@@ -286,17 +286,17 @@ But if this adds too much complexity, skip. Tests + docs are enough.
 Update docs/Faucet.md:
 
 * Add section: “Using faucet funds for service-node collateral”.
-* Explain testnet min service stake = 1000 IDR.
+* Explain testnet min service stake = 1000 dIDR.
 * Example start faucet with amount 1000.
-* Example request 1000 IDR.
+* Example request 1000 dIDR.
 * Mine confirmation.
-* Stake 1000 IDR.
+* Stake 1000 dIDR.
 * Register service node.
-* Run idrservice.
+* Run indoservice.
 * Check eligible simulated points.
 * Note:
 
-  * testnet IDR has no monetary value.
+  * testnet dIDR has no monetary value.
   * service points are simulation only.
   * staking is collateral only, not APY.
 
@@ -305,14 +305,14 @@ Update docs/ServiceNode.md:
 * Add testnet collateral flow using faucet.
 * Add expected output:
 
-  * required stake: 1000 IDR
-  * active stake: 1000 IDR
+  * required stake: 1000 dIDR
+  * active stake: 1000 dIDR
   * stake eligible: true
   * collateral status: eligible.
 
 Update docs/Staking.md:
 
-* Add note that faucet-funded testnet IDR can be used for testing stake lock.
+* Add note that faucet-funded testnet dIDR can be used for testing stake lock.
 * No staking rewards.
 
 Update docs/Testnet.md:
@@ -354,37 +354,37 @@ Manual E2E:
 
 Clean:
 
-go run ./node/cmd/deskachain --datadir ./testdata/e2e_service dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/e2e_service dev reset --yes
 
 Init:
 
-go run ./node/cmd/deskachain --datadir ./testdata/e2e_service --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/e2e_service --network testnet init
 
 Create faucet wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/e2e_service wallet new
+go run ./node/cmd/indochain --datadir ./testdata/e2e_service wallet new
 
 Save:
 <FAUCET_ADDR>
 
 Create service owner wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/e2e_service wallet new
+go run ./node/cmd/indochain --datadir ./testdata/e2e_service wallet new
 
 Save:
 <OWNER_ADDR>
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/e2e_service node start --rpc :8911 --p2p :9911 --advertise-p2p http://127.0.0.1:9911 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 1000 --faucet-min-interval 1s --faucet-max-per-address 2000
+go run ./node/cmd/indochain --datadir ./testdata/e2e_service node start --rpc :8911 --p2p :9911 --advertise-p2p http://127.0.0.1:9911 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 1000 --faucet-min-interval 1s --faucet-max-per-address 2000
 
 Fund faucet:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check faucet:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 balance <FAUCET_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 balance <FAUCET_ADDR>
 
 Expected:
 
@@ -392,21 +392,21 @@ Expected:
 
 Request faucet:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
 
 Expected:
 
 * faucet tx created
-* amount 1000 IDR
+* amount 1000 dIDR
 * status pending
 
 Mine faucet confirmation:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 
 Check owner:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
 
 Expected:
 
@@ -416,22 +416,22 @@ Expected:
 
 Stake lock:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
 
 Expected:
 
 * stake lock tx created
-* amount 1000 IDR
+* amount 1000 dIDR
 * status pending
 
 Mine stake confirmation:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
 
 Check stake:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake list --address <OWNER_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 stake list --address <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 balance <OWNER_ADDR>
 
 Expected:
 
@@ -441,29 +441,29 @@ Expected:
 
 Register service:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
 
 Run service agent:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
 
 Check score:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
 
 Expected:
 
-* required stake: 1000 IDR
-* active stake: 1000 IDR
+* required stake: 1000 dIDR
+* active stake: 1000 dIDR
 * stake eligible: true
 * collateral status: eligible
 * eligible simulated points > 0
-* note: service points are simulation only and are not spendable IDR
+* note: service points are simulation only and are not spendable dIDR
 
 Check chain:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 chain info
 
 Expected:
 
@@ -499,7 +499,7 @@ After stake:
 
 Phase 3.4.1 valid if:
 
-* faucet-funded wallet can stake 1000 IDR on testnet.
+* faucet-funded wallet can stake 1000 dIDR on testnet.
 * stake tx mines normally.
 * service score sees active stake 1000.
 * service eligibility true.

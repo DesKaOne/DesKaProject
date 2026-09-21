@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/p2p"
-	"deskachain/internal/storage"
-	"deskachain/internal/wallet"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/p2p"
+	"indochain/internal/storage"
+	"indochain/internal/wallet"
 )
 
 func TestRPCServerTimeoutConfig(t *testing.T) {
@@ -45,7 +45,7 @@ func TestPublicRPCDisablesWalletButAllowsReadOnly(t *testing.T) {
 
 func TestPublicRPCSendIsDisabledWithWalletRPC(t *testing.T) {
 	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
-	resp, err := http.Post(server.URL+"/send", "application/json", strings.NewReader(`{"from":"IDR-invalid","to":"IDR-invalid","amount":"1"}`))
+	resp, err := http.Post(server.URL+"/send", "application/json", strings.NewReader(`{"from":"iND-invalid","to":"iND-invalid","amount":"1"}`))
 	if err != nil {
 		t.Fatal(err)
 	}

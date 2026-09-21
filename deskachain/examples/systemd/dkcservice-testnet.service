@@ -1,13 +1,13 @@
 [Unit]
-Description=DesKaChain Testnet Service Agent
+Description=IndoChain Testnet Service Agent
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/var/lib/deskachain
-EnvironmentFile=/etc/deskachain/idrservice.env
-ExecStart=/usr/local/bin/idrservice --rpc-url ${IDR_SERVICE_RPC_URL} --address ${IDR_SERVICE_ADDRESS} --endpoint ${IDR_SERVICE_ENDPOINT} --state ${IDR_SERVICE_STATE}
+WorkingDirectory=/var/lib/indochain
+EnvironmentFile=/etc/indochain/indoservice.env
+ExecStart=/usr/local/bin/indoservice --rpc-url ${IND_SERVICE_RPC_URL} --address ${IND_SERVICE_ADDRESS} --endpoint ${IND_SERVICE_ENDPOINT} --state ${IND_SERVICE_STATE}
 Restart=always
 RestartSec=5
 KillSignal=SIGINT

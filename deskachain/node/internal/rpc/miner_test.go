@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/p2p"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/p2p"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 type minerTemplateTestResponse struct {

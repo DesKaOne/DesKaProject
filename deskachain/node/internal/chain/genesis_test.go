@@ -3,7 +3,7 @@ package chain
 import (
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestGenesisHashDeterministic(t *testing.T) {

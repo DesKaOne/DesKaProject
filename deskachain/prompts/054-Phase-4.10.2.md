@@ -1,4 +1,4 @@
-Patch DesKaChain Phase 4.10.2 — Testnet Reorg Depth Config & Deep Reorg Recovery
+Patch IndoChain Phase 4.10.2 — Testnet Reorg Depth Config & Deep Reorg Recovery
 
 Context:
 Phase 4.10.1 fixed the false-positive `network id mismatch` during fork sync.
@@ -6,8 +6,8 @@ Phase 4.10.1 fixed the false-positive `network id mismatch` during fork sync.
 Current result:
 Fork sync now correctly reports matching network/chain/genesis:
 
-* local network id: idr-testnet-1
-* peer network id: idr-testnet-1
+* local network id: ind-testnet-1
+* peer network id: ind-testnet-1
 * local chain id: 777101
 * peer chain id: 777101
 * local genesis matches peer genesis
@@ -52,7 +52,7 @@ Add config/CLI/env support:
 * CLI flag:
   --max-reorg-depth <int>
 * env:
-  IDR_MAX_REORG_DEPTH=<int>
+  IND_MAX_REORG_DEPTH=<int>
 
 Suggested defaults:
 
@@ -133,12 +133,12 @@ Add/update tests:
 * public RPC peer sync still disabled.
 * private/local RPC peer sync allowed.
 * startup config parses `--max-reorg-depth`.
-* env `IDR_MAX_REORG_DEPTH` works if env config is supported.
+* env `IND_MAX_REORG_DEPTH` works if env config is supported.
 
 8. Manual validation after patch.
 
 Start VPS:
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.86.152.39:10311 
@@ -147,7 +147,7 @@ Start VPS:
 --max-reorg-depth 128
 
 Start Mini PC:
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 127.0.0.1:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -156,7 +156,7 @@ Start Mini PC:
 --max-reorg-depth 128
 
 Run:
-./deskachain --rpc-url http://127.0.0.1:9311 peer sync http://100.86.152.39:10311
+./indochain --rpc-url http://127.0.0.1:9311 peer sync http://100.86.152.39:10311
 
 Expected:
 
@@ -166,14 +166,14 @@ Expected:
 * chain validate passes
 
 Windows:
-.\deskachain.exe --datadir .\data\testnet --network testnet node start `    --rpc 127.0.0.1:9312`
+.\indochain.exe --datadir .\data\testnet --network testnet node start `    --rpc 127.0.0.1:9312`
 --p2p 0.0.0.0:10312 `    --advertise-p2p http://100.83.159.107:10312`
 --enable-miner-rpc `    --seed-peer http://100.86.152.39:10311`
 --seed-peer http://100.101.251.7:10311 `
 --max-reorg-depth 128
 
 Then:
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer sync http://100.86.152.39:10311
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer sync http://100.86.152.39:10311
 
 Expected:
 

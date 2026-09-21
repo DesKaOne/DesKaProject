@@ -23,7 +23,7 @@ param(
 )
 
 if ($Help) {
-    Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 [-ExpectedNetwork testnet] [-ExpectedNetworkID idr-testnet-1] [-ExpectedChainID 777101] [-MinPeers 1] [-ExpectedMinHeight 100] [-ExpectedMaxHeightLag 10] [-CheckPeerList] [-CheckSeed http://host:10311] [-FailOnZeroPeers] [-CheckMining] [-CheckDifficulty] [-WarnIfNoRecentBlockMinutes 10] [-FailIfNoRecentBlockMinutes 30] [-AllowWalletRPC] [-AllowAdminRPC] [-Json] [-BinDir .\dist\windows-amd64] [-Datadir .\data\testnet] [-TimeoutSeconds 10]"
+    Write-Host "Usage: powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 [-ExpectedNetwork testnet] [-ExpectedNetworkID ind-testnet-1] [-ExpectedChainID 777101] [-MinPeers 1] [-ExpectedMinHeight 100] [-ExpectedMaxHeightLag 10] [-CheckPeerList] [-CheckSeed http://host:10311] [-FailOnZeroPeers] [-CheckMining] [-CheckDifficulty] [-WarnIfNoRecentBlockMinutes 10] [-FailIfNoRecentBlockMinutes 30] [-AllowWalletRPC] [-AllowAdminRPC] [-Json] [-BinDir .\dist\windows-amd64] [-Datadir .\data\testnet] [-TimeoutSeconds 10]"
     exit 0
 }
 
@@ -90,7 +90,7 @@ try {
 
 try {
     $ui = Get-WebEndpoint "/explorer-ui/"
-    $checks.explorer_ui = ($ui.StatusCode -ge 200 -and $ui.StatusCode -lt 300 -and $ui.Content.Contains("DesKaChain Explorer"))
+    $checks.explorer_ui = ($ui.StatusCode -ge 200 -and $ui.StatusCode -lt 300 -and $ui.Content.Contains("IndoChain Explorer"))
     if (-not $checks.explorer_ui) {
         Add-Warning "explorer UI did not return expected content"
     }
@@ -230,15 +230,15 @@ $cliInfo = ""
 $cliValidate = ""
 if ($BinDir) {
     $resolved = Resolve-Path $BinDir -ErrorAction Stop
-    $deskachain = Join-Path $resolved.Path "deskachain.exe"
-    if (-not (Test-Path $deskachain)) {
-        $deskachain = Join-Path $resolved.Path "deskachain"
+    $indochain = Join-Path $resolved.Path "indochain.exe"
+    if (-not (Test-Path $indochain)) {
+        $indochain = Join-Path $resolved.Path "indochain"
     }
-    if (-not (Test-Path $deskachain)) {
-        Add-Warning "deskachain binary not found in $($resolved.Path)"
+    if (-not (Test-Path $indochain)) {
+        Add-Warning "indochain binary not found in $($resolved.Path)"
     } else {
         try {
-            $cliInfo = (& $deskachain --rpc-url $RpcUrl chain info 2>&1 | Out-String).Trim()
+            $cliInfo = (& $indochain --rpc-url $RpcUrl chain info 2>&1 | Out-String).Trim()
             $checks.cli_chain_info = $LASTEXITCODE -eq 0
             if ($LASTEXITCODE -ne 0) {
                 Add-Warning "chain info via CLI failed"
@@ -249,7 +249,7 @@ if ($BinDir) {
         }
         if ($Datadir) {
             try {
-                $cliValidate = (& $deskachain --rpc-url $RpcUrl chain validate 2>&1 | Out-String).Trim()
+                $cliValidate = (& $indochain --rpc-url $RpcUrl chain validate 2>&1 | Out-String).Trim()
                 $checks.cli_chain_validate = $LASTEXITCODE -eq 0
                 if ($LASTEXITCODE -ne 0) {
                     Add-Error "chain validate via CLI failed"

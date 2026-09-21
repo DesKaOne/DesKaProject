@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/wallet"
 )
 
 const e2eEndpoint = "http://127.0.0.1:9971"
@@ -51,7 +51,7 @@ func TestFaucetToStakeToServiceEligibleE2E(t *testing.T) {
 	runServiceAgentEquivalent(t, fixture.serverURL, fixture.ownerWallet.Address)
 	score := serviceScore(t, fixture.serverURL, fixture.ownerWallet.Address)
 	assertServiceCollateral(t, score, 1000*config.UnitsPerCoin, 1000*config.UnitsPerCoin, true, "eligible", true)
-	if !strings.Contains(score["note"].(string), "not spendable IDR") {
+	if !strings.Contains(score["note"].(string), "not spendable dIDR") {
 		t.Fatalf("score missing simulation-only note: %#v", score)
 	}
 	assertRPCBalance(t, fixture.serverURL, fixture.ownerWallet.Address, "1000", "0", "1000")
@@ -142,11 +142,11 @@ func TestChainInfoCirculatingSupplyWithMaturity(t *testing.T) {
 	if info["height"].(float64) != 122 {
 		t.Fatalf("height = %v want 122: %#v", info["height"], info)
 	}
-	if info["total_supply"] != "6100 IDR" {
-		t.Fatalf("total supply = %v want 6100 IDR", info["total_supply"])
+	if info["total_supply"] != "6100 dIDR" {
+		t.Fatalf("total supply = %v want 6100 dIDR", info["total_supply"])
 	}
-	if info["circulating_supply"] != "1100 IDR" {
-		t.Fatalf("circulating supply = %v want mature coinbase supply 1100 IDR", info["circulating_supply"])
+	if info["circulating_supply"] != "1100 dIDR" {
+		t.Fatalf("circulating supply = %v want mature coinbase supply 1100 dIDR", info["circulating_supply"])
 	}
 }
 
@@ -158,11 +158,11 @@ func TestChainInfoCirculatingSupplyIncludesActiveStake(t *testing.T) {
 	minePendingFixture(t, fixture.paths, fixture.faucetWallet.Address, config.Testnet())
 
 	info := getRPCMap(t, fixture.serverURL+"/chain/info", http.StatusOK)
-	if info["circulating_supply"] != "1350 IDR" {
-		t.Fatalf("circulating supply = %v want 1350 IDR with active stake still counted", info["circulating_supply"])
+	if info["circulating_supply"] != "1350 dIDR" {
+		t.Fatalf("circulating supply = %v want 1350 dIDR with active stake still counted", info["circulating_supply"])
 	}
-	if info["total_active_stake"] != "1000 IDR" {
-		t.Fatalf("total active stake = %v want 1000 IDR", info["total_active_stake"])
+	if info["total_active_stake"] != "1000 dIDR" {
+		t.Fatalf("total active stake = %v want 1000 dIDR", info["total_active_stake"])
 	}
 }
 
@@ -175,7 +175,7 @@ func TestChainInfoSpendableNotEqualCirculating(t *testing.T) {
 
 	chainInfo := getRPCMap(t, fixture.serverURL+"/chain/info", http.StatusOK)
 	balance := getRPCMap(t, fixture.serverURL+"/balance/"+fixture.ownerWallet.Address, http.StatusOK)
-	if chainInfo["circulating_supply"] != "1350 IDR" || balance["spendable_balance"] != "0" || balance["active_stake"] != "1000" {
+	if chainInfo["circulating_supply"] != "1350 dIDR" || balance["spendable_balance"] != "0" || balance["active_stake"] != "1000" {
 		t.Fatalf("expected active stake to reduce spendable but not circulating: chain=%#v balance=%#v", chainInfo, balance)
 	}
 }
@@ -192,7 +192,7 @@ func TestChainInfoSupplyUnaffectedByFaucetStakeService(t *testing.T) {
 	runServiceAgentEquivalent(t, fixture.serverURL, fixture.ownerWallet.Address)
 
 	info := getRPCMap(t, fixture.serverURL+"/chain/info", http.StatusOK)
-	if info["total_supply"] != "6350 IDR" || afterFaucetMine-before != config.InitialBlockReward || afterStakeMine-afterFaucetMine != config.InitialBlockReward || totalSupplyFixture(t, fixture.paths) != afterStakeMine {
+	if info["total_supply"] != "6350 dIDR" || afterFaucetMine-before != config.InitialBlockReward || afterStakeMine-afterFaucetMine != config.InitialBlockReward || totalSupplyFixture(t, fixture.paths) != afterStakeMine {
 		t.Fatalf("unexpected supply after faucet/stake/service: before=%d afterFaucet=%d afterStake=%d info=%#v", before, afterFaucetMine, afterStakeMine, info)
 	}
 }
@@ -223,10 +223,10 @@ func TestE2EProfileConsistency(t *testing.T) {
 	postRPCMap(t, fixture.serverURL+"/service/register", map[string]string{"address": fixture.ownerWallet.Address, "endpoint": e2eEndpoint}, http.StatusOK)
 }
 
-func newFaucetStakeServiceFixture(t *testing.T, faucetAmountIDR uint64) faucetStakeServiceFixture {
+func newFaucetStakeServiceFixture(t *testing.T, faucetAmountIND uint64) faucetStakeServiceFixture {
 	t.Helper()
 	info := faucetInfo()
-	info.FaucetAmount = faucetAmountIDR * config.UnitsPerCoin
+	info.FaucetAmount = faucetAmountIND * config.UnitsPerCoin
 	info.FaucetMaxPerAddress = 2000 * config.UnitsPerCoin
 	info.FaucetMinInterval = time.Second
 	paths, faucetWallet, server := newFaucetRPCServer(t, config.Testnet(), info)

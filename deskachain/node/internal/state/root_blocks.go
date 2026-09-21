@@ -3,10 +3,10 @@ package state
 import (
 	"sort"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/types"
-	"deskachain/internal/staking"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/staking"
+	"indochain/internal/types"
 )
 
 func RootForBlocks(blocks []types.Block, params config.ConsensusParams, profile config.NetworkConfig) (string, error) {

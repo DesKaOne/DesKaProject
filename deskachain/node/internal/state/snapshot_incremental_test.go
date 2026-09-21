@@ -3,9 +3,9 @@ package state
 import (
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestSnapshotAfterBlockPreservesCoinbaseMaturityState(t *testing.T) {

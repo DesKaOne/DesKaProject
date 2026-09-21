@@ -1,36 +1,36 @@
-# DesKaChain Service Node Agent
+# IndoChain Service Node Agent
 
-`idrservice` is the Phase 3.1 service node agent for DesKaChain service simulation.
+`indoservice` is the Phase 3.1 service node agent for IndoChain service simulation.
 
 It automates the Phase 3.0 service-node RPC workflow:
 
-- register a IDR address as a service node,
+- register a iND address as a service node,
 - send heartbeats,
 - create simulated verification challenges,
 - submit safe simulated measurements,
 - fetch service score and simulated points,
 - save local agent state.
 
-It is not a public exit proxy. It does not open a VPN, relay, or public listener. It does not sell bandwidth. It does not mine PoW blocks. It does not earn spendable IDR. Service points are simulation-only research/testnet accounting.
+It is not a public exit proxy. It does not open a VPN, relay, or public listener. It does not sell bandwidth. It does not mine PoW blocks. It does not earn spendable dIDR. Service points are simulation-only research/testnet accounting.
 
 Since Phase 3.2, the node may mark service reward simulation as stake-eligible when the configured owner address has enough active staking collateral. The agent reports that score metadata from RPC, but it does not lock or unlock stake by itself.
 
 ## Requirements
 
-- A running DesKaChain node with service RPC enabled.
-- A `IDR...` address.
+- A running IndoChain node with service RPC enabled.
+- A `iND...` address.
 - No private key is required by the agent.
 
 ## Run Once
 
 ```powershell
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
 ```
 
 Expected output includes:
 
 ```text
-DesKaChain Service Node Agent
+IndoChain Service Node Agent
 service agent registered id=...
 heartbeat ok score=...
 challenge created id=...
@@ -42,7 +42,7 @@ state saved
 ## Run Loop
 
 ```powershell
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
 ```
 
 Stop with `Ctrl+C`. The agent saves state before exit.
@@ -52,13 +52,13 @@ Stop with `Ctrl+C`. The agent saves state before exit.
 The default state file is:
 
 ```text
-./idrservice-state.json
+./indoservice-state.json
 ```
 
 Inspect it:
 
 ```powershell
-go run ./node/cmd/idrservice status --state ./idrservice-state.json
+go run ./node/cmd/indoservice status --state ./indoservice-state.json
 ```
 
 The state stores service metadata and counters only. It does not store private keys.
@@ -75,14 +75,14 @@ Safe mode is default. In Phase 3.1, even `--safe-mode=false` keeps behavior safe
 - access private keys,
 - connect to random third-party hosts.
 
-It only calls the configured DesKaChain node RPC.
+It only calls the configured IndoChain node RPC.
 
 ## Public RPC Warning
 
 When a node is started with `--public-rpc`, service write endpoints are disabled by default. Start controlled test/verifier nodes with:
 
 ```powershell
-go run ./node/cmd/deskachain node start --public-rpc --enable-service-rpc=true
+go run ./node/cmd/indochain node start --public-rpc --enable-service-rpc=true
 ```
 
 Do not enable service RPC publicly without rate limits and abuse protection.

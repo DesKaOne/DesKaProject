@@ -5,12 +5,12 @@ import (
 	"errors"
 	"strings"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 
 	"golang.org/x/crypto/ripemd160"
 )
 
-const legacyDevPrefix = "idr1"
+const legacyDevPrefix = "iND1"
 
 type AddressPayload struct {
 	Version    byte

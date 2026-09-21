@@ -1,6 +1,6 @@
-# DesKaChain Public Testnet Topology
+# IndoChain Public Testnet Topology
 
-Testnet IDR has no monetary value. Mainnet is not available. Seeds are bootstrap helpers only; nodes still validate network ID, chain ID, genesis hash, headers, and blocks.
+Testnet dIDR has no monetary value. Mainnet is not available. Seeds are bootstrap helpers only; nodes still validate network ID, chain ID, genesis hash, headers, and blocks.
 
 ## Recommended Topology
 
@@ -41,7 +41,7 @@ Testnet IDR has no monetary value. Mainnet is not available. Seeds are bootstrap
 ## Seed Node
 
 ```sh
-./deskachain --datadir ./data/testnet --network testnet node start \
+./indochain --datadir ./data/testnet --network testnet node start \
   --rpc 0.0.0.0:9311 \
   --p2p 0.0.0.0:10311 \
   --advertise-p2p http://100.86.152.39:10311 \
@@ -52,7 +52,7 @@ Testnet IDR has no monetary value. Mainnet is not available. Seeds are bootstrap
 ## Public Peer Node
 
 ```powershell
-.\deskachain.exe --datadir .\data\testnet --network testnet node start `
+.\indochain.exe --datadir .\data\testnet --network testnet node start `
   --rpc 127.0.0.1:9312 `
   --p2p 0.0.0.0:10312 `
   --advertise-p2p http://100.83.159.107:10312 `
@@ -68,40 +68,40 @@ Testnet IDR has no monetary value. Mainnet is not available. Seeds are bootstrap
 ## Miner Node
 
 ```powershell
-.\idrminer.exe --rpc-url http://127.0.0.1:9312 --address <IDR_ADDRESS> --threads 2
+.\indominer.exe --rpc-url http://127.0.0.1:9312 --address <IND_ADDRESS> --threads 2
 ```
 
 ## Service Node Simulation
 
 ```sh
-./idrservice --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --once
+./indoservice --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --once
 ```
 
-Service points are simulation-only and are not spendable IDR.
+Service points are simulation-only and are not spendable dIDR.
 
 ## Diagnostics
 
 ```powershell
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer list
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer health
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer seeds
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer discover
-.\deskachain.exe --datadir .\data\testnet --network testnet upstream status --upstream-peer http://100.86.152.39:10311
-.\deskachain.exe --datadir .\data\testnet --network testnet upstream push http://100.86.152.39:10311
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain validate
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining status
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining difficulty
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer list
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer health
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer seeds
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer discover
+.\indochain.exe --datadir .\data\testnet --network testnet upstream status --upstream-peer http://100.86.152.39:10311
+.\indochain.exe --datadir .\data\testnet --network testnet upstream push http://100.86.152.39:10311
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain validate
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining status
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining difficulty
 ```
 
 Health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9312 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101 -CheckPeerList
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9312 -ExpectedNetwork testnet -ExpectedNetworkID ind-testnet-1 -ExpectedChainID 777101 -CheckPeerList
 ```
 
 ## Troubleshooting
 
-- Wrong network: confirm `network_id=idr-testnet-1`.
+- Wrong network: confirm `network_id=ind-testnet-1`.
 - Genesis mismatch: confirm genesis hash `db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4`.
 - Peer offline: check firewall and P2P port `10311`.
 - Firewall blocked: test from another host, not only localhost.

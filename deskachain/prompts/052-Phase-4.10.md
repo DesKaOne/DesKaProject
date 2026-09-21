@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -18,14 +18,14 @@ Status saat ini:
   * wallet_rpc false
   * admin_rpc false
 * Explorer API/UI read-only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.10 — Public Testnet Mining Stability & Difficulty Observation
+IndoChain Phase 4.10 — Public Testnet Mining Stability & Difficulty Observation
 
 Goal:
 Improve and observe mining stability on public testnet without changing consensus rules.
@@ -56,7 +56,7 @@ Non-goals:
 * Do not add mining pool/Stratum yet.
 * Do not add GPU mining.
 * Do not promise mining profit.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Do not make staking produce blocks.
 * Do not make service points spendable.
@@ -66,7 +66,7 @@ Non-goals:
 1. Miner reconnect and retry hardening
    ==================================================
 
-Harden `idrminer` runtime behavior.
+Harden `indominer` runtime behavior.
 
 Requirements:
 
@@ -221,9 +221,9 @@ Add observation helpers:
 
 * CLI command:
 
-  * `deskachain mining status`
-  * `deskachain mining difficulty`
-  * `deskachain mining blocks --limit 30`
+  * `indochain mining status`
+  * `indochain mining difficulty`
+  * `indochain mining blocks --limit 30`
 * RPC endpoint or CLI output should show:
 
   * target block time 30s
@@ -345,7 +345,7 @@ README-ID.md
 Docs must explain:
 
 * Testnet mining is for testing only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * No mining profit promise.
 * Mainnet is not available.
 * PoW is the only block-production consensus.
@@ -368,16 +368,16 @@ Docs must explain:
 Example commands:
 
 Windows:
-.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
+.\indominer.exe --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2
 
 Linux:
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2
 
 Once:
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2 --once
 
 Limited:
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> --threads 2 --max-blocks 5
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> --threads 2 --max-blocks 5
 
 ==================================================
 9. Explorer mining panel
@@ -462,9 +462,9 @@ Known nodes:
   * P2P: http://100.83.159.107:10312
 
 A. Check mining status:
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining status
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining difficulty
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining blocks --limit 10
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining status
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining difficulty
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining blocks --limit 10
 
 B. Health mining check:
 powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcUrl http://127.0.0.1:9312`
@@ -472,20 +472,20 @@ powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 `    -RpcU
 -CheckMining
 
 C. Run one miner:
-.\dist\windows-amd64\idrminer.exe `    --rpc-url http://127.0.0.1:9312`
---address <IDR_ADDRESS> `    --threads 2`
+.\dist\windows-amd64\indominer.exe `    --rpc-url http://127.0.0.1:9312`
+--address <IND_ADDRESS> `    --threads 2`
 --max-blocks 3
 
 D. Run second miner against VPS or Mini PC:
-.\dist\windows-amd64\idrminer.exe `    --rpc-url http://100.86.152.39:9311`
---address <IDR_ADDRESS_2> `    --threads 2`
+.\dist\windows-amd64\indominer.exe `    --rpc-url http://100.86.152.39:9311`
+--address <IND_ADDRESS_2> `    --threads 2`
 --max-blocks 3
 
 E. Validate:
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain info
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain validate
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining status
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer health
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain info
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain validate
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining status
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer health
 
 F. Restart node during miner retry test:
 
@@ -513,9 +513,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1 -Version v0.4.10-
 
 Expected artifacts:
 
-* deskachain-v0.4.10-testnet-rc1-windows-amd64.zip
-* deskachain-v0.4.10-testnet-rc1-linux-amd64.tar.gz
-* deskachain-v0.4.10-testnet-rc1-linux-arm64.tar.gz
+* indochain-v0.4.10-testnet-rc1-windows-amd64.zip
+* indochain-v0.4.10-testnet-rc1-linux-amd64.tar.gz
+* indochain-v0.4.10-testnet-rc1-linux-arm64.tar.gz
 * SHA256SUMS.txt
 
 Archive must include:

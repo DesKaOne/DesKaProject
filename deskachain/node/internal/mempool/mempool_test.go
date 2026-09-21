@@ -9,7 +9,7 @@ import (
 	"sync"
 	"testing"
 
-	"deskachain/internal/types"
+	"indochain/internal/types"
 )
 
 func TestAtomicSaveAndDuplicateGuard(t *testing.T) {

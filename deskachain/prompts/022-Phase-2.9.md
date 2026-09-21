@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -59,7 +59,7 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * IDR Base58Check address,
+  * iND Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * dynamic difficulty,
@@ -67,14 +67,14 @@ Status saat ini:
   * coinbase maturity.
 
 Nama patch:
-DesKaChain Phase 2.9 — Standalone CPU Miner CLI
+IndoChain Phase 2.9 — Standalone CPU Miner CLI
 
 Tujuan:
 Memisahkan proses mining dari node agar miner bisa berjalan sebagai aplikasi/CLI terpisah.
 
 Saat ini mining masih dilakukan lewat command node:
 
-deskachain mine --address <ADDR> --blocks N
+indochain mine --address <ADDR> --blocks N
 
 Phase 2.9 harus menambahkan:
 
@@ -91,7 +91,7 @@ Phase 2.9 harus menambahkan:
 
 Aturan penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -119,13 +119,13 @@ Aturan penting:
 
 Tambahkan endpoint RPC untuk miner mengambil template block:
 
-GET /miner/template?address=<IDR_ADDRESS>
+GET /miner/template?address=<IND_ADDRESS>
 
 atau jika pattern RPC existing memakai POST, boleh:
 
 POST /miner/template
 {
-"address": "IDR..."
+"address": "iND..."
 }
 
 Pilih style yang konsisten dengan RPC existing.
@@ -162,7 +162,7 @@ Template response minimal:
 "previous_hash": "...",
 "difficulty": 4,
 "target": "0000ffffffff...",
-"reward_address": "IDR...",
+"reward_address": "iND...",
 "coinbase_reward": "50",
 "timestamp": 1781910000,
 "transactions": [...],
@@ -295,18 +295,18 @@ Tambahkan binary baru atau subcommand baru.
 Pilihan disarankan:
 
 * Tambahkan binary baru:
-  node/cmd/idrminer/
+  node/cmd/indominer/
   sehingga bisa build:
-  go build -o idrminer ./node/cmd/idrminer
+  go build -o indominer ./node/cmd/indominer
 
 Tetap boleh juga tambahkan:
-deskachain miner start
+indochain miner start
 
 Tapi minimal wajib ada command standalone yang bisa dijalankan tanpa membuka datadir chain lokal.
 
 Command target:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8391 --address <IDR_ADDR> --threads 4
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8391 --address <IND_ADDR> --threads 4
 
 Flags:
 
@@ -318,14 +318,14 @@ Flags:
 * --once, mine one block then exit.
 * --max-blocks int, optional, 0 means unlimited.
 * --retry-interval duration, default 3s.
-* --user-agent string, default idrminer/<version>.
+* --user-agent string, default indominer/<version>.
 * --network optional, default inferred from node/template if possible.
 
 Output example:
 
-DesKaChain CPU Miner
+IndoChain CPU Miner
 rpc: http://127.0.0.1:8391
-reward address: IDR...
+reward address: iND...
 threads: 4
 
 new job height=12 difficulty=4 txs=1 prev=...
@@ -401,7 +401,7 @@ Ini penting agar mining bisa dijalankan di mesin lain tanpa membawa private key.
 
 Command lama:
 
-deskachain mine --address <ADDR> --blocks N
+indochain mine --address <ADDR> --blocks N
 
 harus tetap bekerja.
 
@@ -558,7 +558,7 @@ Tambahkan/update tests:
 
 1. Template endpoint at genesis:
 
-* GET /miner/template address IDR valid.
+* GET /miner/template address iND valid.
 * returns height 1.
 * previous hash genesis.
 * difficulty initial 4.
@@ -668,23 +668,23 @@ Tambahkan dokumentasi:
 
 1. Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
+go run ./node/cmd/indochain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
 
 2. Create wallet:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 wallet new
 
 3. Start standalone miner:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4
 
 4. Mine one block:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4 --once
 
 5. Build binary:
 
-go build -o idrminer ./node/cmd/idrminer
+go build -o indominer ./node/cmd/indominer
 
 6. Notes:
 
@@ -707,17 +707,17 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/miner dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/miner init
-go run ./node/cmd/deskachain --datadir ./testdata/miner wallet new
+go run ./node/cmd/indochain --datadir ./testdata/miner dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/miner init
+go run ./node/cmd/indochain --datadir ./testdata/miner wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
+go run ./node/cmd/indochain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
 
 Check template:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IND_ADDR>"
 
 Expected:
 height: 1
@@ -727,7 +727,7 @@ tx_count: 1
 
 Run standalone miner once:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 new job height=1 difficulty=4
@@ -736,13 +736,13 @@ submit accepted height=1
 
 Check chain:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 balance <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 chain validate
 
 Expected:
 height: 1
-total supply: 50 IDR
+total supply: 50 dIDR
 confirmed balance: 50
 mature balance: 0
 immature balance: 50
@@ -751,7 +751,7 @@ chain valid
 
 Mine 3 blocks:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --max-blocks 3
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4 --max-blocks 3
 
 Expected:
 accepted blocks 3
@@ -762,7 +762,7 @@ Mempool tx test:
 
 * mine enough blocks until maturity.
 * create receiver wallet.
-* send 10 IDR.
+* send 10 dIDR.
 * run standalone miner --once.
 * expected tx confirmed and mempool count 0.
 

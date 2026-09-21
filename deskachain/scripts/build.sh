@@ -20,7 +20,7 @@ if command -v git >/dev/null 2>&1; then
   COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || printf unknown)"
 fi
 BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-LDFLAGS="-s -w -X deskachain/internal/version.Version=$VERSION -X deskachain/internal/version.Commit=$COMMIT -X deskachain/internal/version.BuildDate=$BUILD_DATE"
+LDFLAGS="-s -w -X indochain/internal/version.Version=$VERSION -X indochain/internal/version.Commit=$COMMIT -X indochain/internal/version.BuildDate=$BUILD_DATE"
 
 if [ "${SKIP_TESTS:-0}" != "1" ] && [ "$SKIP" != "1" ]; then
   (cd "$ROOT" && go test ./node/...)
@@ -36,9 +36,9 @@ build_target() {
   ext="$4"
   outdir="$DIST/$dir"
   mkdir -p "$outdir"
-  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/deskachain$ext" ./node/cmd/deskachain)
-  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/idrminer$ext" ./node/cmd/idrminer)
-  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/idrservice$ext" ./node/cmd/idrservice)
+  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/indochain$ext" ./node/cmd/indochain)
+  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/indominer$ext" ./node/cmd/indominer)
+  (cd "$ROOT" && GOOS="$goos" GOARCH="$goarch" go build -trimpath -ldflags "$LDFLAGS" -o "$outdir/indoservice$ext" ./node/cmd/indoservice)
   printf 'built %s\n' "$outdir"
 }
 

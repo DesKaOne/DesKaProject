@@ -1,6 +1,6 @@
 # Fork and Reorg Notes
 
-DesKaChain Phase 2.4 detects forks and prepares the data flow needed for a future safe reorg, but it does not automatically reorganize the local chain.
+IndoChain Phase 2.4 detects forks and prepares the data flow needed for a future safe reorg, but it does not automatically reorganize the local chain.
 
 ## What Is a Fork
 
@@ -36,4 +36,4 @@ Future safe reorg work should include:
 - applying the peer branch after validation;
 - fork choice by cumulative work, not height alone.
 
-Height alone is not enough for fork choice. DesKaChain now has placeholder helpers for block work and cumulative work, but the consensus rule is not changed in Phase 2.4.
+Height alone is not enough for fork choice. IndoChain now has placeholder helpers for block work and cumulative work, but the consensus rule is not changed in Phase 2.4.

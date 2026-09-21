@@ -1,10 +1,10 @@
-# DesKaChain systemd Testnet Node
+# IndoChain systemd Testnet Node
 
-This guide runs a public-testnet node under systemd with restart recovery. It does not launch mainnet. Testnet IDR has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
+This guide runs a public-testnet node under systemd with restart recovery. It does not launch mainnet. Testnet dIDR has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
 
 ## Unit Behavior
 
-The example unit in `examples/systemd/deskachain-testnet.service` is intended for long-running seed or miner-enabled testnet nodes.
+The example unit in `examples/systemd/indochain-testnet.service` is intended for long-running seed or miner-enabled testnet nodes.
 
 - `Restart=always` restarts the node after a crash or non-zero exit.
 - `RestartSec=5` avoids a tight restart loop.
@@ -18,36 +18,36 @@ The environment file must not contain private keys. Wallet files, faucet state, 
 ## Install
 
 ```sh
-sudo useradd --system --home /var/lib/deskachain --shell /usr/sbin/nologin deskachain || true
-sudo mkdir -p /opt/deskachain /var/lib/deskachain/testnet /etc/deskachain
-sudo chown -R deskachain:deskachain /var/lib/deskachain
-sudo install -m 0755 deskachain idrminer idrservice /opt/deskachain/
-sudo install -m 0644 examples/systemd/deskachain-testnet.env /etc/deskachain/testnet.env
-sudo install -m 0644 examples/systemd/deskachain-testnet.service /etc/systemd/system/deskachain-testnet.service
-sudo editor /etc/deskachain/testnet.env
+sudo useradd --system --home /var/lib/indochain --shell /usr/sbin/nologin indochain || true
+sudo mkdir -p /opt/indochain /var/lib/indochain/testnet /etc/indochain
+sudo chown -R indochain:indochain /var/lib/indochain
+sudo install -m 0755 indochain indominer indoservice /opt/indochain/
+sudo install -m 0644 examples/systemd/indochain-testnet.env /etc/indochain/testnet.env
+sudo install -m 0644 examples/systemd/indochain-testnet.service /etc/systemd/system/indochain-testnet.service
+sudo editor /etc/indochain/testnet.env
 sudo systemctl daemon-reload
-sudo systemctl enable --now deskachain-testnet
+sudo systemctl enable --now indochain-testnet
 ```
 
-Set `IDR_ADVERTISE_P2P` to a LAN, Tailscale, or VPS address that other peers can reach. Keep wallet/admin RPC disabled on public RPC. Enable miner RPC only when the node should accept mining clients.
+Set `IND_ADVERTISE_P2P` to a LAN, Tailscale, or VPS address that other peers can reach. Keep wallet/admin RPC disabled on public RPC. Enable miner RPC only when the node should accept mining clients.
 
 ## Operate
 
 ```sh
-sudo systemctl status deskachain-testnet
-journalctl -u deskachain-testnet -f
-journalctl -u deskachain-testnet --since "30 minutes ago"
-sudo systemctl restart deskachain-testnet
-sudo systemctl stop deskachain-testnet
+sudo systemctl status indochain-testnet
+journalctl -u indochain-testnet -f
+journalctl -u indochain-testnet --since "30 minutes ago"
+sudo systemctl restart indochain-testnet
+sudo systemctl stop indochain-testnet
 ```
 
 Check the node after start or restart:
 
 ```sh
 curl http://127.0.0.1:9311/health
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
-./deskachain --rpc-url http://127.0.0.1:9311 peer list --source
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 peer list --source
 ```
 
 `/health` reports network, network ID, chain ID, genesis hash, height, tip hash, peer count, mempool count, RPC mode flags, service-node count, staking summary, and uptime seconds. It does not expose wallet private data.
@@ -57,7 +57,7 @@ curl http://127.0.0.1:9311/health
 1. Start the service.
 2. Mine at least one testnet block.
 3. Record `chain info` height and tip.
-4. Run `sudo systemctl restart deskachain-testnet`.
+4. Run `sudo systemctl restart indochain-testnet`.
 5. Re-run `chain info` and `chain validate`.
 
 Expected result:
@@ -70,25 +70,25 @@ Expected result:
 ## Failure Recovery Test
 
 ```sh
-pidof deskachain
+pidof indochain
 sudo kill -9 <PID>
-sudo systemctl status deskachain-testnet
-journalctl -u deskachain-testnet --since "5 minutes ago"
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+sudo systemctl status indochain-testnet
+journalctl -u indochain-testnet --since "5 minutes ago"
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 ```
 
 Expected result:
 
 - systemd restarts the service.
 - chain validation still passes after startup.
-- if an unclean stop leaves `node.lock`, remove it only after confirming no `deskachain` process is using that datadir.
+- if an unclean stop leaves `node.lock`, remove it only after confirming no `indochain` process is using that datadir.
 
 ## Duplicate Datadir Lock Test
 
 While the service is running, try starting a second node with the same datadir:
 
 ```sh
-./deskachain --datadir /var/lib/deskachain/testnet --network testnet node start --rpc :9312 --p2p :10312
+./indochain --datadir /var/lib/indochain/testnet --network testnet node start --rpc :9312 --p2p :10312
 ```
 
 Expected result: startup fails clearly because the datadir is locked by the running node.

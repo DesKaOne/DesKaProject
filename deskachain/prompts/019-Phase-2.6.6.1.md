@@ -1,18 +1,18 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status:
 
-* Phase 2.6.6 IDR Base58 Address Migration sudah diterapkan.
-* `wallet new` sekarang menghasilkan address baru dengan format `IDR...`.
-* Mining ke address `IDR...` berhasil.
+* Phase 2.6.6 iND Base58 Address Migration sudah diterapkan.
+* `wallet new` sekarang menghasilkan address baru dengan format `iND...`.
+* Mining ke address `iND...` berhasil.
 * Saat node sedang berjalan, datadir lock mencegah command lokal `wallet new` menulis langsung ke datadir.
 * Error lock memberi saran:
-  `go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new`
+  `go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 wallet new`
 * Tetapi command tersebut gagal:
   `remote mode not supported for this command yet`
 
 Nama patch:
-DesKaChain Phase 2.6.6.1 — Remote Wallet Command UX Fix
+IndoChain Phase 2.6.6.1 — Remote Wallet Command UX Fix
 
 Tujuan:
 Memperbaiki UX wallet command saat datadir dikunci oleh running node.
@@ -20,7 +20,7 @@ Memperbaiki UX wallet command saat datadir dikunci oleh running node.
 Aturan penting:
 
 * Jangan ubah address format.
-* Jangan rollback IDR Base58Check.
+* Jangan rollback iND Base58Check.
 * Jangan ubah consensus.
 * Jangan implement difficulty adjustment.
 * Jangan implement coinbase maturity.
@@ -56,11 +56,11 @@ Behavior:
 * Simpan wallet ke wallet store runtime node.
 * Return address baru.
 * Jangan return private key kecuali ada endpoint/flag eksplisit untuk export.
-* Output address harus `IDR...`.
+* Output address harus `iND...`.
 
 Response:
 {
-"address": "IDR...",
+"address": "iND...",
 "format": "base58check",
 "network": "localnet",
 "key_curve": "secp256k1"
@@ -80,10 +80,10 @@ Security note:
 
 Command ini harus bekerja:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 wallet new
 
 Output:
-IDR...
+iND...
 
 Jangan print private key.
 
@@ -96,12 +96,12 @@ Jika wallet list sudah ada lokal, tambahkan remote:
 wallet list
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 wallet list
 
 Output:
 addresses:
 
-* IDR...
+* iND...
 
 Jika terlalu besar, minimal `wallet new` dulu.
 
@@ -114,10 +114,10 @@ Jika sudah ada lokal:
 wallet inspect <address>
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet inspect <address>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 wallet inspect <address>
 
 Output:
-address: IDR...
+address: iND...
 format: base58check
 network: localnet
 key curve: secp256k1
@@ -133,7 +133,7 @@ Jika terlalu besar, boleh TODO.
 Jika remote wallet new berhasil, hint lock boleh tetap:
 
 use:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:<port> wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:<port> wallet new
 
 Jika remote wallet new tidak diimplement karena security concern, ubah hint menjadi:
 
@@ -163,7 +163,7 @@ Tambahkan/update tests:
 1. Remote wallet new handler:
 
 * POST /wallet/new returns address.
-* address starts with IDR.
+* address starts with iND.
 * address validates.
 
 2. Remote wallet new persists:
@@ -183,7 +183,7 @@ Tambahkan/update tests:
 
 5. Wallet store concurrent create:
 
-* Multiple wallet new calls produce valid unique IDR addresses.
+* Multiple wallet new calls produce valid unique iND addresses.
 * No file corruption.
 
 6. Security docs:
@@ -197,10 +197,10 @@ Tambahkan/update tests:
 Update README wallet section:
 
 Local wallet:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
 
 When node is running:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 wallet new
 
 Warning:
 
@@ -219,31 +219,31 @@ go test ./node/...
 
 Manual test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/address dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/address init
-go run ./node/cmd/deskachain --datadir ./testdata/address wallet new
+go run ./node/cmd/indochain --datadir ./testdata/address dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/address init
+go run ./node/cmd/indochain --datadir ./testdata/address wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/address node start --rpc :8381 --p2p :9381 --advertise-p2p http://127.0.0.1:9381
+go run ./node/cmd/indochain --datadir ./testdata/address node start --rpc :8381 --p2p :9381 --advertise-p2p http://127.0.0.1:9381
 
 Remote wallet new:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 wallet new
 
 Expected:
-IDR...
+iND...
 
 Then send test:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 send --from <ADDR_A> --to <ADDR_B> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mempool list --detail
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <ADDR_A> --blocks 1
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 balance <ADDR_B>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 send --from <ADDR_A> --to <ADDR_B> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 mine --address <ADDR_A> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 balance <ADDR_B>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 chain info
 
 Expected:
-balance B: 10 IDR
+balance B: 10 dIDR
 normal transactions: 1
 coinbase transactions: 4
 total transactions: 5

@@ -1,4 +1,4 @@
-# DesKaChain Suggested GitHub Labels
+# IndoChain Suggested GitHub Labels
 
 These labels are suggested for RC1 issue triage. No automation is required.
 
@@ -13,7 +13,7 @@ These labels are suggested for RC1 issue triage. No automation is required.
 | `mining` | CPU miner, block template, submit, or coinbase maturity confusion. |
 | `faucet` | Faucet operation or funding flow. |
 | `staking` | Collateral locking/unlocking, not APY or PoS rewards. |
-| `service-node` | Service-node simulation and `idrservice`. |
+| `service-node` | Service-node simulation and `indoservice`. |
 | `docs` | Documentation, onboarding, command examples. |
 | `packaging` | Build archives, checksums, artifact contents. |
 

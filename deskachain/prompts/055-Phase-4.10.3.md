@@ -1,7 +1,7 @@
-Patch DesKaChain Phase 4.10.3 — Upstream Seed Backfill & Isolated Mining Guard
+Patch IndoChain Phase 4.10.3 — Upstream Seed Backfill & Isolated Mining Guard
 
 Context:
-DesKaChain public testnet Phase 4.10 is already valid full:
+IndoChain public testnet Phase 4.10 is already valid full:
 
 * Mining stability works.
 * Reorg false-positive network mismatch fixed.
@@ -35,7 +35,7 @@ Add new feature:
 * repeatable like `--seed-peer`
 * optional config/env support if project has env config:
 
-  * `IDR_UPSTREAM_PEERS=http://100.86.152.39:10311,http://...`
+  * `IND_UPSTREAM_PEERS=http://100.86.152.39:10311,http://...`
 
 Definition:
 
@@ -66,7 +66,7 @@ Non-goals:
 * Do not bypass validation.
 * Do not accept invalid blocks.
 * Do not expose wallet/admin RPC publicly.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not add mainnet.
 
 ==================================================
@@ -80,7 +80,7 @@ Add CLI flags:
 --upstream-file <path> optional if easy
 
 Optional env:
-IDR_UPSTREAM_PEERS=[http://100.86.152.39:10311,http://100.101.251.7:10311](http://100.86.152.39:10311,http://100.101.251.7:10311)
+IND_UPSTREAM_PEERS=[http://100.86.152.39:10311,http://100.101.251.7:10311](http://100.86.152.39:10311,http://100.101.251.7:10311)
 
 Normalize and dedupe URLs using existing peer URL normalization.
 
@@ -179,10 +179,10 @@ Include:
 
 Add CLI commands if easy:
 
-deskachain upstream list
-deskachain upstream status
-deskachain upstream push <peer-url>
-deskachain upstream push-all
+indochain upstream list
+indochain upstream status
+indochain upstream push <peer-url>
+indochain upstream push-all
 
 Alternative if CLI grouping is too much:
 
@@ -205,8 +205,8 @@ New flags:
 --allow-isolated-mining
 
 Optional env:
-IDR_MIN_MINING_PEERS=1
-IDR_ALLOW_ISOLATED_MINING=false
+IND_MIN_MINING_PEERS=1
+IND_ALLOW_ISOLATED_MINING=false
 
 Suggested defaults:
 
@@ -297,7 +297,7 @@ Do not make `--upstream-peer` expose any private action publicly.
 
 VPS can run:
 
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.86.152.39:10311 
@@ -306,7 +306,7 @@ VPS can run:
 
 Mini PC can run:
 
-./deskachain --datadir ./data/testnet --network testnet node start 
+./indochain --datadir ./data/testnet --network testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -319,7 +319,7 @@ Mini PC can run:
 
 Windows can run:
 
-.\deskachain.exe --datadir .\data\testnet --network testnet node start `    --rpc 0.0.0.0:9312`
+.\indochain.exe --datadir .\data\testnet --network testnet node start `    --rpc 0.0.0.0:9312`
 --p2p 0.0.0.0:10312 `    --advertise-p2p http://100.83.159.107:10312`
 --public-rpc `    --enable-miner-rpc`
 --seed-peer http://100.86.152.39:10311 `    --seed-peer http://100.101.251.7:10311`
@@ -401,7 +401,7 @@ go test ./node/internal/config -run "Upstream|MiningPeers|Isolated|Profile|Testn
 Scenario A: VPS starts without seed peer.
 
 1. Start VPS:
-   ./deskachain --datadir ./data/testnet --network testnet node start 
+   ./indochain --datadir ./data/testnet --network testnet node start 
    --rpc 0.0.0.0:9311 
    --p2p 0.0.0.0:10311 
    --advertise-p2p http://100.86.152.39:10311 
@@ -409,7 +409,7 @@ Scenario A: VPS starts without seed peer.
    --max-reorg-depth 128
 
 2. Start Mini PC with upstream VPS:
-   ./deskachain --datadir ./data/testnet --network testnet node start 
+   ./indochain --datadir ./data/testnet --network testnet node start 
    --rpc 0.0.0.0:9311 
    --p2p 0.0.0.0:10311 
    --advertise-p2p http://100.101.251.7:10311 
@@ -478,7 +478,7 @@ Explain:
 * `--seed-peer` is for pulling/discovery.
 * `--upstream-peer` is for pushing/backfill.
 * Mining nodes must not mine isolated on testnet.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
 * PoW remains the only block production consensus.
 
@@ -493,9 +493,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1 -Version v0.4.10-
 
 Expected artifacts:
 
-* deskachain-v0.4.10-testnet-rc2-windows-amd64.zip
-* deskachain-v0.4.10-testnet-rc2-linux-amd64.tar.gz
-* deskachain-v0.4.10-testnet-rc2-linux-arm64.tar.gz
+* indochain-v0.4.10-testnet-rc2-windows-amd64.zip
+* indochain-v0.4.10-testnet-rc2-linux-amd64.tar.gz
+* indochain-v0.4.10-testnet-rc2-linux-arm64.tar.gz
 * SHA256SUMS.txt
 
 No wallet/private key/datadir/runtime state in packages.

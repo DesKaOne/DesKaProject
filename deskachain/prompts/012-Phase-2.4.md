@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur saat ini:
 
 * Core node berada di:
   node/
-  cmd/deskachain/
+  cmd/indochain/
   internal/
   go.mod
   go.sum
@@ -30,10 +30,10 @@ Status saat ini:
 * Chain validate pass di node1 dan node2.
 
 Nama patch:
-DesKaChain Phase 2.4 — Fork Detection Test & Light Reorg Preparation
+IndoChain Phase 2.4 — Fork Detection Test & Light Reorg Preparation
 
 Tujuan utama:
-Mempersiapkan DesKaChain untuk menghadapi fork ringan tanpa langsung implementasi reorg kompleks penuh.
+Mempersiapkan IndoChain untuk menghadapi fork ringan tanpa langsung implementasi reorg kompleks penuh.
 
 Pada Phase 2.4:
 
@@ -182,10 +182,10 @@ Command local/remote:
 chain locator
 
 Local:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 chain locator
+go run ./node/cmd/indochain --datadir ./testdata/node1 chain locator
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
 
 Output:
 height: 10
@@ -216,7 +216,7 @@ Perilaku:
 * Tampilkan hasil.
 
 Remote mode:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Output:
 common ancestor found
@@ -237,7 +237,7 @@ fork check --peer <p2p-url>
 Local dan remote mode.
 
 Contoh:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
 
 Perilaku:
 
@@ -449,11 +449,11 @@ Phase 2.4 — Fork Detection Test & Light Reorg Preparation
 
 Tambahkan command:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Tambahkan catatan:
 
@@ -473,15 +473,15 @@ go test ./node/...
 
 Jalankan dua node normal:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
 
 Expected jika sync:
 no fork detected

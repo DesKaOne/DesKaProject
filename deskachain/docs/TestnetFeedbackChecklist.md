@@ -37,7 +37,7 @@ Use this checklist when reporting public testnet RC results.
 
 - Stake lock works.
 - Service register works.
-- `idrservice --once` works.
+- `indoservice --once` works.
 - Service eligibility is shown.
 - Points are clearly simulation-only.
 

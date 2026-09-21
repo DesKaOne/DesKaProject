@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -14,11 +14,11 @@ Status saat ini:
 Masalah/risiko yang ditemukan:
 Saat node sedang berjalan dengan command:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 User masih bisa menjalankan command lokal lain yang memakai datadir sama, misalnya:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 mine --address <addr> --blocks 3
+go run ./node/cmd/indochain --datadir ./testdata/node1 mine --address <addr> --blocks 3
 
 Untuk MVP ini kadang terlihat berhasil, tetapi secara desain ini tidak ideal karena dua proses berbeda bisa membuka storage/datadir yang sama. Ke depan ini rawan:
 
@@ -29,7 +29,7 @@ Untuk MVP ini kadang terlihat berhasil, tetapi secara desain ini tidak ideal kar
 * broadcast block/tx tidak konsisten.
 
 Nama patch:
-DesKaChain Phase 2.1 — Node Runtime Hardening, Remote CLI, dan Broadcast Stabilization
+IndoChain Phase 2.1 — Node Runtime Hardening, Remote CLI, dan Broadcast Stabilization
 
 Tujuan utama:
 Membuat node runtime menjadi sumber kebenaran saat node sedang berjalan, sehingga mining/send/peer sync bisa dilakukan lewat RPC node yang hidup, bukan dengan proses CLI lain yang menulis langsung ke datadir yang sama.
@@ -46,7 +46,7 @@ Aturan penting:
 * Semua tetap harus lolos:
   go mod tidy
   go test ./...
-  go run ./node/cmd/deskachain
+  go run ./node/cmd/indochain
 
 ==================================================
 
@@ -106,7 +106,7 @@ Tambahkan flag override khusus development:
 
 Contoh:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 --ignore-lock chain info
+go run ./node/cmd/indochain --datadir ./testdata/node1 --ignore-lock chain info
 
 Aturan:
 
@@ -135,13 +135,13 @@ Jika --rpc-url diisi, command tertentu harus menggunakan RPC node berjalan, buka
 
 Contoh:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain info
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <a> --to <b> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <a> --to <b> --amount 10
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
 Remote command yang wajib didukung:
 
@@ -184,13 +184,13 @@ Response:
 {
 "mined_blocks": 3,
 "new_height": 6,
-"miner_balance": "300 IDR",
+"miner_balance": "300 dIDR",
 "blocks": [
 {
 "height": 4,
 "hash": "...",
 "txs": 2,
-"reward": "50 IDR",
+"reward": "50 dIDR",
 "difficulty": 4,
 "nonce": 12345
 }
@@ -224,8 +224,8 @@ Response:
 "id": "<txid>",
 "from": "<addressA>",
 "to": "<addressB>",
-"amount": "10 IDR",
-"fee": "0 IDR",
+"amount": "10 dIDR",
+"fee": "0 dIDR",
 "nonce": 1,
 "broadcast": {
 "peers": 1,
@@ -348,10 +348,10 @@ Command:
 node status
 
 Lokal:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node status
+go run ./node/cmd/indochain --datadir ./testdata/node1 node status
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node status
 
 Output:
 datadir: ./testdata/node1
@@ -404,12 +404,12 @@ peer http://127.0.0.1:9331
 Alur:
 
 1. Node1 mine 3 block lewat RPC remote CLI:
-   go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+   go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
 
 2. Node2 sync otomatis atau manual dari node1.
 
-3. Node1 send 10 IDR ke walletB lewat RPC remote CLI:
-   go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
+3. Node1 send 10 dIDR ke walletB lewat RPC remote CLI:
+   go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
 
 Expected:
 
@@ -418,7 +418,7 @@ Expected:
 * Mempool node2 berisi tx yang sama.
 * Command ini harus menampilkan tx pending di node2:
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
+  go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
 
 ==================================================
 10. Broadcast block end-to-end
@@ -427,7 +427,7 @@ Expected:
 Lanjutan skenario:
 
 1. Node1 mine 1 block lewat RPC remote CLI:
-   go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+   go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
 
 Expected:
 
@@ -436,7 +436,7 @@ Expected:
 * Node2 menerima block.
 * Node2 append block jika extend tip.
 * Mempool node2 kosong setelah block diterima.
-* Balance walletB di node2 menjadi 10 IDR.
+* Balance walletB di node2 menjadi 10 dIDR.
 * Tip hash node1 dan node2 sama.
 * Chain validate node2 pass.
 
@@ -449,7 +449,7 @@ Tambahkan command:
 node compare --peer <rpc-url>
 
 Contoh:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 
 Perilaku:
 
@@ -543,25 +543,25 @@ Tambahkan penjelasan penting:
 Contoh alur baru yang benar:
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 balance <walletB>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 balance <walletB>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 
 Expected:
 
 * node2 menerima tx broadcast.
 * node2 menerima block broadcast.
-* walletB balance 10 IDR.
+* walletB balance 10 dIDR.
 * node1 dan node2 in sync.
 * chain validate pass di kedua node.
 
@@ -576,36 +576,36 @@ go test ./...
 
 Setup:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 
 Start node:
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Remote control:
 
 Terminal 3:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 balance <walletB>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 balance <walletB>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain validate
 
 Expected:
 
@@ -613,7 +613,7 @@ Expected:
 * Remote send sukses.
 * Tx broadcast ke node2.
 * Block broadcast ke node2.
-* WalletB balance 10 IDR di node2.
+* WalletB balance 10 dIDR di node2.
 * Node compare menunjukkan nodes in sync.
 * Kedua node chain valid.
 

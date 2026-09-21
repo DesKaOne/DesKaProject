@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status:
 
@@ -7,25 +7,25 @@ Status:
 * go work sync berhasil.
 * go test ./node/... pass.
 * Template endpoint sudah bekerja:
-  GET /miner/template?address=<IDR_ADDR>
+  GET /miner/template?address=<IND_ADDR>
   mengembalikan block template height=1 difficulty=4.
-* idrminer berhasil mengambil template dan menemukan valid nonce/hash.
+* indominer berhasil mengambil template dan menemukan valid nonce/hash.
 * Tetapi submit block timeout dan setelah itu node RPC ikut macet.
 
 Log manual:
 
 Template OK:
-GET http://127.0.0.1:8401/miner/template?address=IDR...
+GET http://127.0.0.1:8401/miner/template?address=iND...
 returns height=1 difficulty=4 tx_count=1
 
 Miner:
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address IDR... --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address iND... --threads 4 --once
 
 Output:
 new job height=1 difficulty=4 txs=1 prev=6e1b3fed63a01109
 block found height=1 hash=00006b03... nonce=167659 thread=3
 submit failed: Post "http://127.0.0.1:8401/miner/submit": context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-template fetch failed: Get "http://127.0.0.1:8401/miner/template?address=IDR...": context deadline exceeded
+template fetch failed: Get "http://127.0.0.1:8401/miner/template?address=iND...": context deadline exceeded
 
 Masalah:
 
@@ -35,7 +35,7 @@ Masalah:
 * Kemungkinan submit handler memegang chain/runtime lock lalu memanggil fungsi lain yang mencoba lock yang sama, atau melakukan broadcast/network call saat lock masih dipegang.
 
 Nama patch:
-DesKaChain Phase 2.9.1 — Miner Submit Deadlock & Timeout Fix
+IndoChain Phase 2.9.1 — Miner Submit Deadlock & Timeout Fix
 
 Tujuan:
 Memperbaiki endpoint /miner/submit agar:
@@ -48,7 +48,7 @@ Memperbaiki endpoint /miner/submit agar:
 
 Aturan penting:
 
-* Jangan ubah address format IDR.
+* Jangan ubah address format iND.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -93,7 +93,7 @@ Larangan penting:
 
 Built-in command:
 
-deskachain mine --address <ADDR> --blocks N
+indochain mine --address <ADDR> --blocks N
 
 sebelumnya sudah valid dan tidak hang.
 
@@ -206,7 +206,7 @@ Jangan terlalu noisy, tapi cukup untuk tahu macet di tahap mana.
 
 Setelah submit invalid/stale/timeout, endpoint ini harus tetap responsif:
 
-GET /miner/template?address=<IDR_ADDR>
+GET /miner/template?address=<IND_ADDR>
 
 Jika submit gagal, tidak boleh meninggalkan lock terkunci.
 
@@ -218,7 +218,7 @@ Jika submit panic, recover di HTTP handler jika pattern project sudah ada.
 7. Miner client timeout
 =======================
 
-idrminer boleh punya client timeout, tapi jangan terlalu pendek.
+indominer boleh punya client timeout, tapi jangan terlalu pendek.
 
 Default:
 
@@ -295,7 +295,7 @@ Tambahkan/update tests:
 * submit should still return or broadcast should timeout.
 * No deadlock.
 
-6. idrminer --once integration:
+6. indominer --once integration:
 
 * run miner against test RPC if integration test exists.
 * miner exits after accepted block.
@@ -303,7 +303,7 @@ Tambahkan/update tests:
 
 7. Existing built-in mine still works:
 
-* deskachain mine path unaffected.
+* indochain mine path unaffected.
 * chain validate pass.
 
 8. Existing tests still pass:
@@ -328,17 +328,17 @@ go test ./node/...
 
 Reset:
 
-go run ./node/cmd/deskachain --datadir ./testdata/miner dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/miner init
-go run ./node/cmd/deskachain --datadir ./testdata/miner wallet new
+go run ./node/cmd/indochain --datadir ./testdata/miner dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/miner init
+go run ./node/cmd/indochain --datadir ./testdata/miner wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
+go run ./node/cmd/indochain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
 
 Template:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IND_ADDR>"
 
 Expected:
 height: 1
@@ -347,7 +347,7 @@ tx_count: 1
 
 Standalone miner once:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 new job height=1 difficulty=4
@@ -357,13 +357,13 @@ miner exits cleanly
 
 Check chain:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 balance <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 balance <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 chain validate
 
 Expected:
 height: 1
-total supply: 50 IDR
+total supply: 50 dIDR
 confirmed balance: 50
 mature balance: 0
 immature balance: 50
@@ -372,7 +372,7 @@ chain valid
 
 Call template again:
 
-Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8401/miner/template?address=<IND_ADDR>"
 
 Expected:
 height: 2

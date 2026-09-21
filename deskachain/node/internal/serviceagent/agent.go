@@ -6,8 +6,8 @@ import (
 	"io"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
 )
 
 type Options struct {
@@ -35,14 +35,14 @@ type Agent struct {
 
 func DefaultOptions() Options {
 	return Options{
-		StatePath:            "./idrservice-state.json",
+		StatePath:            "./indoservice-state.json",
 		HeartbeatInterval:    30 * time.Second,
 		ChallengeInterval:    time.Minute,
 		ScoreInterval:        time.Minute,
 		RetryInterval:        5 * time.Second,
 		SafeMode:             true,
 		MaxBytesPerChallenge: 100_000_000,
-		ClientVersion:        "idrservice/dev",
+		ClientVersion:        "indoservice/dev",
 	}
 }
 
@@ -220,7 +220,7 @@ func (a Agent) request() RegisterRequest {
 		Endpoint:      a.Options.Endpoint,
 		ClientVersion: a.Options.ClientVersion,
 		Platform:      a.Options.Platform,
-		UserAgent:     "idrservice",
+		UserAgent:     "indoservice",
 	}
 }
 
@@ -279,7 +279,7 @@ func validateAddressAnyNetwork(address string) error {
 }
 
 func (a Agent) printStartup() {
-	fmt.Fprintln(a.Out, "DesKaChain Service Node Agent")
+	fmt.Fprintln(a.Out, "IndoChain Service Node Agent")
 	fmt.Fprintf(a.Out, "rpc: %s\n", a.Options.RPCURL)
 	fmt.Fprintf(a.Out, "address: %s\n", a.Options.Address)
 	fmt.Fprintf(a.Out, "endpoint: %s\n", a.Options.Endpoint)

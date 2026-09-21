@@ -5,9 +5,9 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestFirstNoncesPartitionByThread(t *testing.T) {

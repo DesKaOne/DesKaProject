@@ -6,10 +6,10 @@ import (
 	"sort"
 	"strings"
 
-	"deskachain/internal/arith"
+	"indochain/internal/arith"
 )
 
-const FeeCollectorAddress = "__DESKACHAIN_FEE_POOL__"
+const FeeCollectorAddress = "__INDOCHAIN_FEE_POOL__"
 
 var (
 	ErrAssetNotFound       = errors.New("asset not found")
@@ -71,7 +71,9 @@ func (s *State) Balances() []BalanceEntry {
 		}
 	}
 	sort.Slice(out, func(i, j int) bool {
-		if out[i].Address != out[j].Address { return out[i].Address < out[j].Address }
+		if out[i].Address != out[j].Address {
+			return out[i].Address < out[j].Address
+		}
 		return out[i].AssetID < out[j].AssetID
 	})
 	return out
@@ -81,7 +83,7 @@ func (s *State) Restore(definitions []Definition, balances []BalanceEntry) error
 	for _, def := range definitions {
 		if IsNative(def.ID) {
 			if def.ID != NativeAssetID || def.Symbol != NativeSymbol || def.Decimals != NativeDecimals {
-				return errors.New("invalid native IDR definition")
+				return errors.New("invalid native dIDR definition")
 			}
 			s.assets[NativeAssetID] = def
 			continue
@@ -153,7 +155,7 @@ func (s *State) Create(def Definition) error {
 		return errors.New("asset id is required")
 	}
 	if IsNative(def.ID) {
-		return errors.New("native IDR cannot be recreated as an issued asset")
+		return errors.New("native dIDR cannot be recreated as an issued asset")
 	}
 	if def.Kind == "" {
 		def.Kind = KindFungible
@@ -289,11 +291,11 @@ func (s *State) ChargeFee(payer string, fee uint64) error {
 		return errors.New("fee payer is required")
 	}
 	if err := s.subtractBalance(payer, NativeAssetID, fee); err != nil {
-		return fmt.Errorf("native IDR fee: %w", err)
+		return fmt.Errorf("native dIDR fee: %w", err)
 	}
 	if err := s.addBalance(FeeCollectorAddress, NativeAssetID, fee); err != nil {
 		_ = s.addBalance(payer, NativeAssetID, fee)
-		return fmt.Errorf("native IDR fee collector: %w", err)
+		return fmt.Errorf("native dIDR fee collector: %w", err)
 	}
 	return nil
 }

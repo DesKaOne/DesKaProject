@@ -4,9 +4,9 @@ import (
 	"math/big"
 	"sort"
 
-	"deskachain/internal/config"
-	"deskachain/internal/fees"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/fees"
+	"indochain/internal/types"
 )
 
 // SelectWithNonces deterministically selects transactions while preserving
@@ -103,7 +103,10 @@ func SelectWithNonces(txs []types.Transaction, profile config.NetworkConfig, max
 	return out, nil
 }
 
-func higherPriority(a, b struct{ tx types.Transaction; gas uint64 }) bool {
+func higherPriority(a, b struct {
+	tx  types.Transaction
+	gas uint64
+}) bool {
 	left := new(big.Int).SetUint64(a.tx.Fee)
 	left.Mul(left, new(big.Int).SetUint64(b.gas))
 	right := new(big.Int).SetUint64(b.tx.Fee)
@@ -120,7 +123,9 @@ func higherPriority(a, b struct{ tx types.Transaction; gas uint64 }) bool {
 	return a.tx.ID < b.tx.ID
 }
 
-func samePriority(a, b struct{ tx types.Transaction; gas uint64 }) bool {
+func samePriority(a, b struct {
+	tx  types.Transaction
+	gas uint64
+}) bool {
 	return a.tx.Fee == b.tx.Fee && a.gas == b.gas && new(big.Int).SetUint64(a.tx.Fee).Cmp(new(big.Int).SetUint64(b.tx.Fee)) == 0
 }
-

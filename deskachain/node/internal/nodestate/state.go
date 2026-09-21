@@ -5,10 +5,10 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/mempool"
-	"deskachain/internal/storage"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/mempool"
+	"indochain/internal/storage"
 )
 
 type ChainRuntimeState struct {

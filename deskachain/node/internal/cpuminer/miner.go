@@ -8,8 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"deskachain/internal/crypto"
-	"deskachain/internal/types"
+	"indochain/internal/crypto"
+	"indochain/internal/types"
 )
 
 var ErrNonceExhausted = errors.New("nonce exhausted")

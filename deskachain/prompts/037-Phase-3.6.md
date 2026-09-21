@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -24,7 +24,7 @@ Status saat ini:
 * PoW remains the only block-production consensus.
 
 Patch name:
-DesKaChain Phase 3.6 — Public Testnet Bootstrap Registry & Seed Peer Config
+IndoChain Phase 3.6 — Public Testnet Bootstrap Registry & Seed Peer Config
 
 Goal:
 Make it easy for new testnet nodes to discover and connect to official/known seed peers without requiring manual `--bootnode` every time.
@@ -108,7 +108,7 @@ or:
 Choose the style consistent with current CLI.
 
 C. Optional config/env:
-IDR_SEED_PEERS=[http://host1:port,http://host2:port](http://host1:port,http://host2:port)
+IND_SEED_PEERS=[http://host1:port,http://host2:port](http://host1:port,http://host2:port)
 
 D. Optional file:
 --seed-file ./config/testnet-seeds.txt
@@ -227,16 +227,16 @@ Include:
 
 Example seed file:
 
-# DesKaChain testnet seed peers
+# IndoChain testnet seed peers
 
 http://seed1.example.org:9811
 http://seed2.example.org:9811
 
 Example command:
 
-deskachain --datadir ./data/testnet --network testnet init
+indochain --datadir ./data/testnet --network testnet init
 
-deskachain --datadir ./data/testnet node start 
+indochain --datadir ./data/testnet node start 
 --rpc :8811 
 --p2p :9811 
 --advertise-p2p http://<PUBLIC_HOST>:9811 
@@ -246,11 +246,11 @@ deskachain --datadir ./data/testnet node start
 
 Windows go run example:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node_b node start --rpc :8812 --p2p :9812 --advertise-p2p http://127.0.0.1:9812 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:9811
+go run ./node/cmd/indochain --datadir ./testdata/node_b node start --rpc :8812 --p2p :9812 --advertise-p2p http://127.0.0.1:9812 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:9811
 
 Add warnings:
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Bootnodes/seeds are not trusted authorities.
 * Every peer must still pass network id/genesis validation.
@@ -323,21 +323,21 @@ Manual local two-node seed flow:
 
 Clean:
 
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/seed_a dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/seed_b dev reset --yes
 
 Init:
 
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_a --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_b --network testnet init
 
 Start seed node A:
 
-go run ./node/cmd/deskachain --datadir ./testdata/seed_a node start --rpc :9111 --p2p :10111 --advertise-p2p http://127.0.0.1:10111 --public-rpc --enable-miner-rpc
+go run ./node/cmd/indochain --datadir ./testdata/seed_a node start --rpc :9111 --p2p :10111 --advertise-p2p http://127.0.0.1:10111 --public-rpc --enable-miner-rpc
 
 Start node B using seed peer, not bootnode:
 
-go run ./node/cmd/deskachain --datadir ./testdata/seed_b node start --rpc :9112 --p2p :10112 --advertise-p2p http://127.0.0.1:10112 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10111/
+go run ./node/cmd/indochain --datadir ./testdata/seed_b node start --rpc :9112 --p2p :10112 --advertise-p2p http://127.0.0.1:10112 --public-rpc --enable-miner-rpc --seed-peer http://127.0.0.1:10111/
 
 Expected:
 
@@ -349,26 +349,26 @@ Expected:
 
 Commands:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 peer list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 peer check http://127.0.0.1:10111
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 peer sync http://127.0.0.1:10111
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 peer check http://127.0.0.1:10111
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 peer sync http://127.0.0.1:10111
 
 Mine A, sync B:
 
 Create miner wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/seed_miner --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/seed_miner wallet new
+go run ./node/cmd/indochain --datadir ./testdata/seed_miner --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/seed_miner wallet new
 
 Mine on A:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:9111 --address <MINER_ADDR> --threads 2 --once
 
 Sync B:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 peer sync http://127.0.0.1:10111
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9112 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 peer sync http://127.0.0.1:10111
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9112 chain validate
 
 Expected:
 

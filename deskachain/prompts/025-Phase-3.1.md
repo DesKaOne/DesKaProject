@@ -1,11 +1,11 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
+  * cmd/indochain/
+  * cmd/indominer/
   * internal/
   * go.mod
   * go.sum
@@ -27,14 +27,14 @@ Status saat ini:
 * Node bisa restart ulang tanpa stale lock.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif:
 
-  * idrminer bisa mine via /miner/template dan /miner/submit.
+  * indominer bisa mine via /miner/template dan /miner/submit.
 * Node public hardening sudah aktif:
 
   * /health
@@ -50,12 +50,12 @@ Status saat ini:
   * service challenge submit
   * service score
   * service rewards
-  * simulated points tidak mengubah IDR balance
+  * simulated points tidak mengubah dIDR balance
   * total supply tidak berubah karena service rewards
   * public RPC default service_rpc=false
 
 Nama patch:
-DesKaChain Phase 3.1 — Service Node Agent MVP
+IndoChain Phase 3.1 — Service Node Agent MVP
 
 Tujuan:
 Membuat standalone service node agent yang bisa berjalan sebagai proses terpisah dan otomatis melakukan:
@@ -75,14 +75,14 @@ Prinsip penting:
 * Agent ini TIDAK membuka relay publik.
 * Agent ini TIDAK menjual bandwidth.
 * Agent ini TIDAK mengubah consensus.
-* Agent ini TIDAK mencetak IDR.
+* Agent ini TIDAK mencetak dIDR.
 * Agent ini hanya berinteraksi dengan service simulation RPC dari Phase 3.0.
 * PoW tetap satu-satunya pembuat block canonical.
 * Service points tetap simulasi dan tidak spendable.
 
 Aturan penting:
 
-* Jangan ubah address format IDR.
+* Jangan ubah address format dIDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -103,27 +103,27 @@ Aturan penting:
 
 ==================================================
 
-1. Tambahkan binary baru idrservice
+1. Tambahkan binary baru indoservice
    ==================================================
 
 Tambahkan binary baru:
 
-node/cmd/idrservice/
+node/cmd/indoservice/
 
 Target run:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501
 
 Build:
 
-go build -o idrservice ./node/cmd/idrservice
+go build -o indoservice ./node/cmd/indoservice
 
 Flags minimal:
 
 * --rpc-url string, required
 * --address string, required
 * --endpoint string, optional
-* --state string, default ./idrservice-state.json
+* --state string, default ./indoservice-state.json
 * --heartbeat-interval duration, default 30s
 * --challenge-interval duration, default 60s
 * --score-interval duration, default 60s
@@ -131,14 +131,14 @@ Flags minimal:
 * --once bool, run one register/heartbeat/challenge cycle then exit
 * --safe-mode bool, default true
 * --max-bytes-per-challenge int64, default 100000000
-* --client-version string, default idrservice/dev
+* --client-version string, default indoservice/dev
 * --platform string, auto detect runtime.GOOS/runtime.GOARCH
 
 Output startup:
 
-DesKaChain Service Node Agent
+IndoChain Service Node Agent
 rpc: http://127.0.0.1:8431
-address: IDR...
+address: iND...
 endpoint: http://127.0.0.1:9501
 safe mode: true
 heartbeat interval: 30s
@@ -183,7 +183,7 @@ For --once:
 Agent harus menyimpan state lokal di file JSON.
 
 Default:
-./idrservice-state.json
+./indoservice-state.json
 
 Fields:
 
@@ -225,7 +225,7 @@ Jangan menyimpan private key.
 4. Simulated measurement generator
 ==================================
 
-Tambahkan package internal/serviceagent atau internal/idrservice.
+Tambahkan package internal/serviceagent atau internal/indoservice.
 
 Measurement simulator:
 
@@ -272,7 +272,7 @@ When safe mode true:
 * no external speed test,
 * no large traffic generation,
 * no private key access,
-* only RPC calls to configured DesKaChain node.
+* only RPC calls to configured IndoChain node.
 
 If someone passes:
 --safe-mode=false
@@ -353,7 +353,7 @@ Existing commands must still work:
 * service rewards
 * service list if exists
 
-The new idrservice should use the same RPC endpoints.
+The new indoservice should use the same RPC endpoints.
 
 ==================================================
 9. Public RPC mode behavior
@@ -365,7 +365,7 @@ If node is started with:
 
 service RPC default is disabled.
 
-idrservice should fail clearly:
+indoservice should fail clearly:
 
 error: service RPC disabled on target node
 
@@ -373,7 +373,7 @@ If node is started with:
 
 --public-rpc --enable-service-rpc=true
 
-idrservice can work.
+indoservice can work.
 
 Add docs warning:
 
@@ -386,7 +386,7 @@ Add docs warning:
 
 No need to change node health heavily.
 
-But if easy, idrservice can check:
+But if easy, indoservice can check:
 
 GET /health
 
@@ -418,7 +418,7 @@ Add subcommands or flags if easy.
 Option A:
 Binary supports:
 
-idrservice status --state ./idrservice-state.json
+indoservice status --state ./indoservice-state.json
 
 Print:
 
@@ -509,7 +509,7 @@ Tambahkan/update tests:
 * server returns service RPC disabled.
 * agent returns clear error.
 
-14. No IDR mutation:
+14. No dIDR mutation:
 
 * existing service tests already check no consensus mutation.
 * keep them passing.
@@ -527,7 +527,7 @@ Tambahkan/update tests:
 * wallet
 * chain
 * cli
-* idrminer
+* indominer
 
 ==================================================
 13. Docs update
@@ -539,15 +539,15 @@ docs/ServiceAgent.md
 
 Content:
 
-* What idrservice is.
+* What indoservice is.
 * It is a service node agent for simulation.
 * It is not public exit proxy.
 * It does not mine PoW blocks.
-* It does not earn spendable IDR.
+* It does not earn spendable dIDR.
 * It submits service simulation data to node RPC.
 * Safe mode is default.
 * No private key needed.
-* Only IDR address required.
+* Only dIDR address required.
 * Future:
 
   * signed service registration,
@@ -566,23 +566,23 @@ Add usage:
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
+go run ./node/cmd/indochain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
 
 Create wallet:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 wallet new
 
 Run service agent once:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Run loop:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
 
 Build:
 
-go build -o idrservice ./node/cmd/idrservice
+go build -o indoservice ./node/cmd/indoservice
 
 ==================================================
 14. Expected final commands
@@ -596,13 +596,13 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/agent dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/agent init
-go run ./node/cmd/deskachain --datadir ./testdata/agent wallet new
+go run ./node/cmd/indochain --datadir ./testdata/agent dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/agent init
+go run ./node/cmd/indochain --datadir ./testdata/agent wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/agent node start --rpc :8451 --p2p :9451 --advertise-p2p http://127.0.0.1:9451
+go run ./node/cmd/indochain --datadir ./testdata/agent node start --rpc :8451 --p2p :9451 --advertise-p2p http://127.0.0.1:9451
 
 Health:
 
@@ -614,49 +614,49 @@ service_rpc true
 
 Run service agent once:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8451 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8451 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Expected:
-DesKaChain Service Node Agent
+IndoChain Service Node Agent
 service agent registered id=...
 heartbeat ok
 challenge created id=...
 challenge submitted status=passed
 service score=...
 simulated points=...
-service points are simulation only and are not spendable IDR
+service points are simulation only and are not spendable dIDR
 state saved
 
 Check node service score:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service score --address <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 service rewards --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 service score --address <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 service rewards --address <IND_ADDR>
 
 Expected:
 service score > 0
 simulated points > 0
-not IDR
+not dIDR
 
 Consensus check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 balance <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 balance <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 chain validate
 
 Expected:
 total supply unchanged by service agent
-IDR balance unchanged by service agent
+dIDR balance unchanged by service agent
 chain valid
 
 Public RPC disabled check:
 
 Start public node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/agent_pub node start --rpc :8461 --p2p :9461 --advertise-p2p http://127.0.0.1:9461 --public-rpc
+go run ./node/cmd/indochain --datadir ./testdata/agent_pub node start --rpc :8461 --p2p :9461 --advertise-p2p http://127.0.0.1:9461 --public-rpc
 
 Run agent:
 
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8461 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8461 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
 
 Expected:
 error: service RPC disabled
@@ -664,7 +664,7 @@ error: service RPC disabled
 Jangan over-engineer.
 Fokus Phase 3.1 hanya:
 
-* standalone idrservice binary,
+* standalone indoservice binary,
 * agent local state,
 * safe-mode simulated measurement,
 * auto register/heartbeat/challenge/submit/score,

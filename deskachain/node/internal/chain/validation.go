@@ -6,13 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/fees"
-	"deskachain/internal/ledger"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/fees"
+	"indochain/internal/ledger"
+	"indochain/internal/state"
+	"indochain/internal/types"
 )
 
 type ValidationResult struct {

@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/storage"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func testAddress(t *testing.T) string {
@@ -267,7 +267,7 @@ func TestServiceCollateralUnlockingAndReleasedNotEligible(t *testing.T) {
 	}
 }
 
-func TestServicePointsStillNotIDR(t *testing.T) {
+func TestServicePointsStillNotIND(t *testing.T) {
 	now := time.Unix(7000, 0)
 	paths := config.NewPaths(t.TempDir())
 	store := NewStore(paths, config.Localnet()).WithNow(func() time.Time { return now })
@@ -289,7 +289,7 @@ func TestServicePointsStillNotIDR(t *testing.T) {
 	}
 	after := serviceBlocks(t, paths)
 	if afterSupply := ledger.TotalSupply(after); afterSupply != beforeSupply {
-		t.Fatalf("service rewards changed IDR supply: before=%d after=%d", beforeSupply, afterSupply)
+		t.Fatalf("service rewards changed dIDR supply: before=%d after=%d", beforeSupply, afterSupply)
 	}
 }
 
@@ -344,7 +344,9 @@ func serviceStakeTxs(t *testing.T, w wallet.Wallet, value uint64) (types.Transac
 func prepareServiceBlocks(blocks []types.Block) {
 	for i := range blocks {
 		blocks[i].Hash = fmt.Sprintf("service-test-%d", blocks[i].Height)
-		if i > 0 { blocks[i].PreviousHash = blocks[i-1].Hash }
+		if i > 0 {
+			blocks[i].PreviousHash = blocks[i-1].Hash
+		}
 	}
 }
 

@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/types"
 )
 
 type Account struct {
@@ -78,7 +78,9 @@ func (l *Ledger) ApplyCoinbase(tx types.Transaction) error {
 	}
 	acct := l.accounts[tx.To]
 	balance, err := arith.Add(acct.Balance, tx.Amount)
-	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	if err != nil {
+		return fmt.Errorf("coinbase balance overflow: %w", err)
+	}
 	acct.Balance = balance
 	l.accounts[tx.To] = acct
 	return nil

@@ -3,9 +3,9 @@ package wallet
 import (
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/types"
 )
 
 func TestSignTransactionWithProfileBindsV2ToChainID(t *testing.T) {

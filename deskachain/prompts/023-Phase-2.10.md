@@ -1,11 +1,11 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
+  * cmd/indochain/
+  * cmd/indominer/
   * internal/
   * go.mod
   * go.sum
@@ -26,8 +26,8 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -46,13 +46,13 @@ Status saat ini:
 
   * node punya `/miner/template`
   * node punya `/miner/submit`
-  * `idrminer` bisa mine block via RPC
+  * `indominer` bisa mine block via RPC
   * submit block sudah tidak deadlock
   * standalone miner bisa include mempool tx
   * chain validate pass
 
 Nama patch:
-DesKaChain Phase 2.10 — Node Public Hardening
+IndoChain Phase 2.10 — Node Public Hardening
 
 Tujuan:
 Memperkuat node sebelum masuk fase public testnet preparation.
@@ -72,7 +72,7 @@ Phase ini fokus pada:
 
 Aturan penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
@@ -288,7 +288,7 @@ Defaults:
 Flags/env:
 
 * `--cors-origins`
-* env `IDR_CORS_ORIGINS`
+* env `IND_CORS_ORIGINS`
 
 Format:
 
@@ -575,8 +575,8 @@ Pastikan Phase 2.9 tetap valid:
 
 * `/miner/template` tetap cepat.
 * `/miner/submit` tetap cepat.
-* idrminer --once tetap accepted.
-* idrminer --max-blocks tetap jalan.
+* indominer --once tetap accepted.
+* indominer --max-blocks tetap jalan.
 * body limit submit tidak menolak block normal.
 * rate limit tidak memblok miner normal.
 * public RPC mode tetap bisa enable miner endpoint jika flag enable.
@@ -602,7 +602,7 @@ Command lama wajib tetap bekerja:
 * chain difficulty
 * chain validate
 * fork/reorg dev sims
-* idrminer
+* indominer
 
 Jangan breaking CLI output besar-besaran, tapi boleh tambah field.
 
@@ -706,7 +706,7 @@ Tambahkan/update tests:
 
 17. Miner regression:
 
-* idrminer --once equivalent integration or RPC submit test.
+* indominer --once equivalent integration or RPC submit test.
 * accepted block.
 * chain validate pass.
 
@@ -735,10 +735,10 @@ Phase 2.10 — Node Public Hardening
 Tambahkan dokumentasi:
 
 1. Local node:
-   go run ./node/cmd/deskachain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+   go run ./node/cmd/indochain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
 2. Public RPC mode:
-   go run ./node/cmd/deskachain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --public-rpc --enable-wallet-rpc=false
+   go run ./node/cmd/indochain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --public-rpc --enable-wallet-rpc=false
 
 3. Warning:
 
@@ -751,7 +751,7 @@ Tambahkan dokumentasi:
    curl http://127.0.0.1:8331/health
 
 5. Miner tetap:
-   go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8331 --address <IDR_ADDR> --threads 4 --once
+   go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8331 --address <IND_ADDR> --threads 4 --once
 
 6. Config file example:
    docs/config.example.json
@@ -768,13 +768,13 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/harden dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/harden init
-go run ./node/cmd/deskachain --datadir ./testdata/harden wallet new
+go run ./node/cmd/indochain --datadir ./testdata/harden dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/harden init
+go run ./node/cmd/indochain --datadir ./testdata/harden wallet new
 
 Start local/admin node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/harden node start --rpc :8411 --p2p :9411 --advertise-p2p http://127.0.0.1:9411
+go run ./node/cmd/indochain --datadir ./testdata/harden node start --rpc :8411 --p2p :9411 --advertise-p2p http://127.0.0.1:9411
 
 Check:
 
@@ -787,40 +787,40 @@ height 0
 
 Remote wallet local mode:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8411 wallet new
 
 Expected:
-IDR...
+iND...
 
 Miner once:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8411 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8411 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 submit accepted
 
 Chain:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8411 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8411 chain validate
 
 Expected:
 chain valid
 
 Public RPC mode test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/harden_pub node start --rpc :8421 --p2p :9421 --advertise-p2p http://127.0.0.1:9421 --public-rpc
+go run ./node/cmd/indochain --datadir ./testdata/harden_pub node start --rpc :8421 --p2p :9421 --advertise-p2p http://127.0.0.1:9421 --public-rpc
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8421 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8421 wallet new
 
 Expected:
 error: endpoint disabled in public RPC mode
 
 Read-only:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8421 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8421 chain info
 
 Expected:
 works

@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -18,19 +18,19 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * CI dan release artifact workflow hijau.
 * Release binary Windows/Linux valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.2 — Public Testnet Faucet + Service Node Multi-Host E2E
+IndoChain Phase 4.2 — Public Testnet Faucet + Service Node Multi-Host E2E
 
 Goal:
 Validate faucet, staking collateral, and service node simulation across multiple real hosts.
@@ -38,10 +38,10 @@ Validate faucet, staking collateral, and service node simulation across multiple
 This phase should prove:
 
 * faucet can run on a controlled testnet seed/operator node,
-* another host can request testnet IDR,
+* another host can request testnet dIDR,
 * faucet creates normal transactions, no silent mint,
 * requested faucet funds become available after mining and maturity rules as expected,
-* remote host can lock 1000 IDR as service collateral,
+* remote host can lock 1000 dIDR as service collateral,
 * service agent can run from another host,
 * service score/eligibility works across public testnet nodes,
 * all nodes remain in sync and chain valid,
@@ -51,7 +51,7 @@ This phase should prove:
 Non-goals:
 
 * Do not launch mainnet.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not promise real mining/service rewards.
 * Do not implement staking APY.
 * Do not implement slashing/PoS.
@@ -84,7 +84,7 @@ Host A: Mini PC / faucet seed node
 * Faucet wallet must be funded and mature.
 * Faucet sends normal transactions.
 * Faucet state stores rate limits.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 
 Host B: Windows/Linux user node
 
@@ -93,7 +93,7 @@ Host B: Windows/Linux user node
 * Requests faucet from Host A.
 * Mines or waits for mined tx.
 * Checks balance.
-* Optionally locks 1000 IDR for service collateral.
+* Optionally locks 1000 dIDR for service collateral.
 
 Warnings:
 
@@ -114,18 +114,18 @@ Example flow:
 
 A. Prepare faucet wallet datadir on Host A:
 
-./deskachain --datadir ./data/faucet_wallet --network testnet init
-./deskachain --datadir ./data/faucet_wallet wallet new
+./indochain --datadir ./data/faucet_wallet --network testnet init
+./indochain --datadir ./data/faucet_wallet wallet new
 
 B. Fund faucet wallet by mining to faucet address:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address <FAUCET_ADDR> --threads 2 --max-blocks 120
+./indominer --rpc-url http://127.0.0.1:9311 --address <FAUCET_ADDR> --threads 2 --max-blocks 120
 
 Because testnet coinbase maturity is 100, ensure faucet has mature balance.
 
 C. Start faucet-enabled node on Host A:
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://<HOST_A_REACHABLE_IP>:10311 
@@ -141,17 +141,17 @@ If current CLI names differ, use existing flags.
 
 D. Request faucet from Host B:
 
-./deskachain --rpc-url http://<HOST_A_RPC_IP>:9311 faucet request --address <USER_ADDR>
+./indochain --rpc-url http://<HOST_A_RPC_IP>:9311 faucet request --address <USER_ADDR>
 
 or if only local RPC is used, document the correct command pattern.
 
 E. Mine block to confirm faucet tx:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
 
 F. Check Host B balance:
 
-./deskachain --rpc-url http://127.0.0.1:9312 wallet balance --address <USER_ADDR>
+./indochain --rpc-url http://127.0.0.1:9312 wallet balance --address <USER_ADDR>
 
 or correct current balance command.
 
@@ -190,26 +190,26 @@ Document E2E service flow:
 Host B:
 
 1. Create owner wallet.
-2. Request faucet 1000 IDR or receive test funds.
+2. Request faucet 1000 dIDR or receive test funds.
 3. Confirm mature/spendable funds if required by transaction model.
 4. Lock stake:
-   ./deskachain --rpc-url http://127.0.0.1:9312 stake lock --address <OWNER_ADDR> --amount 1000
+   ./indochain --rpc-url http://127.0.0.1:9312 stake lock --address <OWNER_ADDR> --amount 1000
 5. Mine block to confirm stake tx.
 6. Register service node:
-   ./deskachain --rpc-url http://127.0.0.1:9312 service register --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971
+   ./indochain --rpc-url http://127.0.0.1:9312 service register --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971
 7. Run service agent:
-   ./idrservice --rpc-url http://127.0.0.1:9312 --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
+   ./indoservice --rpc-url http://127.0.0.1:9312 --address <OWNER_ADDR> --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
 8. Check score:
-   ./deskachain --rpc-url http://127.0.0.1:9312 service score --address <OWNER_ADDR>
+   ./indochain --rpc-url http://127.0.0.1:9312 service score --address <OWNER_ADDR>
 
 Expected:
 
-* active stake: 1000 IDR.
-* required stake: 1000 IDR.
+* active stake: 1000 dIDR.
+* required stake: 1000 dIDR.
 * stake eligible: true.
 * service collateral status: eligible.
 * service points visible as simulation-only.
-* no spendable IDR minted by service score.
+* no spendable dIDR minted by service score.
 
 Warnings:
 
@@ -253,7 +253,7 @@ Do not invent behavior. Patch docs/tests to match actual architecture.
 6. Service agent multi-host behavior
 ====================================
 
-Validate `idrservice` from a host different from seed node.
+Validate `indoservice` from a host different from seed node.
 
 Cases:
 
@@ -265,7 +265,7 @@ Cases:
 * Insufficient stake should show not eligible.
 * Stake unlocked/released should lose eligibility.
 
-Keep `idrservice --once` fast and deterministic enough for testnet smoke.
+Keep `indoservice --once` fast and deterministic enough for testnet smoke.
 
 ==================================================
 7. RPC safety with faucet/service
@@ -366,12 +366,12 @@ C. Host B peer check Host A OK.
 D. Host B wallet creates testnet address.
 E. Host B requests faucet from Host A.
 F. Faucet tx confirmed by mining.
-G. Host B balance shows 1000 IDR.
-H. Host B locks stake 1000 IDR.
+G. Host B balance shows 1000 dIDR.
+H. Host B locks stake 1000 dIDR.
 I. Stake tx confirmed by mining.
 J. Host B stake list/info shows active stake 1000.
 K. Host B registers service endpoint.
-L. Run idrservice --once.
+L. Run indoservice --once.
 M. service score shows eligible.
 N. Host A and Host B chain info same height/tip.
 O. Host A and Host B chain validate pass.
@@ -379,7 +379,7 @@ P. Confirm total supply only reflects mined coinbase, not faucet/service mint.
 
 Expected final:
 
-* owner active stake: 1000 IDR.
+* owner active stake: 1000 dIDR.
 * service collateral eligible: true.
 * service points > 0 or valid score output.
 * chain valid on both hosts.
@@ -392,16 +392,16 @@ Expected final:
 
 Host A, faucet wallet:
 
-./deskachain --datadir ./data/faucet_wallet --network testnet init
-FAUCET_ADDR=$(./deskachain --datadir ./data/faucet_wallet wallet new)
+./indochain --datadir ./data/faucet_wallet --network testnet init
+FAUCET_ADDR=$(./indochain --datadir ./data/faucet_wallet wallet new)
 
 Mine mature faucet funds:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --max-blocks 120
+./indominer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --max-blocks 120
 
 Start/restart Host A with faucet enabled:
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -415,9 +415,9 @@ Start/restart Host A with faucet enabled:
 
 Host B:
 
-./deskachain --datadir ./data/node_b --network testnet init
+./indochain --datadir ./data/node_b --network testnet init
 
-./deskachain --datadir ./data/node_b node start 
+./indochain --datadir ./data/node_b node start 
 --rpc 0.0.0.0:9312 
 --p2p 0.0.0.0:10312 
 --advertise-p2p http://100.83.159.107:10312 
@@ -428,52 +428,52 @@ Host B:
 
 Host B wallet:
 
-./deskachain --datadir ./data/wallet_b --network testnet init
-OWNER_ADDR=$(./deskachain --datadir ./data/wallet_b wallet new)
+./indochain --datadir ./data/wallet_b --network testnet init
+OWNER_ADDR=$(./indochain --datadir ./data/wallet_b wallet new)
 
 Request faucet:
 
-./deskachain --rpc-url http://100.101.251.7:9311 faucet request --address "$OWNER_ADDR"
+./indochain --rpc-url http://100.101.251.7:9311 faucet request --address "$OWNER_ADDR"
 
 Mine confirmation:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9311 --address "$FAUCET_ADDR" --threads 2 --once
 
 Check balance:
 
-./deskachain --rpc-url http://127.0.0.1:9312 wallet balance --address "$OWNER_ADDR"
+./indochain --rpc-url http://127.0.0.1:9312 wallet balance --address "$OWNER_ADDR"
 
 Stake:
 
-./deskachain --rpc-url http://127.0.0.1:9312 stake lock --address "$OWNER_ADDR" --amount 1000
+./indochain --rpc-url http://127.0.0.1:9312 stake lock --address "$OWNER_ADDR" --amount 1000
 
 Mine confirmation:
 
-./idrminer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
 
 Check stake:
 
-./deskachain --rpc-url http://127.0.0.1:9312 stake list --address "$OWNER_ADDR"
+./indochain --rpc-url http://127.0.0.1:9312 stake list --address "$OWNER_ADDR"
 
 Service register:
 
-./deskachain --rpc-url http://127.0.0.1:9312 service register --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971
+./indochain --rpc-url http://127.0.0.1:9312 service register --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971
 
 Run service once:
 
-./idrservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971 --once
+./indoservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://100.83.159.107:9971 --once
 
 Score:
 
-./deskachain --rpc-url http://127.0.0.1:9312 service score --address "$OWNER_ADDR"
+./indochain --rpc-url http://127.0.0.1:9312 service score --address "$OWNER_ADDR"
 
 Final chain checks:
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain info
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
-./deskachain --rpc-url http://127.0.0.1:9312 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9312 chain validate
 
 Adjust commands to actual CLI if names/flags differ.
 
@@ -512,8 +512,8 @@ Phase 4.2 valid if:
 * faucet creates normal tx and does not mint supply directly.
 * multi-host faucet request works.
 * Host B receives/spends testnet faucet funds.
-* Host B locks 1000 IDR stake.
-* service node becomes eligible with 1000 IDR active stake.
+* Host B locks 1000 dIDR stake.
+* service node becomes eligible with 1000 dIDR active stake.
 * service points remain simulation-only.
 * Host A and Host B remain synced with same height/tip.
 * chain validate passes on both hosts.

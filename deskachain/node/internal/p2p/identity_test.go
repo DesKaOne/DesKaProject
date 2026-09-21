@@ -13,29 +13,29 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 func testHandshakeForIdentity(t *testing.T, identity NodeIdentity, profile config.NetworkConfig) Handshake {
 	t.Helper()
 	profile.GenesisHash = chain.GenesisBlockForNetwork(profile).Hash
 	hs := Handshake{
-		NetworkName:         profile.NetworkName,
-		NetworkID:           profile.NetworkID,
-		ChainID:             profile.ChainID,
-		ProtocolVersion:     profile.ProtocolVersion,
-		P2PProtocolVersion:  profile.P2PProtocolVersion,
-		MinProtocolVersion:  profile.MinProtocolVersion,
-		GenesisHash:         profile.GenesisHash,
-		Height:              12,
-		TipHash:             "tip-hash",
-		CumulativeWork:      12345,
-		NodeID:              identity.NodeID,
-		IdentityVersion:     NodeIdentityVersion,
-		NodePublicKey:       hex.EncodeToString(identity.PublicKey),
-		P2PListen:            "127.0.0.1:9331",
-		P2PAdvertise:         "127.0.0.1:9331",
+		NetworkName:        profile.NetworkName,
+		NetworkID:          profile.NetworkID,
+		ChainID:            profile.ChainID,
+		ProtocolVersion:    profile.ProtocolVersion,
+		P2PProtocolVersion: profile.P2PProtocolVersion,
+		MinProtocolVersion: profile.MinProtocolVersion,
+		GenesisHash:        profile.GenesisHash,
+		Height:             12,
+		TipHash:            "tip-hash",
+		CumulativeWork:     12345,
+		NodeID:             identity.NodeID,
+		IdentityVersion:    NodeIdentityVersion,
+		NodePublicKey:      hex.EncodeToString(identity.PublicKey),
+		P2PListen:          "127.0.0.1:9331",
+		P2PAdvertise:       "127.0.0.1:9331",
 	}
 	signature, err := SignHandshake(identity, hs)
 	if err != nil {
@@ -155,10 +155,10 @@ func TestValidateHandshakeRequiresAuthenticatedNodeWhenConfigured(t *testing.T) 
 	profile := config.Localnet()
 	profile.RequireAuthenticatedNode = true
 	peer := Handshake{
-		NetworkID:        profile.NetworkID,
-		ChainID:          profile.ChainID,
-		GenesisHash:      chain.GenesisBlockForNetwork(profile).Hash,
-		ProtocolVersion:  profile.ProtocolVersion,
+		NetworkID:          profile.NetworkID,
+		ChainID:            profile.ChainID,
+		GenesisHash:        chain.GenesisBlockForNetwork(profile).Hash,
+		ProtocolVersion:    profile.ProtocolVersion,
 		MinProtocolVersion: profile.MinProtocolVersion,
 	}
 	if err := ValidateHandshake(profile, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity required") {

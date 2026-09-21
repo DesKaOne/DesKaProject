@@ -3,14 +3,14 @@ package ledger
 import (
 	"testing"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/staking"
-	"deskachain/internal/types"
+	"indochain/internal/asset"
+	"indochain/internal/staking"
+	"indochain/internal/types"
 )
 
 func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 	account := StateAccount{
-		Address:   "IDR-alice",
+		Address:   "iND-alice",
 		Confirmed: 100,
 		Mature:    100,
 		Nonce:     7,
@@ -18,33 +18,33 @@ func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 	stakes := []staking.Record{
 		{
 			StakeID:      "stake-active",
-			OwnerAddress: "IDR-alice",
+			OwnerAddress: "iND-alice",
 			Amount:       20,
 			Status:       staking.StatusActive,
 		},
 		{
 			StakeID:       "stake-unlocking",
-			OwnerAddress:  "IDR-alice",
+			OwnerAddress:  "iND-alice",
 			Amount:        10,
 			Status:        staking.StatusUnlocking,
 			ReleaseHeight: 20,
 		},
 		{
 			StakeID:      "stake-released",
-			OwnerAddress: "IDR-alice",
+			OwnerAddress: "iND-alice",
 			Amount:       5,
 			Status:       staking.StatusReleased,
 		},
 	}
 	pending := []types.Transaction{
-		{From: "IDR-alice", To: "IDR-bob", Amount: 11, Fee: 2, Type: types.TxTypeTransfer},
-		{From: "IDR-bob", To: "IDR-alice", Amount: 7, Type: types.TxTypeTransfer},
-		{From: "IDR-alice", To: "IDR-alice", Amount: 15, Type: types.TxTypeStakeLock},
-		{From: "COINBASE", To: "IDR-alice", Amount: 999, Coinbase: true},
+		{From: "iND-alice", To: "iND-bob", Amount: 11, Fee: 2, Type: types.TxTypeTransfer},
+		{From: "iND-bob", To: "iND-alice", Amount: 7, Type: types.TxTypeTransfer},
+		{From: "iND-alice", To: "iND-alice", Amount: 15, Type: types.TxTypeStakeLock},
+		{From: "COINBASE", To: "iND-alice", Amount: 999, Coinbase: true},
 	}
 
 	details := BalanceDetailsFromState(
-		"IDR-alice",
+		"iND-alice",
 		account,
 		stakes,
 		pending,
@@ -72,13 +72,13 @@ func TestBalanceDetailsFromStateMatchesStateAccounting(t *testing.T) {
 
 func TestBalanceDetailsFromStateNeverUnderflowsSpendable(t *testing.T) {
 	details := BalanceDetailsFromState(
-		"IDR-alice",
-		StateAccount{Address: "IDR-alice", Mature: 10},
+		"iND-alice",
+		StateAccount{Address: "iND-alice", Mature: 10},
 		[]staking.Record{
-			{StakeID: "stake", OwnerAddress: "IDR-alice", Amount: 10, Status: staking.StatusActive},
+			{StakeID: "stake", OwnerAddress: "iND-alice", Amount: 10, Status: staking.StatusActive},
 		},
 		[]types.Transaction{
-			{From: "IDR-alice", To: "IDR-bob", Amount: 100, Fee: 1, Type: types.TxTypeTransfer},
+			{From: "iND-alice", To: "iND-bob", Amount: 100, Fee: 1, Type: types.TxTypeTransfer},
 		},
 		100,
 		1,
@@ -88,32 +88,32 @@ func TestBalanceDetailsFromStateNeverUnderflowsSpendable(t *testing.T) {
 	}
 }
 
-func TestBalanceDetailsFromStateSeparatesTokenAmountFromIDRFee(t *testing.T) {
+func TestBalanceDetailsFromStateSeparatesTokenAmountFromINDFee(t *testing.T) {
 	pending := []types.Transaction{
 		{
 			Version:  types.TxVersionAsset,
 			Type:     types.TxTypeTransfer,
-			From:     "alice",
-			To:       "bob",
+			From:     "iND-alice",
+			To:       "iND-bob",
 			AssetID:  "asset:usd",
 			Amount:   1000,
 			Fee:      3,
-			FeePayer: "alice",
+			FeePayer: "iND-alice",
 		},
 		{
 			Version:  types.TxVersionAsset,
 			Type:     types.TxTypeTransfer,
-			From:     "carol",
-			To:       "dave",
+			From:     "iND-carol",
+			To:       "iND-dave",
 			AssetID:  asset.NativeAssetID,
 			Amount:   20,
 			Fee:      4,
-			FeePayer: "sponsor",
+			FeePayer: "iND-sponsor",
 		},
 	}
 	details := BalanceDetailsFromState(
-		"alice",
-		StateAccount{Address: "alice", Confirmed: 100, Mature: 100},
+		"iND-alice",
+		StateAccount{Address: "iND-alice", Confirmed: 100, Mature: 100},
 		nil,
 		pending,
 		0,
@@ -123,8 +123,8 @@ func TestBalanceDetailsFromStateSeparatesTokenAmountFromIDRFee(t *testing.T) {
 		t.Fatalf("alice pending balances = %#v, want outgoing=3 incoming=0", details)
 	}
 	details = BalanceDetailsFromState(
-		"sponsor",
-		StateAccount{Address: "sponsor", Confirmed: 10, Mature: 10},
+		"iND-sponsor",
+		StateAccount{Address: "iND-sponsor", Confirmed: 10, Mature: 10},
 		nil,
 		pending,
 		0,

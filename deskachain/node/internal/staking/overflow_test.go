@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 func TestStakeUnlockRejectsReleaseHeightOverflowWithoutMutation(t *testing.T) {

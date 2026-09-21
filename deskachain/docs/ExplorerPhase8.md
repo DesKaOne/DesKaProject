@@ -1,6 +1,6 @@
-# DesKaChain Explorer — Phase 8 Contract
+# IndoChain Explorer — Phase 8 Contract
 
-Phase 8 upgrades the existing read-only explorer toward the future DesKaScan surface without changing consensus, transaction rules, wallet behavior, or the native IDR economic model.
+Phase 8 upgrades the existing read-only explorer toward the future DesKaScan surface without changing consensus, transaction rules, wallet behavior, or the native dIDR economic model.
 
 ## 8.1 Contract goals
 
@@ -32,7 +32,7 @@ Universal search accepts one query and detects block height, block hash, transac
 
 ## 8.4 Asset/token readiness
 
-Asset exploration remains a read-model concern. Keep these concepts distinct: native asset IDR, issued assets/tokens, transaction fee asset, and optional authorized paymaster. Issued-token ownership does not redefine the native fee model.
+Asset exploration remains a read-model concern. Keep these concepts distinct: native asset dIDR, issued assets/tokens, transaction fee asset, and optional authorized paymaster. Issued-token ownership does not redefine the native fee model.
 
 ## 8.5 Performance boundary
 

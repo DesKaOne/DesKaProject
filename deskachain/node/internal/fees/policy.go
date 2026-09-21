@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 // Quote is a deterministic fee estimate for a transaction envelope.

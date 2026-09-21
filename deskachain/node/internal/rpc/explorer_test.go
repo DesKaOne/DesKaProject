@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/wallet"
 )
 
 func TestExplorerStatusAndBlocksAtGenesis(t *testing.T) {

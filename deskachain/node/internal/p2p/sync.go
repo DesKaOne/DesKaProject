@@ -7,11 +7,11 @@ import (
 	"log"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/mempool"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/mempool"
+	"indochain/internal/storage"
+	"indochain/internal/types"
 )
 
 func SyncFromPeer(paths config.Paths, peer string, out io.Writer) error {

@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -25,8 +25,8 @@ Status saat ini:
 * go test ./node/... harus pass.
 * Address migration sudah selesai:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address final: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address final: `iND` + Base58Check
   * private key tetap raw 32-byte hex
   * secp256k1 sudah dipakai jika Phase 2.6.6 menerapkannya
   * remote wallet new sudah valid
@@ -48,13 +48,13 @@ Status saat ini:
   * safe reorg preview/apply,
   * reorg mempool recovery,
   * runtime stats cleanup,
-  * IDR Base58Check address,
+  * iND Base58Check address,
   * network profile foundation,
   * protocol metadata,
   * remote wallet command UX fix.
 
 Nama patch:
-DesKaChain Phase 2.7 — Difficulty Adjustment & Realistic Cumulative Work
+IndoChain Phase 2.7 — Difficulty Adjustment & Realistic Cumulative Work
 
 Tujuan:
 Mengganti difficulty fixed menjadi difficulty adjustment sederhana, aman, dan cocok untuk localnet/testnet.
@@ -77,7 +77,7 @@ Phase 2.7 harus menambahkan:
 
 Aturan penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan rollback Base58Check.
 * Jangan ubah private key format.
 * Jangan implement coinbase maturity.
@@ -338,10 +338,10 @@ Tambahkan command:
 chain difficulty
 
 Local:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 chain difficulty
+go run ./node/cmd/indochain --datadir ./testdata/node1 chain difficulty
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain difficulty
 
 Output:
 
@@ -409,7 +409,7 @@ next difficulty: 4
 target block time: 10s
 retarget window: 10
 blocks until retarget: 7
-total supply: 150 IDR
+total supply: 150 dIDR
 cumulative work: 196609
 
 Catatan:
@@ -617,10 +617,10 @@ Tambahkan/update tests:
 
 19. Existing tests still pass:
 
-* send IDR -> IDR.
+* send dIDR -> dIDR.
 * mempool stats.
 * reorg tx scenarios.
-* wallet IDR address generation.
+* wallet iND address generation.
 
 ==================================================
 14. README / docs update
@@ -633,7 +633,7 @@ Phase 2.7 — Difficulty Adjustment & Realistic Cumulative Work
 
 Tambahkan penjelasan:
 
-* DesKaChain tidak lagi bergantung pada fixed difficulty.
+* IndoChain tidak lagi bergantung pada fixed difficulty.
 * Localnet memakai:
   target block time: 10s
   retarget window: 10 blocks
@@ -648,9 +648,9 @@ Tambahkan penjelasan:
 
 Tambahkan command:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain difficulty
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain info
 
 ==================================================
 15. Expected final commands
@@ -664,20 +664,20 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/diff dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/diff init
-go run ./node/cmd/deskachain --datadir ./testdata/diff wallet new
+go run ./node/cmd/indochain --datadir ./testdata/diff dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/diff init
+go run ./node/cmd/indochain --datadir ./testdata/diff wallet new
 
 Expected:
-IDR...
+iND...
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/diff node start --rpc :8361 --p2p :9361 --advertise-p2p http://127.0.0.1:9361
+go run ./node/cmd/indochain --datadir ./testdata/diff node start --rpc :8361 --p2p :9361 --advertise-p2p http://127.0.0.1:9361
 
 Remote difficulty:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain difficulty
 
 Expected at height 0:
 network: localnet
@@ -692,13 +692,13 @@ max difficulty: 8
 
 Mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <IDR_ADDR> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 mine --address <IND_ADDR> --blocks 3
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain difficulty
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain validate
 
 Expected:
 chain valid
@@ -709,12 +709,12 @@ cumulative work: 196609
 
 Mine 12 blocks:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 mine --address <IDR_ADDR> --blocks 12
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 mine --address <IND_ADDR> --blocks 12
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain difficulty
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8361 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8361 chain validate
 
 Expected:
 chain valid

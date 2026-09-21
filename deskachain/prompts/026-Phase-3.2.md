@@ -1,12 +1,12 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
-  * cmd/idrservice/
+  * cmd/indochain/
+  * cmd/indominer/
+  * cmd/indoservice/
   * internal/
   * go.mod
   * go.sum
@@ -26,14 +26,14 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif:
 
-  * idrminer bisa mine via /miner/template dan /miner/submit.
+  * indominer bisa mine via /miner/template dan /miner/submit.
 * Node hardening sudah aktif:
 
   * /health
@@ -47,16 +47,16 @@ Status saat ini:
   * service challenge create/submit
   * service score
   * service rewards
-  * idrservice agent
-  * service points tidak mengubah IDR balance
+  * indoservice agent
+  * service points tidak mengubah dIDR balance
   * service points tidak mengubah total supply
   * public RPC default service_rpc=false
 
 Nama patch:
-DesKaChain Phase 3.2 — Staking Module & Service Node Collateral
+IndoChain Phase 3.2 — Staking Module & Service Node Collateral
 
 Tujuan:
-Menambahkan staking/collateral module untuk mengunci IDR sebagai syarat/eligibility service node.
+Menambahkan staking/collateral module untuk mengunci dIDR sebagai syarat/eligibility service node.
 
 Prinsip penting:
 
@@ -64,18 +64,18 @@ Prinsip penting:
 * Ini BUKAN validator set.
 * Ini BUKAN block proposer selection.
 * Ini BUKAN APY.
-* Ini BUKAN reward IDR otomatis.
+* Ini BUKAN reward dIDR otomatis.
 * Ini tidak mengubah PoW sebagai consensus utama.
 * PoW tetap satu-satunya pembuat block canonical.
-* Staking hanya mengunci IDR agar tidak bisa dibelanjakan selama aktif/unbonding.
+* Staking hanya mengunci dIDR agar tidak bisa dibelanjakan selama aktif/unbonding.
 * Service node boleh memakai active stake sebagai collateral/eligibility.
-* Tidak ada slashing IDR pada Phase ini.
-* Tidak ada staking reward IDR pada Phase ini.
-* Tidak ada mint IDR dari staking.
+* Tidak ada slashing dIDR pada Phase ini.
+* Tidak ada staking reward dIDR pada Phase ini.
+* Tidak ada mint dIDR dari staking.
 
 Aturan penting:
 
-* Jangan ubah address format IDR.
+* Jangan ubah address format dIDR.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah cumulative work formula.
@@ -115,16 +115,16 @@ MaxActiveStakesPerAddress int
 Default localnet:
 
 * Enabled: true
-* MinServiceStake: 100 IDR
-* MinStakeAmount: 10 IDR
+* MinServiceStake: 100 dIDR
+* MinStakeAmount: 10 dIDR
 * UnbondingPeriodBlocks: 10
 * MaxActiveStakesPerAddress: 10
 
 Default testnet placeholder:
 
 * Enabled: true
-* MinServiceStake: 1000 IDR
-* MinStakeAmount: 100 IDR
+* MinServiceStake: 1000 dIDR
+* MinStakeAmount: 100 dIDR
 * UnbondingPeriodBlocks: 100
 * MaxActiveStakesPerAddress: 20
 
@@ -191,11 +191,11 @@ Jika project belum siap menambah TxType besar:
 
 Command:
 
-stake lock --address <IDR_ADDR> --amount <AMOUNT>
+stake lock --address <IND_ADDR> --amount <AMOUNT>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake lock --address <IDR_ADDR> --amount 100
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 stake lock --address <IND_ADDR> --amount 100
 
 Behavior:
 
@@ -213,8 +213,8 @@ Behavior:
 Output:
 stake lock tx created
 tx id: ...
-address: IDR...
-amount: 100 IDR
+address: iND...
+amount: 100 dIDR
 status: pending
 note: stake becomes active after tx is mined
 
@@ -241,11 +241,11 @@ Stake ID:
 
 Command:
 
-stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
+stake unlock --address <IND_ADDR> --stake-id <STAKE_ID>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8451 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8451 stake unlock --address <IND_ADDR> --stake-id <STAKE_ID>
 
 Behavior:
 
@@ -329,15 +329,15 @@ Update balance details to include staking.
 
 Balance command should show:
 
-confirmed balance: 550 IDR
-mature balance: 250 IDR
-immature balance: 300 IDR
-active stake: 100 IDR
-unlocking stake: 0 IDR
-released stake: 0 IDR
-pending stake lock: 0 IDR
-pending outgoing: 0 IDR
-spendable balance: 150 IDR
+confirmed balance: 550 dIDR
+mature balance: 250 dIDR
+immature balance: 300 dIDR
+active stake: 100 dIDR
+unlocking stake: 0 dIDR
+released stake: 0 dIDR
+pending stake lock: 0 dIDR
+pending outgoing: 0 dIDR
+spendable balance: 150 dIDR
 
 Rules:
 
@@ -367,14 +367,14 @@ Clamp at 0 if needed, but validation logic should prevent negative.
 
 Update send validation:
 
-* A user cannot send IDR locked in active/unbonding stake.
+* A user cannot send dIDR locked in active/unbonding stake.
 * If mature balance 150 and active stake 100:
 
   * spendable 50.
   * send 60 fails.
   * send 50 succeeds.
 * Error:
-  insufficient spendable balance: spendable X IDR, required Y IDR, active stake Z IDR, unlocking stake U IDR
+  insufficient spendable balance: spendable X dIDR, required Y dIDR, active stake Z dIDR, unlocking stake U dIDR
 
 ==================================================
 8. Stake validation in chain validation
@@ -487,18 +487,18 @@ Service score should display collateral info.
 
 Command:
 
-service score --address <IDR_ADDR>
+service score --address <IND_ADDR>
 
 Output includes:
-required stake: 100 IDR
-active stake: 100 IDR
+required stake: 100 dIDR
+active stake: 100 dIDR
 stake eligible: true
 collateral status: eligible
 
 Rules:
 
 * Phase 3.2 should not slash stake.
-* Phase 3.2 should not pay IDR staking rewards.
+* Phase 3.2 should not pay dIDR staking rewards.
 * Service points may still be simulation only.
 * If active stake < required:
 
@@ -521,7 +521,7 @@ true
 If true:
 
 * rewards command should show points as ineligible if stake below required.
-* Do not mutate IDR.
+* Do not mutate dIDR.
 
 ==================================================
 12. Stake commands
@@ -544,13 +544,13 @@ Commands:
    active stake records
 
 2. stake lock
-   stake lock --address <IDR_ADDR> --amount <AMOUNT>
+   stake lock --address <IND_ADDR> --amount <AMOUNT>
 
 3. stake unlock
-   stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
+   stake unlock --address <IND_ADDR> --stake-id <STAKE_ID>
 
 4. stake list
-   stake list --address <IDR_ADDR>
+   stake list --address <IND_ADDR>
    stake list
    Shows stake records:
    stake id
@@ -578,20 +578,20 @@ Add RPC endpoints:
 
 GET /stake/info
 GET /stake/list
-GET /stake/list?address=<IDR_ADDR>
+GET /stake/list?address=<IND_ADDR>
 GET /stake/status?id=<STAKE_ID>
 POST /stake/lock
 POST /stake/unlock
 
 Request lock:
 {
-"address": "IDR...",
+"address": "iND...",
 "amount": "100"
 }
 
 Request unlock:
 {
-"address": "IDR...",
+"address": "iND...",
 "stake_id": "..."
 }
 
@@ -678,7 +678,7 @@ Content:
 * Staking in Phase 3.2 is collateral only.
 * It is not PoS.
 * It does not create validators.
-* It does not create IDR rewards.
+* It does not create dIDR rewards.
 * It does not affect block production.
 * Locked stake reduces spendable balance.
 * Unlock starts unbonding period.
@@ -707,8 +707,8 @@ Add/update tests:
 1. Stake params:
 
 * localnet params enabled.
-* min stake amount 10 IDR.
-* min service stake 100 IDR.
+* min stake amount 10 dIDR.
+* min service stake 100 dIDR.
 * unbonding period 10.
 
 2. Stake lock immature rejected:
@@ -805,10 +805,10 @@ Add/update tests:
 * below required stake => ineligible note or eligible_points 0.
 * above required stake => eligible simulated points.
 
-21. No IDR reward from staking:
+21. No dIDR reward from staking:
 
 * stake lock/unlock does not change total supply.
-* no staking reward IDR minted.
+* no staking reward dIDR minted.
 
 22. Balance fields:
 
@@ -841,7 +841,7 @@ Add/update tests:
 * wallet
 * chain
 * cli
-* idrminer
+* indominer
 
 ==================================================
 19. Expected final commands
@@ -855,21 +855,21 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/stake init
-go run ./node/cmd/deskachain --datadir ./testdata/stake wallet new
+go run ./node/cmd/indochain --datadir ./testdata/stake dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/stake init
+go run ./node/cmd/indochain --datadir ./testdata/stake wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake node start --rpc :8471 --p2p :9471 --advertise-p2p http://127.0.0.1:9471
+go run ./node/cmd/indochain --datadir ./testdata/stake node start --rpc :8471 --p2p :9471 --advertise-p2p http://127.0.0.1:9471
 
 Mine until mature:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --max-blocks 11
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8471 --address <IND_ADDR> --threads 4 --max-blocks 11
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 balance <IND_ADDR>
 
 Expected:
 confirmed balance: 550
@@ -878,17 +878,17 @@ spendable balance: 50
 
 Stake info:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake info
 
 Expected:
 staking enabled: true
-min stake amount: 10 IDR
-min service stake: 100 IDR
+min stake amount: 10 dIDR
+min service stake: 100 dIDR
 unbonding period: 10 blocks
 
 Stake lock 10:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake lock --address <IND_ADDR> --amount 10
 
 Expected:
 stake lock tx created
@@ -896,39 +896,39 @@ status: pending
 
 Mine 1 block:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8471 --address <IND_ADDR> --threads 4 --once
 
 Stake list:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake list --address <IND_ADDR>
 
 Expected:
-amount: 10 IDR
+amount: 10 dIDR
 status: active
 
 Balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 balance <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 balance <IND_ADDR>
 
 Expected:
-active stake: 10 IDR
+active stake: 10 dIDR
 spendable balance reduced by 10
 
 Try send over spendable:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 wallet new
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 send --from <IDR_ADDR> --to <ADDR_B> --amount 45
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 send --from <IND_ADDR> --to <ADDR_B> --amount 45
 
 Expected:
 fail if spendable below 45 after active stake
 
 Unlock:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake unlock --address <IND_ADDR> --stake-id <STAKE_ID>
 
 Mine 1 block:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8471 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8471 --address <IND_ADDR> --threads 4 --once
 
 Stake list:
 Expected:
@@ -942,24 +942,24 @@ spendable balance increases
 
 Service collateral test:
 
-* Stake 100 IDR after enough maturity.
+* Stake 100 dIDR after enough maturity.
 * Register service.
-* Run idrservice once.
+* Run indoservice once.
 * service score should show stake eligible true.
 
 Consensus check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 chain validate
 
 Expected:
 chain valid
 total supply unchanged by staking
-no staking reward IDR minted
+no staking reward dIDR minted
 
 Public RPC check:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake_pub node start --rpc :8481 --p2p :9481 --advertise-p2p http://127.0.0.1:9481 --public-rpc
+go run ./node/cmd/indochain --datadir ./testdata/stake_pub node start --rpc :8481 --p2p :9481 --advertise-p2p http://127.0.0.1:9481 --public-rpc
 
 Then:
 stake info should work.
@@ -975,5 +975,5 @@ Fokus Phase 3.2 hanya:
 * service node collateral eligibility,
 * docs/tests,
 * no PoS,
-* no staking reward IDR,
+* no staking reward dIDR,
 * no slashing yet.

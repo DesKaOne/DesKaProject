@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/mining"
-	"deskachain/internal/nodestate"
+	"indochain/internal/config"
+	"indochain/internal/mining"
+	"indochain/internal/nodestate"
 )
 
 type NodeInfo struct {
@@ -81,7 +81,6 @@ func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server 
 		MaxHeaderBytes:    1 << 20,
 	}
 }
-
 
 func normalizeRPCProfile(info NodeInfo) config.NetworkConfig {
 	if info.Profile.Name == "" {

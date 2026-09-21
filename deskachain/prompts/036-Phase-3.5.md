@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -16,9 +16,9 @@ Status saat ini:
 * Miner/faucet/balance profile-aware.
 * Faucet creates normal transaction, no silent mint.
 * Faucet rate limit valid.
-* Faucet-funded owner can stake 1000 IDR.
-* Service node becomes eligible when active stake is 1000 IDR.
-* Service points remain simulation-only and not spendable IDR.
+* Faucet-funded owner can stake 1000 dIDR.
+* Service node becomes eligible when active stake is 1000 dIDR.
+* Service points remain simulation-only and not spendable dIDR.
 * Staking remains collateral-only.
 * PoW remains the only block-production consensus.
 
@@ -28,29 +28,29 @@ Latest manual E2E checkpoint:
 * chain id: 777101
 * height: 122
 * difficulty: 6
-* total supply: 6100 IDR
+* total supply: 6100 dIDR
 * pending tx count: 0
 * total transactions: 124
 * coinbase transactions: 122
 * normal transactions: 2
 * staking enabled: true
-* min stake amount: 100 IDR
-* min service stake: 1000 IDR
-* total active stake: 1000 IDR
+* min stake amount: 100 dIDR
+* min service stake: 1000 dIDR
+* total active stake: 1000 dIDR
 * active stake count: 1
 * chain validate: chain valid
 
 Important observation:
 `chain info` printed:
-circulating supply: 0 IDR
+circulating supply: 0 dIDR
 
-This may be wrong or undefined because at height 122 with coinbase maturity 100, some coinbase rewards should already be mature, and one account has 1000 IDR active stake. Phase 3.5 must define and test circulating supply semantics clearly.
+This may be wrong or undefined because at height 122 with coinbase maturity 100, some coinbase rewards should already be mature, and one account has 1000 dIDR active stake. Phase 3.5 must define and test circulating supply semantics clearly.
 
 Patch name:
-DesKaChain Phase 3.5 — Public Testnet Node Packaging & Operator Runbook
+IndoChain Phase 3.5 — Public Testnet Node Packaging & Operator Runbook
 
 Goal:
-Prepare DesKaChain for a public-testnet style operator workflow without changing consensus or economics.
+Prepare IndoChain for a public-testnet style operator workflow without changing consensus or economics.
 
 This phase should make it easy and safe for someone to run:
 
@@ -114,9 +114,9 @@ Expected behavior:
 
 Example command:
 
-deskachain --datadir ./data/testnet-public --network testnet init
+indochain --datadir ./data/testnet-public --network testnet init
 
-deskachain --datadir ./data/testnet-public node start 
+indochain --datadir ./data/testnet-public node start 
 --rpc :8811 
 --p2p :9811 
 --advertise-p2p http://<PUBLIC_HOST>:9811 
@@ -193,13 +193,13 @@ Expected miner endpoints:
 
 Add docs with example:
 
-idrminer --rpc-url http://<NODE_HOST>:8811 --address <TESTNET_IDR_ADDR> --threads 4
+indominer --rpc-url http://<NODE_HOST>:8811 --address <TESTNET_IND_ADDR> --threads 4
 
 Add note:
 
 * HTTP RPC mining is solo/direct-node mining.
 * Stratum/pool mining is not implemented yet.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 
 ==================================================
 4. Bootnode and peer operator workflow
@@ -209,19 +209,19 @@ Create clear docs for running multiple public testnet nodes.
 
 Examples:
 Node A bootnode:
-deskachain --datadir ./data/node-a --network testnet init
-deskachain --datadir ./data/node-a node start --rpc :8811 --p2p :9811 --advertise-p2p http://<A_HOST>:9811 --public-rpc --enable-miner-rpc
+indochain --datadir ./data/node-a --network testnet init
+indochain --datadir ./data/node-a node start --rpc :8811 --p2p :9811 --advertise-p2p http://<A_HOST>:9811 --public-rpc --enable-miner-rpc
 
 Node B with bootnode:
-deskachain --datadir ./data/node-b --network testnet init
-deskachain --datadir ./data/node-b node start --rpc :8812 --p2p :9812 --advertise-p2p http://<B_HOST>:9812 --bootnode http://<A_HOST>:9811 --public-rpc --enable-miner-rpc
+indochain --datadir ./data/node-b --network testnet init
+indochain --datadir ./data/node-b node start --rpc :8812 --p2p :9812 --advertise-p2p http://<B_HOST>:9812 --bootnode http://<A_HOST>:9811 --public-rpc --enable-miner-rpc
 
 CLI checks:
-deskachain --rpc-url http://<B_HOST>:8812 peer list
-deskachain --rpc-url http://<B_HOST>:8812 peer check http://<A_HOST>:9811
-deskachain --rpc-url http://<B_HOST>:8812 peer sync http://<A_HOST>:9811
-deskachain --rpc-url http://<B_HOST>:8812 chain info
-deskachain --rpc-url http://<B_HOST>:8812 chain validate
+indochain --rpc-url http://<B_HOST>:8812 peer list
+indochain --rpc-url http://<B_HOST>:8812 peer check http://<A_HOST>:9811
+indochain --rpc-url http://<B_HOST>:8812 peer sync http://<A_HOST>:9811
+indochain --rpc-url http://<B_HOST>:8812 chain info
+indochain --rpc-url http://<B_HOST>:8812 chain validate
 
 Add tests if missing:
 
@@ -243,8 +243,8 @@ examples/testnet/public-node.env
 examples/testnet/miner-node.env
 examples/testnet/faucet-node.env
 examples/testnet/service-agent.env
-examples/systemd/deskachain-testnet.service
-examples/systemd/idrservice-testnet.service
+examples/systemd/indochain-testnet.service
+examples/systemd/indoservice-testnet.service
 
 If the project does not use env files yet, examples can be docs-only templates.
 
@@ -273,15 +273,15 @@ Do not include private keys.
 Add Linux systemd sample for node:
 
 [Unit]
-Description=DesKaChain Testnet Node
+Description=IndoChain Testnet Node
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/opt/deskachain
-EnvironmentFile=/etc/deskachain/testnet.env
-ExecStart=/opt/deskachain/bin/deskachain --datadir ${IDR_DATADIR} node start ...
+WorkingDirectory=/opt/indochain
+EnvironmentFile=/etc/indochain/testnet.env
+ExecStart=/opt/indochain/bin/indochain --datadir ${IND_DATADIR} node start ...
 Restart=always
 RestartSec=5
 LimitNOFILE=65535
@@ -297,8 +297,8 @@ Add service agent sample if useful.
 
 Docs should explain:
 sudo systemctl daemon-reload
-sudo systemctl enable --now deskachain-testnet
-journalctl -u deskachain-testnet -f
+sudo systemctl enable --now indochain-testnet
+journalctl -u indochain-testnet -f
 
 ==================================================
 7. Windows PowerShell operator examples
@@ -323,7 +323,7 @@ Use commands compatible with current `go run ./node/cmd/...` workflow and option
 If simple, add a `node preflight` command or improve existing command.
 
 Optional command:
-deskachain --datadir ./data/testnet node preflight
+indochain --datadir ./data/testnet node preflight
 
 It should check:
 
@@ -351,10 +351,10 @@ Investigate this observed output after valid Phase 3.4.1 manual E2E:
 
 height: 122
 coinbase maturity: 100
-total supply: 6100 IDR
+total supply: 6100 dIDR
 normal transactions: 2
-total active stake: 1000 IDR
-circulating supply: 0 IDR
+total active stake: 1000 dIDR
+circulating supply: 0 dIDR
 
 Define exact semantics for circulating supply.
 
@@ -364,11 +364,11 @@ Recommended semantics:
 * circulating supply = mature supply, including mature coins that are active stake/unlocking/released, excluding immature coinbase.
 * spendable supply is different from circulating supply and excludes active/unlocking stake and pending outgoing.
 
-Under this definition, at height 122 with maturity 100 and reward 50 IDR:
+Under this definition, at height 122 with maturity 100 and reward 50 dIDR:
 
 * mature coinbase blocks should be about 22 blocks.
-* mature supply should be about 1100 IDR.
-* active stake 1000 IDR should still count as circulating because it is mature and owner-controlled collateral, just not spendable.
+* mature supply should be about 1100 dIDR.
+* active stake 1000 dIDR should still count as circulating because it is mature and owner-controlled collateral, just not spendable.
 
 If the project intentionally defines circulating supply differently, document it clearly and add tests.
 
@@ -437,7 +437,7 @@ docs/Operator.md should include:
 
 Safety notes:
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Do not expose wallet/admin RPC publicly.
 * Service points are simulation-only.
 * Staking is collateral-only, no APY/reward.
@@ -502,18 +502,18 @@ If some packages have no matching tests, that is okay only if the functionality 
 
 Manual public node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/public_node dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/public_node --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/public_node dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/public_node --network testnet init
 
 Start:
 
-go run ./node/cmd/deskachain --datadir ./testdata/public_node node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
+go run ./node/cmd/indochain --datadir ./testdata/public_node node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
 
 Check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9011 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9011 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9011 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9011 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9011 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9011 wallet new
 
 Expected:
 
@@ -523,11 +523,11 @@ Expected:
 
 Mine:
 
-go run ./node/cmd/deskachain --datadir ./testdata/public_node wallet new
+go run ./node/cmd/indochain --datadir ./testdata/public_node wallet new
 
 Use local datadir wallet address as miner reward.
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
 
 Expected:
 
@@ -535,7 +535,7 @@ Expected:
 
 Public faucet check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9011 faucet info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9011 faucet info
 
 Expected:
 
@@ -543,7 +543,7 @@ Expected:
 
 Service check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:9011 service score --address <ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:9011 service score --address <ADDR>
 
 Expected:
 

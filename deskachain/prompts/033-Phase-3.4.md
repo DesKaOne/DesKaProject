@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -12,11 +12,11 @@ Status saat ini:
 * testnet:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * coinbase maturity: 100
-  * min stake amount: 100 IDR
-  * min service stake: 1000 IDR
+  * min stake amount: 100 dIDR
+  * min service stake: 1000 dIDR
   * unbonding period: 100 blocks
 * Multi-node controlled local testnet sudah valid:
 
@@ -33,10 +33,10 @@ Status saat ini:
 * PoW tetap satu-satunya block production consensus.
 
 Nama patch:
-DesKaChain Phase 3.4 — Dev Faucet & Testnet Funding Flow
+IndoChain Phase 3.4 — Dev Faucet & Testnet Funding Flow
 
 Tujuan:
-Menambahkan faucet khusus dev/testnet agar wallet bisa menerima IDR testnet untuk testing transfer, staking collateral, dan service node eligibility tanpa harus mining manual terlalu lama.
+Menambahkan faucet khusus dev/testnet agar wallet bisa menerima dIDR testnet untuk testing transfer, staking collateral, dan service node eligibility tanpa harus mining manual terlalu lama.
 
 Fokus:
 
@@ -61,7 +61,7 @@ Non-goals:
 * Jangan implement PoS.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format IDR.
+* Jangan ubah address format dIDR.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali benar-benar perlu.
@@ -127,10 +127,10 @@ Default:
 Flags node start:
 
 * --enable-faucet-rpc
-* --faucet-address <IDR_ADDR>
-* --faucet-amount <IDR_AMOUNT>
+* --faucet-address <IND_ADDR>
+* --faucet-amount <IND_AMOUNT>
 * --faucet-min-interval <duration>
-* --faucet-max-per-address <IDR_AMOUNT> optional
+* --faucet-max-per-address <IND_AMOUNT> optional
 
 Rules:
 
@@ -153,25 +153,25 @@ Response:
 {
 "enabled": true,
 "network": "testnet",
-"network_id": "idr-testnet-1",
+"network_id": "ind-testnet-1",
 "chain_id": 777101,
 "faucet_address": "...",
 "amount": "100",
 "min_interval_seconds": 3600,
 "mempool_pending": N,
-"note": "testnet faucet only; testnet IDR has no monetary value"
+"note": "testnet faucet only; testnet dIDR has no monetary value"
 }
 
 POST /faucet/request
 
 Request:
 {
-"address": "<IDR_ADDR>"
+"address": "<IND_ADDR>"
 }
 
 Optional:
 {
-"address": "<IDR_ADDR>",
+"address": "<IND_ADDR>",
 "amount": "100"
 }
 
@@ -212,7 +212,7 @@ Tambahkan CLI commands:
 
 1. faucet info
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 faucet info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 faucet info
 
 Output:
 
@@ -226,7 +226,7 @@ Output:
 
 2. faucet request
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 faucet request --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 faucet request --address <IND_ADDR>
 
 Output:
 
@@ -242,7 +242,7 @@ Output:
 
 If needed, add dev helper:
 
-go run ./node/cmd/deskachain --datadir <DIR> faucet set-address --address <IDR_ADDR>
+go run ./node/cmd/indochain --datadir <DIR> faucet set-address --address <IND_ADDR>
 
 or use node start flag only.
 
@@ -278,9 +278,9 @@ Rules:
 
 Suggested defaults for dev:
 
-* faucet amount: 100 IDR
+* faucet amount: 100 dIDR
 * min interval: 1 minute for local controlled testing
-* max per address per day: 1000 IDR
+* max per address per day: 1000 dIDR
 * For docs, explain dev defaults are not production-safe.
 
 ==================================================
@@ -302,7 +302,7 @@ Testnet coinbase maturity is 100, so manual faucet funding may require mining en
 
 For easier dev flow, add docs command:
 
-idrminer --max-blocks 105
+indominer --max-blocks 105
 
 Then faucet wallet has mature balance.
 
@@ -343,7 +343,7 @@ Required tests:
 
   * enabled true
   * network testnet
-  * network_id idr-testnet-1
+  * network_id ind-testnet-1
   * chain_id 777101
   * faucet_address
   * amount
@@ -439,37 +439,37 @@ Manual testnet flow:
 
 Clean:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn dev reset --yes
 
 Init testnet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn --network testnet init
 
 Create faucet wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn wallet new
 
 Save as:
 <FAUCET_ADDR>
 
 Create recipient wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn wallet new
 
 Save as:
 <RECIPIENT_ADDR>
 
 Start testnet node with faucet enabled:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
 
 Fund faucet by mining enough blocks:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check faucet balance:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
 
 Expected:
 
@@ -478,50 +478,50 @@ Expected:
 
 Faucet info:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 faucet info
 
 Expected:
 
 * enabled true
 * network testnet
 * chain id 777101
-* faucet amount 100 IDR
+* faucet amount 100 dIDR
 
 Request faucet:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
 
 Expected:
 
 * faucet tx created
 * status pending
-* amount 100 IDR
+* amount 100 dIDR
 
 Check recipient before mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 
 Expected:
 
-* pending incoming 100 IDR or mempool pending shown.
+* pending incoming 100 dIDR or mempool pending shown.
 
 Mine one block:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
 
 Check recipient after mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 
 Expected:
 
-* confirmed balance 100 IDR
-* spendable 100 IDR if normal tx maturity does not apply.
+* confirmed balance 100 dIDR
+* spendable 100 dIDR if normal tx maturity does not apply.
 * if project applies rules differently, document it.
 
 Rate limit check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
 
 Expected:
 
@@ -529,13 +529,13 @@ Expected:
 
 Localnet reject check:
 
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln --network localnet init
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_ln node start --rpc :8821 --p2p :9821 --advertise-p2p http://127.0.0.1:9821 --enable-faucet-rpc --faucet-address <ANY_IDR_ADDR>
+go run ./node/cmd/indochain --datadir ./testdata/faucet_ln dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/faucet_ln --network localnet init
+go run ./node/cmd/indochain --datadir ./testdata/faucet_ln node start --rpc :8821 --p2p :9821 --advertise-p2p http://127.0.0.1:9821 --enable-faucet-rpc --faucet-address <ANY_IND_ADDR>
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8821 faucet info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8821 faucet info
 
 Expected:
 
@@ -552,7 +552,7 @@ docs/Faucet.md
 Content:
 
 * Dev/testnet faucet only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Faucet does not mint silently.
 * Faucet uses normal transactions.
 * Faucet tx must be mined.

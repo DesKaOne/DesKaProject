@@ -1,9 +1,9 @@
 package chain
 
 import (
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/types"
 )
 
 type ChainStats struct {

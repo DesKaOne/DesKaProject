@@ -18,9 +18,9 @@ import (
 	"syscall"
 	"time"
 
-	"deskachain/internal/cpuminer"
-	"deskachain/internal/types"
-	"deskachain/internal/version"
+	"indochain/internal/cpuminer"
+	"indochain/internal/types"
+	"indochain/internal/version"
 )
 
 type templateResponse struct {
@@ -72,10 +72,10 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 		return nil
 	}
 	if len(args) > 0 && (args[0] == "--version" || args[0] == "-version" || args[0] == "version") {
-		fmt.Fprint(out, version.String("idrminer"))
+		fmt.Fprint(out, version.String("indominer"))
 		return nil
 	}
-	fs := flag.NewFlagSet("idrminer", flag.ContinueOnError)
+	fs := flag.NewFlagSet("indominer", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	showVersion := fs.Bool("version", false, "print version and exit")
 	showHelp := fs.Bool("help", false, "print help and exit")
@@ -93,13 +93,13 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 	submitTimeout := fs.Duration("submit-timeout", 20*time.Second, "submit request timeout")
 	jobRefreshInterval := fs.Duration("job-refresh-interval", 5*time.Second, "stale job refresh interval")
 	duration := fs.Duration("duration", 0, "maximum miner runtime, 0 means unlimited")
-	userAgent := fs.String("user-agent", version.UserAgent("idrminer"), "HTTP user agent")
+	userAgent := fs.String("user-agent", version.UserAgent("indominer"), "HTTP user agent")
 	_ = fs.String("network", "", "optional network hint")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if *showVersion {
-		fmt.Fprint(out, version.String("idrminer"))
+		fmt.Fprint(out, version.String("indominer"))
 		return nil
 	}
 	if *showHelp {
@@ -107,7 +107,7 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 		return nil
 	}
 	if *rpcURL == "" || *address == "" {
-		return errors.New("usage: idrminer --rpc-url <url> --address <IDR_ADDR> [--threads N]")
+		return errors.New("usage: indominer --rpc-url <url> --address <IND_ADDR> [--threads N]")
 	}
 	if *threads < 1 {
 		*threads = 1
@@ -137,7 +137,7 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 	templateClient := &http.Client{Timeout: 10 * time.Second}
 	submitClient := &http.Client{Timeout: *submitTimeout}
 	base := strings.TrimRight(*rpcURL, "/")
-	fmt.Fprintln(out, "DesKaChain CPU Miner")
+	fmt.Fprintln(out, "IndoChain CPU Miner")
 	fmt.Fprintf(out, "rpc: %s\n", base)
 	fmt.Fprintf(out, "reward address: %s\n", *address)
 	fmt.Fprintf(out, "threads: %d\n\n", *threads)
@@ -238,14 +238,14 @@ func run(args []string, out io.Writer, errOut io.Writer) error {
 }
 
 func printMinerHelp(out io.Writer) {
-	fmt.Fprintln(out, "DesKaChain CPU Miner")
-	fmt.Fprintln(out, "usage: idrminer --rpc-url <url> --address <IDR_ADDR> [--threads N] [--once]")
+	fmt.Fprintln(out, "IndoChain CPU Miner")
+	fmt.Fprintln(out, "usage: indominer --rpc-url <url> --address <IND_ADDR> [--threads N] [--once]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "options:")
 	fmt.Fprintln(out, "  --version")
 	fmt.Fprintln(out, "  --help")
 	fmt.Fprintln(out, "  --rpc-url <url>")
-	fmt.Fprintln(out, "  --address <IDR_ADDR>")
+	fmt.Fprintln(out, "  --address <IND_ADDR>")
 	fmt.Fprintln(out, "  --threads <n>")
 	fmt.Fprintln(out, "  --retry")
 	fmt.Fprintln(out, "  --retry-delay <duration>")

@@ -1,12 +1,12 @@
 package chain
 
 import (
-	"deskachain/internal/asset"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/state"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
+	"indochain/internal/asset"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
 )
 
 func (bc *Blockchain) AssetBalanceWithProfile(address, assetID string, profile config.NetworkConfig) (uint64, error) {
@@ -63,13 +63,13 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 			}
 			if asset.IsNative(assetID) {
 				return asset.Definition{
-					ID: asset.NativeAssetID,
-					Name: asset.NativeSymbol,
-					Symbol: asset.NativeSymbol,
+					ID:       asset.NativeAssetID,
+					Name:     asset.NativeSymbol,
+					Symbol:   asset.NativeSymbol,
 					Decimals: asset.NativeDecimals,
-					Kind: asset.KindFungible,
-					Issuer: "protocol",
-					Status: asset.StatusActive,
+					Kind:     asset.KindFungible,
+					Issuer:   "protocol",
+					Status:   asset.StatusActive,
 				}, true, nil
 			}
 			return asset.Definition{}, false, nil
@@ -86,8 +86,6 @@ func (bc *Blockchain) AssetDefinitionWithProfile(assetID string, profile config.
 	def, ok := l.AssetDefinition(assetID)
 	return def, ok, nil
 }
-
-
 
 func (bc *Blockchain) AssetBalancesForAddressWithProfile(address string, profile config.NetworkConfig) ([]asset.BalanceEntry, error) {
 	tip, err := bc.Tip()

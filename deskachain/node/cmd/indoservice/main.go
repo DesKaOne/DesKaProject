@@ -11,8 +11,8 @@ import (
 	"runtime"
 	"syscall"
 
-	"deskachain/internal/serviceagent"
-	"deskachain/internal/version"
+	"indochain/internal/serviceagent"
+	"indochain/internal/version"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 
 func run(args []string, out io.Writer) error {
 	if len(args) > 0 && (args[0] == "--version" || args[0] == "-version" || args[0] == "version") {
-		fmt.Fprint(out, version.String("idrservice"))
+		fmt.Fprint(out, version.String("indoservice"))
 		return nil
 	}
 	if len(args) > 0 && (args[0] == "--help" || args[0] == "-h" || args[0] == "help") {
@@ -36,10 +36,10 @@ func run(args []string, out io.Writer) error {
 	}
 	opts := serviceagent.DefaultOptions()
 	opts.Platform = runtime.GOOS + "/" + runtime.GOARCH
-	fs := flag.NewFlagSet("idrservice", flag.ContinueOnError)
+	fs := flag.NewFlagSet("indoservice", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.StringVar(&opts.RPCURL, "rpc-url", "", "DesKaChain node RPC URL")
-	fs.StringVar(&opts.Address, "address", "", "service owner IDR address")
+	fs.StringVar(&opts.RPCURL, "rpc-url", "", "IndoChain node RPC URL")
+	fs.StringVar(&opts.Address, "address", "", "service owner iND address")
 	fs.StringVar(&opts.Endpoint, "endpoint", "", "optional advertised endpoint")
 	fs.StringVar(&opts.StatePath, "state", opts.StatePath, "agent state JSON path")
 	fs.DurationVar(&opts.HeartbeatInterval, "heartbeat-interval", opts.HeartbeatInterval, "heartbeat interval")
@@ -71,8 +71,8 @@ func run(args []string, out io.Writer) error {
 }
 
 func printServiceHelp(out io.Writer) {
-	fmt.Fprintln(out, "DesKaChain Service Agent")
-	fmt.Fprintln(out, "usage: idrservice --rpc-url <url> --address <IDR_ADDR> [--endpoint <url>] [--once]")
+	fmt.Fprintln(out, "IndoChain Service Agent")
+	fmt.Fprintln(out, "usage: indoservice --rpc-url <url> --address <IND_ADDR> [--endpoint <url>] [--once]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "commands:")
 	fmt.Fprintln(out, "  status")
@@ -81,14 +81,14 @@ func printServiceHelp(out io.Writer) {
 	fmt.Fprintln(out, "  --version")
 	fmt.Fprintln(out, "  --help")
 	fmt.Fprintln(out, "  --rpc-url <url>")
-	fmt.Fprintln(out, "  --address <IDR_ADDR>")
+	fmt.Fprintln(out, "  --address <IND_ADDR>")
 	fmt.Fprintln(out, "  --endpoint <url>")
 	fmt.Fprintln(out, "mainnet: not available")
 }
 
 func runStatus(args []string, out io.Writer) error {
-	path := "./idrservice-state.json"
-	fs := flag.NewFlagSet("idrservice status", flag.ContinueOnError)
+	path := "./indoservice-state.json"
+	fs := flag.NewFlagSet("indoservice status", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.StringVar(&path, "state", path, "agent state JSON path")
 	if err := fs.Parse(args); err != nil {

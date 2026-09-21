@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 - Phase 1 dan Phase 1.5 sudah selesai.
@@ -15,7 +15,7 @@ Tujuan patch ini:
 Membuat alur transfer antar wallet benar-benar stabil sebelum masuk Phase 2 P2P.
 
 Nama patch:
-DesKaChain Phase 1.6 — Transfer & Mempool Hardening
+IndoChain Phase 1.6 — Transfer & Mempool Hardening
 
 Aturan penting:
 - Jangan tambah P2P dulu.
@@ -27,7 +27,7 @@ Aturan penting:
 - Semua tetap harus jalan dengan:
   go mod tidy
   go test ./...
-  go run ./node/cmd/deskachain
+  go run ./node/cmd/indochain
 
 ==================================================
 1. Perkuat alur send antar wallet
@@ -35,16 +35,16 @@ Aturan penting:
 
 Pastikan command berikut benar-benar bekerja:
 
-  go run ./node/cmd/deskachain send --from <addressA> --to <addressB> --amount 10
+  go run ./node/cmd/indochain send --from <addressA> --to <addressB> --amount 10
 
 Perilaku wajib:
 - Wallet pengirim harus ditemukan di wallet store lokal.
-- Address tujuan harus valid prefix idr1.
+- Address tujuan harus valid prefix iND1.
 - Amount wajib > 0.
 - Amount tidak boleh melebihi confirmed balance dikurangi pending outgoing amount.
 - Nonce transaksi harus:
   confirmed nonce pengirim + jumlah pending tx dari pengirim + 1
-- Fee default tetap 0 IDR untuk Phase 1.6.
+- Fee default tetap 0 dIDR untuk Phase 1.6.
 - Transaksi harus ditandatangani.
 - Public key harus tersimpan di transaksi.
 - Tx ID harus deterministic berdasarkan isi transaksi.
@@ -55,8 +55,8 @@ Perilaku wajib:
   id: <txid>
   from: <from>
   to: <to>
-  amount: 10 IDR
-  fee: 0 IDR
+  amount: 10 dIDR
+  fee: 0 dIDR
   nonce: 1
   status: pending
 
@@ -78,7 +78,7 @@ Kalau wallet from tidak ditemukan:
 
 Pastikan command:
 
-  go run ./node/cmd/deskachain mempool list
+  go run ./node/cmd/indochain mempool list
 
 Output jika kosong:
 
@@ -87,8 +87,8 @@ Output jika kosong:
 Output jika ada tx:
 
   pending tx count: 2
-  id=<txid> from=<from> to=<to> amount=10 IDR fee=0 IDR nonce=1
-  id=<txid> from=<from> to=<to> amount=5 IDR fee=0 IDR nonce=2
+  id=<txid> from=<from> to=<to> amount=10 dIDR fee=0 dIDR nonce=1
+  id=<txid> from=<from> to=<to> amount=5 dIDR fee=0 dIDR nonce=2
 
 Aturan:
 - Jangan tampilkan private key.
@@ -101,7 +101,7 @@ Aturan:
 
 Saat menjalankan:
 
-  go run ./node/cmd/deskachain mine --address <miner> --blocks 1
+  go run ./node/cmd/indochain mine --address <miner> --blocks 1
 
 Block baru harus:
 - Membuat coinbase tx untuk miner.
@@ -114,7 +114,7 @@ Block baru harus:
 
 Output mining harus menampilkan jumlah tx:
 
-  mined block height=4 hash=<hash> txs=2 reward=50 IDR difficulty=4 nonce=<nonce>
+  mined block height=4 hash=<hash> txs=2 reward=50 dIDR difficulty=4 nonce=<nonce>
 
 Catatan:
 - txs termasuk coinbase.
@@ -126,17 +126,17 @@ Catatan:
 
 Contoh alur:
 
-  wallet A mining 3 block = 150 IDR
-  wallet A kirim 10 IDR ke wallet B
+  wallet A mining 3 block = 150 dIDR
+  wallet A kirim 10 dIDR ke wallet B
   mine 1 block oleh wallet A
 
 Hasil:
 - Wallet A:
-  150 - 10 + 50 = 190 IDR
+  150 - 10 + 50 = 190 dIDR
 - Wallet B:
-  10 IDR
+  10 dIDR
 - Total supply:
-  200 IDR
+  200 dIDR
 
 Fee masih 0, jadi tidak ada fee tambahan.
 
@@ -197,7 +197,7 @@ Output jika invalid:
   address invalid
 
 Aturan validasi minimal:
-- Harus prefix idr1.
+- Harus prefix iND1.
 - Panjang sesuai format address project saat ini.
 - Karakter hex/hash suffix valid sesuai implementasi saat ini.
 - Jangan terlalu over-engineer, cukup untuk Phase 1.6.
@@ -249,8 +249,8 @@ Response jika confirmed:
   "block_height": 4,
   "from": "...",
   "to": "...",
-  "amount": "10 IDR",
-  "fee": "0 IDR",
+  "amount": "10 dIDR",
+  "fee": "0 dIDR",
   "nonce": 1,
   "coinbase": false
 }
@@ -261,8 +261,8 @@ Response jika pending:
   "status": "pending",
   "from": "...",
   "to": "...",
-  "amount": "10 IDR",
-  "fee": "0 IDR",
+  "amount": "10 dIDR",
+  "fee": "0 dIDR",
   "nonce": 1,
   "coinbase": false
 }
@@ -280,12 +280,12 @@ Response:
 {
   "address": "...",
   "valid": true,
-  "confirmed_balance": "190 IDR",
+  "confirmed_balance": "190 dIDR",
   "confirmed_nonce": 1,
   "pending_outgoing_count": 0,
-  "pending_outgoing_amount": "0 IDR",
+  "pending_outgoing_amount": "0 dIDR",
   "pending_incoming_count": 0,
-  "pending_incoming_amount": "0 IDR"
+  "pending_incoming_amount": "0 dIDR"
 }
 
 ==================================================
@@ -321,14 +321,14 @@ Tambahkan test yang mensimulasikan alur ini di datadir temporary:
 2. Buat wallet A.
 3. Buat wallet B.
 4. Mine 3 block ke wallet A.
-5. Pastikan balance A = 150 IDR.
-6. Send 10 IDR dari A ke B.
+5. Pastikan balance A = 150 dIDR.
+6. Send 10 dIDR dari A ke B.
 7. Pastikan mempool count = 1.
 8. Mine 1 block ke wallet A.
 9. Pastikan mempool count = 0.
-10. Pastikan balance A = 190 IDR.
-11. Pastikan balance B = 10 IDR.
-12. Pastikan total supply = 200 IDR.
+10. Pastikan balance A = 190 dIDR.
+11. Pastikan balance B = 10 dIDR.
+12. Pastikan total supply = 200 dIDR.
 13. Pastikan chain validate pass.
 14. Pastikan tx get mengembalikan status confirmed.
 
@@ -356,22 +356,22 @@ Tambahkan bagian:
 - Phase sekarang: 1.6 Transfer & Mempool Hardening.
 - Contoh transfer antar wallet:
 
-  go run ./node/cmd/deskachain dev reset --yes
-  go run ./node/cmd/deskachain init
-  go run ./node/cmd/deskachain wallet new
-  go run ./node/cmd/deskachain wallet new
-  go run ./node/cmd/deskachain mine --address <walletA> --blocks 3
-  go run ./node/cmd/deskachain send --from <walletA> --to <walletB> --amount 10
-  go run ./node/cmd/deskachain mempool list
-  go run ./node/cmd/deskachain mine --address <walletA> --blocks 1
-  go run ./node/cmd/deskachain balance <walletA>
-  go run ./node/cmd/deskachain balance <walletB>
-  go run ./node/cmd/deskachain chain validate
+  go run ./node/cmd/indochain dev reset --yes
+  go run ./node/cmd/indochain init
+  go run ./node/cmd/indochain wallet new
+  go run ./node/cmd/indochain wallet new
+  go run ./node/cmd/indochain mine --address <walletA> --blocks 3
+  go run ./node/cmd/indochain send --from <walletA> --to <walletB> --amount 10
+  go run ./node/cmd/indochain mempool list
+  go run ./node/cmd/indochain mine --address <walletA> --blocks 1
+  go run ./node/cmd/indochain balance <walletA>
+  go run ./node/cmd/indochain balance <walletB>
+  go run ./node/cmd/indochain chain validate
 
 Tambahkan penjelasan:
 - Pending tx belum mengubah confirmed balance sampai block ditambang.
-- Miner mendapat reward 50 IDR per block.
-- Fee masih 0 IDR di Phase 1.6.
+- Miner mendapat reward 50 dIDR per block.
+- Fee masih 0 dIDR di Phase 1.6.
 - Wallet storage masih dev-only dan belum aman untuk production.
 
 ==================================================
@@ -382,29 +382,29 @@ Setelah patch selesai, command ini harus berhasil:
 
   go mod tidy
   go test ./...
-  go run ./node/cmd/deskachain dev reset --yes
-  go run ./node/cmd/deskachain init
-  go run ./node/cmd/deskachain wallet new
-  go run ./node/cmd/deskachain wallet new
+  go run ./node/cmd/indochain dev reset --yes
+  go run ./node/cmd/indochain init
+  go run ./node/cmd/indochain wallet new
+  go run ./node/cmd/indochain wallet new
 
 Lalu manual test:
 
-  go run ./node/cmd/deskachain mine --address <walletA> --blocks 3
-  go run ./node/cmd/deskachain send --from <walletA> --to <walletB> --amount 10
-  go run ./node/cmd/deskachain mempool list
-  go run ./node/cmd/deskachain wallet inspect --address <walletA>
-  go run ./node/cmd/deskachain wallet inspect --address <walletB>
-  go run ./node/cmd/deskachain mine --address <walletA> --blocks 1
-  go run ./node/cmd/deskachain balance <walletA>
-  go run ./node/cmd/deskachain balance <walletB>
-  go run ./node/cmd/deskachain chain info
-  go run ./node/cmd/deskachain chain validate
-  go run ./node/cmd/deskachain tx get <txid>
+  go run ./node/cmd/indochain mine --address <walletA> --blocks 3
+  go run ./node/cmd/indochain send --from <walletA> --to <walletB> --amount 10
+  go run ./node/cmd/indochain mempool list
+  go run ./node/cmd/indochain wallet inspect --address <walletA>
+  go run ./node/cmd/indochain wallet inspect --address <walletB>
+  go run ./node/cmd/indochain mine --address <walletA> --blocks 1
+  go run ./node/cmd/indochain balance <walletA>
+  go run ./node/cmd/indochain balance <walletB>
+  go run ./node/cmd/indochain chain info
+  go run ./node/cmd/indochain chain validate
+  go run ./node/cmd/indochain tx get <txid>
 
 Expected:
-- Wallet A balance akhir: 190 IDR
-- Wallet B balance akhir: 10 IDR
-- Total supply: 200 IDR
+- Wallet A balance akhir: 190 dIDR
+- Wallet B balance akhir: 10 dIDR
+- Total supply: 200 dIDR
 - Mempool kosong setelah mining
 - Chain valid
 

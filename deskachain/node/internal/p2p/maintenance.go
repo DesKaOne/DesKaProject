@@ -9,8 +9,8 @@ import (
 	"sort"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 type MaintenanceOptions struct {

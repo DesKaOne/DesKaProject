@@ -13,24 +13,24 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/arith"
-	"deskachain/internal/asset"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/faucet"
-	"deskachain/internal/fees"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/mining"
-	"deskachain/internal/p2p"
-	"deskachain/internal/servicenode"
-	"deskachain/internal/staking"
-	"deskachain/internal/state"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/arith"
+	"indochain/internal/asset"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/faucet"
+	"indochain/internal/fees"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/mining"
+	"indochain/internal/p2p"
+	"indochain/internal/servicenode"
+	"indochain/internal/staking"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 type handler struct {
@@ -290,9 +290,9 @@ func (h handler) explorerIndexedTx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"ok": true,
+		"ok":          true,
 		"api_version": ExplorerAPIVersion,
-		"indexer": status,
+		"indexer":     status,
 		"transaction": tx,
 	})
 }
@@ -328,14 +328,14 @@ func (h handler) explorerIndexedAddressTxs(w http.ResponseWriter, r *http.Reques
 	items := make([]map[string]any, 0, len(history))
 	for _, item := range history {
 		items = append(items, map[string]any{
-			"txid": item.TxID,
+			"txid":         item.TxID,
 			"block_height": item.BlockHeight,
-			"block_hash": item.BlockHash,
-			"role": item.Role,
+			"block_hash":   item.BlockHash,
+			"role":         item.Role,
 			"counterparty": item.Counterparty,
-			"asset_id": item.AssetID,
-			"amount": item.Amount,
-			"fee": item.Fee,
+			"asset_id":     item.AssetID,
+			"amount":       item.Amount,
+			"fee":          item.Fee,
 		})
 	}
 	resp := explorerPagedResponse("transactions", items, total, limit, offset)
@@ -368,15 +368,18 @@ func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		block, found, err := indexer.blockByHeight(height)
-		if err != nil { writeError(w, err); return }
+		if err != nil {
+			writeError(w, err)
+			return
+		}
 		if found {
 			results = append(results, map[string]any{
 				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
-				"path": fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"path":     fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
 				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
 			})
 		}
-	} else if strings.HasPrefix(query, "IDR") {
+	} else if strings.HasPrefix(query, "iND") {
 		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
 			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
 			return
@@ -387,16 +390,22 @@ func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
 		})
 	} else if isHexHash(query) {
 		block, found, err := indexer.blockByHash(query)
-		if err != nil { writeError(w, err); return }
+		if err != nil {
+			writeError(w, err)
+			return
+		}
 		if found {
 			results = append(results, map[string]any{
 				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
-				"path": fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"path":     fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
 				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
 			})
 		}
 		tx, found, err := indexer.transaction(query)
-		if err != nil { writeError(w, err); return }
+		if err != nil {
+			writeError(w, err)
+			return
+		}
 		if found {
 			results = append(results, map[string]any{
 				"type": "tx", "id": tx.ID, "label": "Transaction " + tx.ID,
@@ -405,7 +414,7 @@ func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or iND address")
 		return
 	}
 	if len(results) == 0 {
@@ -418,7 +427,10 @@ func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
 func (h handler) explorerIndexerStatus(w http.ResponseWriter, _ *http.Request) {
 	indexer := newExplorerIndexer(h.paths, h.profile())
 	status, err := indexer.status()
-	if err != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": err.Error()}); return }
+	if err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "indexer": status})
 }
 
@@ -434,7 +446,10 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).Load()
 	indexer := newExplorerIndexer(h.paths, h.profile())
 	indexerStatus, indexerErr := indexer.status()
-	if indexerErr != nil { writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": indexerErr.Error()}); return }
+	if indexerErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": indexerErr.Error()})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":                        true,
 		"network":                   net.Name,
@@ -459,7 +474,7 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"faucet_rpc":                h.info.EnableFaucetRPC,
 		"service_rpc":               h.info.EnableServiceRPC,
 		"mainnet_available":         false,
-		"testnet_value_warning":     "testnet IDR has no monetary value",
+		"testnet_value_warning":     "testnet iND has no monetary value",
 		"indexer_mode":              indexerStatus.Mode,
 		"indexer":                   indexerStatus,
 	})
@@ -513,7 +528,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-	} else if strings.HasPrefix(query, "IDR") {
+	} else if strings.HasPrefix(query, "iND") {
 		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
 			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
 			return
@@ -545,7 +560,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or iND address")
 		return
 	}
 
@@ -709,7 +724,7 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		"service_collateral_eligible": score.StakeEligible,
 		"service_points":              score.SimulatedPoints,
 		"simulation_only":             true,
-		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
+		"service_points_warning":      "service points are simulation-only and are not spendable dIDR",
 	})
 }
 
@@ -1949,7 +1964,7 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"coinbase_maturity":              net.Consensus.CoinbaseMaturity,
 		"pending_tx_count":               pendingCount,
 		"peer_count":                     peerCount,
-		"note":                           "testnet mining is for testing only; testnet IDR has no monetary value",
+		"note":                           "testnet mining is for testing only; testnet dIDR has no monetary value",
 	}
 }
 
@@ -2276,7 +2291,7 @@ func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
 		"bytes_per_gas":  p.Fee.BytesPerGas,
 		"max_gas_per_tx": p.Fee.MaxGasPerTx,
 		"base_gas": map[string]uint64{
-			"transfer_idr":   p.Fee.BaseGasTransfer,
+			"transfer_ind":   p.Fee.BaseGasTransfer,
 			"transfer_token": p.Fee.BaseGasAssetTransfer,
 			"stake_lock":     p.Fee.BaseGasStakeLock,
 			"stake_unlock":   p.Fee.BaseGasStakeUnlock,
@@ -2542,7 +2557,7 @@ func (h handler) faucetInfo(w http.ResponseWriter, _ *http.Request) {
 		"max_per_address":      amount.Format(h.faucetMaxPerAddress()),
 		"min_interval_seconds": int64(h.faucetMinInterval().Seconds()),
 		"mempool_pending":      len(pending),
-		"note":                 "testnet faucet only; testnet IDR has no monetary value",
+		"note":                 "testnet faucet only; testnet dIDR has no monetary value",
 	})
 }
 
@@ -3960,7 +3975,7 @@ func (h handler) explorerServiceSummary(address string, node *servicenode.Node) 
 		"status":                      eligibleStatus,
 		"simulation_only":             true,
 		"scope":                       "local_node_service_store",
-		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
+		"service_points_warning":      "service points are simulation-only and are not spendable dIDR",
 		"service_registry_consensus":  false,
 		"stake_collateral_consensus":  true,
 		"local_service_state_warning": "service registration and score samples are local to this RPC node",

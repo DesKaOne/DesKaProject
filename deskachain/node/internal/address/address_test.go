@@ -3,7 +3,7 @@ package address
 import (
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestAddressEncodeValidate(t *testing.T) {
@@ -11,7 +11,7 @@ func TestAddressEncodeValidate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if addr[:3] != "IDR" {
+	if addr[:3] != "iND" {
 		t.Fatalf("address = %s", addr)
 	}
 	if !ValidateAddress(addr, config.Localnet()) {
@@ -24,7 +24,7 @@ func TestAddressWrongPrefixAndChecksum(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if ValidateAddress("idr"+addr[3:], config.Localnet()) {
+	if ValidateAddress("ind"+addr[3:], config.Localnet()) {
 		t.Fatal("lowercase prefix should be invalid for new address")
 	}
 	bad := flipLast(addr)
@@ -44,7 +44,7 @@ func TestAddressWrongNetworkVersion(t *testing.T) {
 }
 
 func TestLegacyDevAddressPolicy(t *testing.T) {
-	legacy := "idr10000000000000000000000000000000000000000"
+	legacy := "iND10000000000000000000000000000000000000000"
 	if !ValidateAddress(legacy, config.Localnet()) {
 		t.Fatal("legacy localnet address should validate")
 	}

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/p2p"
-	"deskachain/internal/storage"
-	"deskachain/internal/wallet"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/p2p"
+	"indochain/internal/storage"
+	"indochain/internal/wallet"
 )
 
 func TestRPCHealthUsesActiveProfileTestnet(t *testing.T) {

@@ -1,21 +1,21 @@
-# DesKaChain Long-Running Public Testnet Checklist
+# IndoChain Long-Running Public Testnet Checklist
 
-Use this checklist for a two-host public-testnet soak and restart recovery run. It does not launch mainnet. Testnet IDR has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
+Use this checklist for a two-host public-testnet soak and restart recovery run. It does not launch mainnet. Testnet dIDR has no monetary value, PoW remains the only block-production consensus, staking is collateral-only, and service points are simulation-only.
 
 ## Hosts
 
 - Host A: Mini PC seed node.
 - Host B: Windows or Linux peer/miner node.
 - Network: `testnet`.
-- Network ID: `idr-testnet-1`.
+- Network ID: `ind-testnet-1`.
 - Chain ID: `777101`.
 - Genesis hash: `db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4`.
 
 ## Start Host A
 
 ```sh
-./deskachain --datadir ./data/seed --network testnet init
-./deskachain --datadir ./data/seed node start \
+./indochain --datadir ./data/seed --network testnet init
+./indochain --datadir ./data/seed node start \
   --rpc 0.0.0.0:9311 \
   --p2p 0.0.0.0:10311 \
   --advertise-p2p http://<HOST_A_REACHABLE_IP>:10311 \
@@ -26,8 +26,8 @@ Use this checklist for a two-host public-testnet soak and restart recovery run. 
 ## Start Host B
 
 ```sh
-./deskachain --datadir ./data/node_b --network testnet init
-./deskachain --datadir ./data/node_b node start \
+./indochain --datadir ./data/node_b --network testnet init
+./indochain --datadir ./data/node_b node start \
   --rpc 0.0.0.0:9312 \
   --p2p 0.0.0.0:10312 \
   --advertise-p2p http://<HOST_B_REACHABLE_IP>:10312 \
@@ -43,24 +43,24 @@ Use this checklist for a two-host public-testnet soak and restart recovery run. 
 3. Check peers:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 peer list --source
-./deskachain --rpc-url http://127.0.0.1:9312 peer list --source
-./deskachain --rpc-url http://127.0.0.1:9312 peer check http://<HOST_A_REACHABLE_IP>:10311
+./indochain --rpc-url http://127.0.0.1:9311 peer list --source
+./indochain --rpc-url http://127.0.0.1:9312 peer list --source
+./indochain --rpc-url http://127.0.0.1:9312 peer check http://<HOST_A_REACHABLE_IP>:10311
 ```
 
 4. Mine one block from either host:
 
 ```sh
-./idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 1
+./indominer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 1
 ```
 
 5. Confirm both nodes match:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
-./deskachain --rpc-url http://127.0.0.1:9312 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9312 chain validate
 ```
 
 Expected result: same height, same tip hash, both chains valid.
@@ -74,10 +74,10 @@ Expected result: same height, same tip hash, both chains valid.
 5. Confirm Host B catches up:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9312 peer sync http://<HOST_A_REACHABLE_IP>:10311
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain validate
+./indochain --rpc-url http://127.0.0.1:9312 peer sync http://<HOST_A_REACHABLE_IP>:10311
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain validate
 ```
 
 Expected result: Host B imports missed blocks and ends with the same height and tip hash as Host A.
@@ -95,14 +95,14 @@ Expected result: peer entries persist, reconnect works, and wrong network/genesi
 
 ## Systemd Restart
 
-Run Host A under `examples/systemd/deskachain-testnet.service`, then:
+Run Host A under `examples/systemd/indochain-testnet.service`, then:
 
 ```sh
-sudo systemctl restart deskachain-testnet
-sudo systemctl status deskachain-testnet
-journalctl -u deskachain-testnet --since "10 minutes ago"
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+sudo systemctl restart indochain-testnet
+sudo systemctl status indochain-testnet
+journalctl -u indochain-testnet --since "10 minutes ago"
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 ```
 
 Expected result: the node stops through SIGINT, releases `node.lock`, restarts, keeps height/tip, and validates the chain.
@@ -119,24 +119,24 @@ Expected result: the second node fails with a datadir lock error. Do not delete 
 Peer state:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 peer list --source
-./deskachain --rpc-url http://127.0.0.1:9311 peer check http://<peer>:<p2p>
-./deskachain --rpc-url http://127.0.0.1:9311 peer sync http://<peer>:<p2p>
+./indochain --rpc-url http://127.0.0.1:9311 peer list --source
+./indochain --rpc-url http://127.0.0.1:9311 peer check http://<peer>:<p2p>
+./indochain --rpc-url http://127.0.0.1:9311 peer sync http://<peer>:<p2p>
 ```
 
 Chain state:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 curl http://127.0.0.1:9311/health
 ```
 
 Logs:
 
 ```sh
-journalctl -u deskachain-testnet -f
-journalctl -u deskachain-testnet --since "30 minutes ago"
+journalctl -u indochain-testnet -f
+journalctl -u indochain-testnet --since "30 minutes ago"
 ```
 
 Expected recoverable errors:
@@ -154,7 +154,7 @@ Expected recoverable errors:
 - Periodically record `/health`, `chain info`, `peer list`, and `chain validate` from both hosts.
 - Keep wallet/admin RPC disabled on any public RPC bind.
 - Use seed peers as bootstrap hints only; they are not trusted authorities.
-- Do not treat mined testnet IDR as having monetary value.
+- Do not treat mined testnet dIDR as having monetary value.
 
 ## Faucet + Service E2E Add-On
 
@@ -163,13 +163,13 @@ After the baseline sync checks pass, run the controlled Phase 4.2 flow:
 1. Start Host A with `--enable-faucet-rpc`, a mature operator faucet wallet, and wallet/admin RPC still disabled.
 2. Start Host B with `--seed-peer` pointing at Host A and `--enable-service-rpc` only if Host B is the controlled service test node.
 3. Create `OWNER_ADDR` in a Host B wallet datadir.
-4. Request `1000 IDR` from Host A faucet RPC.
+4. Request `1000 dIDR` from Host A faucet RPC.
 5. Mine one block and confirm Host B sees the faucet transfer after sync.
-6. Lock `1000 IDR` as stake from Host B.
+6. Lock `1000 dIDR` as stake from Host B.
 7. Mine one block and confirm `stake list` reports active stake.
-8. Register Host B service endpoint and run `idrservice --once`.
-9. Confirm `service score` reports required stake `1000 IDR`, active stake `1000 IDR`, and `stake eligible: true`.
+8. Register Host B service endpoint and run `indoservice --once`.
+9. Confirm `service score` reports required stake `1000 dIDR`, active stake `1000 dIDR`, and `stake eligible: true`.
 10. Confirm Host A and Host B have the same height/tip and both pass `chain validate`.
 11. Confirm `chain info` supply changed only due to mined coinbase rewards, not faucet or service scoring.
 
-Service registration and score samples are local simulation state on the RPC node used by `idrservice`. Chain-backed stake and supply should sync across hosts.
+Service registration and score samples are local simulation state on the RPC node used by `indoservice`. Chain-backed stake and supply should sync across hosts.

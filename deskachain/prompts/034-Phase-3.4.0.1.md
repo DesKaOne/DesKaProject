@@ -1,11 +1,11 @@
-DesKaChain Phase 3.4.0.1 — Testnet Wallet Address Profile & Miner Submit Timeout Fix
+IndoChain Phase 3.4.0.1 — Testnet Wallet Address Profile & Miner Submit Timeout Fix
 
 Context:
 Phase 3.4 faucet sudah dipatch, tetapi validasi belum lulus.
 
 Observed failures:
 
-1. `go test -count=1 ./node/...` gagal di package `deskachain/internal/rpc`.
+1. `go test -count=1 ./node/...` gagal di package `indochain/internal/rpc`.
    Failing test:
 
    * TestMinerSubmitInvalidPoWStaleAndWrongDifficulty
@@ -14,13 +14,13 @@ Observed failures:
 
 2. Manual testnet faucet flow:
    Datadir testnet dibuat dengan:
-   deskachain --datadir ./testdata/faucet_tn --network testnet init
+   indochain --datadir ./testdata/faucet_tn --network testnet init
 
    Wallet dibuat dengan:
-   deskachain --datadir ./testdata/faucet_tn wallet new
+   indochain --datadir ./testdata/faucet_tn wallet new
 
    Address yang keluar:
-   IDR...
+   dIDR...
 
    Tetapi saat digunakan pada node testnet, balance/replay error:
    invalid coinbase recipient: invalid address: wrong network version
@@ -41,7 +41,7 @@ Menutup blocker Phase 3.4 agar testnet wallet/faucet/miner memakai active networ
 Non-goals:
 
 * Jangan implement public faucet.
-* Jangan ubah address prefix IDR.
+* Jangan ubah address prefix dIDR.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali benar-benar wajib.
 * Jangan disable network-version validation.
@@ -56,7 +56,7 @@ Non-goals:
    ==================================================
 
 Problem:
-`deskachain --datadir <testnet_dir> wallet new` kemungkinan masih memakai default localnet profile jika flag `--network testnet` tidak diberikan.
+`indochain --datadir <testnet_dir> wallet new` kemungkinan masih memakai default localnet profile jika flag `--network testnet` tidak diberikan.
 
 Expected:
 Jika datadir sudah init testnet, semua command local datadir harus resolve profile dari datadir metadata.
@@ -71,8 +71,8 @@ Fix:
   3. default localnet only for brand new/no metadata backward-compatible case.
 
 Commands:
-deskachain --datadir ./testdata/faucet_tn --network testnet init
-deskachain --datadir ./testdata/faucet_tn wallet new
+indochain --datadir ./testdata/faucet_tn --network testnet init
+indochain --datadir ./testdata/faucet_tn wallet new
 
 Expected:
 
@@ -105,7 +105,7 @@ Add tests:
 ================================================
 
 Problem:
-`balance <IDR_ADDR>` on testnet returns:
+`balance <IND_ADDR>` on testnet returns:
 invalid coinbase recipient: invalid address: wrong network version
 
 Need determine if:
@@ -140,7 +140,7 @@ Add tests:
 ==========================================================
 
 Problem:
-idrminer was able to mine/submit using address later rejected by balance as wrong network version.
+indominer was able to mine/submit using address later rejected by balance as wrong network version.
 
 Expected:
 
@@ -260,7 +260,7 @@ must pass.
 ===========================
 
 Currently:
-deskachain/internal/faucet [no test files]
+indochain/internal/faucet [no test files]
 
 Add tests for faucet state if feasible:
 
@@ -279,29 +279,29 @@ If state logic is tested through RPC already, package tests are still recommende
 Because current `./testdata/faucet_tn` may contain blocks mined to wrong-network coinbase address, reset it after patch.
 
 Manual commands after patch:
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn wallet new
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn wallet new
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn wallet new
 
 Start:
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
 
 Check immediately:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 faucet info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 
 Expected before mining:
 
 * no wrong network version error.
-* balance valid with 0 IDR.
+* balance valid with 0 dIDR.
 
 Mine enough:
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --max-blocks 105
 
 Check:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <FAUCET_ADDR>
 
 Expected:
 
@@ -309,7 +309,7 @@ Expected:
 * no wrong network version error.
 
 Request:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 faucet request --address <RECIPIENT_ADDR>
 
 Expected:
 
@@ -317,14 +317,14 @@ Expected:
 * status pending.
 
 Mine confirmation:
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8811 --address <FAUCET_ADDR> --threads 4 --once
 
 Check recipient:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8811 balance <RECIPIENT_ADDR>
 
 Expected:
 
-* confirmed balance 100 IDR.
+* confirmed balance 100 dIDR.
 * no wrong network version error.
 
 ==================================================

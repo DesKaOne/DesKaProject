@@ -7,7 +7,7 @@ Usage: bash ./scripts/testnet-health.sh http://127.0.0.1:9311 [options]
 
 Options:
   --expected-network testnet
-  --expected-network-id idr-testnet-1
+  --expected-network-id ind-testnet-1
   --expected-chain-id 777101
   --allow-wallet-rpc
   --allow-admin-rpc
@@ -173,7 +173,7 @@ json_value() {
   fi
 }
 
-tmpdir="${TMPDIR:-/tmp}/deskachain-health-$$"
+tmpdir="${TMPDIR:-/tmp}/indochain-health-$$"
 mkdir -p "$tmpdir"
 trap 'rm -rf "$tmpdir"' EXIT INT TERM
 
@@ -214,7 +214,7 @@ else
 fi
 
 if fetch "/explorer-ui/" > "$ui_file" 2>"$tmpdir/ui.err"; then
-  if grep -q "DesKaChain Explorer" "$ui_file"; then
+  if grep -q "IndoChain Explorer" "$ui_file"; then
     ui_ok=true
   else
     add_warning "explorer UI did not return expected content"
@@ -324,23 +324,23 @@ fi
 cli_chain_info=""
 cli_chain_validate=""
 if [ -n "$BIN_DIR" ]; then
-  deskachain="$BIN_DIR/deskachain"
-  [ -x "$deskachain" ] || deskachain="$BIN_DIR/deskachain.exe"
-  if [ -x "$deskachain" ]; then
-    if cli_chain_info="$("$deskachain" --rpc-url "$RPC_URL" chain info 2>&1)"; then
+  indochain="$BIN_DIR/indochain"
+  [ -x "$indochain" ] || indochain="$BIN_DIR/indochain.exe"
+  if [ -x "$indochain" ]; then
+    if cli_chain_info="$("$indochain" --rpc-url "$RPC_URL" chain info 2>&1)"; then
       :
     else
       add_warning "chain info via CLI failed"
     fi
     if [ -n "$DATADIR" ]; then
-      if cli_chain_validate="$("$deskachain" --rpc-url "$RPC_URL" chain validate 2>&1)"; then
+      if cli_chain_validate="$("$indochain" --rpc-url "$RPC_URL" chain validate 2>&1)"; then
         :
       else
         add_error "chain validate via CLI failed"
       fi
     fi
   else
-    add_warning "deskachain binary not found in $BIN_DIR"
+    add_warning "indochain binary not found in $BIN_DIR"
   fi
 fi
 

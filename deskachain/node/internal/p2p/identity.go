@@ -10,14 +10,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 const (
 	NodeIdentityVersion uint32 = 1
-	nodeIdentityDomain         = "DesKaChain/p2p-handshake/v1"
+	nodeIdentityDomain         = "IndoChain/p2p-handshake/v1"
 )
 
 type NodeIdentity struct {
@@ -118,7 +118,7 @@ func LoadOrCreateNodeIdentity(nodeIDPath string) (NodeIdentity, error) {
 
 func atomicCreateFile(path string, data []byte, perm os.FileMode) error {
 	dir := filepath.Dir(path)
-	tmp, err := os.CreateTemp(dir, ".deskachain-identity-*")
+	tmp, err := os.CreateTemp(dir, ".indochain-identity-*")
 	if err != nil {
 		return err
 	}

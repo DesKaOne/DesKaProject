@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/rpc"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/rpc"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestRunOnceMinesOneBlockAndExits(t *testing.T) {
@@ -64,7 +64,7 @@ func TestVersionAndHelpDoNotRequireRPC(t *testing.T) {
 	if err := run([]string{"--version"}, &out, &errOut); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"idrminer", "version:", "commit:", "built:", "networks: localnet,testnet", "mainnet: not available"} {
+	for _, want := range []string{"indominer", "version:", "commit:", "built:", "networks: localnet,testnet", "mainnet: not available"} {
 		if !strings.Contains(out.String(), want) {
 			t.Fatalf("version output missing %q:\n%s", want, out.String())
 		}
@@ -73,7 +73,7 @@ func TestVersionAndHelpDoNotRequireRPC(t *testing.T) {
 	if err := run([]string{"--help"}, &out, &errOut); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out.String(), "usage: idrminer") {
+	if !strings.Contains(out.String(), "usage: indominer") {
 		t.Fatalf("help output missing usage:\n%s", out.String())
 	}
 }

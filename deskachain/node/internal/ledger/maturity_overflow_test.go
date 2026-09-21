@@ -6,10 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestMatureLedgerRejectsCoinbaseBalanceOverflow(t *testing.T) {

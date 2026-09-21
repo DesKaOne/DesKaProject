@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -8,7 +8,7 @@ Status saat ini:
 * Node2 auto-sync dari node1 sudah berhasil.
 * node compare via RPC menunjukkan:
   nodes in sync
-  network id: idr-local-1
+  network id: ind-local-1
   chain id: 777001
   height: 6
   tip hash sama.
@@ -16,12 +16,12 @@ Status saat ini:
 Masalah yang ditemukan:
 Saat node2 sedang berjalan:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Command berikut gagal karena datadir terkunci:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
 Output:
 error: datadir is locked by running node
@@ -30,7 +30,7 @@ use --rpc-url http://127.0.0.1:8332 to control the running node
 Ini benar secara konsep, tetapi remote CLI untuk peer command harus dilengkapi dan README/test command harus diperbaiki.
 
 Nama patch:
-DesKaChain Phase 2.2.1 — Remote Peer Commands & Lock UX Fix
+IndoChain Phase 2.2.1 — Remote Peer Commands & Lock UX Fix
 
 Tujuan:
 Merapikan command peer saat node sedang berjalan, sehingga semua operasi peer yang menyentuh runtime node bisa dilakukan lewat --rpc-url.
@@ -54,19 +54,19 @@ Aturan penting:
 
 Pastikan command berikut bisa berjalan dalam remote mode:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer list
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer add http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer add http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer remove http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer remove http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync --peer http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync --peer http://127.0.0.1:9331
 
 Remote mode berarti:
 
@@ -93,7 +93,7 @@ Response sukses:
 "ok": true,
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "idr-local-1",
+"network_id": "ind-local-1",
 "chain_id": 777001,
 "height": 6,
 "tip_hash": "...",
@@ -135,7 +135,7 @@ Response:
 {
 "url": "http://127.0.0.1:9331",
 "node_id": "...",
-"network_id": "idr-local-1",
+"network_id": "ind-local-1",
 "chain_id": 777001,
 "height": 6,
 "tip_hash": "...",
@@ -221,20 +221,20 @@ Jika gagal:
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
 
 Output sukses:
 peer ok
 url: http://127.0.0.1:9331
 node id: <id>
-network id: idr-local-1
+network id: ind-local-1
 chain id: 777001
 height: 6
 tip hash: <hash>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
 Output jika up to date:
 sync complete
@@ -252,7 +252,7 @@ sync complete
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
 
 Output:
 checked peers: 1
@@ -268,7 +268,7 @@ Saat command local write ditolak karena datadir locked, tampilkan command altern
 
 Contoh untuk:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
 Output:
 error: datadir is locked by running node
@@ -276,15 +276,15 @@ datadir: testdata\node2
 rpc: :8332
 p2p: :9332
 use:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
 Contoh untuk mine:
 use:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <address> --blocks <n>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <address> --blocks <n>
 
 Contoh untuk send:
 use:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <from> --to <to> --amount <amount>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <from> --to <to> --amount <amount>
 
 Catatan:
 
@@ -312,37 +312,37 @@ Perbaiki semua contoh command saat node sedang berjalan.
 
 Jangan lagi contohkan:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
 ketika node2 sedang hidup.
 
 Ganti dengan:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
 Bagian manual test Phase 2.2.1:
 
 Setup:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 
 Expected:
 
@@ -394,13 +394,13 @@ go test ./...
 
 Dengan node1 dan node2 sedang running:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 
 Expected:
 

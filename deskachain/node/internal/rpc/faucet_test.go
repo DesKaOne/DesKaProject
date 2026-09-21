@@ -8,15 +8,15 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/storage"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestFaucetInfoDisabledByDefault(t *testing.T) {
@@ -346,8 +346,12 @@ func fundFaucetFixture(t *testing.T, paths config.Paths, address string, profile
 		prior = append(prior, block)
 	}
 	snapshot, err := state.SnapshotForBlocks(prior, profile.Consensus, profile)
-	if err != nil { t.Fatal(err) }
-	if err := store.SaveState(snapshot); err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func minePendingFixture(t *testing.T, paths config.Paths, miner string, profile config.NetworkConfig) {
@@ -376,8 +380,12 @@ func minePendingFixture(t *testing.T, paths config.Paths, miner string, profile 
 	prior := append([]types.Block(nil), blocks...)
 	prior = append(prior, block)
 	snapshot, err := state.SnapshotForBlocks(prior, profile.Consensus, profile)
-	if err != nil { t.Fatal(err) }
-	if err := store.SaveState(snapshot); err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SaveState(snapshot); err != nil {
+		t.Fatal(err)
+	}
 	ids := map[string]struct{}{}
 	for _, tx := range pending {
 		ids[tx.ID] = struct{}{}

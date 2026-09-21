@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -27,7 +27,7 @@ Status saat ini:
 * Tetapi command common ancestor gagal:
 
 Command:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Output:
 common ancestor not found
@@ -41,7 +41,7 @@ Masalah:
 Endpoint /p2p/common-ancestor atau CLI chain common-ancestor tidak bekerja benar. Jika dua node punya chain sama, common ancestor harus ditemukan di tip tertinggi, bukan not found.
 
 Nama patch:
-DesKaChain Phase 2.4.1 — Common Ancestor Endpoint Fix
+IndoChain Phase 2.4.1 — Common Ancestor Endpoint Fix
 
 Tujuan:
 Memperbaiki command dan endpoint common ancestor agar:
@@ -174,7 +174,7 @@ chain common-ancestor --peer <p2p-url>
 Local dan remote mode harus benar.
 
 Remote mode contoh:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Behavior:
 
@@ -341,9 +341,9 @@ no common ancestor found
 
 Padahal fork check menyatakan nodes in sync, jalankan:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
 
 Expected untuk nodes in sync:
 common ancestor found
@@ -361,9 +361,9 @@ go test ./node/...
 
 Dengan node1 dan node2 running serta sudah in sync di height 3:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Expected:
 common ancestor found
@@ -371,7 +371,7 @@ height: 3
 hash: 00004c32de7171fdb3d8335d171e86c89d0af1c3d202961426c52cf1590454a3
 
 Debug:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
 
 Expected:
 local locator count: 4

@@ -1,14 +1,14 @@
-# DesKaChain API
+# IndoChain API
 
 Status: Phase 3.6  
 Network support: `localnet`, `testnet`  
 Primary RPC protocol: HTTP JSON  
 P2P protocol: HTTP JSON, node-to-node  
-Ticker: `IDR`
+Ticker: `dIDR`
 
-This document describes the current DesKaChain HTTP RPC and P2P APIs. It is intended for CLI, wallet, miner, service-node, faucet, explorer, and testnet tooling.
+This document describes the current IndoChain HTTP RPC and P2P APIs. It is intended for CLI, wallet, miner, service-node, faucet, explorer, and testnet tooling.
 
-> Testnet IDR has no monetary value. Staking is collateral-only. Service points are simulation-only and are not spendable IDR. PoW remains the only block production consensus.
+> Testnet dIDR has no monetary value. Staking is collateral-only. Service points are simulation-only and are not spendable dIDR. PoW remains the only block production consensus.
 
 ## Base URLs
 
@@ -27,13 +27,13 @@ http://127.0.0.1:9811
 Example testnet node start:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811
 ```
 
 Example public-testnet node using seed peers:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./data/testnet-public --network testnet node start --rpc :8811 --p2p :9811 --advertise-p2p http://<PUBLIC_HOST>:9811 --public-rpc --seed-file ./examples/testnet/testnet-seeds.txt
+go run ./node/cmd/indochain --datadir ./data/testnet-public --network testnet node start --rpc :8811 --p2p :9811 --advertise-p2p http://<PUBLIC_HOST>:9811 --public-rpc --seed-file ./examples/testnet/testnet-seeds.txt
 ```
 
 Seed peers are startup configuration, not a separate public RPC API. They are persisted in the peer store with source `seed`; network ID, chain ID, genesis hash, and protocol compatibility are still enforced by peer validation and sync paths.
@@ -41,14 +41,14 @@ Seed peers are startup configuration, not a separate public RPC API. They are pe
 Example testnet node with faucet enabled:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
+go run ./node/cmd/indochain --datadir ./testdata/faucet_tn node start --rpc :8811 --p2p :9811 --advertise-p2p http://127.0.0.1:9811 --enable-faucet-rpc --faucet-address <FAUCET_ADDR> --faucet-amount 100 --faucet-min-interval 1m
 ```
 
 For a faucet-funded service collateral scenario, use `--faucet-amount 1000 --faucet-max-per-address 2000` on a controlled testnet node.
 
 ## Common Response Rules
 
-Most successful responses are JSON objects. Some fields are numbers, while human-friendly amounts are usually strings formatted in IDR.
+Most successful responses are JSON objects. Some fields are numbers, while human-friendly amounts are usually strings formatted in dIDR.
 
 Errors usually return HTTP `400`, `403`, `413`, or `429`:
 
@@ -83,8 +83,8 @@ Current important profiles:
 
 | Network | Network ID | Chain ID | Coinbase maturity | Min stake | Min service stake | Unbonding |
 |---|---|---:|---:|---:|---:|---:|
-| `localnet` | `idr-local-1` | `777001` | `10` | `10 IDR` | `100 IDR` | `10` blocks |
-| `testnet` | `idr-testnet-1` | `777101` | `100` | `100 IDR` | `1000 IDR` | `100` blocks |
+| `localnet` | `ind-local-1` | `777001` | `10` | `10 dIDR` | `100 dIDR` | `10` blocks |
+| `testnet` | `ind-testnet-1` | `777101` | `100` | `100 dIDR` | `1000 dIDR` | `100` blocks |
 
 Known genesis hashes:
 
@@ -141,9 +141,9 @@ In public RPC mode, wallet/admin/miner/faucet/service write endpoints are disabl
 
 ## Address And Amount Format
 
-Addresses use `IDR...` Base58Check format. Address validation is network-profile aware, even when the visible prefix is still `IDR`.
+Addresses use `iND...` Base58Check format. Address validation is network-profile aware, even when the visible prefix is still `iND`.
 
-Amounts in public CLI/docs are written as decimal IDR strings, for example:
+Amounts in public CLI/docs are written as decimal iND strings, for example:
 
 ```json
 {
@@ -159,7 +159,7 @@ Transaction JSON stores base units as unsigned integers:
 }
 ```
 
-Current examples use `1 IDR = 100000000` base units.
+Current examples use `1 dIDR = 100000000` base units.
 
 ## Transaction Object
 
@@ -168,8 +168,8 @@ A transaction object has this shape:
 ```json
 {
   "id": "<TX_ID>",
-  "from": "<IDR_ADDR_OR_COINBASE>",
-  "to": "<IDR_ADDR>",
+  "from": "<IND_ADDR_OR_COINBASE>",
+  "to": "<IND_ADDR>",
   "amount": 10000000000,
   "fee": 0,
   "nonce": 1,
@@ -202,7 +202,7 @@ A block object has this shape:
   "timestamp": 1782050193,
   "nonce": 7794265,
   "difficulty": 6,
-  "miner_address": "<IDR_ADDR>",
+  "miner_address": "<IND_ADDR>",
   "transactions": [],
   "merkle_root": "<HASH>",
   "hash": "<HASH>",
@@ -232,7 +232,7 @@ Response fields include:
 {
   "ok": true,
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "genesis_hash": "db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4",
   "height": 197,
@@ -266,7 +266,7 @@ Returns the active network profile.
 ```json
 {
   "name": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "genesis_hash": "<HASH>"
 }
@@ -323,7 +323,7 @@ Important fields:
 ```json
 {
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "genesis_hash": "<HASH>",
   "height": 197,
@@ -336,19 +336,19 @@ Important fields:
   "min_difficulty": 1,
   "max_difficulty": 12,
   "coinbase_maturity": 100,
-  "total_supply": "9850 IDR",
-  "circulating_supply": "4850 IDR",
+  "total_supply": "9850 dIDR",
+  "circulating_supply": "4850 dIDR",
   "cumulative_work": 123456,
   "pending_tx_count": 0,
   "total_transactions": 197,
   "coinbase_transactions": 197,
   "normal_transactions": 0,
   "staking_enabled": true,
-  "min_stake_amount": "100 IDR",
-  "min_service_stake": "1000 IDR",
+  "min_stake_amount": "100 dIDR",
+  "min_service_stake": "1000 dIDR",
   "unbonding_period": 100,
-  "total_active_stake": "0 IDR",
-  "total_unlocking_stake": "0 IDR",
+  "total_active_stake": "0 dIDR",
+  "total_unlocking_stake": "0 dIDR",
   "active_stake_count": 0
 }
 ```
@@ -422,7 +422,7 @@ Response:
   "valid": true,
   "height": 197,
   "blocks": 198,
-  "total_supply": "9850 IDR"
+  "total_supply": "9850 dIDR"
 }
 ```
 
@@ -435,14 +435,14 @@ Returns confirmed, mature, immature, staking, and pending balances.
 Example:
 
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8811/balance/IDRD...
+Invoke-RestMethod http://127.0.0.1:8811/balance/INDD...
 ```
 
 Response:
 
 ```json
 {
-  "address": "IDRD...",
+  "address": "INDD...",
   "confirmed_balance": "100",
   "mature_balance": "100",
   "immature_balance": "0",
@@ -509,7 +509,7 @@ Wallet RPC endpoint. Lists local wallet addresses from the selected datadir.
 {
   "wallets": [
     {
-      "address": "IDRD...",
+      "address": "INDD...",
       "format": "base58check",
       "network": "testnet",
       "key_curve": "secp256k1",
@@ -528,7 +528,7 @@ Response:
 
 ```json
 {
-  "address": "IDRD...",
+  "address": "INDD...",
   "format": "base58check",
   "network": "testnet",
   "key_curve": "secp256k1"
@@ -543,8 +543,8 @@ Request:
 
 ```json
 {
-  "from": "<FROM_IDR_ADDR>",
-  "to": "<TO_IDR_ADDR>",
+  "from": "<FROM_IND_ADDR>",
+  "to": "<TO_IND_ADDR>",
   "amount": "100"
 }
 ```
@@ -556,10 +556,10 @@ Response:
   "status": "pending",
   "id": "<TX_ID>",
   "tx_id": "<TX_ID>",
-  "from": "<FROM_IDR_ADDR>",
-  "to": "<TO_IDR_ADDR>",
-  "amount": "100 IDR",
-  "fee": "0 IDR",
+  "from": "<FROM_IND_ADDR>",
+  "to": "<TO_IND_ADDR>",
+  "amount": "100 dIDR",
+  "fee": "0 dIDR",
   "nonce": 1,
   "broadcast": {}
 }
@@ -573,14 +573,14 @@ Notes:
 
 ## Mining
 
-### `GET /miner/template?address=<IDR_ADDR>`
+### `GET /miner/template?address=<IND_ADDR>`
 
 Returns a mining candidate block template for a reward address.
 
 Example:
 
 ```powershell
-Invoke-RestMethod "http://127.0.0.1:8811/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8811/miner/template?address=<IND_ADDR>"
 ```
 
 Response:
@@ -589,14 +589,14 @@ Response:
 {
   "template_id": "<TEMPLATE_ID>",
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "protocol_version": 1,
   "height": 198,
   "previous_hash": "<HASH>",
   "difficulty": 6,
   "target": "000000ffff...",
-  "reward_address": "<IDR_ADDR>",
+  "reward_address": "<IND_ADDR>",
   "coinbase_reward": "50",
   "timestamp": 1782050193,
   "transactions": [],
@@ -615,7 +615,7 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>"
+  "address": "<IND_ADDR>"
 }
 ```
 
@@ -634,7 +634,7 @@ Request:
     "timestamp": 1782050193,
     "nonce": 12345,
     "difficulty": 6,
-    "miner_address": "<IDR_ADDR>",
+    "miner_address": "<IND_ADDR>",
     "transactions": [],
     "merkle_root": "<HASH>",
     "hash": "<HASH>"
@@ -667,7 +667,7 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "blocks": 1,
   "max_nonce": 0,
   "verbose": false
@@ -694,14 +694,14 @@ Response:
 {
   "enabled": true,
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "faucet_address": "<FAUCET_ADDR>",
   "amount": "100",
   "max_per_address": "1000",
   "min_interval_seconds": 60,
   "mempool_pending": 0,
-  "note": "testnet faucet only; testnet IDR has no monetary value"
+  "note": "testnet faucet only; testnet dIDR has no monetary value"
 }
 ```
 
@@ -747,7 +747,7 @@ Common errors:
 | `faucet is testnet-only` | Faucet was requested on a non-testnet node. |
 | `invalid faucet address` | Configured faucet source is missing or wrong network. |
 | `invalid address` | Recipient address is invalid or wrong network. |
-| `insufficient mature faucet balance` | Faucet wallet does not have enough mature spendable IDR. |
+| `insufficient mature faucet balance` | Faucet wallet does not have enough mature spendable dIDR. |
 | `recipient rate limited` | Recipient requested too soon. |
 | `pending faucet tx already exists for address` | Recipient already has a pending faucet tx from the faucet. |
 | `recipient faucet daily limit exceeded` | Recipient exceeded configured daily limit. |
@@ -757,16 +757,16 @@ Common errors:
 Short controlled testnet sequence:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
 ```
 
-Expected service metadata: required stake `1000 IDR`, active stake `1000 IDR`, `stake_eligible: true`, `collateral_status: "eligible"`, and `eligible_simulated_points > 0`. Faucet, stake, and service flows do not mutate supply directly; supply changes only through mined coinbase rewards.
+Expected service metadata: required stake `1000 dIDR`, active stake `1000 dIDR`, `stake_eligible: true`, `collateral_status: "eligible"`, and `eligible_simulated_points > 0`. Faucet, stake, and service flows do not mutate supply directly; supply changes only through mined coinbase rewards.
 
 ## Staking
 
@@ -789,7 +789,7 @@ Returns staking parameters and summary.
 }
 ```
 
-### `GET /stake/list?address=<IDR_ADDR>`
+### `GET /stake/list?address=<IND_ADDR>`
 
 Lists stake records. The `address` query is optional.
 
@@ -801,7 +801,7 @@ Response:
   "stakes": [
     {
       "stake_id": "<STAKE_ID>",
-      "owner": "<IDR_ADDR>",
+      "owner": "<IND_ADDR>",
       "amount": "1000",
       "status": "active",
       "lock_height": 198,
@@ -825,7 +825,7 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "amount": "1000"
 }
 ```
@@ -837,7 +837,7 @@ Response:
   "ok": true,
   "tx_id": "<TX_ID>",
   "stake_id": "<STAKE_ID>",
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "amount": "1000",
   "status": "pending",
   "broadcast": {}
@@ -854,7 +854,7 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "stake_id": "<STAKE_ID>"
 }
 ```
@@ -874,7 +874,7 @@ Response:
 
 ## Service Node Simulation
 
-Service nodes are simulated/off-chain service-score records. Service points are not spendable IDR. Active staking collateral can make a service node eligible for simulated rewards/points, but this does not mint IDR.
+Service nodes are simulated/off-chain service-score records. Service points are not spendable dIDR. Active staking collateral can make a service node eligible for simulated rewards/points, but this does not mint dIDR.
 
 ### `POST /service/register`
 
@@ -884,11 +884,11 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "endpoint": "http://127.0.0.1:9701",
   "client_version": "dev",
   "platform": "windows",
-  "user_agent": "idrservice"
+  "user_agent": "indoservice"
 }
 ```
 
@@ -898,7 +898,7 @@ Response:
 {
   "ok": true,
   "service_node_id": "svc_...",
-  "owner_address": "<IDR_ADDR>",
+  "owner_address": "<IND_ADDR>",
   "status": "registered"
 }
 ```
@@ -922,7 +922,7 @@ Response:
   "abuse_penalty": 0,
   "service_score": 90,
   "flags": [],
-  "note": "service points are simulation only and are not spendable IDR"
+  "note": "service points are simulation only and are not spendable dIDR"
 }
 ```
 
@@ -934,7 +934,7 @@ Request:
 
 ```json
 {
-  "address": "<IDR_ADDR>"
+  "address": "<IND_ADDR>"
 }
 ```
 
@@ -944,7 +944,7 @@ Response:
 {
   "ok": true,
   "challenge_id": "<ID>",
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "issued_at": "<TIME>",
   "expires_at": "<TIME>",
   "nonce": "<NONCE>",
@@ -970,7 +970,7 @@ Request:
 
 Response contains updated score fields.
 
-### `GET /service/score?address=<IDR_ADDR>`
+### `GET /service/score?address=<IND_ADDR>`
 
 Returns score and collateral eligibility.
 
@@ -993,12 +993,12 @@ Response:
     "collateral_status": "none",
     "eligible_simulated_points": 0,
     "eligibility_note": "not eligible for service reward simulation until active stake >= required stake",
-    "note": "service points are simulation only and are not spendable IDR"
+    "note": "service points are simulation only and are not spendable dIDR"
   }
 }
 ```
 
-### `GET /service/rewards?address=<IDR_ADDR>`
+### `GET /service/rewards?address=<IND_ADDR>`
 
 Returns simulated reward/point records.
 
@@ -1020,7 +1020,7 @@ Response:
     {
       "url": "http://127.0.0.1:9811",
       "node_id": "<NODE_ID>",
-      "network_id": "idr-testnet-1",
+      "network_id": "ind-testnet-1",
       "chain_id": 777101,
       "genesis_hash": "<HASH>",
       "protocol_version": 1,
@@ -1199,7 +1199,7 @@ Response:
   "allowed": true,
   "reason": "peer has more cumulative work",
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "local_height": 10,
   "peer_height": 12,
@@ -1289,7 +1289,7 @@ Returns compact P2P health:
 {
   "ok": true,
   "network": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "genesis_hash": "<HASH>",
   "height": 197,
@@ -1305,7 +1305,7 @@ Returns profile and node identity used by peer validation.
 ```json
 {
   "network_name": "testnet",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101,
   "protocol_version": 1,
   "p2p_protocol_version": "1",
@@ -1329,14 +1329,14 @@ Phase 5.15 adds optional application-level Ed25519 authentication for node-to-no
 
 When a client uses an authenticated node identity, every P2P request carries:
 
-- `X-IDR-Auth-Version`
-- `X-IDR-Node-ID`
-- `X-IDR-Node-PubKey`
-- `X-IDR-Network-ID`
-- `X-IDR-Chain-ID`
-- `X-IDR-Auth-Timestamp`
-- `X-IDR-Auth-Nonce`
-- `X-IDR-Auth-Signature`
+- `X-dIDR-Auth-Version`
+- `X-dIDR-Node-ID`
+- `X-dIDR-Node-PubKey`
+- `X-dIDR-Network-ID`
+- `X-dIDR-Chain-ID`
+- `X-dIDR-Auth-Timestamp`
+- `X-dIDR-Auth-Nonce`
+- `X-dIDR-Auth-Signature`
 
 The signature binds the HTTP method, exact request URI, network, chain ID, timestamp, nonce, and SHA-256 digest of the request body. Nonces are replay-protected for the configured five-minute authentication window.
 
@@ -1388,7 +1388,7 @@ Returns block headers. Default limit is `100`; max limit is `500`.
       "difficulty": 6,
       "merkle_root": "<HASH>",
       "tx_count": 1,
-      "miner_address": "<IDR_ADDR>"
+      "miner_address": "<IND_ADDR>"
     }
   ]
 }
@@ -1472,7 +1472,7 @@ Request:
 {
   "url": "http://127.0.0.1:9811",
   "node_id": "<NODE_ID>",
-  "network_id": "idr-testnet-1",
+  "network_id": "ind-testnet-1",
   "chain_id": 777101
 }
 ```
@@ -1512,7 +1512,7 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8811/faucet/request -Conten
 ## Get miner template
 
 ```powershell
-Invoke-RestMethod "http://127.0.0.1:8811/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8811/miner/template?address=<IND_ADDR>"
 ```
 
 ## Submit peer check
@@ -1541,7 +1541,7 @@ The faucet is for dev/testnet only. It does not create funds directly. It requir
 
 ## Mining Safety
 
-`/mine` is a convenience dev endpoint. For normal mining use `idrminer` with `/miner/template` and `/miner/submit`.
+`/mine` is a convenience dev endpoint. For normal mining use `indominer` with `/miner/template` and `/miner/submit`.
 
 ## P2P Network Guard
 
@@ -1587,7 +1587,7 @@ For the v3 asset model:
 
 `GET /asset/balance?address=<address>&asset_id=<id>` returns an address's balance with the asset's decimals plus raw integer units.
 
-The v3 fee asset is native `IDR`. A token transfer therefore has an asset amount plus an IDR protocol fee. A non-sender fee payer is represented by the paymaster fields in the transaction envelope and must provide a valid authorization signature.
+The v3 fee asset is native `dIDR`. A token transfer therefore has an asset amount plus an dIDR protocol fee. A non-sender fee payer is represented by the paymaster fields in the transaction envelope and must provide a valid authorization signature.
 
 
 `GET /asset/balances?address=<address>` returns all non-zero native/token balances indexed for the address.
@@ -1597,7 +1597,7 @@ The v3 fee asset is native `IDR`. A token transfer therefore has an asset amount
 
 ### `GET /fee/policy`
 
-Returns the active fee policy. In v3 the fee asset is native IDR and the response includes the gas schedule, minimum fee, gas price, and per-transaction gas limit.
+Returns the active fee policy. In v3 the fee asset is native dIDR and the response includes the gas schedule, minimum fee, gas price, and per-transaction gas limit.
 
 Example:
 
@@ -1605,7 +1605,7 @@ Example:
 {
   "ok": true,
   "enabled": true,
-  "fee_asset_id": "IDR",
+  "fee_asset_id": "dIDR",
   "min_fee": 1,
   "min_gas_price": 0,
   "bytes_per_gas": 32,
@@ -1626,7 +1626,7 @@ Example:
 
 ### `POST /fee/estimate`
 
-Estimates gas and the minimum IDR fee for a transaction envelope.
+Estimates gas and the minimum dIDR fee for a transaction envelope.
 
 Request:
 
@@ -1653,13 +1653,13 @@ Response:
   "ok": true,
   "network": "testnet",
   "chain_id": 777101,
-  "fee_asset_id": "IDR",
+  "fee_asset_id": "dIDR",
   "quote": {
     "gas_units": 20,
     "tx_bytes": 160,
     "min_fee": 1,
     "requested_fee": 5,
-    "fee_asset_id": "IDR",
+    "fee_asset_id": "dIDR",
     "sufficient": true
   }
 }
@@ -1667,4 +1667,4 @@ Response:
 
 The exact `gas_units`, `tx_bytes`, and `min_fee` values depend on the active network fee policy and transaction signing envelope.
 
-For v3 issued-asset transfers, the default fee payer is the sender. A different fee payer must provide paymaster authorization, and that payer is charged in native IDR.
+For v3 issued-asset transfers, the default fee payer is the sender. A different fee payer must provide paymaster authorization, and that payer is charged in native dIDR.

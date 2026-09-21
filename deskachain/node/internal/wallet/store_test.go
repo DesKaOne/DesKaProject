@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	"deskachain/internal/crypto"
+	"indochain/internal/crypto"
 )
 
 func TestStoreConcurrentAddCreatesUniqueValidWallets(t *testing.T) {

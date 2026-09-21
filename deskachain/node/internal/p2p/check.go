@@ -3,8 +3,8 @@ package p2p
 import (
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 func CheckPeer(paths config.Paths, peer string) (Handshake, error) {

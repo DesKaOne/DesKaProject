@@ -1,12 +1,12 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
-  * cmd/idrservice/
+  * cmd/indochain/
+  * cmd/indominer/
+  * cmd/indoservice/
   * internal/
 
     * staking/
@@ -34,15 +34,15 @@ Status saat ini:
 * go test ./node/... pass.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif.
 * Coinbase maturity sudah aktif.
 * Standalone CPU miner sudah aktif.
 * Node public hardening sudah aktif.
 * Service node simulation sudah aktif.
-* idrservice agent sudah aktif.
+* indoservice agent sudah aktif.
 * Staking collateral sudah aktif:
 
   * stake lock
@@ -60,7 +60,7 @@ Status saat ini:
   * Phase ini harus menambah regression tests agar staking tidak gampang rusak di patch berikutnya.
 
 Nama patch:
-DesKaChain Phase 3.2.1 — Staking Regression Tests & Consensus Safety
+IndoChain Phase 3.2.1 — Staking Regression Tests & Consensus Safety
 
 Tujuan:
 Menambahkan test coverage permanen untuk staking/collateral agar aman sebelum lanjut fitur baru.
@@ -75,12 +75,12 @@ Phase ini fokus pada:
 * staking + public RPC safety,
 * no consensus mutation,
 * no PoS,
-* no staking reward IDR.
+* no staking reward dIDR.
 
 Prinsip penting:
 
 * Jangan ubah consensus behavior yang sudah valid.
-* Jangan ubah address format IDR.
+* Jangan ubah address format iND.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah coinbase maturity.
@@ -89,7 +89,7 @@ Prinsip penting:
 * Jangan implement validator.
 * Jangan implement slashing.
 * Jangan implement delegation.
-* Jangan implement staking reward IDR.
+* Jangan implement staking reward dIDR.
 * Jangan rewrite besar.
 * Patch ini mayoritas test dan safety fix kecil saja.
 * Semua command lama harus tetap bekerja.
@@ -114,8 +114,8 @@ Minimal test coverage:
 1. TestLocalnetStakingParams
 
 * staking enabled true.
-* min stake amount = 10 IDR.
-* min service stake = 100 IDR.
+* min stake amount = 10 dIDR.
+* min service stake = 100 dIDR.
 * unbonding period = 10 blocks.
 * max active stakes per address sesuai config.
 
@@ -143,7 +143,7 @@ Minimal test coverage:
 
 * amount < min stake rejected.
 
-6. TestDuplicateStakeIDRejected
+6. TestDuplicateStakeINDejected
 
 * stake id sama tidak boleh double active.
 
@@ -190,9 +190,9 @@ Tests:
 2. TestStakeLockAfterMaturityAccepted
 
 * mine sampai height minimal 11.
-* mature 50 IDR.
-* stake lock 10 IDR accepted.
-* after mined, active stake 10 IDR.
+* mature 50 dIDR.
+* stake lock 10 dIDR accepted.
+* after mined, active stake 10 dIDR.
 
 3. TestActiveStakeReducesSpendable
 
@@ -415,8 +415,8 @@ Tests:
 * active stake 100.
 * service score shows:
 
-  * required stake 100 IDR
-  * active stake 100 IDR
+  * required stake 100 dIDR
+  * active stake 100 dIDR
   * stake_eligible true
   * collateral_status eligible
   * eligible simulated points equals simulated points.
@@ -437,9 +437,9 @@ Tests:
 * released stake does not count as active collateral.
 * stake_eligible false.
 
-5. TestServicePointsStillNotIDR
+5. TestServicePointsStillNotIND
 
-* service score/rewards do not change IDR balance.
+* service score/rewards do not change dIDR balance.
 * total supply unchanged.
 
 ==================================================
@@ -558,7 +558,7 @@ Tambahkan note:
 * No PoS.
 * No validator set.
 * No staking APY.
-* No IDR staking reward.
+* No dIDR staking reward.
 * No slashing in this phase.
 
 ==================================================
@@ -588,28 +588,28 @@ Expected:
 
 Manual quick regression:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake_reg dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/stake_reg init
-go run ./node/cmd/deskachain --datadir ./testdata/stake_reg wallet new
+go run ./node/cmd/indochain --datadir ./testdata/stake_reg dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/stake_reg init
+go run ./node/cmd/indochain --datadir ./testdata/stake_reg wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake_reg node start --rpc :8491 --p2p :9491 --advertise-p2p http://127.0.0.1:9491
+go run ./node/cmd/indochain --datadir ./testdata/stake_reg node start --rpc :8491 --p2p :9491 --advertise-p2p http://127.0.0.1:9491
 
 Mine:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --threads 4 --max-blocks 12
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8491 --address <IND_ADDR> --threads 4 --max-blocks 12
 
 Stake:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake lock --address <IDR_ADDR> --amount 100
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 stake lock --address <IND_ADDR> --amount 100
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8491 --address <IND_ADDR> --threads 4 --once
 
 Check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 balance <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 stake list --address <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 balance <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 stake list --address <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 chain validate
 
 Expected:
 
@@ -619,30 +619,30 @@ Expected:
 
 Service eligibility quick:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8491 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8491 service score --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 service register --address <IND_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8491 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8491 service score --address <IND_ADDR>
 
 Expected:
 
-* required stake: 100 IDR
-* active stake: 100 IDR
+* required stake: 100 dIDR
+* active stake: 100 dIDR
 * stake eligible: true
 * collateral status: eligible
 
 Public RPC quick:
 
-go run ./node/cmd/deskachain --datadir ./testdata/stake_reg_pub node start --rpc :8501 --p2p :9501 --advertise-p2p http://127.0.0.1:9501 --public-rpc
+go run ./node/cmd/indochain --datadir ./testdata/stake_reg_pub node start --rpc :8501 --p2p :9501 --advertise-p2p http://127.0.0.1:9501 --public-rpc
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8501 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8501 stake info
 
 Expected:
 
 * works
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8501 stake lock --address <IDR_ADDR> --amount 10
+  go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8501 stake lock --address <IND_ADDR> --amount 10
 
 Expected:
 

@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestExplorerUIStaticRoutes(t *testing.T) {
 	_, server := newProfileRPCServer(t, config.Testnet())
 
 	index := getText(t, server.URL+"/explorer-ui", http.StatusOK)
-	if !strings.Contains(index, "DesKaChain Explorer") || !strings.Contains(index, `id="app"`) {
+	if !strings.Contains(index, "IndoChain Explorer") || !strings.Contains(index, `id="app"`) {
 		t.Fatalf("index missing app shell: %s", index)
 	}
 	indexSlash := getText(t, server.URL+"/explorer-ui/", http.StatusOK)

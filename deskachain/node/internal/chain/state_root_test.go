@@ -3,10 +3,10 @@ package chain
 import (
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/state"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestCanonicalBlockStateRootValidatesFromPreBlockState(t *testing.T) {
