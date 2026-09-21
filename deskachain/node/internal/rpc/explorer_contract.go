@@ -46,6 +46,8 @@ type ExplorerIndexerStats struct {
 	LastSyncDurationMs  int64   `json:"last_sync_duration_ms"`
 	LastSyncBlockCount  int     `json:"last_sync_block_count"`
 	BlocksPerSecond     float64 `json:"blocks_per_second"`
+	SyncFailureCount    uint64  `json:"sync_failure_count"`
+	LastSyncError       string  `json:"last_sync_error,omitempty"`
 }
 
 type ExplorerContract struct {
