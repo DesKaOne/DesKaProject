@@ -75,7 +75,11 @@
   }
 
   function setError(message) {
-    app.innerHTML = panel("Explorer error", '<p class="error">' + escapeHTML(message) + "</p>");
+    app.innerHTML = panel("Explorer error",
+      '<div class="error-state">' +
+      '<p class="error">' + escapeHTML(message) + "</p>" +
+      '<div class="toolbar"><button type="button" class="primary" data-refresh="dashboard">Back to dashboard</button></div>" +
+      "</div>");
   }
 
   function friendlyError(err, fallback) {
@@ -487,7 +491,7 @@
   function runSearch(q) {
     q = String(q || "").trim();
     if (!q) {
-      setError("Enter a block height, block hash, transaction id, or iND address.");
+      setError("Enter a block height, block hash, transaction id, iND address, or indexed asset ID.");
       return;
     }
     input.value = q;
@@ -495,7 +499,7 @@
     jsonFetch("/explorer/indexed/search?q=" + encodeURIComponent(q)).then(function (data) {
       var results = data.results || [];
       if (!results.length) {
-        setError("No explorer result found.");
+        setError("No explorer result found. Try a block height, block hash, transaction id, iND address, or indexed asset ID.");
         return;
       }
       window.location.hash = routeFromExplorerPath(results[0].path);
@@ -535,6 +539,7 @@
     var refresh = event.target.closest("[data-refresh]");
     if (refresh && refresh.getAttribute("data-refresh") === "dashboard") {
       event.preventDefault();
+      window.location.hash = "#/";
       renderDashboard();
       return;
     }
