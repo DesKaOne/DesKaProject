@@ -54,4 +54,4 @@ The persistent explorer indexer runs in the RPC server lifecycle and advances it
 
 ### Phase 8.4 soak metrics
 
-The persistent indexer exposes `GET /explorer/indexer/stats` with indexed/chain height, lag, readiness, record counts, sync count, last sync timestamp, last sync duration, last sync block count, and blocks-per-second. Sync metrics are persisted in the explorer `meta` bucket so they survive RPC restarts and can be used during testnet soak monitoring. Metrics describe the explorer read model only and do not participate in consensus.
+The persistent indexer exposes `GET /explorer/indexer/stats` with indexed/chain height, lag, readiness, record counts, sync count, last sync timestamp, last sync duration, last sync block count, and blocks-per-second. Sync metrics are persisted in the explorer `meta` bucket so they survive RPC restarts and can be used during testnet soak monitoring. Metrics describe the explorer read model only and do not participate in consensus. Sync failures are also persisted with a failure count and the latest error string so a long-running testnet soak can distinguish healthy idle syncs from repeated indexing failures.
