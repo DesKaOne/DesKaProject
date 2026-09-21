@@ -25,6 +25,10 @@ func TestBackendWalletSendRelayShape(t *testing.T) {
 		"from": "from",
 		"to": "to",
 		"amount": 1,
+		"fee": 1,
+		"nonce": 1,
+		"public_key": "pub",
+		"signature": "sig",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -44,8 +48,6 @@ func TestBackendRejectsPrivateKeyPayload(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	// The client itself is intentionally generic; the rejection belongs to the
-	// backend HTTP handler and is covered by the handler-level integration test.
 	s := &server{rpc: client.New(srv.URL)}
 	req := httptest.NewRequest(http.MethodPost, "/v1/tx/send", strings.NewReader(`{"private_key":"secret","from":"A","to":"B"}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -53,5 +55,47 @@ func TestBackendRejectsPrivateKeyPayload(t *testing.T) {
 	s.send(rec, req)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestBackendRejectsUnsignedPayload(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatalf("unsigned payload must not reach upstream")
+	}))
+	defer srv.Close()
+
+	s := &server{rpc: client.New(srv.URL)}
+	req := httptest.NewRequest(http.MethodPost, "/v1/tx/send", strings.NewReader(`{"version":3,"from":"A","to":"B","amount":1,"fee":1,"nonce":1}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	s.send(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestBackendRelaysSignedShape(t *testing.T) {
+	called := false
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		if r.URL.Path != "/send" {
+			t.Fatalf("unexpected path: %s", r.URL.Path)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"ok":true,"tx_id":"signed-1"}`))
+	}))
+	defer srv.Close()
+
+	s := &server{rpc: client.New(srv.URL)}
+	req := httptest.NewRequest(http.MethodPost, "/v1/tx/send", strings.NewReader(`{"version":3,"from":"A","to":"B","amount":1,"fee":1,"nonce":1,"public_key":"pub","signature":"sig"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	s.send(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
+	}
+	if !called {
+		t.Fatal("signed payload was not relayed")
 	}
 }
