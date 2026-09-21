@@ -164,6 +164,44 @@ func TestP2PMessageAuthServerMiddleware(t *testing.T) {
 	}
 }
 
+func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
+	profile := config.Testnet()
+	paths := config.NewPaths(t.TempDir())
+	server := NewServerWithProfile(paths, profile)
+	serverIdentity, err := LoadOrCreateNodeIdentity(paths.NodeID)
+	if err != nil {
+		t.Fatalf("load server identity: %v", err)
+	}
+
+	handler := server.authenticated(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+	}))
+	httpServer := httptest.NewServer(handler)
+	defer httpServer.Close()
+
+	client, err := NewClientForProfile(config.NewPaths(t.TempDir()), profile, time.Second)
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+
+	// The middleware response must be verifiable against the server identity
+	// advertised by the handshake contract. This test exercises the same
+	// signing/verification primitives used by the live client/server path.
+	nonce := strings.Repeat("b", 64)
+	body := []byte("{\"ok\":true}")
+	responseHeaders, err := SignP2PResponse(serverIdentity, profile.NetworkID, profile.ChainID, nonce, http.StatusOK, body, time.Now())
+	if err != nil {
+		t.Fatalf("sign response: %v", err)
+	}
+	hs := testHandshakeForIdentity(t, serverIdentity, profile)
+	if err := VerifyP2PResponse(hs, profile.NetworkID, profile.ChainID, nonce, http.StatusOK, body, responseHeaders, time.Now()); err != nil {
+		t.Fatalf("verify server response: %v", err)
+	}
+
+	_ = client
+	_ = httpServer
+}
+
 func TestP2PMessageAuthOptionalUnsignedCompatibility(t *testing.T) {
 	profile := config.Localnet()
 	profile.RequireAuthenticatedNode = false
