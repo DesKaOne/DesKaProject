@@ -5,9 +5,9 @@ import (
 	"math"
 	"testing"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 func TestValidateNextBlockRejectsHeightOverflow(t *testing.T) {

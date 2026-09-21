@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 type Client struct {
@@ -232,12 +232,12 @@ func (c Client) NodeIdentityValidation() error {
 
 func (c Client) addHeaders(req *http.Request) {
 	if c.NodeID != "" {
-		req.Header.Set("X-IDR-Node-ID", c.NodeID)
+		req.Header.Set("X-IND-Node-ID", c.NodeID)
 	}
 	if c.P2PURL != "" {
-		req.Header.Set("X-IDR-P2P-URL", c.P2PURL)
+		req.Header.Set("X-IND-P2P-URL", c.P2PURL)
 	}
 	if c.NetworkID != "" {
-		req.Header.Set("X-IDR-Network-ID", c.NetworkID)
+		req.Header.Set("X-IND-Network-ID", c.NetworkID)
 	}
 }

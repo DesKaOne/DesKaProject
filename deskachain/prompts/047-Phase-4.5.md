@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -23,14 +23,14 @@ Status saat ini:
   * admin_rpc=false
   * faucet_rpc=false by default
   * service_rpc=false by default
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.5 — Explorer UX Polish + API Pagination/Search Hardening
+IndoChain Phase 4.5 — Explorer UX Polish + API Pagination/Search Hardening
 
 Goal:
 Polish the public testnet explorer UI and harden read-only explorer API behavior for public usage.
@@ -83,14 +83,14 @@ Search should detect:
 * block height integer,
 * block hash,
 * txid,
-* IDR address.
+* dIDR address.
 
 Behavior:
 
 * Numeric query:
 
   * search block by height.
-* IDR address:
+* dIDR address:
 
   * validate active network.
   * return address result.
@@ -229,7 +229,7 @@ Requirements:
 * Search by block height.
 * Search by block hash.
 * Search by txid.
-* Search by IDR address.
+* Search by dIDR address.
 * Enter key submits.
 * Search button submits.
 * Loading state while searching.
@@ -242,7 +242,7 @@ If `/explorer/search` exists, use it.
 If not, implement frontend fallback:
 
 * numeric -> block page.
-* IDR address -> address page.
+* dIDR address -> address page.
 * hash -> try tx then block.
 
 No write actions.
@@ -401,7 +401,7 @@ Document:
   * max limit
 * Error format.
 * Read-only safety.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet not available.
 * Service points simulation-only.
 * Staking collateral-only.
@@ -472,7 +472,7 @@ Manual checks:
   * height
   * block hash
   * txid
-  * IDR address
+  * dIDR address
 * Invalid search shows friendly error.
 * Not found shows friendly error.
 * Copy buttons work.
@@ -488,7 +488,7 @@ curl "http://127.0.0.1:9311/explorer/blocks?limit=-1"
 curl "http://127.0.0.1:9311/explorer/address/<ADDR>/txs?limit=1&offset=1"
 
 Safety:
-deskachain --rpc-url http://127.0.0.1:9311 wallet new
+indochain --rpc-url http://127.0.0.1:9311 wallet new
 
 Expected:
 

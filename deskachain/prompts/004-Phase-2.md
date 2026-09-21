@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -9,19 +9,19 @@ Status saat ini:
 * init, dev reset, wallet, mine, send, mempool, balance, chain info, chain validate sudah berjalan.
 * Transfer antar wallet sudah terbukti:
 
-  * Wallet A mining 3 block = 150 IDR.
-  * Wallet A kirim 10 IDR ke Wallet B.
+  * Wallet A mining 3 block = 150 dIDR.
+  * Wallet A kirim 10 dIDR ke Wallet B.
   * Wallet A mining 1 block lagi.
-  * Wallet A akhir = 190 IDR.
-  * Wallet B akhir = 10 IDR.
-  * Total supply = 200 IDR.
+  * Wallet A akhir = 190 dIDR.
+  * Wallet B akhir = 10 dIDR.
+  * Total supply = 200 dIDR.
   * Chain valid.
 
 Nama patch:
-DesKaChain Phase 2 — Local P2P Multi Node Sync
+IndoChain Phase 2 — Local P2P Multi Node Sync
 
 Tujuan utama:
-Membuat beberapa node DesKaChain lokal dapat saling terhubung, sinkronisasi block, broadcast transaksi, dan broadcast block hasil mining.
+Membuat beberapa node IndoChain lokal dapat saling terhubung, sinkronisasi block, broadcast transaksi, dan broadcast block hasil mining.
 
 Aturan penting:
 
@@ -35,7 +35,7 @@ Aturan penting:
 * Semua tetap harus lolos:
   go mod tidy
   go test ./...
-  go run ./node/cmd/deskachain
+  go run ./node/cmd/indochain
 
 ==================================================
 
@@ -121,9 +121,9 @@ Default:
 
 Contoh:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Perilaku:
 
@@ -196,7 +196,7 @@ GET /p2p/health
 Response:
 {
 "ok": true,
-"network": "deskachain-local",
+"network": "indochain-local",
 "height": 4,
 "tip_hash": "..."
 }
@@ -204,11 +204,11 @@ Response:
 GET /p2p/status
 Response:
 {
-"network": "deskachain-local",
+"network": "indochain-local",
 "height": 4,
 "tip_hash": "...",
 "difficulty": 4,
-"total_supply": "200 IDR",
+"total_supply": "200 dIDR",
 "mempool_count": 0
 }
 
@@ -523,36 +523,36 @@ Tambahkan contoh menjalankan 2 node lokal di Windows PowerShell.
 
 Persiapan:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
 
 Init dan buat wallet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
 
 Simpan address miner node1.
 
 Start node1 terminal pertama:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Start node2 terminal kedua:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Mining dari terminal ketiga:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
+go run ./node/cmd/indochain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
 
 Manual sync node2:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
 Cek node2:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node2 chain info
-go run ./node/cmd/deskachain --datadir ./testdata/node2 chain validate
+go run ./node/cmd/indochain --datadir ./testdata/node2 chain info
+go run ./node/cmd/indochain --datadir ./testdata/node2 chain validate
 
 Expected:
 
@@ -589,32 +589,32 @@ go test ./...
 
 Manual test lokal:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
+go run ./node/cmd/indochain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
 
 Sync node2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer add http://127.0.0.1:9331
-go run ./node/cmd/deskachain --datadir ./testdata/node2 peer sync
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer add http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 peer sync
 
 Cek:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 chain info
-go run ./node/cmd/deskachain --datadir ./testdata/node2 chain info
-go run ./node/cmd/deskachain --datadir ./testdata/node2 chain validate
+go run ./node/cmd/indochain --datadir ./testdata/node1 chain info
+go run ./node/cmd/indochain --datadir ./testdata/node2 chain info
+go run ./node/cmd/indochain --datadir ./testdata/node2 chain validate
 
 Expected:
 

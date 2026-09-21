@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strings"
 
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/types"
 )
 
 type MineOptions struct {

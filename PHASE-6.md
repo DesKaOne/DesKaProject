@@ -1,16 +1,16 @@
 # Phase 6 — Production Readiness
 
-Phase 6 hardens the merged DesKaChain v3 protocol before external testnet use.
+Phase 6 hardens the merged IndoChain v3 protocol before external testnet use.
 
 ## Frozen v3 invariants
 
-- Native asset: **IDR**
-- Fee asset: **IDR**
+- Native asset: **dIDR**
+- Fee asset: **dIDR**
 - Native asset precision: **8 decimal units**
 - Transaction version: **3**
 - Block version: **1**
 - RPC API: **v1**
-- P2P protocol: **idr-p2p/1**
+- P2P protocol: **ind-p2p/1**
 - Economics: **fee-only blocks**
 - Block subsidy: **0**
 - User-issued assets: enabled

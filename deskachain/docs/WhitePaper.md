@@ -1,30 +1,30 @@
-# WhitePaper DesKaChain
+# WhitePaper IndoChain
 
 ## Versi Testnet — Draft v0.1
 
 **Status:** Draft awal untuk fase testnet
-**Nama proyek:** DesKaChain
-**Ticker sementara:** IDR
+**Nama proyek:** IndoChain
+**Ticker sementara:** dIDR
 **Jenis jaringan:** Blockchain native berbasis komunitas
-**Status ekonomi:** Testnet IDR tidak memiliki nilai ekonomi
+**Status ekonomi:** Testnet dIDR tidak memiliki nilai ekonomi
 
 ---
 
 # 1. Ringkasan
 
-DesKaChain adalah proyek blockchain native yang dirancang sebagai jaringan terbuka, ringan, dan dapat diikuti oleh komunitas melalui node, mining, wallet, serta layanan jaringan tambahan seperti service node berbasis bandwidth.
+IndoChain adalah proyek blockchain native yang dirancang sebagai jaringan terbuka, ringan, dan dapat diikuti oleh komunitas melalui node, mining, wallet, serta layanan jaringan tambahan seperti service node berbasis bandwidth.
 
-Pada tahap awal, DesKaChain menggunakan mekanisme Proof-of-Work sebagai fondasi keamanan jaringan. Mining dilakukan untuk membuat block, memvalidasi transaksi, dan menjaga integritas chain. Selain mining block, DesKaChain juga merencanakan konsep service node yang dapat berkontribusi melalui uptime, latency, dan bandwidth yang diverifikasi.
+Pada tahap awal, IndoChain menggunakan mekanisme Proof-of-Work sebagai fondasi keamanan jaringan. Mining dilakukan untuk membuat block, memvalidasi transaksi, dan menjaga integritas chain. Selain mining block, IndoChain juga merencanakan konsep service node yang dapat berkontribusi melalui uptime, latency, dan bandwidth yang diverifikasi.
 
 Fase testnet digunakan untuk menguji stabilitas node, mining, wallet, transaksi, P2P network, fork handling, reorg, explorer, faucet, dan mekanisme reward testnet. Seluruh coin di testnet tidak memiliki nilai ekonomi, tidak dijanjikan dapat diperdagangkan, dan tidak boleh dianggap sebagai aset bernilai.
 
-DesKaChain dirancang dengan prinsip jangka panjang: membangun jaringan yang sehat, transparan, dapat dimining, dapat digunakan, dan tidak bergantung pada skema harga, yield tetap, atau model ekonomi yang rawan runtuh.
+IndoChain dirancang dengan prinsip jangka panjang: membangun jaringan yang sehat, transparan, dapat dimining, dapat digunakan, dan tidak bergantung pada skema harga, yield tetap, atau model ekonomi yang rawan runtuh.
 
 ---
 
 # 2. Visi
 
-Visi DesKaChain adalah membangun blockchain komunitas yang:
+Visi IndoChain adalah membangun blockchain komunitas yang:
 
 * dapat dijalankan secara terbuka,
 * dapat dimining oleh perangkat umum,
@@ -34,31 +34,31 @@ Visi DesKaChain adalah membangun blockchain komunitas yang:
 * memiliki testnet publik yang aktif,
 * dan berkembang secara bertahap menuju mainnet yang stabil.
 
-DesKaChain tidak dirancang sebagai skema cepat kaya, token yield, atau stablecoin algoritmik. Nilai utama jaringan berasal dari utilitas, partisipasi node, mining, komunitas, dan pengembangan ekosistem.
+IndoChain tidak dirancang sebagai skema cepat kaya, token yield, atau stablecoin algoritmik. Nilai utama jaringan berasal dari utilitas, partisipasi node, mining, komunitas, dan pengembangan ekosistem.
 
 ---
 
 # 3. Prinsip Dasar
 
-DesKaChain mengikuti beberapa prinsip utama:
+IndoChain mengikuti beberapa prinsip utama:
 
 ## 3.1 Fair Launch
 
-Mainnet DesKaChain direncanakan menggunakan prinsip peluncuran yang transparan. Distribusi coin harus dijelaskan sejak awal melalui dokumen tokenomics dan genesis final.
+Mainnet IndoChain direncanakan menggunakan prinsip peluncuran yang transparan. Distribusi coin harus dijelaskan sejak awal melalui dokumen tokenomics dan genesis final.
 
 ## 3.2 Tidak Ada Janji Harga
 
-DesKaChain tidak menjanjikan harga, keuntungan, APY tetap, atau return finansial apa pun. Harga pasar, jika suatu hari terbentuk, sepenuhnya ditentukan oleh mekanisme pasar dan utilitas jaringan.
+IndoChain tidak menjanjikan harga, keuntungan, APY tetap, atau return finansial apa pun. Harga pasar, jika suatu hari terbentuk, sepenuhnya ditentukan oleh mekanisme pasar dan utilitas jaringan.
 
 ## 3.3 Testnet Tidak Bernilai Ekonomi
 
-Coin di testnet hanya digunakan untuk pengujian. Testnet IDR tidak memiliki harga, tidak boleh dijual, tidak boleh dianggap sebagai aset, dan tidak memiliki jaminan konversi otomatis ke mainnet.
+Coin di testnet hanya digunakan untuk pengujian. Testnet dIDR tidak memiliki harga, tidak boleh dijual, tidak boleh dianggap sebagai aset, dan tidak memiliki jaminan konversi otomatis ke mainnet.
 
 ## 3.3.1 Fondasi Protocol Phase 2.6.6
 
-Address wallet baru DesKaChain memakai format `IDR` + Base58Check dengan payload `version byte + HASH160(compressed secp256k1 public key)`. Private key disimpan dan diexport sebagai raw 32-byte scalar hex. Address dev lama hanya didukung untuk kompatibilitas localnet/dev dan tidak menjadi format public testnet atau mainnet.
+Address wallet baru IndoChain memakai format `iND` + Base58Check dengan payload `version byte + HASH160(compressed secp256k1 public key)`. Private key disimpan dan diexport sebagai raw 32-byte scalar hex. Address dev lama hanya didukung untuk kompatibilitas localnet/dev dan tidak menjadi format public testnet atau mainnet.
 
-Network profile awal terdiri dari localnet, testnet, dan mainnet dengan chain id, network id, dan address version yang berbeda. Protocol version awal adalah `1`, P2P protocol version `idr-p2p/1`, dan RPC API version `v1`.
+Network profile awal terdiri dari localnet, testnet, dan mainnet dengan chain id, network id, dan address version yang berbeda. Protocol version awal adalah `1`, P2P protocol version `ind-p2p/1`, dan RPC API version `v1`.
 
 ## 3.4 Keamanan Sebelum Ekspansi
 
@@ -66,7 +66,7 @@ Fitur seperti wallet, explorer, miner desktop, bandwidth service node, staking, 
 
 ## 3.5 Tidak Menggunakan Model Luna
 
-DesKaChain tidak menggunakan stablecoin algoritmik, tidak menggunakan mint/burn untuk mempertahankan peg, tidak menjanjikan yield tinggi, dan tidak membuat sistem ekonomi yang bergantung pada pertumbuhan harga secara terus-menerus.
+IndoChain tidak menggunakan stablecoin algoritmik, tidak menggunakan mint/burn untuk mempertahankan peg, tidak menjanjikan yield tinggi, dan tidak membuat sistem ekonomi yang bergantung pada pertumbuhan harga secara terus-menerus.
 
 ---
 
@@ -74,7 +74,7 @@ DesKaChain tidak menggunakan stablecoin algoritmik, tidak menggunakan mint/burn 
 
 Banyak proyek blockchain kecil gagal karena terlalu cepat mengejar hype, listing, harga, atau skema reward tanpa fondasi teknis yang kuat. Akibatnya, jaringan tidak memiliki node sehat, wallet tidak stabil, explorer tidak tersedia, dan ekonomi token menjadi rapuh.
 
-DesKaChain mencoba membangun dari bawah:
+IndoChain mencoba membangun dari bawah:
 
 1. Core blockchain terlebih dahulu.
 2. P2P network yang stabil.
@@ -89,7 +89,7 @@ DesKaChain mencoba membangun dari bawah:
 
 # 5. Gambaran Teknis
 
-DesKaChain adalah blockchain account-based yang menyimpan saldo berdasarkan address. Pada fase awal, jaringan memiliki fitur:
+IndoChain adalah blockchain account-based yang menyimpan saldo berdasarkan address. Pada fase awal, jaringan memiliki fitur:
 
 * genesis block,
 * block validation,
@@ -124,7 +124,7 @@ Arsitektur awal terdiri dari:
 
 # 6. Consensus Awal
 
-Pada tahap testnet, DesKaChain menggunakan Proof-of-Work sebagai mekanisme dasar untuk membuat block.
+Pada tahap testnet, IndoChain menggunakan Proof-of-Work sebagai mekanisme dasar untuk membuat block.
 
 Proof-of-Work dipilih karena:
 
@@ -134,13 +134,13 @@ Proof-of-Work dipilih karena:
 * dapat diuji secara lokal maupun publik,
 * dan menjadi fondasi yang lebih mudah dibanding langsung memulai dengan PoS penuh.
 
-Difficulty mining dikembangkan bertahap. Sejak Phase 2.7, DesKaChain memakai difficulty adjustment sederhana berdasarkan target block time dan retarget window. Localnet memakai target block time 10 detik, retarget window 10 block, dan perubahan difficulty konservatif maksimal 1 per window.
+Difficulty mining dikembangkan bertahap. Sejak Phase 2.7, IndoChain memakai difficulty adjustment sederhana berdasarkan target block time dan retarget window. Localnet memakai target block time 10 detik, retarget window 10 block, dan perubahan difficulty konservatif maksimal 1 per window.
 
 ---
 
 # 7. Mining
 
-DesKaChain merencanakan dua jenis kontribusi jaringan:
+IndoChain merencanakan dua jenis kontribusi jaringan:
 
 ## 7.1 Block Mining
 
@@ -167,7 +167,7 @@ GPU mining akan diteliti setelah CPU miner stabil dan algoritma PoW sudah lebih 
 
 ## 7.2 Bandwidth / Service Node
 
-Selain block mining, DesKaChain merencanakan service node berbasis kontribusi jaringan seperti:
+Selain block mining, IndoChain merencanakan service node berbasis kontribusi jaringan seperti:
 
 * uptime,
 * latency,
@@ -191,7 +191,7 @@ Service node akan diuji terlebih dahulu pada testnet dan reward-nya akan bersifa
 
 # 8. Staking dan PoS
 
-DesKaChain mempertimbangkan staking sebagai fitur masa depan, tetapi tidak langsung menjadikan staking sebagai consensus utama.
+IndoChain mempertimbangkan staking sebagai fitur masa depan, tetapi tidak langsung menjadikan staking sebagai consensus utama.
 
 Pada tahap awal, staking lebih cocok digunakan sebagai:
 
@@ -202,23 +202,23 @@ Pada tahap awal, staking lebih cocok digunakan sebagai:
 
 PoS penuh membutuhkan desain yang jauh lebih kompleks, termasuk validator set, slashing, epoch, finality, delegation, randomness, downtime penalty, dan perlindungan terhadap long-range attack.
 
-Karena itu, DesKaChain akan memulai dari:
+Karena itu, IndoChain akan memulai dari:
 
 1. PoW sebagai fondasi chain.
 2. Staking sebagai module ekonomi/collateral.
 3. PoS atau hybrid consensus sebagai riset lanjutan.
 
-Staking DesKaChain tidak boleh dipasarkan sebagai janji profit atau APY tetap.
+Staking IndoChain tidak boleh dipasarkan sebagai janji profit atau APY tetap.
 
 ---
 
 # 9. Address dan Wallet
 
-DesKaChain akan menggunakan format address final sebelum public testnet.
+IndoChain akan menggunakan format address final sebelum public testnet.
 
 Rencana address:
 
-* prefix: `IDR`,
+* prefix: `iND`,
 * encoding: Base58Check,
 * payload: version byte + public key hash + checksum,
 * private key: raw 32-byte hex.
@@ -239,7 +239,7 @@ Sebelum wallet publik dirilis, format address harus sudah final agar tidak terja
 
 # 10. Tokenomics Awal
 
-Tokenomics final DesKaChain akan ditentukan sebelum mainnet. Pada fase testnet, angka-angka berikut masih dapat berubah.
+Tokenomics final IndoChain akan ditentukan sebelum mainnet. Pada fase testnet, angka-angka berikut masih dapat berubah.
 
 Prinsip tokenomics:
 
@@ -255,7 +255,7 @@ Reward awal localnet/testnet digunakan hanya untuk pengujian.
 
 Contoh parameter sementara:
 
-* block reward: 50 IDR,
+* block reward: 50 dIDR,
 * decimals: 8,
 * coinbase maturity: aktif sejak Phase 2.8,
 * dynamic difficulty: aktif sejak Phase 2.7 untuk localnet/testnet,
@@ -267,7 +267,7 @@ Contoh parameter sementara:
 
 # 11. Testnet
 
-Testnet DesKaChain adalah jaringan pengujian publik sebelum mainnet. Tujuannya adalah menguji:
+Testnet IndoChain adalah jaringan pengujian publik sebelum mainnet. Tujuannya adalah menguji:
 
 * node,
 * mining,
@@ -290,9 +290,9 @@ Coin testnet tidak memiliki nilai ekonomi.
 
 # 12. Program Klaim Mainnet Terbatas
 
-DesKaChain dapat menyediakan program klaim mainnet terbatas untuk menghargai partisipasi komunitas pada fase testnet.
+IndoChain dapat menyediakan program klaim mainnet terbatas untuk menghargai partisipasi komunitas pada fase testnet.
 
-Program ini bukan berarti coin testnet memiliki harga. Testnet IDR tetap tidak bernilai ekonomi.
+Program ini bukan berarti coin testnet memiliki harga. Testnet dIDR tetap tidak bernilai ekonomi.
 
 Program klaim dapat menggunakan prinsip:
 
@@ -320,7 +320,7 @@ Aturan detail program klaim akan diumumkan sebelum public testnet atau sebelum m
 
 # 13. Anti-Abuse
 
-Karena testnet mining dapat dilakukan secara bebas, DesKaChain perlu menerapkan anti-abuse untuk mencegah farming tidak sehat.
+Karena testnet mining dapat dilakukan secara bebas, IndoChain perlu menerapkan anti-abuse untuk mencegah farming tidak sehat.
 
 Potensi abuse:
 
@@ -389,11 +389,11 @@ Status: rencana berikutnya.
 * Runtime safety cleanup
 * Improved `.gitignore`
 
-## Phase 2.6.6 — Protocol Spec Freeze & IDR Address Migration
+## Phase 2.6.6 — Protocol Spec Freeze & iND Address Migration
 
 Status: implemented.
 
-* IDR Base58Check address
+* iND Base58Check address
 * Private key hex
 * Protocol versioning
 * Network profiles
@@ -450,9 +450,9 @@ Status: implemented.
 
 Status: research/planned.
 
-Phase 3.0 adds a service-node research layer only. Service nodes can register, heartbeat, submit simulated challenge measurements, receive service scores, and accumulate simulated service points. Phase 3.1 adds a standalone `idrservice` safe-mode agent that automates those RPC calls and stores local agent state. These points are not IDR, are not spendable, and do not affect consensus, PoW difficulty, cumulative work, supply, coinbase rewards, balances, or chain validation.
+Phase 3.0 adds a service-node research layer only. Service nodes can register, heartbeat, submit simulated challenge measurements, receive service scores, and accumulate simulated service points. Phase 3.1 adds a standalone `indoservice` safe-mode agent that automates those RPC calls and stores local agent state. These points are not dIDR, are not spendable, and do not affect consensus, PoW difficulty, cumulative work, supply, coinbase rewards, balances, or chain validation.
 
-Phase 3.2 adds staking collateral for service-node eligibility. This staking module only locks and unlocks IDR through canonical chain transactions. It is not Proof-of-Stake, does not create validators, does not select block producers, does not mint staking rewards, and does not slash IDR in this phase. Active and unbonding stake reduce spendable balance until released.
+Phase 3.2 adds staking collateral for service-node eligibility. This staking module only locks and unlocks dIDR through canonical chain transactions. It is not Proof-of-Stake, does not create validators, does not select block producers, does not mint staking rewards, and does not slash dIDR in this phase. Active and unbonding stake reduce spendable balance until released.
 
 * Bandwidth service node research
 * Service reward simulation
@@ -465,7 +465,7 @@ Phase 3.2 adds staking collateral for service-node eligibility. This staking mod
 
 # 15. Risiko
 
-DesKaChain masih berada pada tahap pengembangan awal. Risiko meliputi:
+IndoChain masih berada pada tahap pengembangan awal. Risiko meliputi:
 
 * bug pada consensus,
 * bug pada reorg,
@@ -485,7 +485,7 @@ Karena itu, seluruh fase testnet harus dianggap eksperimental.
 
 # 16. Prinsip Anti-Luna
 
-DesKaChain secara eksplisit menghindari model ekonomi yang rapuh.
+IndoChain secara eksplisit menghindari model ekonomi yang rapuh.
 
 Aturan dasar:
 
@@ -494,37 +494,37 @@ Aturan dasar:
 3. Tidak menggunakan mint tidak terbatas untuk mempertahankan harga.
 4. Tidak menjanjikan APY tetap tinggi.
 5. Tidak membayar reward dari user baru.
-6. Tidak menjadikan IDR sebagai satu-satunya jaminan aset stabil.
-7. Tidak memasarkan IDR sebagai pendapatan pasti.
+6. Tidak menjadikan dIDR sebagai satu-satunya jaminan aset stabil.
+7. Tidak memasarkan dIDR sebagai pendapatan pasti.
 8. Tidak membuat bandwidth mining sebagai passive income tanpa verifikasi.
 9. Tidak membuat staking sebagai mesin profit otomatis.
 10. Tidak menjadikan harga sebagai fondasi utama proyek.
 
-DesKaChain fokus pada utilitas, jaringan, mining, wallet, explorer, dan komunitas.
+IndoChain fokus pada utilitas, jaringan, mining, wallet, explorer, dan komunitas.
 
 ---
 
-# 17. Posisi Ekonomi IDR
+# 17. Posisi Ekonomi dIDR
 
-IDR adalah native coin jaringan DesKaChain. Fungsi yang direncanakan:
+dIDR adalah native coin jaringan IndoChain. Fungsi yang direncanakan:
 
 * membayar transaksi,
 * menerima block reward,
 * digunakan dalam wallet,
 * digunakan dalam service node reward,
 * digunakan dalam staking/collateral masa depan,
-* dan menjadi unit dasar ekosistem DesKaChain.
+* dan menjadi unit dasar ekosistem IndoChain.
 
-IDR bukan stablecoin, bukan yield token, bukan synthetic asset, dan bukan jaminan keuntungan.
+dIDR bukan stablecoin, bukan yield token, bukan synthetic asset, dan bukan jaminan keuntungan.
 
 ---
 
 # 18. Kesimpulan
 
-DesKaChain adalah proyek blockchain native yang dibangun secara bertahap dari core chain, P2P network, mining, fork handling, reorg, wallet, explorer, service node, hingga public testnet dan mainnet.
+IndoChain adalah proyek blockchain native yang dibangun secara bertahap dari core chain, P2P network, mining, fork handling, reorg, wallet, explorer, service node, hingga public testnet dan mainnet.
 
-Fokus utama DesKaChain adalah membangun jaringan yang dapat bertahan lama, bukan menciptakan hype jangka pendek. Testnet digunakan untuk menguji teknologi, membangun komunitas, dan memperbaiki sistem sebelum mainnet.
+Fokus utama IndoChain adalah membangun jaringan yang dapat bertahan lama, bukan menciptakan hype jangka pendek. Testnet digunakan untuk menguji teknologi, membangun komunitas, dan memperbaiki sistem sebelum mainnet.
 
 Coin testnet tidak memiliki nilai ekonomi. Jika program klaim mainnet diterapkan, program tersebut akan bersifat terbatas, memiliki cap, memiliki periode klaim tertentu, dan tunduk pada anti-abuse checks.
 
-DesKaChain bertujuan menjadi jaringan yang sederhana, terbuka, dapat dimining, dan berkembang secara sehat bersama komunitas.
+IndoChain bertujuan menjadi jaringan yang sederhana, terbuka, dapat dimining, dan berkembang secara sehat bersama komunitas.

@@ -3,7 +3,7 @@ package chain
 import (
 	"math"
 
-	"deskachain/internal/types"
+	"indochain/internal/types"
 )
 
 type BlockLocatorEntry struct {

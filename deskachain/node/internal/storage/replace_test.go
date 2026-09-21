@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/types"
+	"indochain/internal/types"
 )
 
 func TestReplaceFromHeightAtomicallyReplacesBranchAndTip(t *testing.T) {
@@ -112,7 +112,6 @@ func TestReplaceFromHeightRejectsHeightOverflow(t *testing.T) {
 		t.Fatalf("expected replacement height overflow, got %v", err)
 	}
 }
-
 
 func TestReplaceFromHeightRejectsMissingPredecessor(t *testing.T) {
 	store, err := OpenBolt(t.TempDir() + "/chain.db")

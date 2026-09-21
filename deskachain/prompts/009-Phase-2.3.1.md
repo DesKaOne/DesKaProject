@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -13,7 +13,7 @@ Status saat ini:
   node1 mine block berisi tx.
   node2 menerima block.
   node2 mempool kosong.
-  walletB balance = 10 IDR.
+  walletB balance = 10 dIDR.
   node compare menunjukkan nodes in sync.
   chain validate pass di node1 dan node2.
 
@@ -37,7 +37,7 @@ Kesimpulan awal:
 Kemungkinan ada lock contention/deadlock kecil atau handler /p2p/status melakukan operasi terlalu berat / menunggu lock yang sedang dipegang sync loop.
 
 Nama patch:
-DesKaChain Phase 2.3.1 — P2P Status Timeout & Runtime Concurrency Fix
+IndoChain Phase 2.3.1 — P2P Status Timeout & Runtime Concurrency Fix
 
 Tujuan utama:
 
@@ -230,7 +230,7 @@ Tambahkan command:
 p2p debug
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
 
 Output:
 node id: <id>
@@ -433,8 +433,8 @@ Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 Invoke-RestMethod http://127.0.0.1:9332/p2p/status
 
 Gunakan:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
 
 Expected:
 
@@ -460,31 +460,31 @@ go test ./...
 Setup 2 node seperti biasa.
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
 Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 Invoke-RestMethod http://127.0.0.1:9332/p2p/status
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 p2p ping http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 p2p ping http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 p2p debug
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain validate
 
 Expected:
 

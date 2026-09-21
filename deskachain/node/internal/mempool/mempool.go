@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"deskachain/internal/types"
+	"indochain/internal/types"
 )
 
 var (

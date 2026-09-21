@@ -161,6 +161,59 @@ select {
   gap: 12px;
 }
 
+.dashboard-summary {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.status-card {
+  flex: 1 1 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.status-card strong {
+  font-size: 20px;
+}
+
+.status-card small {
+  color: var(--muted);
+}
+
+.status-ok {
+  border-color: var(--accent);
+}
+
+.status-warn {
+  border-color: var(--warn-text);
+}
+
+.address-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.address-value {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
 .metric {
   background: var(--surface-soft);
   border: 1px solid var(--line);
@@ -180,6 +233,15 @@ select {
   display: block;
   margin-top: 6px;
   overflow-wrap: anywhere;
+}
+
+.block-navigation {
+  margin-bottom: 14px;
+}
+
+.block-navigation .muted {
+  flex: 1;
+  text-align: center;
 }
 
 .toolbar {
@@ -227,6 +289,11 @@ tr:last-child td {
   overflow-wrap: anywhere;
 }
 
+.tx-badge {
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -237,8 +304,20 @@ tr:last-child td {
 }
 
 .error {
-  border-color: var(--danger);
   color: var(--danger);
+}
+
+.error-state {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.error-state p {
+  margin: 0;
 }
 
 .copy {
@@ -269,6 +348,15 @@ tr:last-child td {
 
   .search {
     grid-template-columns: 1fr;
+  }
+
+  .address-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .address-header .copy {
+    margin-left: 0;
   }
 
   table {

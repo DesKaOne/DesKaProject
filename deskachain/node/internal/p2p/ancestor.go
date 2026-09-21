@@ -3,9 +3,9 @@ package p2p
 import (
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 func LocalLocator(paths config.Paths) (LocatorResponse, error) {

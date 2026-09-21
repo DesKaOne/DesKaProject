@@ -1,6 +1,6 @@
-# DesKaChain RC1 Post-Release Monitoring
+# IndoChain RC1 Post-Release Monitoring
 
-Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC on public nodes.
+Testnet dIDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC on public nodes.
 
 ## Purpose
 
@@ -41,30 +41,30 @@ The goal is to answer:
 PowerShell health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID ind-testnet-1 -ExpectedChainID 777101
 ```
 
 Bash health check:
 
 ```sh
-bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id idr-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
+bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id ind-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
 ```
 
 Peer diagnostics:
 
 ```powershell
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 peer health
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 peer seeds
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 peer discover
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 mining status
-.\deskachain.exe --rpc-url http://127.0.0.1:9311 mining blocks --limit 10
+.\indochain.exe --rpc-url http://127.0.0.1:9311 peer health
+.\indochain.exe --rpc-url http://127.0.0.1:9311 peer seeds
+.\indochain.exe --rpc-url http://127.0.0.1:9311 peer discover
+.\indochain.exe --rpc-url http://127.0.0.1:9311 mining status
+.\indochain.exe --rpc-url http://127.0.0.1:9311 mining blocks --limit 10
 ```
 
 ## What Is Not Monitored
 
 - Financial value.
 - Mining profitability.
-- Any claim that testnet IDR has monetary value.
+- Any claim that testnet dIDR has monetary value.
 - Staking yield.
 - Service point value.
 

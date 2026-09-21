@@ -1,4 +1,4 @@
-Patch DesKaChain Phase 4.10.1 — Reorg Sync Fork False-Positive Fix
+Patch IndoChain Phase 4.10.1 — Reorg Sync Fork False-Positive Fix
 
 Context:
 Public testnet multi-miner test produced a fork.
@@ -7,7 +7,7 @@ Observed nodes:
 
 * VPS:
 
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * height: 308
@@ -16,7 +16,7 @@ Observed nodes:
 
 * Windows/Mini PC:
 
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
   * height: 300
@@ -157,7 +157,7 @@ Manual validation after patch:
 1. Start VPS branch at higher height/work.
 2. Start Windows/Mini PC on lower fork.
 3. Run private/local RPC:
-   deskachain peer sync http://100.86.152.39:10311
+   indochain peer sync http://100.86.152.39:10311
 4. Expected:
 
    * sync succeeds

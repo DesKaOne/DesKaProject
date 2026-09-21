@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -24,14 +24,14 @@ Status saat ini:
   * service_rpc=false by default
 * Real multi-host testnet sudah valid.
 * Faucet -> stake -> service eligible multi-host sudah valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.4 — Public Testnet Explorer Web UI MVP
+IndoChain Phase 4.4 — Public Testnet Explorer Web UI MVP
 
 Goal:
 Add a lightweight read-only web explorer UI for public testnet, backed by the Phase 4.3 explorer API.
@@ -179,7 +179,7 @@ Shows:
 * testnet warning
 
 Must show visible warning:
-“Testnet IDR has no monetary value.”
+“Testnet dIDR has no monetary value.”
 “Mainnet is not available.”
 “Explorer is read-only.”
 
@@ -292,7 +292,7 @@ Shows:
 * simulation_only flag
 
 Must visibly say:
-“Service points are simulation-only and are not spendable IDR.”
+“Service points are simulation-only and are not spendable dIDR.”
 
 ==================================================
 4. Search
@@ -305,12 +305,12 @@ Search should accept:
 * block height integer,
 * block hash,
 * txid,
-* IDR address.
+* dIDR address.
 
 Behavior:
 
 * If numeric, open block detail by height.
-* If IDR address, open address page.
+* If dIDR address, open address page.
 * If hash-like string, try:
 
   1. tx detail,
@@ -402,7 +402,7 @@ Requirements:
 Footer or banner:
 
 * Testnet only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet not available.
 * Read-only explorer.
 
@@ -475,7 +475,7 @@ Add:
 * Explain no wallet/admin/write actions.
 * Explain API is still available under `/explorer/*`.
 * Explain service points are simulation-only.
-* Explain testnet IDR has no monetary value.
+* Explain testnet dIDR has no monetary value.
 * Explain mainnet not available.
 
 ==================================================
@@ -549,7 +549,7 @@ Use a node with existing testnet data and explorer API.
 
 Start node:
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -581,7 +581,7 @@ Manual checks:
   * block height,
   * block hash,
   * txid,
-  * IDR address.
+  * dIDR address.
 * invalid search shows friendly error.
 * mobile width still readable.
 

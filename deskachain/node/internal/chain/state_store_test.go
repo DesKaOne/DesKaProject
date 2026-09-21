@@ -5,11 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/state"
-	"deskachain/internal/storage"
+	"indochain/internal/asset"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/state"
+	"indochain/internal/storage"
 )
 
 func TestInitRejectsMissingStateDBWithoutRepair(t *testing.T) {
@@ -81,12 +81,12 @@ func TestValidateStateWithNetworkDetectsTamperedState(t *testing.T) {
 		t.Fatal(err)
 	}
 	snapshot.Accounts = append(snapshot.Accounts, ledger.StateAccount{
-		Address:   "IDR-tampered",
+		Address:   "iND-tampered",
 		Confirmed: 1,
 		Mature:    1,
 	})
 	snapshot.AssetBalances = append(snapshot.AssetBalances, asset.BalanceEntry{
-		Address: "IDR-tampered",
+		Address: "iND-tampered",
 		AssetID: asset.NativeAssetID,
 		Amount:  1,
 	})

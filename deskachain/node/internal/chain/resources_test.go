@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 func TestValidateTransactionSizeUsesConfiguredBoundary(t *testing.T) {
@@ -66,7 +66,7 @@ func TestValidateBlockResourcesRejectsOversizedBlock(t *testing.T) {
 	params.MaxBlockBytes = 16
 
 	block := types.Block{
-		Height: 0,
+		Height:       0,
 		Transactions: []types.Transaction{{ID: "a"}},
 	}
 	err := ValidateBlockResources(block, params)

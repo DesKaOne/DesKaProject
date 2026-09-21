@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -32,14 +32,14 @@ Status saat ini:
     nodes in sync
   * chain info setelah reorg:
     height: 5
-    total supply: 250 IDR
+    total supply: 250 dIDR
     total transactions: 5
     coinbase transactions: 5
     normal transactions: 0
   * reorg apply tanpa --yes ditolak.
 
 Nama patch:
-DesKaChain Phase 2.6 — Reorg Mempool Recovery & Transaction Conflict Tests
+IndoChain Phase 2.6 — Reorg Mempool Recovery & Transaction Conflict Tests
 
 Tujuan utama:
 Memastikan reorg aman ketika block yang dilepas dan branch peer berisi transaksi normal, bukan hanya coinbase.
@@ -110,8 +110,8 @@ Setup:
   * user2
 * Chain A:
 
-  1. Mine 3 block ke minerA agar minerA punya 150 IDR.
-  2. Buat tx normal dari minerA ke user1 sebesar 10 IDR.
+  1. Mine 3 block ke minerA agar minerA punya 150 dIDR.
+  2. Buat tx normal dari minerA ke user1 sebesar 10 dIDR.
   3. Mine tx tersebut ke block A4.
   4. Height A = 4.
 * Chain B:
@@ -135,16 +135,16 @@ Agar tx tetap valid:
 * Gunakan funding yang ada di common ancestor sebelum fork.
 * Buat shared pre-fork chain dulu:
 
-  * common chain height 3, minerCommon punya 150 IDR.
+  * common chain height 3, minerCommon punya 150 dIDR.
   * fork dari height 3.
-  * Chain A membuat tx minerCommon -> user1 sebesar 10 IDR di A4.
+  * Chain A membuat tx minerCommon -> user1 sebesar 10 dIDR di A4.
   * Chain B mine block B4-B6 tanpa tx tersebut.
-* Setelah reorg ke B, minerCommon masih punya 150 IDR dari common ancestor, jadi tx masih valid.
+* Setelah reorg ke B, minerCommon masih punya 150 dIDR dari common ancestor, jadi tx masih valid.
 * Expected:
   requeued transactions: 1
   mempool count: 1
   tx minerCommon->user1 ada di mempool
-  user1 balance setelah reorg: 0 IDR
+  user1 balance setelah reorg: 0 dIDR
   minerCommon balance belum berkurang di ledger canonical
   chain valid
 
@@ -160,7 +160,7 @@ Setup:
 * Common chain height 3, minerCommon punya saldo.
 * Fork A:
 
-  * tx1 minerCommon -> user1 sebesar 10 IDR masuk block A4.
+  * tx1 minerCommon -> user1 sebesar 10 dIDR masuk block A4.
 * Fork B:
 
   * tx1 yang sama juga masuk block B4.
@@ -172,7 +172,7 @@ Expected:
 * requeued transactions: 0
 * dropped/confirmed transactions: 1
 * mempool count: 0
-* user1 balance setelah reorg: 10 IDR
+* user1 balance setelah reorg: 10 dIDR
 * tx1 confirmed di canonical chain
 * chain valid
 
@@ -185,13 +185,13 @@ Jika orphaned tx konflik dengan branch baru, tx harus drop, bukan requeue.
 
 Setup:
 
-* Common chain height 3, minerCommon punya 150 IDR.
+* Common chain height 3, minerCommon punya 150 dIDR.
 * Fork A:
 
-  * txA: minerCommon -> user1 sebesar 100 IDR masuk block A4.
+  * txA: minerCommon -> user1 sebesar 100 dIDR masuk block A4.
 * Fork B:
 
-  * txB: minerCommon -> user2 sebesar 120 IDR masuk block B4.
+  * txB: minerCommon -> user2 sebesar 120 dIDR masuk block B4.
   * B lanjut sampai height 6.
 * Jika setelah branch B, saldo minerCommon tidak cukup untuk txA lagi atau nonce/sequence konflik, txA harus invalid.
 * Reorg A ke B.
@@ -201,12 +201,12 @@ Expected:
 * txA tidak masuk mempool.
 * dropped transactions: 1
 * mempool count: 0
-* user1 balance setelah reorg: 0 IDR
-* user2 balance setelah reorg: 120 IDR
+* user1 balance setelah reorg: 0 dIDR
+* user2 balance setelah reorg: 120 dIDR
 * chain valid
 
 Catatan:
-Jika DesKaChain belum punya nonce, konflik minimal bisa berdasarkan insufficient balance setelah branch B.
+Jika IndoChain belum punya nonce, konflik minimal bisa berdasarkan insufficient balance setelah branch B.
 Jika nonce sudah ada, gunakan nonce conflict juga.
 
 ==================================================
@@ -301,12 +301,12 @@ pending tx count: 1
 txid: ...
 from: ...
 to: ...
-amount: 10 IDR
+amount: 10 dIDR
 fee: ...
 status: pending
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 mempool list --detail
 
 Jika belum ada txid display, tambahkan.
 
@@ -321,7 +321,7 @@ Contoh:
 balance <address>
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 balance <address>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 balance <address>
 
 Pastikan setelah reorg:
 
@@ -406,8 +406,8 @@ Tambahkan/update tests:
 
 7. Total supply after reorg:
 
-* Canonical height 6 dengan reward 50 IDR.
-* total supply 300 IDR.
+* Canonical height 6 dengan reward 50 dIDR.
+* total supply 300 dIDR.
 * Orphaned coinbase tidak dihitung.
 
 8. Balance after reorg:
@@ -445,17 +445,17 @@ Tambahkan penjelasan:
 
 Tambahkan contoh command:
 
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
 
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
 
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 mempool list --detail
 
 Expected untuk requeue-valid:
 requeued transactions: 1
@@ -473,19 +473,19 @@ go test ./node/...
 
 Scenario requeue-valid:
 
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
 
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
 
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
 
 Expected:
 allowed: true
 
 Apply:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
 
 Expected:
 reorg applied
@@ -493,14 +493,14 @@ requeued transactions: 1
 chain valid: true
 
 Check mempool:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 mempool list --detail
 
 Expected:
 pending tx count: 1
 
 Scenario confirmed-on-peer:
 
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario confirmed-on-peer
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario confirmed-on-peer
 
 Expected after apply:
 requeued transactions: 0
@@ -510,7 +510,7 @@ chain valid: true
 
 Scenario conflict-double-spend:
 
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario conflict-double-spend
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario conflict-double-spend
 
 Expected after apply:
 requeued transactions: 0

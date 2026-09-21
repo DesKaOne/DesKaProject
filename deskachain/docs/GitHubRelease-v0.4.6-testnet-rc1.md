@@ -1,4 +1,4 @@
-# DesKaChain Public Testnet RC1 - v0.4.6-testnet-rc1
+# IndoChain Public Testnet RC1 - v0.4.6-testnet-rc1
 
 ## Status
 
@@ -6,21 +6,21 @@ Public testnet release candidate for limited testing.
 
 ## Important Warnings
 
-- Testnet IDR has no monetary value.
+- Testnet dIDR has no monetary value.
 - Mainnet is not available.
-- Do not treat testnet IDR as investment.
+- Do not treat testnet dIDR as investment.
 - There is no mining income or profit promise.
 - Staking is collateral-only.
-- Service points are simulation-only and not spendable IDR.
+- Service points are simulation-only and not spendable dIDR.
 - Testnet may reset.
 - Back up wallet files.
 - Do not expose wallet/admin RPC publicly.
 
 ## What Is Included
 
-- `deskachain` node and CLI.
-- `idrminer` CPU miner.
-- `idrservice` service-node simulation agent.
+- `indochain` node and CLI.
+- `indominer` CPU miner.
+- `indoservice` service-node simulation agent.
 - Public testnet profile.
 - P2P seed peer sync.
 - Public read-only RPC mode.
@@ -34,9 +34,9 @@ Public testnet release candidate for limited testing.
 
 ## Downloads
 
-- `deskachain-v0.4.6-testnet-rc1-windows-amd64.zip`
-- `deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz`
-- `deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz`
+- `indochain-v0.4.6-testnet-rc1-windows-amd64.zip`
+- `indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz`
+- `indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz`
 - `SHA256SUMS.txt`
 
 ## Verify Checksums
@@ -44,7 +44,7 @@ Public testnet release candidate for limited testing.
 Windows PowerShell:
 
 ```powershell
-Get-FileHash .\deskachain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ```
 

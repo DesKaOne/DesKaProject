@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -11,7 +11,7 @@ Status saat ini:
 * Node2 menerima block dari node1.
 * Node2 menerima tx pending dari node1.
 * Setelah block berikutnya diterima, mempool node2 kosong.
-* Wallet node2 menerima 10 IDR.
+* Wallet node2 menerima 10 dIDR.
 * node compare menunjukkan nodes in sync.
 * chain validate pass di node1 dan node2.
 
@@ -34,7 +34,7 @@ Masalah kecil yang ditemukan:
    Lalu node1 mencoba sync ke:
    http://127.0.0.1:9332
    Padahal pada command node1:
-   go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+   go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
    tidak ada --peers.
 
    Ini kemungkinan:
@@ -52,7 +52,7 @@ Masalah kecil yang ditemukan:
    Artinya log difficulty saat start mining tidak konsisten dengan difficulty aktual block.
 
 Nama patch:
-DesKaChain Phase 2.3.3 — Runtime Hygiene, Peer Store Reset, dan Difficulty Consistency
+IndoChain Phase 2.3.3 — Runtime Hygiene, Peer Store Reset, dan Difficulty Consistency
 
 Tujuan utama:
 
@@ -131,9 +131,9 @@ Harus menghapus seluruh selected datadir, termasuk:
 * runtime cache file
 
 Setelah:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331
 
 Expected:
 peers: 0
@@ -205,7 +205,7 @@ peers: 1
 url=http://127.0.0.1:9332 source=peers.json status=active score=5
 
 Untuk remote mode:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 peer list --source
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 peer list --source
 
 RPC response /peers harus bisa menyertakan source jika mudah.
 
@@ -218,7 +218,7 @@ Tambahkan command:
 dev inspect
 
 Contoh:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev inspect
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev inspect
 
 Output:
 datadir: testdata\node1
@@ -236,7 +236,7 @@ Jika node sedang locked, command ini read-only dan boleh berjalan.
 Jika tidak bisa baca file, tampilkan error jelas, jangan panic.
 
 Remote mode optional:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 dev inspect
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 dev inspect
 
 Jika remote mode terlalu aneh untuk nama dev inspect, boleh return:
 remote mode not supported for dev inspect
@@ -344,10 +344,10 @@ Tambahkan command:
 peer clear --yes
 
 Local:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer clear --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer clear --yes
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 peer clear --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 peer clear --yes
 
 Behavior:
 
@@ -446,9 +446,9 @@ Phase 2.3.3 — Runtime Hygiene, Peer Store Reset, dan Difficulty Consistency
 Tambahkan troubleshooting:
 
 Jika setelah dev reset node masih menampilkan peers: 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev inspect
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer list --source
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer clear --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev inspect
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer list --source
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer clear --yes
 
 Expected setelah reset:
 peers: 0
@@ -472,10 +472,10 @@ go test ./node/...
 
 Test peer reset:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev inspect
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer list --source
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev inspect
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer list --source
 
 Expected:
 peers: 0
@@ -483,14 +483,14 @@ peers.json: missing atau peers: 0
 
 Start node1 fresh:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
 Expected:
 peers: 0
 
 Test difficulty:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain info
 
 Expected pada height 0:
 tip difficulty: 0
@@ -498,7 +498,7 @@ next difficulty: 4
 
 Mine 1 block:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
 
 Expected log:
 mining block started target_height=1 difficulty=4
@@ -508,8 +508,8 @@ mined block height=1 ... difficulty=4
 
 Test peer clear:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 peer clear --yes
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 peer clear --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 peer list
 
 Expected:
 peers: 0

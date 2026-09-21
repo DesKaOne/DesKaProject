@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -10,19 +10,19 @@ Status saat ini:
   * config.Testnet()
   * localnet chain_id 777001
   * testnet chain_id 777101
-  * localnet network_id idr-local-1
-  * testnet network_id idr-testnet-1
+  * localnet network_id ind-local-1
+  * testnet network_id ind-testnet-1
   * network metadata network.json
   * RPC/P2P/profile tests sebagian sudah ada.
 * Namun sebelum lanjut Phase 3.3, masih ada blocker kecil:
 
-  1. file runtime `idrservice-state.json` masih ikut root repo/zip.
+  1. file runtime `indoservice-state.json` masih ikut root repo/zip.
   2. file typo `docs/Arsitecture.md` masih ada.
   3. `node/internal/p2p/reorg.go` masih hardcode `config.Localnet()` pada runtime path.
   4. RPC built-in `/mine` masih perlu validasi address memakai active profile.
 
 Nama patch:
-DesKaChain Phase 3.2.2.1 — Pre-Testnet Final Cleanup & Profile Reorg Fix
+IndoChain Phase 3.2.2.1 — Pre-Testnet Final Cleanup & Profile Reorg Fix
 
 Tujuan:
 Menutup sisa blocker Phase 3.2.2 agar aman lanjut ke Phase 3.3 multi-node testnet bootstrap.
@@ -37,7 +37,7 @@ Non-goals:
 * Jangan implement validator set.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis hash.
 * Jangan ubah staking behavior.
@@ -50,7 +50,7 @@ Non-goals:
 
 Pastikan file ini tidak ada di repo root:
 
-idrservice-state.json
+indoservice-state.json
 
 Jika ada:
 
@@ -59,16 +59,16 @@ Jika ada:
 
 Command manual referensi:
 
-git rm --cached idrservice-state.json
+git rm --cached indoservice-state.json
 
 atau jika belum tracked:
 
-rm idrservice-state.json
+rm indoservice-state.json
 
 Pastikan .gitignore tetap punya:
 
-idrservice-state.json
-**/idrservice-state.json
+indoservice-state.json
+**/indoservice-state.json
 service_nodes.json
 service_challenges.json
 service_rewards.json
@@ -227,7 +227,7 @@ Rules:
 
 * localnet address tetap valid.
 * testnet address validation pakai active profile.
-* Jika testnet masih pakai prefix/version IDR yang sama, hasil tetap sama, tapi path sudah future-proof.
+* Jika testnet masih pakai prefix/version iND yang sama, hasil tetap sama, tapi path sudah future-proof.
 * Error jelas jika address invalid untuk network aktif.
 
 Endpoint yang harus dicek:
@@ -238,7 +238,7 @@ Endpoint yang harus dicek:
 * service register jika address validation network-aware tersedia
 * stake lock/unlock jika address validation network-aware tersedia
 
-Jangan breaking existing IDR address.
+Jangan breaking existing iND address.
 
 ==================================================
 7. Search hardcode runtime Localnet
@@ -301,7 +301,7 @@ Tambahkan/update tests:
 5. TestNoRuntimeStateFilesInRepo
 
 * optional lightweight test/script.
-* fail jika root `idrservice-state.json` ada.
+* fail jika root `indoservice-state.json` ada.
 * Jika tidak cocok sebagai Go test, dokumentasikan manual check.
 
 6. Existing tests tetap pass:
@@ -323,7 +323,7 @@ Search cleanup:
 
 PowerShell:
 
-Test-Path .\idrservice-state.json
+Test-Path .\indoservice-state.json
 
 Expected:
 False
@@ -349,9 +349,9 @@ Expected:
 
 Localnet check:
 
-go run ./node/cmd/deskachain --datadir ./testdata/final_local dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/final_local --network localnet init
-go run ./node/cmd/deskachain --datadir ./testdata/final_local node start --rpc :8511 --p2p :9511 --advertise-p2p http://127.0.0.1:9511
+go run ./node/cmd/indochain --datadir ./testdata/final_local dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/final_local --network localnet init
+go run ./node/cmd/indochain --datadir ./testdata/final_local node start --rpc :8511 --p2p :9511 --advertise-p2p http://127.0.0.1:9511
 
 Then:
 
@@ -360,43 +360,43 @@ Invoke-RestMethod http://127.0.0.1:8511/health
 Expected:
 
 * network localnet
-* network_id idr-local-1
+* network_id ind-local-1
 * chain_id 777001
 
 Testnet check:
 
-go run ./node/cmd/deskachain --datadir ./testdata/final_test dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/final_test --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/final_test node start --rpc :8521 --p2p :9521 --advertise-p2p http://127.0.0.1:9521
+go run ./node/cmd/indochain --datadir ./testdata/final_test dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/final_test --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/final_test node start --rpc :8521 --p2p :9521 --advertise-p2p http://127.0.0.1:9521
 
 Then:
 
 Invoke-RestMethod http://127.0.0.1:8521/health
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8521 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8521 stake info
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain_id 777101
 * stake params testnet, not localnet
 
 Miner template testnet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/final_test wallet new
+go run ./node/cmd/indochain --datadir ./testdata/final_test wallet new
 
-Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IND_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain_id 777101
 
-Optional idrminer testnet:
+Optional indominer testnet:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8521 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8521 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 
@@ -430,7 +430,7 @@ Update README/Roadmap/docs to mention:
 
 Patch valid jika:
 
-* root idrservice-state.json hilang.
+* root indoservice-state.json hilang.
 * docs/Arsitecture.md hilang.
 * no stale Arsitecture links.
 * p2p reorg runtime path no longer hardcodes localnet.

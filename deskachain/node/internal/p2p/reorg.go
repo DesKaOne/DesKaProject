@@ -6,11 +6,11 @@ import (
 	"sort"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/types"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/types"
 )
 
 const DefaultMaxReorgDepth uint64 = 64
@@ -196,7 +196,7 @@ func BuildReorgPlanWithProfile(paths config.Paths, peer string, maxDepth uint64,
 		plan.Allowed = false
 		plan.Decision = "local_ahead_more_work"
 		plan.Reason = "local chain has higher cumulative work"
-default:
+	default:
 		if _, err := chain.ValidateChainWithNetwork(peerFull, profile); err != nil {
 			plan.Allowed = false
 			plan.Decision = "peer_branch_invalid"

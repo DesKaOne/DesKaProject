@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/config"
-	"deskachain/internal/fees"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/fees"
+	"indochain/internal/types"
 )
 
 func ValidateTransactionSize(tx types.Transaction, consensus config.ConsensusParams) error {

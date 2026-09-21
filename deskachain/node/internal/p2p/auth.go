@@ -19,19 +19,19 @@ import (
 
 const (
 	p2pMessageAuthVersion       uint32 = 1
-	p2pMessageAuthDomain               = "DesKaChain/p2p-message/v1"
+	p2pMessageAuthDomain               = "IndoChain/p2p-message/v1"
 	p2pMessageAuthTimeSkew             = 5 * time.Minute
 	p2pMessageAuthBodyLimit            = 8 << 20
 	p2pMessageAuthResponseLimit        = 16 << 20
 
-	authHeaderVersion    = "X-IDR-Auth-Version"
-	authHeaderNodeID     = "X-IDR-Node-ID"
-	authHeaderNodePubKey = "X-IDR-Node-PubKey"
-	authHeaderNetworkID  = "X-IDR-Network-ID"
-	authHeaderChainID    = "X-IDR-Chain-ID"
-	authHeaderTimestamp  = "X-IDR-Auth-Timestamp"
-	authHeaderNonce      = "X-IDR-Auth-Nonce"
-	authHeaderSignature  = "X-IDR-Auth-Signature"
+	authHeaderVersion    = "X-IND-Auth-Version"
+	authHeaderNodeID     = "X-IND-Node-ID"
+	authHeaderNodePubKey = "X-IND-Node-PubKey"
+	authHeaderNetworkID  = "X-IND-Network-ID"
+	authHeaderChainID    = "X-IND-Chain-ID"
+	authHeaderTimestamp  = "X-IND-Auth-Timestamp"
+	authHeaderNonce      = "X-IND-Auth-Nonce"
+	authHeaderSignature  = "X-IND-Auth-Signature"
 )
 
 type p2pRequestAuth struct {

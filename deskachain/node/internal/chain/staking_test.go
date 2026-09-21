@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/staking"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/staking"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestChainValidateStakeLockBlock(t *testing.T) {

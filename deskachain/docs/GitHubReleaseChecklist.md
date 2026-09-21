@@ -1,6 +1,6 @@
 # GitHub Release Checklist - v0.4.6-testnet-rc1
 
-Use this checklist before publishing DesKaChain Public Testnet RC1.
+Use this checklist before publishing IndoChain Public Testnet RC1.
 
 ## Before Release
 
@@ -12,19 +12,19 @@ Use this checklist before publishing DesKaChain Public Testnet RC1.
 - Confirm `SHA256SUMS.txt` exists.
 - Confirm release archives contain expected binaries, docs, examples, and config.
 - Confirm archives contain no datadir, wallet files, chain DB, mempool, peer store, faucet state, service state, private keys, or `.git`.
-- Confirm public docs state that testnet IDR has no monetary value and mainnet is not available.
+- Confirm public docs state that testnet dIDR has no monetary value and mainnet is not available.
 - Confirm wallet/admin RPC examples remain private or disabled.
 
 ## Artifacts To Attach
 
-- `deskachain-v0.4.6-testnet-rc1-windows-amd64.zip`
-- `deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz`
-- `deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz`
+- `indochain-v0.4.6-testnet-rc1-windows-amd64.zip`
+- `indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz`
+- `indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz`
 - `SHA256SUMS.txt`
 
 ## Release Metadata
 
-- Title: `DesKaChain Public Testnet RC1 - v0.4.6-testnet-rc1`
+- Title: `IndoChain Public Testnet RC1 - v0.4.6-testnet-rc1`
 - Pre-release: `true`
 - Latest release: `false`, if GitHub allows.
 - Clearly mark as testnet RC.
@@ -40,7 +40,7 @@ Use this checklist before publishing DesKaChain Public Testnet RC1.
 - Download artifacts from the GitHub Release.
 - Verify SHA256 from downloaded artifacts.
 - Extract to a clean folder.
-- Run `deskachain version`.
+- Run `indochain version`.
 - Start a local testnet node.
 - Open `/explorer-ui/`.
 - Run the smoke script from repository checkout if practical.

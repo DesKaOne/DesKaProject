@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -9,7 +9,7 @@ Status saat ini:
   * v0.4.6-testnet-rc1
 * Smoke test binary sudah valid:
 
-  * deskachain version
+  * indochain version
   * init testnet
   * start node
   * mine one block
@@ -18,9 +18,9 @@ Status saat ini:
   * explorer status/UI
 * Release artifacts sudah dibuat:
 
-  * deskachain-v0.4.6-testnet-rc1-windows-amd64.zip
-  * deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-  * deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
+  * indochain-v0.4.6-testnet-rc1-windows-amd64.zip
+  * indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+  * indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
   * SHA256SUMS.txt
 * Docs sudah ada:
 
@@ -34,17 +34,17 @@ Status saat ini:
 * Public RPC safety tetap aman.
 * Explorer API/UI read-only.
 * Faucet/stake/service multi-host sudah valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.7 — Public Testnet RC1 GitHub Release & External Tester Onboarding
+IndoChain Phase 4.7 — Public Testnet RC1 GitHub Release & External Tester Onboarding
 
 Goal:
-Prepare and publish DesKaChain Public Testnet RC1 for limited external testers/operators.
+Prepare and publish IndoChain Public Testnet RC1 for limited external testers/operators.
 
 This phase should produce:
 
@@ -65,7 +65,7 @@ Do not change consensus or testnet genesis.
 Non-goals:
 
 * Do not launch mainnet.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not promise price/profit/rewards.
 * Do not add staking APY.
 * Do not make service points spendable.
@@ -103,13 +103,13 @@ A. Before release
 
 B. Artifacts to attach
 
-* deskachain-v0.4.6-testnet-rc1-windows-amd64.zip
-* deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-* deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
+* indochain-v0.4.6-testnet-rc1-windows-amd64.zip
+* indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+* indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
 * SHA256SUMS.txt
 
 C. Release title
-DesKaChain Public Testnet RC1 — v0.4.6-testnet-rc1
+IndoChain Public Testnet RC1 — v0.4.6-testnet-rc1
 
 D. Release type
 
@@ -137,7 +137,7 @@ This should be copy-paste ready for GitHub Release body.
 
 Required sections:
 
-# DesKaChain Public Testnet RC1 — v0.4.6-testnet-rc1
+# IndoChain Public Testnet RC1 — v0.4.6-testnet-rc1
 
 ## Status
 
@@ -145,21 +145,21 @@ Public testnet release candidate for limited testing.
 
 ## Important warnings
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
-* Do not treat testnet IDR as investment.
+* Do not treat testnet dIDR as investment.
 * No mining income/profit promise.
 * Staking is collateral-only.
-* Service points are simulation-only and not spendable IDR.
+* Service points are simulation-only and not spendable dIDR.
 * Testnet may reset.
 * Back up wallet files.
 * Do not expose wallet/admin RPC publicly.
 
 ## What is included
 
-* deskachain node/CLI.
-* idrminer CPU miner.
-* idrservice service-node simulation agent.
+* indochain node/CLI.
+* indominer CPU miner.
+* indoservice service-node simulation agent.
 * Public testnet profile.
 * P2P seed peer sync.
 * Public read-only RPC mode.
@@ -178,7 +178,7 @@ List expected artifacts.
 ## Verify checksums
 
 Windows:
-Get-FileHash .\deskachain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
 
 Linux:
 sha256sum -c SHA256SUMS.txt
@@ -249,7 +249,7 @@ A. What you need
 B. What this is
 
 * Public testnet RC.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet unavailable.
 
 C. Download and verify
@@ -293,7 +293,7 @@ H. What not to do
 
 * Do not expose wallet/admin RPC publicly.
 * Do not use important/private machine without understanding testnet risk.
-* Do not put real funds/private keys into DesKaChain testnet.
+* Do not put real funds/private keys into IndoChain testnet.
 * Do not trust random binaries.
 
 ==================================================
@@ -387,7 +387,7 @@ Service:
 
 * Stake lock works.
 * Service register works.
-* idrservice --once works.
+* indoservice --once works.
 * Service eligible shown.
 * Points clearly simulation-only.
 
@@ -416,7 +416,7 @@ Tone:
 
 Include:
 
-* What DesKaChain is.
+* What IndoChain is.
 * What RC1 includes.
 * How to download.
 * How to verify checksum.
@@ -548,7 +548,7 @@ Manual validation after GitHub Release draft:
 7. Extract clean folder.
 8. Run:
 
-   * deskachain version
+   * indochain version
    * init testnet
    * start node
    * open /explorer-ui/

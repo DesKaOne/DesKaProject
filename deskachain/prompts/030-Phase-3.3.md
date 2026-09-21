@@ -1,12 +1,12 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
-  * cmd/idrservice/
+  * cmd/indochain/
+  * cmd/indominer/
+  * cmd/indoservice/
   * internal/
 
     * address/
@@ -54,11 +54,11 @@ Status saat ini:
 * runtime cleanup sudah beres.
 * docs cleanup sudah beres.
 * Staking tetap collateral-only, bukan PoS.
-* Service points tetap simulation-only, bukan spendable IDR.
+* Service points tetap simulation-only, bukan spendable dIDR.
 * PoW tetap satu-satunya block production consensus.
 
 Nama patch:
-DesKaChain Phase 3.3 — Testnet Genesis/Profile & Multi-node Bootstrap
+IndoChain Phase 3.3 — Testnet Genesis/Profile & Multi-node Bootstrap
 
 Tujuan:
 Membuat fondasi testnet multi-node yang bisa dijalankan secara lokal/controlled sebelum public testnet.
@@ -88,7 +88,7 @@ Non-goals:
 * Jangan implement mainnet.
 * Jangan implement mining pool.
 * Jangan implement GPU miner.
-* Jangan mengubah address format IDR.
+* Jangan mengubah address format dIDR.
 * Jangan mengubah private key format.
 * Jangan mengubah localnet genesis hash.
 * Jangan rewrite besar.
@@ -103,10 +103,10 @@ Pastikan `config.Testnet()` punya parameter jelas dan stabil.
 Expected:
 
 * Network: `testnet`
-* NetworkID: `idr-testnet-1`
+* NetworkID: `ind-testnet-1`
 * ChainID: `777101`
 * ProtocolVersion: sesuai current protocol
-* Address prefix: tetap `IDR` untuk fase ini, kecuali project sudah mendukung version network-specific.
+* Address prefix: tetap `iND` untuk fase ini, kecuali project sudah mendukung version network-specific.
 * Genesis harus testnet-specific.
 * Testnet genesis hash harus berbeda dari localnet genesis hash.
 * Testnet consensus params harus profile-specific.
@@ -133,13 +133,13 @@ Tambahkan test:
 
 Pastikan:
 
-deskachain --datadir <DIR> --network testnet init
+indochain --datadir <DIR> --network testnet init
 
 menulis metadata:
 
 {
 "network": "testnet",
-"network_id": "idr-testnet-1",
+"network_id": "ind-testnet-1",
 "chain_id": 777101,
 "genesis_hash": "..."
 }
@@ -174,7 +174,7 @@ Behavior:
 
 Contoh:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn2 node start --rpc :8612 --p2p :9612 --advertise-p2p http://127.0.0.1:9612 --bootnode http://127.0.0.1:9611
+go run ./node/cmd/indochain --datadir ./testdata/tn2 node start --rpc :8612 --p2p :9612 --advertise-p2p http://127.0.0.1:9612 --bootnode http://127.0.0.1:9611
 
 Expected:
 
@@ -262,13 +262,13 @@ Pastikan miner template testnet mengembalikan:
 
 {
 "network": "testnet",
-"network_id": "idr-testnet-1",
+"network_id": "ind-testnet-1",
 "chain_id": 777101
 }
 
 Standalone miner harus bisa:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8611 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8611 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 
@@ -293,8 +293,8 @@ Expected:
 
 Test:
 
-* localnet service required stake = 100 IDR.
-* testnet service required stake = value dari config.Testnet(), misalnya 1000 IDR jika sudah diset.
+* localnet service required stake = 100 dIDR.
+* testnet service required stake = value dari config.Testnet(), misalnya 1000 dIDR jika sudah diset.
 * Jangan hardcode localnet di service collateral.
 
 ==================================================
@@ -317,13 +317,13 @@ Test flow:
 * mine enough for stake if needed.
 * stake lock required amount if possible.
 * service register.
-* idrservice --once.
+* indoservice --once.
 * service score shows network/testnet stake requirement.
 
 Tetap:
 
 * service points simulation only.
-* no IDR reward.
+* no dIDR reward.
 * no supply mutation.
 
 ==================================================
@@ -351,7 +351,7 @@ Node start harus log:
 * tip
 
 Contoh:
-node started network=testnet network_id=idr-testnet-1 chain_id=777101 genesis=...
+node started network=testnet network_id=ind-testnet-1 chain_id=777101 genesis=...
 
 ==================================================
 11. Commands / CLI UX
@@ -361,7 +361,7 @@ Tambahkan/rapikan commands jika perlu:
 
 1. network info
    Optional:
-   go run ./node/cmd/deskachain --datadir <DIR> network info
+   go run ./node/cmd/indochain --datadir <DIR> network info
 
 Output:
 
@@ -400,7 +400,7 @@ Isi:
 
 * Phase 3.3 adalah controlled/local testnet bootstrap.
 * Belum public production testnet.
-* IDR testnet tidak punya nilai uang.
+* dIDR testnet tidak punya nilai uang.
 * Staking testnet bukan APY.
 * Service points simulation only.
 * Cara start Node A bootstrap.
@@ -409,7 +409,7 @@ Isi:
 * Cara sync Node B.
 * Cara cek chain validate.
 * Cara cek network mismatch.
-* Cara run idrservice controlled.
+* Cara run indoservice controlled.
 
 Update:
 
@@ -449,7 +449,7 @@ Tambahkan/update tests:
 * init testnet.
 * metadata network testnet.
 * chain_id 777101.
-* network_id idr-testnet-1.
+* network_id ind-testnet-1.
 * genesis_hash testnet.
 
 4. TestStartUsesDatadirNetworkMetadata
@@ -497,12 +497,12 @@ Tambahkan/update tests:
 
 12. TestMinerTemplateTestnetProfile
 
-* /miner/template on testnet returns network testnet, network_id idr-testnet-1, chain_id 777101.
+* /miner/template on testnet returns network testnet, network_id ind-testnet-1, chain_id 777101.
 
-13. TestidrMinerTestnetOnce
+13. TestindMinerTestnetOnce
 
 * optional integration if existing infra supports.
-* mine one block on testnet via idrminer-style RPC.
+* mine one block on testnet via indominer-style RPC.
 * chain valid.
 
 14. TestStakeInfoTestnetProfile
@@ -535,66 +535,66 @@ go test -count=1 ./node/...
 
 Clean old data:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/tn2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/tn1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/tn2 dev reset --yes
 
 Init Node A testnet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn1 --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/tn1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/tn1 --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/tn1 wallet new
 
 Start Node A:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn1 node start --rpc :8611 --p2p :9611 --advertise-p2p http://127.0.0.1:9611
+go run ./node/cmd/indochain --datadir ./testdata/tn1 node start --rpc :8611 --p2p :9611 --advertise-p2p http://127.0.0.1:9611
 
 Check Node A:
 
 Invoke-RestMethod http://127.0.0.1:8611/health
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 stake info
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain_id 777101
 * genesis_hash testnet
 * stake params testnet
 
 Init Node B testnet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn2 --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/tn2 --network testnet init
 
 Start Node B with bootnode:
 
-go run ./node/cmd/deskachain --datadir ./testdata/tn2 node start --rpc :8612 --p2p :9612 --advertise-p2p http://127.0.0.1:9612 --bootnode http://127.0.0.1:9611
+go run ./node/cmd/indochain --datadir ./testdata/tn2 node start --rpc :8612 --p2p :9612 --advertise-p2p http://127.0.0.1:9612 --bootnode http://127.0.0.1:9611
 
 Check Node B peers:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer check http://127.0.0.1:9611
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer check http://127.0.0.1:9611
 
 Expected:
 
 * peer accepted.
-* network_id idr-testnet-1.
+* network_id ind-testnet-1.
 * chain_id 777101.
 * no network mismatch.
 
 Mine Node A:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --threads 4 --max-blocks 3
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8611 --address <NODE_A_IND_ADDR> --threads 4 --max-blocks 3
 
 Sync Node B:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9611
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9611
 
 Check both:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 chain validate
 
 Expected:
 
@@ -604,14 +604,14 @@ Expected:
 
 Network mismatch manual:
 
-go run ./node/cmd/deskachain --datadir ./testdata/ln1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/ln1 --network localnet init
-go run ./node/cmd/deskachain --datadir ./testdata/ln1 node start --rpc :8621 --p2p :9621 --advertise-p2p http://127.0.0.1:9621
+go run ./node/cmd/indochain --datadir ./testdata/ln1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/ln1 --network localnet init
+go run ./node/cmd/indochain --datadir ./testdata/ln1 node start --rpc :8621 --p2p :9621 --advertise-p2p http://127.0.0.1:9621
 
 Then from testnet node:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer check http://127.0.0.1:9621
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9621
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer check http://127.0.0.1:9621
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8612 peer sync http://127.0.0.1:9621
 
 Expected:
 
@@ -619,25 +619,25 @@ Expected:
 
 Miner template testnet:
 
-Invoke-RestMethod "http://127.0.0.1:8611/miner/template?address=<NODE_A_IDR_ADDR>"
+Invoke-RestMethod "http://127.0.0.1:8611/miner/template?address=<NODE_A_IND_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain_id 777101
 
 Controlled service node testnet optional:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_IDR_ADDR> --endpoint http://127.0.0.1:9701 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 service register --address <NODE_A_IND_ADDR> --endpoint http://127.0.0.1:9701
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8611 --address <NODE_A_IND_ADDR> --endpoint http://127.0.0.1:9701 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8611 service score --address <NODE_A_IND_ADDR>
 
 Expected:
 
 * service works if service_rpc enabled.
 * required stake uses testnet params.
-* simulation only, not IDR.
+* simulation only, not dIDR.
 
 ==================================================
 15. Done criteria
@@ -652,7 +652,7 @@ Phase 3.3 valid jika:
 * mismatch network rejected.
 * two testnet nodes can peer/check/sync.
 * localnet/testnet peer mismatch rejected.
-* miner template and idrminer work on testnet.
+* miner template and indominer work on testnet.
 * stake/service profile params use testnet.
 * docs/Testnet.md exists.
 * all tests pass.

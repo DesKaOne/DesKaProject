@@ -6,15 +6,15 @@ import (
 	"errors"
 	"sort"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/crypto"
-	"deskachain/internal/ledger"
-	"deskachain/internal/staking"
+	"indochain/internal/asset"
+	"indochain/internal/crypto"
+	"indochain/internal/ledger"
+	"indochain/internal/staking"
 )
 
 const (
 	StateRootVersion uint8 = 1
-	StateRootDomain         = "DesKaChain/state-root/v1"
+	StateRootDomain        = "IndoChain/state-root/v1"
 )
 
 var ErrNilLedger = errors.New("nil mature ledger")
@@ -35,13 +35,15 @@ func RootForCollectionsWithAssets(accounts []ledger.StateAccount, stakes []staki
 	balances = append([]asset.BalanceEntry(nil), balances...)
 	sort.Slice(definitions, func(i, j int) bool { return definitions[i].ID < definitions[j].ID })
 	sort.Slice(balances, func(i, j int) bool {
-		if balances[i].Address != balances[j].Address { return balances[i].Address < balances[j].Address }
+		if balances[i].Address != balances[j].Address {
+			return balances[i].Address < balances[j].Address
+		}
 		return balances[i].AssetID < balances[j].AssetID
 	})
 
 	var buf bytes.Buffer
 	buf.WriteByte(StateRootVersion)
-	writeString(&buf, "DesKaChain/state-root/v2-assets")
+	writeString(&buf, "IndoChain/state-root/v2-assets")
 	writeUint32(&buf, uint32(len(accounts)))
 	for _, account := range accounts {
 		writeString(&buf, account.Address)
@@ -79,7 +81,11 @@ func RootForCollectionsWithAssets(accounts []ledger.StateAccount, stakes []staki
 }
 
 func writeBool(buf *bytes.Buffer, value bool) {
-	if value { buf.WriteByte(1) } else { buf.WriteByte(0) }
+	if value {
+		buf.WriteByte(1)
+	} else {
+		buf.WriteByte(0)
+	}
 }
 
 func RootForCollections(accounts []ledger.StateAccount, stakes []staking.Record) (string, error) {

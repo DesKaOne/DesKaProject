@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 func TestBlockVersionActivationGate(t *testing.T) {

@@ -5,9 +5,9 @@ Difficulty observation is informational only. Phase 4.10 does not change the dif
 Read current mining metrics:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 mining status
-./deskachain --rpc-url http://127.0.0.1:9311 mining difficulty
-./deskachain --rpc-url http://127.0.0.1:9311 mining blocks --limit 30
+./indochain --rpc-url http://127.0.0.1:9311 mining status
+./indochain --rpc-url http://127.0.0.1:9311 mining difficulty
+./indochain --rpc-url http://127.0.0.1:9311 mining blocks --limit 30
 ```
 
 Read through RPC:

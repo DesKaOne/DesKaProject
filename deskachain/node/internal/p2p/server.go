@@ -13,14 +13,14 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/nodestate"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
+	"indochain/internal/amount"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/nodestate"
+	"indochain/internal/storage"
+	"indochain/internal/types"
 )
 
 type Server struct {
@@ -488,9 +488,9 @@ func (s Server) acceptPeerIntroduction(intro PeerIntroduction) error {
 
 func (s Server) learnInboundPeer(r *http.Request) {
 	intro := PeerIntroduction{
-		URL:       r.Header.Get("X-IDR-P2P-URL"),
-		NodeID:    r.Header.Get("X-IDR-Node-ID"),
-		NetworkID: r.Header.Get("X-IDR-Network-ID"),
+		URL:       r.Header.Get("X-IND-P2P-URL"),
+		NodeID:    r.Header.Get("X-IND-Node-ID"),
+		NetworkID: r.Header.Get("X-IND-Network-ID"),
 		ChainID:   s.network().ChainID,
 		Version:   s.network().NetworkName,
 		Protocol:  s.network().P2PProtocolVersion,

@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -15,17 +15,17 @@ Status saat ini:
 * Node B chain validate OK.
 * CI dan release artifact workflow sudah hijau.
 * Release binary Windows/Linux + SHA256SUMS valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 * PoW remains the only block-production consensus.
 
 Patch name:
-DesKaChain Phase 4.0 — Public Testnet Multi-Host Deployment
+IndoChain Phase 4.0 — Public Testnet Multi-Host Deployment
 
 Goal:
-Prepare and validate DesKaChain public testnet deployment across multiple real hosts.
+Prepare and validate IndoChain public testnet deployment across multiple real hosts.
 
 This phase should make it easy and safe to run:
 
@@ -93,7 +93,7 @@ Include safety notes:
 * P2P port can be public.
 * Public RPC must be read-only unless specific safe toggles are intended.
 * Wallet/admin RPC must never be public.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
 * Seed peers are not trusted authorities; network ID and genesis are validated.
 
@@ -127,9 +127,9 @@ Add examples:
 
 Mini PC seed over Tailscale:
 
-./deskachain --datadir /var/lib/deskachain/testnet --network testnet init
+./indochain --datadir /var/lib/indochain/testnet --network testnet init
 
-./deskachain --datadir /var/lib/deskachain/testnet node start 
+./indochain --datadir /var/lib/indochain/testnet node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -138,16 +138,16 @@ Mini PC seed over Tailscale:
 
 Windows peer joins:
 
-.\deskachain.exe --datadir .\data\testnet --network testnet init
+.\indochain.exe --datadir .\data\testnet --network testnet init
 
-.\deskachain.exe --datadir .\data\testnet node start `    --rpc :9312`
+.\indochain.exe --datadir .\data\testnet node start `    --rpc :9312`
 --p2p :10312 `    --advertise-p2p http://100.83.159.107:10312`
 --public-rpc `    --enable-miner-rpc`
 --seed-peer http://100.101.251.7:10311/
 
 VPS seed example:
 
-./deskachain --datadir /var/lib/deskachain/testnet node start 
+./indochain --datadir /var/lib/indochain/testnet node start 
 --rpc 127.0.0.1:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://<VPS_PUBLIC_IP>:10311 
@@ -206,15 +206,15 @@ Add docs examples:
 
 From peer node:
 
-./deskachain --rpc-url http://127.0.0.1:9312 peer list
-./deskachain --rpc-url http://127.0.0.1:9312 peer check http://100.101.251.7:10311
-./deskachain --rpc-url http://127.0.0.1:9312 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain validate
+./indochain --rpc-url http://127.0.0.1:9312 peer list
+./indochain --rpc-url http://127.0.0.1:9312 peer check http://100.101.251.7:10311
+./indochain --rpc-url http://127.0.0.1:9312 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain validate
 
 Optional code improvement if simple:
 Add command:
 
-deskachain peer diagnose <peer-url>
+indochain peer diagnose <peer-url>
 
 or improve `peer check` output to include:
 
@@ -275,28 +275,28 @@ Ensure seed file:
 
 Add or update:
 
-examples/systemd/deskachain-testnet.service
-examples/systemd/deskachain-testnet.env
+examples/systemd/indochain-testnet.service
+examples/systemd/indochain-testnet.env
 
 Example env:
 
-IDR_DATADIR=/var/lib/deskachain/testnet
-IDR_NETWORK=testnet
-IDR_RPC_ADDR=0.0.0.0:9311
-IDR_P2P_ADDR=0.0.0.0:10311
-IDR_ADVERTISE_P2P=http://100.101.251.7:10311
-IDR_PUBLIC_RPC=true
-IDR_ENABLE_MINER_RPC=true
-IDR_ENABLE_FAUCET_RPC=false
-IDR_ENABLE_SERVICE_RPC=false
-IDR_SEED_PEERS=
+IND_DATADIR=/var/lib/indochain/testnet
+IND_NETWORK=testnet
+IND_RPC_ADDR=0.0.0.0:9311
+IND_P2P_ADDR=0.0.0.0:10311
+IND_ADVERTISE_P2P=http://100.101.251.7:10311
+IND_PUBLIC_RPC=true
+IND_ENABLE_MINER_RPC=true
+IND_ENABLE_FAUCET_RPC=false
+IND_ENABLE_SERVICE_RPC=false
+IND_SEED_PEERS=
 
 Systemd unit:
 
 * After=network-online.target
 * Wants=network-online.target
-* WorkingDirectory=/opt/deskachain
-* EnvironmentFile=/etc/deskachain/testnet.env
+* WorkingDirectory=/opt/indochain
+* EnvironmentFile=/etc/indochain/testnet.env
 * ExecStart should use env variables.
 * Restart=always
 * RestartSec=5
@@ -307,12 +307,12 @@ Systemd unit:
 * StandardError=journal
 
 Add install commands:
-sudo useradd --system --home /var/lib/deskachain --shell /usr/sbin/nologin deskachain
-sudo mkdir -p /opt/deskachain /var/lib/deskachain/testnet /etc/deskachain
-sudo chown -R deskachain:deskachain /var/lib/deskachain
+sudo useradd --system --home /var/lib/indochain --shell /usr/sbin/nologin indochain
+sudo mkdir -p /opt/indochain /var/lib/indochain/testnet /etc/indochain
+sudo chown -R indochain:indochain /var/lib/indochain
 sudo systemctl daemon-reload
-sudo systemctl enable --now deskachain-testnet
-journalctl -u deskachain-testnet -f
+sudo systemctl enable --now indochain-testnet
+journalctl -u indochain-testnet -f
 
 ==================================================
 7. Multi-host manual validation plan
@@ -347,9 +347,9 @@ Commands:
 
 Host A:
 
-./deskachain --datadir ./data/seed --network testnet init
+./indochain --datadir ./data/seed --network testnet init
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -358,9 +358,9 @@ Host A:
 
 Host B:
 
-./deskachain --datadir ./data/node_b --network testnet init
+./indochain --datadir ./data/node_b --network testnet init
 
-./deskachain --datadir ./data/node_b node start 
+./indochain --datadir ./data/node_b node start 
 --rpc 0.0.0.0:9312 
 --p2p 0.0.0.0:10312 
 --advertise-p2p http://100.83.159.107:10312 
@@ -370,20 +370,20 @@ Host B:
 
 Host B checks:
 
-./deskachain --rpc-url http://127.0.0.1:9312 peer list
-./deskachain --rpc-url http://127.0.0.1:9312 peer check http://100.101.251.7:10311
+./indochain --rpc-url http://127.0.0.1:9312 peer list
+./indochain --rpc-url http://127.0.0.1:9312 peer check http://100.101.251.7:10311
 
 Mine from Host B to Host B or Host A:
 
-./deskachain --datadir ./data/miner --network testnet init
-ADDR=$(./deskachain --datadir ./data/miner wallet new)
+./indochain --datadir ./data/miner --network testnet init
+ADDR=$(./indochain --datadir ./data/miner wallet new)
 
-./idrminer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9312 --address "$ADDR" --threads 2 --once
 
 Check Host A:
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 
 Expected:
 

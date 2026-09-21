@@ -1,11 +1,11 @@
 package p2p
 
 import (
-	"deskachain/internal/chain"
-	"deskachain/internal/types"
+	"indochain/internal/chain"
+	"indochain/internal/types"
 )
 
-const Network = "deskachain-local"
+const Network = "indochain-local"
 
 type Status struct {
 	Network            string `json:"network"`

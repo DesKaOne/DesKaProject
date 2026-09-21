@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -44,7 +44,7 @@ Status saat ini:
   * mempool atomic write/duplicate guard/basic safety cleanup.
 
 Nama patch:
-DesKaChain Phase 2.6.6 — Protocol Spec Freeze & IDR Base58 Address Migration
+IndoChain Phase 2.6.6 — Protocol Spec Freeze & iND Base58 Address Migration
 
 Tujuan:
 Memfinalkan fondasi protokol sebelum project makin besar, terutama:
@@ -54,10 +54,10 @@ Memfinalkan fondasi protokol sebelum project makin besar, terutama:
 * crypto key/signature direction,
 * network profile foundation,
 * protocol versioning,
-* backward compatibility lokal untuk address lama `idr1...`.
+* backward compatibility lokal untuk address lama `iND1...`.
 
 Setelah phase ini, wallet baru harus memakai address format baru:
-IDR + Base58Check(...)
+iND + Base58Check(...)
 
 Aturan penting:
 
@@ -84,15 +84,15 @@ Aturan penting:
 
 Ganti format address baru dari format dev lama:
 
-idr1 + sha256(publicKeyHex)[:40]
+iND1 + sha256(publicKeyHex)[:40]
 
 menjadi format final:
 
-IDR + Base58Check(payload)
+iND + Base58Check(payload)
 
 Format:
 
-* Human prefix literal: `IDR`
+* Human prefix literal: `iND`
 * Encoding body: Bitcoin-style Base58 alphabet
 * Payload sebelum checksum:
   version byte      1 byte
@@ -102,18 +102,18 @@ Format:
 * Base58Check body:
   base58(payload + checksum)
 * Final address:
-  "IDR" + base58(payload + checksum)
+  "iND" + base58(payload + checksum)
 
 Contoh bentuk:
-IDRxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+INDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 Catatan:
 
 * Jangan mengurangi ukuran public key hash hanya demi membuat panjang address sama persis dengan Bitcoin/Dogecoin.
 * Panjang address boleh sedikit berbeda, yang penting aman dan konsisten.
 * Address harus case-sensitive.
-* Prefix `IDR` harus uppercase.
-* Lowercase `idr...` untuk format baru harus invalid, kecuali legacy `idr1...` dev address dalam mode compatibility.
+* Prefix `iND` harus uppercase.
+* Lowercase `ind...` untuk format baru harus invalid, kecuali legacy `iND1...` dev address dalam mode compatibility.
 
 Tambahkan package/helper address, misalnya:
 internal/address
@@ -223,19 +223,19 @@ Pastikan semua transaksi baru memakai key/signature secp256k1.
 ==================================================
 
 Address lama:
-idr1...
+iND1...
 
 harus dianggap legacy dev address.
 
 Aturan:
 
-* wallet baru harus selalu generate address baru `IDR...`.
+* wallet baru harus selalu generate address baru `iND...`.
 * address validation default menerima address baru.
-* legacy `idr1...` boleh diterima hanya untuk localnet/dev compatibility jika existing tests/data masih butuh.
+* legacy `iND1...` boleh diterima hanya untuk localnet/dev compatibility jika existing tests/data masih butuh.
 * Jangan jadikan legacy address sebagai format utama.
 * Tambahkan warning di wallet inspect/export jika wallet masih memakai legacy address.
 * README harus menjelaskan:
-  `idr1...` adalah legacy dev address dan tidak untuk public testnet/mainnet.
+  `iND1...` adalah legacy dev address dan tidak untuk public testnet/mainnet.
 
 Jika terlalu rumit migrasi otomatis, cukup:
 
@@ -274,8 +274,8 @@ Profiles minimal:
 1. localnet
    Name: localnet
    ChainID: 777001
-   NetworkID: idr-local-1
-   AddressPrefix: IDR
+   NetworkID: ind-local-1
+   AddressPrefix: iND
    AddressVersion: 0x1E
    LegacyAddressAllowed: true
    DefaultRPCPort: 8331
@@ -284,8 +284,8 @@ Profiles minimal:
 2. testnet
    Name: testnet
    ChainID: 777002
-   NetworkID: idr-test-1
-   AddressPrefix: IDR
+   NetworkID: ind-test-1
+   AddressPrefix: iND
    AddressVersion: 0x1F
    LegacyAddressAllowed: false
    DefaultRPCPort: 18331
@@ -294,8 +294,8 @@ Profiles minimal:
 3. mainnet
    Name: mainnet
    ChainID: 777000
-   NetworkID: idr-main-1
-   AddressPrefix: IDR
+   NetworkID: ind-main-1
+   AddressPrefix: iND
    AddressVersion: 0x20
    LegacyAddressAllowed: false
    DefaultRPCPort: 8333
@@ -303,7 +303,7 @@ Profiles minimal:
 
 Catatan:
 
-* Untuk Phase ini boleh semua tetap memakai prefix visual `IDR`.
+* Untuk Phase ini boleh semua tetap memakai prefix visual `iND`.
 * Perbedaan network minimal ada di address version dan network id.
 * Later phase bisa mempertimbangkan prefix visual berbeda untuk testnet/localnet jika perlu.
 * Jangan biarkan config tersebar hardcode `config.Localnet()` di banyak tempat tanpa alasan.
@@ -356,7 +356,7 @@ wallet new
 
 Expected:
 
-* output address baru `IDR...`
+* output address baru `iND...`
 * private key tetap bisa diexport hex 64 chars jika command export ada.
 * wallet file menyimpan cukup data untuk recover address.
 * public key compressed bytes atau hex disimpan jika existing wallet model butuh.
@@ -374,7 +374,7 @@ Expected:
 * legacy wallet diberi label/warning jika ada.
 
 Output contoh:
-address: IDR...
+address: iND...
 format: base58check
 network: localnet
 key curve: secp256k1
@@ -397,11 +397,11 @@ Semua command yang menerima address harus memakai ValidateAddress:
 
 Rules:
 
-* New address IDR Base58Check valid.
+* New address iND Base58Check valid.
 * Wrong checksum invalid.
 * Wrong version invalid untuk selected network.
 * Wrong prefix invalid.
-* Legacy idr1 accepted only if profile.LegacyAddressAllowed == true.
+* Legacy iND1 accepted only if profile.LegacyAddressAllowed == true.
 * Invalid address error harus jelas:
   invalid address: checksum mismatch
   invalid address: wrong network version
@@ -445,11 +445,11 @@ Commands yang membuat wallet/address otomatis harus memakai format baru:
 * tests mining
 
 Expected output:
-miner: IDR...
-user1: IDR...
-user2: IDR...
+miner: iND...
+user1: iND...
+user2: iND...
 
-Jangan biarkan test helper generate `idr1...` lagi kecuali explicit legacy test.
+Jangan biarkan test helper generate `iND1...` lagi kecuali explicit legacy test.
 
 ==================================================
 12. Docs update
@@ -468,13 +468,13 @@ Tambahkan section:
 Address format:
 
 * New format:
-  IDR + Base58Check(version + pubkey_hash + checksum)
+  iND + Base58Check(version + pubkey_hash + checksum)
 * PubKeyHash:
   RIPEMD160(SHA256(compressed secp256k1 public key))
 * Private key:
   raw 32-byte hex
 * Legacy:
-  idr1... is localnet/dev legacy only
+  iND1... is localnet/dev legacy only
 
 Network profiles:
 
@@ -491,7 +491,7 @@ Protocol versions:
 
 Catatan publik:
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet claim, if implemented, will be capped and time-limited.
 * No price promise.
 * No APY promise.
@@ -516,7 +516,7 @@ Tambahkan/update tests:
 
 4. Address encode:
 
-* generated address starts with IDR.
+* generated address starts with iND.
 * address validates.
 
 5. Address wrong prefix:
@@ -533,7 +533,7 @@ Tambahkan/update tests:
 
 8. Legacy address:
 
-* `idr1...` valid hanya di localnet if LegacyAddressAllowed true.
+* `iND1...` valid hanya di localnet if LegacyAddressAllowed true.
 * invalid di testnet/mainnet.
 
 9. Private key hex:
@@ -552,7 +552,7 @@ Tambahkan/update tests:
 
 11. Wallet new:
 
-* generated wallet address starts IDR.
+* generated wallet address starts with iND.
 * wallet inspect shows base58check/secp256k1.
 
 12. Wallet import/export:
@@ -563,13 +563,13 @@ Tambahkan/update tests:
 
 13. Send tx:
 
-* send from IDR address to IDR address.
+* send from iND address to iND address.
 * signature validates.
 * balance changes after mining.
 
 14. Mining address validation:
 
-* mine to IDR address success.
+* mine to iND address success.
 * mine to invalid checksum address fails.
 
 15. RPC address validation:
@@ -578,11 +578,11 @@ Tambahkan/update tests:
 
 16. Dev fork-sim:
 
-* generated miner addresses start IDR.
+* generated miner addresses start iND.
 
 17. Reorg tx sim:
 
-* miner/user addresses start IDR.
+* miner/user addresses start iND.
 * scenarios still pass.
 
 18. P2P handshake:
@@ -609,62 +609,62 @@ go test ./node/...
 
 Manual wallet test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/address dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/address init
-go run ./node/cmd/deskachain --datadir ./testdata/address wallet new
+go run ./node/cmd/indochain --datadir ./testdata/address dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/address init
+go run ./node/cmd/indochain --datadir ./testdata/address wallet new
 
 Expected:
-IDR...
+iND...
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/address node start --rpc :8381 --p2p :9381 --advertise-p2p http://127.0.0.1:9381
+go run ./node/cmd/indochain --datadir ./testdata/address node start --rpc :8381 --p2p :9381 --advertise-p2p http://127.0.0.1:9381
 
 Mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <IDR_ADDRESS> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 mine --address <IND_ADDRESS> --blocks 3
 
 Expected:
 mined block height=1 ...
-miner balance: 150 IDR
+miner balance: 150 dIDR
 
 Chain info:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 chain info
 
 Expected:
 height: 3
-total supply: 150 IDR
+total supply: 150 dIDR
 network: localnet
 chain id: 777001
 protocol version: ...
 
 Send test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/address wallet new
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 send --from <ADDR_A> --to <ADDR_B> --amount 10
+go run ./node/cmd/indochain --datadir ./testdata/address wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 send --from <ADDR_A> --to <ADDR_B> --amount 10
 
 Then mine 1 block:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8381 mine --address <ADDR_A> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8381 mine --address <ADDR_A> --blocks 1
 
 Expected:
-balance B: 10 IDR
+balance B: 10 dIDR
 normal transactions: 1
 
 Dev reorg tx sim:
 
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
 
 Expected output addresses:
-miner common: IDR...
-user1: IDR...
-user2: IDR...
+miner common: iND...
+user1: iND...
+user2: iND...
 
 Do not over-engineer.
 Focus Phase 2.6.6 only on:
 
-* IDR Base58Check address,
+* iND Base58Check address,
 * secp256k1 key/signature migration,
 * raw 32-byte private key hex,
 * network profile foundation,

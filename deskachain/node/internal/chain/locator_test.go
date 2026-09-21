@@ -3,7 +3,7 @@ package chain
 import (
 	"testing"
 
-	"deskachain/internal/types"
+	"indochain/internal/types"
 )
 
 func TestBuildBlockLocatorGenesis(t *testing.T) {

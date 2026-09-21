@@ -3,7 +3,7 @@ package types
 import "testing"
 
 func TestMerkleRootChangesWhenTransactionsChange(t *testing.T) {
-	first := NewCoinbaseTransaction("idr10000000000000000000000000000000000000000", 1, 1)
+	first := NewCoinbaseTransaction("iND10000000000000000000000000000000000000000", 1, 1)
 	second := first
 	second.Amount = 2
 	second.RefreshID()

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func Parse(value string) (uint64, error) {

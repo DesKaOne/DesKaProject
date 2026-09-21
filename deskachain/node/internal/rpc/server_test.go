@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestMainnetReadOnlyRPCPath(t *testing.T) {
@@ -15,6 +15,7 @@ func TestMainnetReadOnlyRPCPath(t *testing.T) {
 	}{
 		{"/network/info", true},
 		{"/health", true},
+		{"/node/metrics", true},
 		{"/chain/info", true},
 		{"/mempool", true},
 		{"/stake/status", true},

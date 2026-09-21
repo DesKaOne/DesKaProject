@@ -1,24 +1,24 @@
-# DesKaChain Service Node Simulation
+# IndoChain Service Node Simulation
 
 Phase 3.0 introduces a research-only service node layer for bandwidth and uptime contribution experiments.
 
-This layer is not consensus mining. PoW remains the only canonical block creation mechanism. Service node points are not IDR, are not spendable, and do not change total supply, circulating supply, balances, difficulty, cumulative work, coinbase rewards, or chain validation.
+This layer is not consensus mining. PoW remains the only canonical block creation mechanism. Service node points are not dIDR, are not spendable, and do not change total supply, circulating supply, balances, difficulty, cumulative work, coinbase rewards, or chain validation.
 
-Since Phase 3.2, a service node can become stake-eligible when its owner address has active staking collateral at or above the configured required stake. This collateral only affects eligibility metadata and simulated service points; it does not make the node a validator and does not create spendable IDR rewards.
+Since Phase 3.2, a service node can become stake-eligible when its owner address has active staking collateral at or above the configured required stake. This collateral only affects eligibility metadata and simulated service points; it does not make the node a validator and does not create spendable dIDR rewards.
 
-Phase 3.2.1 adds regression tests around this collateral eligibility. Staking remains collateral only: no PoS, no validator set, no staking APY, no IDR staking reward, and no slashing in this phase.
+Phase 3.2.1 adds regression tests around this collateral eligibility. Staking remains collateral only: no PoS, no validator set, no staking APY, no dIDR staking reward, and no slashing in this phase.
 
-Phase 3.4.1 adds an end-to-end controlled testnet scenario where faucet-funded testnet IDR is locked as service-node collateral before running the service simulation. This proves the faucet, stake, and service layers agree on the same testnet profile and address.
+Phase 3.4.1 adds an end-to-end controlled testnet scenario where faucet-funded testnet dIDR is locked as service-node collateral before running the service simulation. This proves the faucet, stake, and service layers agree on the same testnet profile and address.
 
 Phase 3.5 documents service-node operator mode in `docs/Operator.md`. Service write RPC should stay disabled on public read-only nodes unless the node is intentionally running a controlled verifier/test setup.
 
-Phase 3.9 adds deployment preparation docs in `docs/DeployTestnet.md`. The service owner wallet should be backed up, and the service agent should use its own state file such as `/var/lib/deskachain/service-agent-state.json`.
+Phase 3.9 adds deployment preparation docs in `docs/DeployTestnet.md`. The service owner wallet should be backed up, and the service agent should use its own state file such as `/var/lib/indochain/service-agent-state.json`.
 
 Phase 4.2 documents the public-testnet multi-host faucet, staking collateral, and service simulation flow. Stake collateral is chain-backed and syncs between nodes. The service-node registry, challenges, and score samples are still local simulation state in `service_nodes.json`, `service_challenges.json`, and `service_rewards.json` on the RPC node that the agent talks to.
 
 ## What It Tracks
 
-- Service node registration tied to a `IDR...` owner address.
+- Service node registration tied to a `dIDR...` owner address.
 - Heartbeats and recent uptime.
 - Local verification challenge simulation.
 - Latency and bandwidth samples submitted to a challenge.
@@ -34,10 +34,10 @@ Phase 4.2 documents the public-testnet multi-host faucet, staking collateral, an
 - No VPN or public relay.
 - No bandwidth selling.
 - No staking or PoS.
-- No staking rewards, validator role, or IDR slashing in Phase 3.2.
+- No staking rewards, validator role, or dIDR slashing in Phase 3.2.
 - No GPU mining.
 - No mining pool.
-- No IDR balance mutation.
+- No dIDR balance mutation.
 
 ## Scoring
 
@@ -82,27 +82,27 @@ Phase 3.0 applies penalties instead of permanent bans by default.
 Read-only service score and rewards endpoints are available like other read-only RPC. Service write endpoints are disabled by default when `--public-rpc` is enabled. Enable them only in controlled verifier/test setups:
 
 ```powershell
-go run ./node/cmd/deskachain node start --public-rpc --enable-service-rpc=true
+go run ./node/cmd/indochain node start --public-rpc --enable-service-rpc=true
 ```
 
 ## Testnet Collateral Flow
 
-For a local controlled testnet, fund the service owner with the dev faucet, mine the faucet transaction, lock `1000 IDR`, mine the stake transaction, then register and run the service agent:
+For a local controlled testnet, fund the service owner with the dev faucet, mine the faucet transaction, lock `1000 dIDR`, mine the stake transaction, then register and run the service agent:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 faucet request --address <OWNER_ADDR>
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 stake lock --address <OWNER_ADDR> --amount 1000
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8911 --address <FAUCET_ADDR> --threads 4 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service register --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8911 --address <OWNER_ADDR> --endpoint http://127.0.0.1:9971 --once
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8911 service score --address <OWNER_ADDR>
 ```
 
 Expected service score metadata:
 
-- required stake: `1000 IDR`
-- active stake: `1000 IDR`
+- required stake: `1000 dIDR`
+- active stake: `1000 dIDR`
 - stake eligible: `true`
 - collateral status: `eligible`
 - eligible simulated points: greater than `0`
@@ -116,32 +116,32 @@ For public-testnet deployment prep, use `examples/testnet/service-node.env` for 
 Host B can run the service owner workflow against its local synced node:
 
 ```sh
-./deskachain --datadir ./data/wallet_b --network testnet init
-OWNER_ADDR="$(./deskachain --datadir ./data/wallet_b wallet new)"
-./deskachain --rpc-url http://<HOST_A_RPC_IP>:9311 faucet request --address "$OWNER_ADDR"
-./idrminer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
-./deskachain --rpc-url http://127.0.0.1:9312 balance "$OWNER_ADDR"
-./deskachain --rpc-url http://127.0.0.1:9312 stake lock --address "$OWNER_ADDR" --amount 1000
-./idrminer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
-./deskachain --rpc-url http://127.0.0.1:9312 stake list --address "$OWNER_ADDR"
-./deskachain --rpc-url http://127.0.0.1:9312 service register --address "$OWNER_ADDR" --endpoint http://<HOST_B_REACHABLE_IP>:9971
-./idrservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
-./deskachain --rpc-url http://127.0.0.1:9312 service score --address "$OWNER_ADDR"
+./indochain --datadir ./data/wallet_b --network testnet init
+OWNER_ADDR="$(./indochain --datadir ./data/wallet_b wallet new)"
+./indochain --rpc-url http://<HOST_A_RPC_IP>:9311 faucet request --address "$OWNER_ADDR"
+./indominer --rpc-url http://127.0.0.1:9311 --address <MINER_ADDR> --threads 2 --once
+./indochain --rpc-url http://127.0.0.1:9312 balance "$OWNER_ADDR"
+./indochain --rpc-url http://127.0.0.1:9312 stake lock --address "$OWNER_ADDR" --amount 1000
+./indominer --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --threads 2 --once
+./indochain --rpc-url http://127.0.0.1:9312 stake list --address "$OWNER_ADDR"
+./indochain --rpc-url http://127.0.0.1:9312 service register --address "$OWNER_ADDR" --endpoint http://<HOST_B_REACHABLE_IP>:9971
+./indoservice --rpc-url http://127.0.0.1:9312 --address "$OWNER_ADDR" --endpoint http://<HOST_B_REACHABLE_IP>:9971 --once
+./indochain --rpc-url http://127.0.0.1:9312 service score --address "$OWNER_ADDR"
 ```
 
 Expected:
 
-- active stake: `1000 IDR`.
-- required stake: `1000 IDR`.
+- active stake: `1000 dIDR`.
+- required stake: `1000 dIDR`.
 - stake eligible: `true`.
 - collateral status: `eligible`.
 - eligible simulated points: greater than `0` after a successful challenge.
-- service points remain simulation-only and do not mint spendable IDR.
+- service points remain simulation-only and do not mint spendable dIDR.
 
 Cross-host visibility:
 
 - Chain-backed stake transactions, active stake totals, total supply, height, and tip hash should match on Host A and Host B after sync.
-- Service registration, challenge samples, and reward rows are local to the RPC node that received them. If Host B runs `idrservice --rpc-url http://127.0.0.1:9312`, Host B's `service score` has the local simulation record. Host A will see the same active stake after sync, but it will not automatically have Host B's local `service_nodes.json` registration unless the service owner also registers against Host A with service RPC deliberately enabled there.
+- Service registration, challenge samples, and reward rows are local to the RPC node that received them. If Host B runs `indoservice --rpc-url http://127.0.0.1:9312`, Host B's `service score` has the local simulation record. Host A will see the same active stake after sync, but it will not automatically have Host B's local `service_nodes.json` registration unless the service owner also registers against Host A with service RPC deliberately enabled there.
 - Service RPC disabled should fail clearly. Enable `--enable-service-rpc` only for controlled verifier/test nodes; it does not enable wallet/admin RPC.
 
 ## Future Phases

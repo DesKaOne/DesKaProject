@@ -1,21 +1,21 @@
-# DesKaChain Asset & Fee Model
+# IndoChain Asset & Fee Model
 
 ## Native asset
 
-The DesKaChain v3 asset model defines **IDR** as the native asset:
+The IndoChain v3 asset model defines **dIDR** as the native asset:
 
-- asset ID: `IDR`
-- symbol: `IDR`
+- asset ID: `dIDR`
+- symbol: `dIDR`
 - native decimals: 0
-- protocol fee asset: `IDR`
+- protocol fee asset: `dIDR`
 
-IDR is the native unit used by DesKaBank, DesKaWallet, DesKaPay, DesKaBusiness, and other DesKa services for protocol fees and internal settlement.
+dIDR is the native unit used by DesKaBank, DesKaWallet, DesKaPay, DesKaBusiness, and other DesKa services for protocol fees and internal settlement.
 
-Legacy v1/v2 transactions remain available during the migration. Their historical IDR amount representation is kept so existing chain-hardening tests and old blocks remain compatible.
+Legacy v1/v2 transactions remain available during the migration. Their historical dIDR amount representation is kept so existing chain-hardening tests and old blocks remain compatible.
 
 ## Issued tokens
 
-DesKaChain v3 also reserves explicit issued fungible assets. A token definition contains its issuer, symbol, decimals, supply policy, and status.
+IndoChain v3 also reserves explicit issued fungible assets. A token definition contains its issuer, symbol, decimals, supply policy, and status.
 
 Examples include:
 
@@ -26,7 +26,7 @@ Examples include:
 
 For a token that claims a fiat or commodity peg, backing, redemption, custody, and issuer controls are external business/financial functions. Consensus records token ownership and authorized token issuance operations; it does not independently prove an off-chain reserve.
 
-The native IDR asset cannot be recreated as an issued token.
+The native dIDR asset cannot be recreated as an issued token.
 
 ## Fee payment
 
@@ -34,7 +34,7 @@ The protocol separates the **asset being transferred** from the **asset used to 
 
 For all v3 transactions:
 
-`Fee asset = IDR`
+`Fee asset = dIDR`
 
 By default:
 
@@ -42,28 +42,28 @@ By default:
 
 Therefore a token holder sending:
 
-`100 USDT + 2 IDR fee`
+`100 USDT + 2 dIDR fee`
 
 must have enough of both assets:
 
 - at least 100 USDT
-- at least 2 IDR
+- at least 2 dIDR
 
 ### Paymaster
 
 A paymaster may sponsor the fee:
 
 `User -> token transfer`
-`Paymaster -> IDR fee`
+`Paymaster -> dIDR fee`
 
 The user still signs the transaction. The paymaster adds a separate authorization signature. The paymaster authorization is intentionally excluded from the transaction ID so sponsorship can be attached after the user's transaction payload is fixed.
 
 The active consensus/execution layer must later verify:
 
 1. the token owner is authorized to spend the token;
-2. the effective fee payer has enough spendable IDR;
+2. the effective fee payer has enough spendable dIDR;
 3. a different fee payer supplied a valid authorization;
-4. the fee is charged exactly once in native IDR.
+4. the fee is charged exactly once in native dIDR.
 
 ## Asset transaction types
 
@@ -80,10 +80,10 @@ Asset creation uses a deterministic ID derived from the create transaction ID.
 
 Phase 5.16 introduces the protocol envelope and amount primitives for:
 
-- native IDR
+- native dIDR
 - issued asset metadata
 - explicit asset IDs
-- native-IDR fee payer
+- native-dIDR fee payer
 - paymaster authorization
 - asset-specific decimal formatting/parsing
 
@@ -92,7 +92,7 @@ Phase 5.17 now includes the multi-asset state/execution foundation: per-asset ba
 
 ## Phase 5.18 fee / gas policy
 
-v3 protocol fees are paid exclusively in native **IDR**. The transaction `Fee` field is an integer IDR amount.
+v3 protocol fees are paid exclusively in native **dIDR**. The transaction `Fee` field is an integer dIDR amount.
 
 The active network profile defines a deterministic gas policy:
 
@@ -104,13 +104,13 @@ The active network profile defines a deterministic gas policy:
 
 The gas estimate uses the chain-bound transaction signing preimage, so the result is stable before the sender signature and after any paymaster authorization is attached.
 
-For an issued-token transfer, the token owner pays the IDR fee by default. When `FeePayer` is a different address, the user signs the transaction and the external paymaster supplies its own authorization signature.
+For an issued-token transfer, the token owner pays the dIDR fee by default. When `FeePayer` is a different address, the user signs the transaction and the external paymaster supplies its own authorization signature.
 
 Fees are not newly minted by the v3 coinbase. During block execution the fee is debited from the effective fee payer, held in the protocol fee collector, and settled to the block miner. The v3 coinbase is therefore limited to the configured block subsidy.
 
 ### Fee RPC
 
-`GET /fee/policy` exposes the active fee schedule and confirms that the fee asset is IDR.
+`GET /fee/policy` exposes the active fee schedule and confirms that the fee asset is dIDR.
 
 `POST /fee/estimate` accepts a transaction envelope and returns gas units, encoded signing-byte size, minimum fee, fee asset, and whether the requested fee meets policy.
 
@@ -137,25 +137,25 @@ Migration remains profile-gated: built-in localnet, testnet, and mainnet configu
 
 ## Protocol fee system
 
-V3 fees are denominated exclusively in native `IDR`. The protocol separates the transferred asset from the fee asset.
+V3 fees are denominated exclusively in native `dIDR`. The protocol separates the transferred asset from the fee asset.
 
 For a normal transaction:
 
-`sender -> token/IDR transfer + IDR protocol fee`
+`sender -> token/dIDR transfer + dIDR protocol fee`
 
 For a sponsored transaction:
 
-`sender -> token/IDR transfer`
-`paymaster -> IDR protocol fee`
+`sender -> token/dIDR transfer`
+`paymaster -> dIDR protocol fee`
 
 The fee policy is deterministic and transaction-type aware. A fee quote combines a base-gas schedule with the canonical unsigned envelope size. The configured `MinFee` is the minimum payable fee, while `MinGasPrice` can make the minimum scale with gas usage.
 
 The current fee lifecycle is:
 
-`payer IDR`
+`payer dIDR`
 `    -> protocol fee pool`
 `    -> block producer settlement`
 
-V3 uses zero block subsidy in the current economic profile, so fee income is not created as new IDR. It is transferred from the effective fee payer to the protocol fee pool and then settled to the block producer. The pool is represented as a protocol-owned asset balance and is not a normal user account.
+V3 uses zero block subsidy in the current economic profile, so fee income is not created as new dIDR. It is transferred from the effective fee payer to the protocol fee pool and then settled to the block producer. The pool is represented as a protocol-owned asset balance and is not a normal user account.
 
 Fee policy is exposed through RPC so DesKaWallet/DesKaBank can quote a fee before signing. Paymaster authorization does not alter the transaction ID.

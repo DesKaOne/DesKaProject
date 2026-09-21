@@ -4,12 +4,12 @@ This runbook covers public testnet mining stability. It does not change consensu
 
 ## Miner Runtime
 
-`idrminer` survives temporary RPC failures in continuous mode. It logs RPC unreachable, retry delay, new jobs, found blocks, accepted submits, rejected submits, stale jobs, and clean shutdown.
+`indominer` survives temporary RPC failures in continuous mode. It logs RPC unreachable, retry delay, new jobs, found blocks, accepted submits, rejected submits, stale jobs, and clean shutdown.
 
 Useful flags:
 
 ```sh
-./idrminer --rpc-url http://127.0.0.1:9311 --address <IDR_ADDRESS> \
+./indominer --rpc-url http://127.0.0.1:9311 --address <IND_ADDRESS> \
   --threads 2 \
   --retry \
   --retry-delay 3s \
@@ -30,21 +30,21 @@ Stale submit or duplicate submit is expected when two miners race. The node shou
 One miner to a local Windows node:
 
 ```powershell
-.\idrminer.exe --rpc-url http://127.0.0.1:9312 --address <IDR_ADDRESS> --threads 2 --max-blocks 3
+.\indominer.exe --rpc-url http://127.0.0.1:9312 --address <IND_ADDRESS> --threads 2 --max-blocks 3
 ```
 
 One miner to the VPS seed:
 
 ```powershell
-.\idrminer.exe --rpc-url http://100.86.152.39:9311 --address <IDR_ADDRESS_2> --threads 2 --max-blocks 3
+.\indominer.exe --rpc-url http://100.86.152.39:9311 --address <IND_ADDRESS_2> --threads 2 --max-blocks 3
 ```
 
 After racing miners, check:
 
 ```powershell
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 chain validate
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 mining status
-.\deskachain.exe --rpc-url http://127.0.0.1:9312 peer health
+.\indochain.exe --rpc-url http://127.0.0.1:9312 chain validate
+.\indochain.exe --rpc-url http://127.0.0.1:9312 mining status
+.\indochain.exe --rpc-url http://127.0.0.1:9312 peer health
 ```
 
 ## Isolated Mining Guard
@@ -52,7 +52,7 @@ After racing miners, check:
 Testnet nodes reject miner templates and submits when isolated by default. Configure miners with at least one seed or a reachable upstream:
 
 ```powershell
-.\deskachain.exe --datadir .\data\testnet --network testnet node start `
+.\indochain.exe --datadir .\data\testnet --network testnet node start `
   --public-rpc `
   --enable-miner-rpc `
   --seed-peer http://100.86.152.39:10311 `

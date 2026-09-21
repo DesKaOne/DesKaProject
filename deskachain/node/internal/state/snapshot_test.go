@@ -3,8 +3,8 @@ package state
 import (
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
 )
 
 func TestSnapshotForLedgerRoundTripValidation(t *testing.T) {
@@ -63,13 +63,13 @@ func TestSnapshotEquivalentIncludesPendingCoinbaseState(t *testing.T) {
 		Version:   SnapshotVersion,
 		Height:    3,
 		StateRoot: "root",
-		Coinbases: []ledger.StateCoinbase{{Address: "IDR-a", Amount: 1, Height: 2}},
+		Coinbases: []ledger.StateCoinbase{{Address: "iND-a", Amount: 1, Height: 2}},
 	}
 	b := Snapshot{
 		Version:   SnapshotVersion,
 		Height:    3,
 		StateRoot: "root",
-		Coinbases: []ledger.StateCoinbase{{Address: "IDR-a", Amount: 2, Height: 2}},
+		Coinbases: []ledger.StateCoinbase{{Address: "iND-a", Amount: 2, Height: 2}},
 	}
 	if Equivalent(a, b) {
 		t.Fatal("snapshots with different pending coinbase state considered equivalent")
@@ -81,7 +81,7 @@ func TestSnapshotValidateRejectsFuturePendingCoinbase(t *testing.T) {
 		Version:   SnapshotVersion,
 		Height:    3,
 		StateRoot: "root",
-		Coinbases: []ledger.StateCoinbase{{Address: "IDR-a", Amount: 1, Height: 4}},
+		Coinbases: []ledger.StateCoinbase{{Address: "iND-a", Amount: 1, Height: 4}},
 	}
 	// Root is populated from empty consensus state so validation reaches the
 	// structural pending-coinbase checks below.

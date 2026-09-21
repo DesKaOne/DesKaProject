@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 type BroadcastSummary struct {
@@ -140,4 +140,3 @@ func adjustBroadcastScore(path, peer string, delta int, reason string) {
 		log.Printf("peer score update failed peer=%s error=%v", peer, err)
 	}
 }
-

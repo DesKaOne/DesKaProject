@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -11,8 +11,8 @@ Status saat ini:
   * Host A Mini PC Linux sebagai seed/faucet node.
   * Host B Windows sebagai peer/staker/service owner.
   * Faucet request multi-host lolos.
-  * Stake lock 1000 IDR lolos.
-  * Service register dan idrservice --once lolos.
+  * Stake lock 1000 dIDR lolos.
+  * Service register dan indoservice --once lolos.
   * Service eligible lolos.
   * Host A dan Host B tetap sync.
   * Chain validate pass.
@@ -21,17 +21,17 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.3 — Public Testnet Explorer API & Read-Only Indexer Prep
+IndoChain Phase 4.3 — Public Testnet Explorer API & Read-Only Indexer Prep
 
 Goal:
 Add a safe read-only explorer/indexer layer for public testnet.
@@ -151,7 +151,7 @@ Response should include:
   * faucet_rpc
   * service_rpc
 * mainnet_available: false
-* testnet_value_warning or equivalent: testnet IDR has no monetary value
+* testnet_value_warning or equivalent: testnet dIDR has no monetary value
 
 Do not expose secrets or local private wallet data.
 
@@ -367,7 +367,7 @@ Important:
 If service registry/score is node-local simulation state, document that explorer service endpoint reflects this node’s local service store, not global consensus state.
 If service registration is chain-backed, expose confirmed registration height/tx.
 
-Do not claim service points are IDR.
+Do not claim service points are dIDR.
 Do not expose service write actions.
 
 ==================================================
@@ -466,11 +466,11 @@ Add explicit negative tests:
 
 Optional CLI read-only commands:
 
-deskachain explorer status
-deskachain explorer blocks
-deskachain explorer block <height|hash>
-deskachain explorer tx <txid>
-deskachain explorer address <address>
+indochain explorer status
+indochain explorer blocks
+indochain explorer block <height|hash>
+indochain explorer tx <txid>
+indochain explorer address <address>
 
 These should call RPC explorer endpoints.
 Keep output human-readable.
@@ -565,7 +565,7 @@ Use Host A Mini PC or Windows node after mining a few blocks.
 
 Start node with public RPC and miner RPC:
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://100.101.251.7:10311 
@@ -574,7 +574,7 @@ Start node with public RPC and miner RPC:
 
 Mine a block if needed:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
+./indominer --rpc-url http://127.0.0.1:9311 --address <ADDR> --threads 2 --once
 
 Validate:
 
@@ -596,7 +596,7 @@ Safety checks:
 
 curl http://127.0.0.1:9311/health
 
-deskachain --rpc-url http://127.0.0.1:9311 wallet new
+indochain --rpc-url http://127.0.0.1:9311 wallet new
 
 Expected:
 

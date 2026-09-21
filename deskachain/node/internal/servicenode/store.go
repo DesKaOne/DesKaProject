@@ -12,11 +12,11 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/staking"
-	"deskachain/internal/storage"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/staking"
+	"indochain/internal/storage"
 )
 
 const (
@@ -277,7 +277,7 @@ func (s Store) Score(address string) (Score, error) {
 		StakeEligible:           stakeEligible,
 		CollateralStatus:        collateralStatus,
 		EligibilityNote:         eligibilityNote,
-		Note:                    "service points are simulation only and are not spendable IDR",
+		Note:                    "service points are simulation only and are not spendable dIDR",
 	}, nil
 }
 
@@ -320,9 +320,9 @@ func (s Store) Rewards(address string) ([]Reward, error) {
 
 func rewardReason(score Score) string {
 	if score.EligibilityNote != "" {
-		return score.EligibilityNote + "; not IDR"
+		return score.EligibilityNote + "; not dIDR"
 	}
-	return "daily service score simulation; not IDR"
+	return "daily service score simulation; not dIDR"
 }
 
 func (s Store) collateral(address string) (required uint64, active uint64, eligible bool, status string) {

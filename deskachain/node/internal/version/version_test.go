@@ -11,7 +11,7 @@ func TestInfoFallbacks(t *testing.T) {
 		Version, Commit, BuildDate = oldVersion, oldCommit, oldBuildDate
 	}()
 	Version, Commit, BuildDate = "", "", ""
-	info := Info("DesKaChain")
+	info := Info("IndoChain")
 	if info.Version != "dev" || info.Commit != "unknown" || info.BuildDate != "unknown" {
 		t.Fatalf("unexpected fallbacks: %#v", info)
 	}
@@ -21,8 +21,8 @@ func TestInfoFallbacks(t *testing.T) {
 }
 
 func TestStringContainsVersionFields(t *testing.T) {
-	text := String("idrminer")
-	for _, want := range []string{"idrminer", "version:", "commit:", "built:", "go:", "os/arch:", "networks: localnet,testnet", "mainnet: not available"} {
+	text := String("indominer")
+	for _, want := range []string{"indominer", "version:", "commit:", "built:", "go:", "os/arch:", "networks: localnet,testnet", "mainnet: not available"} {
 		if !strings.Contains(text, want) {
 			t.Fatalf("version string missing %q:\n%s", want, text)
 		}

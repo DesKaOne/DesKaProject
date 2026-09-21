@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -17,17 +17,17 @@ Status saat ini:
   * admin_rpc=false
   * faucet_rpc=false by default
   * service_rpc=false by default
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.6 — Public Testnet Release Candidate & Operator Checklist
+IndoChain Phase 4.6 — Public Testnet Release Candidate & Operator Checklist
 
 Goal:
-Prepare DesKaChain public testnet as a release candidate that can be shared with external testers/operators.
+Prepare IndoChain public testnet as a release candidate that can be shared with external testers/operators.
 
 This phase should produce:
 
@@ -71,9 +71,9 @@ v0.4.6-testnet-rc1
 
 Ensure version output can show RC version from build script:
 
-deskachain version
-idrminer --version
-idrservice --version
+indochain version
+indominer --version
+indoservice --version
 
 Expected:
 
@@ -108,9 +108,9 @@ A. Summary
 
 B. Included binaries
 
-* deskachain
-* idrminer
-* idrservice
+* indochain
+* indominer
+* indoservice
 
 C. Supported platforms
 
@@ -133,7 +133,7 @@ D. Features included
 
 E. Safety warnings
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
 * No profit/reward promises.
 * Do not expose wallet/admin RPC publicly.
@@ -225,11 +225,11 @@ E. Faucet operator
 
 F. Service node
 
-* Confirm owner has 1000 IDR.
+* Confirm owner has 1000 dIDR.
 * Lock stake.
 * Confirm active stake.
 * Enable service RPC deliberately.
-* Run idrservice --once.
+* Run indoservice --once.
 * Confirm service eligible.
 * Confirm service points simulation-only.
 
@@ -281,12 +281,12 @@ Include:
 
 Example Linux:
 
-tar -xzf deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-cd deskachain-v0.4.6-testnet-rc1-linux-amd64
+tar -xzf indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+cd indochain-v0.4.6-testnet-rc1-linux-amd64
 sha256sum -c SHA256SUMS.txt
-./deskachain version
-./deskachain --datadir ./data/testnet --network testnet init
-./deskachain --datadir ./data/testnet node start 
+./indochain version
+./indochain --datadir ./data/testnet --network testnet init
+./indochain --datadir ./data/testnet node start 
 --rpc 127.0.0.1:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://<YOUR_REACHABLE_IP>:10311 
@@ -295,14 +295,14 @@ sha256sum -c SHA256SUMS.txt
 
 Example Windows PowerShell:
 Expand archive.
-.\deskachain.exe version
-.\deskachain.exe --datadir .\data\testnet --network testnet init
-.\deskachain.exe --datadir .\data\testnet node start ...
+.\indochain.exe version
+.\indochain.exe --datadir .\data\testnet --network testnet init
+.\indochain.exe --datadir .\data\testnet node start ...
 
 Warnings:
 
 * Testnet only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet unavailable.
 * No wallet/admin public exposure.
 
@@ -322,12 +322,12 @@ Smoke script should:
 
 * accept binary directory or default `dist/windows-amd64` / `dist/linux-amd64`
 * create temporary datadir
-* run `deskachain version`
+* run `indochain version`
 * init testnet
 * start node in background
 * wait for `/health`
 * create miner wallet/datadir
-* mine one block with `idrminer --once`
+* mine one block with `indominer --once`
 * call:
 
   * chain info
@@ -367,7 +367,7 @@ README-ID.md
 Add explicit artifact verification:
 
 Windows:
-Get-FileHash .\deskachain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
 
 Linux:
 sha256sum -c SHA256SUMS.txt
@@ -439,7 +439,7 @@ Ensure package scripts exclude:
 * private keys
 * faucet state
 * service state
-* idrservice-state.json
+* indoservice-state.json
 * peers runtime store
 * .env with secrets
 * .git
@@ -457,7 +457,7 @@ Check:
 * no runtime datadir in archive.
 * no wallet files in archive.
 * no faucet_state.json.
-* no idrservice-state.json.
+* no indoservice-state.json.
 * no private keys.
 * no `.env` containing secrets.
 * no wallet/admin public enablement in examples.
@@ -468,7 +468,7 @@ If feasible, package script should scan archive contents and fail on forbidden p
 * private_key
 * wallet
 * faucet_state.json
-* idrservice-state.json
+* indoservice-state.json
 * testdata/
 * data/
 * .env if not explicitly examples with safe placeholders
@@ -511,9 +511,9 @@ Do not require secrets.
 
 Ensure all public-facing docs say:
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
-* Do not treat testnet IDR as investment.
+* Do not treat testnet dIDR as investment.
 * No mining income/profit promise.
 * Staking is collateral-only.
 * Service points are simulation-only and not spendable.
@@ -562,9 +562,9 @@ bash ./scripts/package.sh v0.4.6-testnet-rc1 --skip-tests
 
 Expected artifacts:
 
-* deskachain-v0.4.6-testnet-rc1-windows-amd64.zip
-* deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-* deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
+* indochain-v0.4.6-testnet-rc1-windows-amd64.zip
+* indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+* indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
 * SHA256SUMS.txt
 
 ==================================================

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/types"
 )
 
 const (
@@ -120,7 +120,9 @@ func (s *State) ApplyUnlock(tx types.Transaction, height uint64) error {
 	record.UnlockTxID = tx.ID
 	record.UnlockHeight = height
 	releaseHeight, err := arith.Add(height, s.params.UnbondingPeriodBlocks)
-	if err != nil { return errors.New("invalid stake unlock: release height overflow") }
+	if err != nil {
+		return errors.New("invalid stake unlock: release height overflow")
+	}
 	record.ReleaseHeight = releaseHeight
 	s.records[tx.StakeID] = record
 	return nil

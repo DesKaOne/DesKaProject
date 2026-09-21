@@ -10,28 +10,28 @@ import (
 
 	bolt "go.etcd.io/bbolt"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/ledger"
-	"deskachain/internal/staking"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
+	"indochain/internal/asset"
+	"indochain/internal/ledger"
+	"indochain/internal/staking"
+	"indochain/internal/state"
+	"indochain/internal/types"
 )
 
 var (
-	blocksBucket        = []byte("blocks")
-	metaBucket          = []byte("meta")
-	tipKey              = []byte("tip")
-	stateBucket         = []byte("state")
-	stateMetaBucket     = []byte("meta")
+	blocksBucket             = []byte("blocks")
+	metaBucket               = []byte("meta")
+	tipKey                   = []byte("tip")
+	stateBucket              = []byte("state")
+	stateMetaBucket          = []byte("meta")
 	stateAccountsBucket      = []byte("accounts")
 	stateStakesBucket        = []byte("stakes")
 	stateStakesByOwnerBucket = []byte("stakes_by_owner")
 	stateCoinbasesBucket     = []byte("coinbases")
 	stateAssetsBucket        = []byte("assets")
 	stateAssetBalancesBucket = []byte("asset_balances")
-	stateVersionKey     = []byte("version")
-	stateHeightKey      = []byte("height")
-	stateRootKey        = []byte("root")
+	stateVersionKey          = []byte("version")
+	stateHeightKey           = []byte("height")
+	stateRootKey             = []byte("root")
 )
 
 var ErrStateNotInitialized = errors.New("state is not initialized")
@@ -893,7 +893,7 @@ func (s *BoltStore) ValidateStateIndexes() error {
 			}
 			if asset.IsNative(def.ID) {
 				if def.ID != asset.NativeAssetID || def.Symbol != asset.NativeSymbol || def.Decimals != asset.NativeDecimals {
-					return errors.New("invalid persisted native IDR definition")
+					return errors.New("invalid persisted native dIDR definition")
 				}
 			} else if err := asset.ValidateDefinition(def); err != nil {
 				return err
@@ -934,7 +934,7 @@ func (s *BoltStore) ValidateStateIndexes() error {
 				return errors.New("state account key mismatch")
 			}
 			if nativeBalances[account.Address] != account.Confirmed {
-				return errors.New("persisted native IDR/account balance mismatch")
+				return errors.New("persisted native dIDR/account balance mismatch")
 			}
 			return nil
 		}); err != nil {

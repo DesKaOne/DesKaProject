@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestExplorerUIStaticRoutes(t *testing.T) {
 	_, server := newProfileRPCServer(t, config.Testnet())
 
 	index := getText(t, server.URL+"/explorer-ui", http.StatusOK)
-	if !strings.Contains(index, "DesKaChain Explorer") || !strings.Contains(index, `id="app"`) {
+	if !strings.Contains(index, "IndoChain Explorer") || !strings.Contains(index, `id="app"`) {
 		t.Fatalf("index missing app shell: %s", index)
 	}
 	indexSlash := getText(t, server.URL+"/explorer-ui/", http.StatusOK)
@@ -23,14 +23,19 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 	}
 
 	js := getText(t, server.URL+"/explorer-ui/assets/app.js", http.StatusOK)
-	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/search") {
+	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") || !strings.Contains(js, "/node/metrics") {
 		t.Fatalf("app js missing explorer API references")
+	}
+	for _, item := range []string{"renderMonitoring", "monitoring", "data-refresh=\"monitoring\"", "dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block", "tx-badge", "Status", "Type", "pagerHTML(\"asset\"", "selectLimit(\"asset\"", "Asset events", "address-header", "address-value", "error-state", "indexed asset ID"} {
+		if !strings.Contains(js, item) {
+			t.Fatalf("app js missing dashboard presentation feature %q", item)
+		}
 	}
 	if !strings.Contains(js, "data-copy") || !strings.Contains(js, "Copied") {
 		t.Fatalf("app js missing copy helper feedback")
 	}
 	css := getText(t, server.URL+"/explorer-ui/assets/styles.css", http.StatusOK)
-	if !strings.Contains(css, ".topbar") || !strings.Contains(css, "@media") {
+	if !strings.Contains(css, ".topbar") || !strings.Contains(css, ".error-state") || !strings.Contains(css, "@media") {
 		t.Fatalf("css missing expected responsive styles")
 	}
 

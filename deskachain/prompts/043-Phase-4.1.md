@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -17,17 +17,17 @@ Status saat ini:
 * Public testnet genesis candidate stable:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.1 — Public Testnet Long-Running Stability & Restart Recovery
+IndoChain Phase 4.1 — Public Testnet Long-Running Stability & Restart Recovery
 
 Goal:
 Harden public testnet nodes for long-running operation across real hosts.
@@ -125,8 +125,8 @@ Add flags/env only if project already has config style:
 
 * `--peer-sync-interval`
 * `--peer-check-interval`
-* `IDR_PEER_SYNC_INTERVAL`
-* `IDR_PEER_CHECK_INTERVAL`
+* `IND_PEER_SYNC_INTERVAL`
+* `IND_PEER_CHECK_INTERVAL`
 
 If adding flags is too much, use internal defaults and document them.
 
@@ -195,15 +195,15 @@ Systemd unit should support:
 Example commands:
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now deskachain-testnet
-sudo systemctl status deskachain-testnet
-journalctl -u deskachain-testnet -f
+sudo systemctl enable --now indochain-testnet
+sudo systemctl status indochain-testnet
+journalctl -u indochain-testnet -f
 
 Restart test:
 
-sudo systemctl restart deskachain-testnet
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+sudo systemctl restart indochain-testnet
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 
 Failure recovery:
 
@@ -242,7 +242,7 @@ Do not expose secrets.
 
 Optional CLI commands:
 
-* `deskachain node status`
+* `indochain node status`
 * or improve existing `chain info`, `peer list`, and `/health` docs.
 
 Tests:
@@ -295,7 +295,7 @@ Test D — systemd restart:
 
 1. Run Host A under systemd.
 2. Mine at least 1 block.
-3. `sudo systemctl restart deskachain-testnet`
+3. `sudo systemctl restart indochain-testnet`
 4. Confirm height/tip persists.
 5. Confirm chain validate.
 
@@ -313,19 +313,19 @@ Document recovery commands:
 
 Peer state:
 
-./deskachain --rpc-url http://127.0.0.1:9311 peer list
-./deskachain --rpc-url http://127.0.0.1:9311 peer check http://<peer>:<p2p>
-./deskachain --rpc-url http://127.0.0.1:9311 peer sync http://<peer>:<p2p>
+./indochain --rpc-url http://127.0.0.1:9311 peer list
+./indochain --rpc-url http://127.0.0.1:9311 peer check http://<peer>:<p2p>
+./indochain --rpc-url http://127.0.0.1:9311 peer sync http://<peer>:<p2p>
 
 Chain state:
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
 
 Logs:
 
-journalctl -u deskachain-testnet -f
-journalctl -u deskachain-testnet --since "30 minutes ago"
+journalctl -u indochain-testnet -f
+journalctl -u indochain-testnet --since "30 minutes ago"
 
 Expected errors should be documented:
 
@@ -389,7 +389,7 @@ Manual multi-host long-run validation:
 
 Host A Mini PC:
 
-./deskachain --datadir ./data/seed node start 
+./indochain --datadir ./data/seed node start 
 --rpc 0.0.0.0:9311 
 --p2p 0.0.0.0:10311 
 --advertise-p2p http://<HOST_A_REACHABLE_IP>:10311 
@@ -398,7 +398,7 @@ Host A Mini PC:
 
 Host B Windows/Linux:
 
-./deskachain --datadir ./data/node_b node start 
+./indochain --datadir ./data/node_b node start 
 --rpc 0.0.0.0:9312 
 --p2p 0.0.0.0:10312 
 --advertise-p2p http://<HOST_B_REACHABLE_IP>:10312 
@@ -408,19 +408,19 @@ Host B Windows/Linux:
 
 Mine blocks:
 
-./idrminer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 3
+./indominer --rpc-url http://127.0.0.1:9311 --address <ADDR_A> --threads 2 --max-blocks 3
 
 or:
 
-./idrminer --rpc-url http://127.0.0.1:9312 --address <ADDR_B> --threads 2 --max-blocks 3
+./indominer --rpc-url http://127.0.0.1:9312 --address <ADDR_B> --threads 2 --max-blocks 3
 
 Check both:
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain info
-./deskachain --rpc-url http://127.0.0.1:9312 chain info
+./indochain --rpc-url http://127.0.0.1:9311 chain info
+./indochain --rpc-url http://127.0.0.1:9312 chain info
 
-./deskachain --rpc-url http://127.0.0.1:9311 chain validate
-./deskachain --rpc-url http://127.0.0.1:9312 chain validate
+./indochain --rpc-url http://127.0.0.1:9311 chain validate
+./indochain --rpc-url http://127.0.0.1:9312 chain validate
 
 Expected:
 

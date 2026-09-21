@@ -1,4 +1,4 @@
-Anda sedang mengerjakan proyek Go baru bernama **DesKaChain**.
+Anda sedang mengerjakan proyek Go baru bernama **IndoChain**.
 
 ## Tujuan
 
@@ -14,19 +14,19 @@ Membangun MVP (Minimum Viable Product) Fase 1 dari blockchain kecil yang menggun
 * Proyek harus dapat dikompilasi dan dijalankan menggunakan:
 
 ```bash
-go run ./node/cmd/deskachain
+go run ./node/cmd/indochain
 ```
 
 * Tambahkan komentar yang jelas pada bagian yang nantinya akan digunakan untuk integrasi komponen Fase 2/Fase 3.
 
 ## Nama Proyek
 
-deskachain
+indochain
 
 ## Koin
 
-* Nama: DesKaChain
-* Ticker: IDR
+* Nama: IndoChain
+* Ticker: dIDR
 * Desimal: 8
 
 ## Fitur Fase 1
@@ -68,7 +68,7 @@ go.etcd.io/bbolt
 ## Struktur Direktori
 
 ```text
-cmd/deskachain/main.go
+cmd/indochain/main.go
 
 internal/config/
   config.go
@@ -148,9 +148,9 @@ coinbase bool
 
 ## Aturan Nilai (Amount)
 
-* IDR memiliki 8 digit desimal.
+* dIDR memiliki 8 digit desimal.
 * Simpan jumlah secara internal sebagai uint64 dalam satuan terkecil.
-* 1 IDR = 100000000 unit.
+* 1 dIDR = 100000000 unit.
 * CLI boleh menerima format desimal seperti `"1.5"` dan mengonversinya secara aman ke uint64.
 * Jangan gunakan floating point untuk penyimpanan saldo.
 
@@ -162,7 +162,7 @@ coinbase bool
 * Pesan genesis:
 
 ```text
-DesKaChain Genesis - fair CPU mining starts here
+IndoChain Genesis - fair CPU mining starts here
 ```
 
 * Tidak ada premine secara default.
@@ -185,7 +185,7 @@ harus diawali sejumlah karakter `"0"` sesuai difficulty.
 Reward awal:
 
 ```text
-50 IDR per block
+50 dIDR per block
 ```
 
 ### Coinbase Transaction
@@ -261,7 +261,7 @@ Phase 1 wallet storage is not production safe.
 * Format:
 
 ```text
-idr1 + suffix hash/heksadesimal
+iND1 + suffix hash/heksadesimal
 ```
 
 atau placeholder mirip bech32.
@@ -292,7 +292,7 @@ Simpan wallet dalam JSON terpisah agar lebih mudah di-debug.
 ### Inisialisasi Blockchain
 
 ```bash
-go run ./node/cmd/deskachain init
+go run ./node/cmd/indochain init
 ```
 
 * Membuat direktori data.
@@ -306,7 +306,7 @@ chain initialized
 ### Membuat Wallet
 
 ```bash
-go run ./node/cmd/deskachain wallet new
+go run ./node/cmd/indochain wallet new
 ```
 
 * Membuat wallet baru.
@@ -316,7 +316,7 @@ go run ./node/cmd/deskachain wallet new
 ### Menampilkan Wallet
 
 ```bash
-go run ./node/cmd/deskachain wallet list
+go run ./node/cmd/indochain wallet list
 ```
 
 * Menampilkan seluruh address yang tersimpan.
@@ -324,15 +324,15 @@ go run ./node/cmd/deskachain wallet list
 ### Melihat Saldo
 
 ```bash
-go run ./node/cmd/deskachain balance <address>
+go run ./node/cmd/indochain balance <address>
 ```
 
-* Menampilkan saldo terkonfirmasi dalam format desimal IDR.
+* Menampilkan saldo terkonfirmasi dalam format desimal dIDR.
 
 ### Mengirim Transaksi
 
 ```bash
-go run ./node/cmd/deskachain send --from <address> --to <address> --amount 1.25
+go run ./node/cmd/indochain send --from <address> --to <address> --amount 1.25
 ```
 
 * Membuat transaksi yang ditandatangani menggunakan wallet lokal.
@@ -342,7 +342,7 @@ go run ./node/cmd/deskachain send --from <address> --to <address> --amount 1.25
 ### Mining
 
 ```bash
-go run ./node/cmd/deskachain mine --address <minerAddress> --blocks 1
+go run ./node/cmd/indochain mine --address <minerAddress> --blocks 1
 ```
 
 * Menambang block.
@@ -355,7 +355,7 @@ go run ./node/cmd/deskachain mine --address <minerAddress> --blocks 1
 ### Informasi Blockchain
 
 ```bash
-go run ./node/cmd/deskachain chain info
+go run ./node/cmd/indochain chain info
 ```
 
 Menampilkan:
@@ -369,7 +369,7 @@ Menampilkan:
 ### Menampilkan Seluruh Blockchain
 
 ```bash
-go run ./node/cmd/deskachain chain print
+go run ./node/cmd/indochain chain print
 ```
 
 * Menampilkan ringkasan seluruh block.
@@ -377,7 +377,7 @@ go run ./node/cmd/deskachain chain print
 ### Menjalankan RPC Server
 
 ```bash
-go run ./node/cmd/deskachain rpc --addr :8332
+go run ./node/cmd/indochain rpc --addr :8332
 ```
 
 * Menjalankan HTTP JSON API.
@@ -429,7 +429,7 @@ Tambahkan unit test untuk:
 
 Buat README.md yang berisi:
 
-* Apa itu DesKaChain
+* Apa itu IndoChain
 * Ruang lingkup Fase 1
 * Cara menjalankan
 * Contoh penggunaan CLI
@@ -450,11 +450,11 @@ Phase 7 Mainnet
 ```bash
 go mod tidy
 go test ./...
-go run ./node/cmd/deskachain init
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain mine --address <address> --blocks 1
-go run ./node/cmd/deskachain balance <address>
-go run ./node/cmd/deskachain chain info
+go run ./node/cmd/indochain init
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain mine --address <address> --blocks 1
+go run ./node/cmd/indochain balance <address>
+go run ./node/cmd/indochain chain info
 ```
 
 ## Catatan Akhir

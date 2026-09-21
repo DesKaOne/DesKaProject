@@ -75,7 +75,7 @@ for target in windows-amd64 linux-amd64 linux-arm64; do
   cp -R "$ROOT/examples/systemd" "$stage/examples/"
   cp -R "$ROOT/examples/testnet" "$stage/examples/"
 
-  if find "$stage" \( -name wallets.json -o -name chain.db -o -name mempool.json -o -name peers.json -o -name node.lock -o -name node_id -o -name faucet_state.json -o -name idrservice-state.json -o -name idrservice-states.json -o -name '*.key' -o -name '*.pem' \) | grep . >/dev/null; then
+  if find "$stage" \( -name wallets.json -o -name chain.db -o -name mempool.json -o -name peers.json -o -name node.lock -o -name node_id -o -name faucet_state.json -o -name indoservice-state.json -o -name indoservice-states.json -o -name '*.key' -o -name '*.pem' \) | grep . >/dev/null; then
     echo "refusing to package runtime/private state" >&2
     exit 1
   fi
@@ -85,7 +85,7 @@ for target in windows-amd64 linux-amd64 linux-arm64; do
   fi
 
   if [ "$target" = "windows-amd64" ]; then
-    archive="$RELEASE_DIR/deskachain-$VERSION-$target.zip"
+    archive="$RELEASE_DIR/indochain-$VERSION-$target.zip"
     if command -v zip >/dev/null 2>&1; then
       (cd "$stage" && zip -qr "$archive" .)
     elif command -v python3 >/dev/null 2>&1; then
@@ -104,7 +104,7 @@ PY
       exit 1
     fi
   else
-    archive="$RELEASE_DIR/deskachain-$VERSION-$target.tar.gz"
+    archive="$RELEASE_DIR/indochain-$VERSION-$target.tar.gz"
     (cd "$stage" && tar -czf "$archive" .)
   fi
   if [ "$target" = "windows-amd64" ]; then
@@ -123,7 +123,7 @@ PY
     contents="$(mktemp)"
     tar -tzf "$archive" > "$contents"
   fi
-  if grep -E '(^|/)(testdata|data|wallets|\.git|dist)(/|$)|(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|idrservice-state\.json|idrservice-states\.json)|\.(key|pem)$' "$contents" >/dev/null; then
+  if grep -E '(^|/)(testdata|data|wallets|\.git|dist)(/|$)|(^|/)(wallets\.json|chain\.db|mempool\.json|peers\.json|node\.lock|node_id|faucet_state\.json|indoservice-state\.json|indoservice-states\.json)|\.(key|pem)$' "$contents" >/dev/null; then
     echo "refusing archive with runtime/private contents: $archive" >&2
     cat "$contents" >&2
     rm -f "$contents"

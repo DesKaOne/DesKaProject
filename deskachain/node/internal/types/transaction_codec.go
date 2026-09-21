@@ -10,9 +10,9 @@ import (
 const (
 	canonicalTxCodecVersion uint8 = 1
 	maxCanonicalFieldBytes        = 1 << 20
-	canonicalSigningDomain         = "DesKaChain/tx-sign/v2"
-	assetSigningDomain              = "DesKaChain/tx-sign/v3"
-	feePayerSigningDomain           = "DesKaChain/fee-pay/v1"
+	canonicalSigningDomain        = "IndoChain/tx-sign/v2"
+	assetSigningDomain            = "IndoChain/tx-sign/v3"
+	feePayerSigningDomain         = "IndoChain/fee-pay/v1"
 )
 
 var (
@@ -188,16 +188,36 @@ func DecodeCanonicalTransaction(raw []byte) (Transaction, error) {
 	if version == TxVersionAsset {
 		return decodeCanonicalTransactionV3(r, tx)
 	}
-	if tx.ID, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.From, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.To, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.Amount, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Fee, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Nonce, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Timestamp, err = readInt64(r); err != nil { return Transaction{}, err }
-	if tx.Signature, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.PublicKey, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.StakeID, err = readCanonicalString(r); err != nil { return Transaction{}, err }
+	if tx.ID, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.From, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.To, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Amount, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Fee, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Nonce, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Timestamp, err = readInt64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Signature, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.PublicKey, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.StakeID, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
 	if r.Len() != 0 {
 		return Transaction{}, fmt.Errorf("%w: trailing bytes", ErrInvalidCanonicalTx)
 	}
@@ -259,36 +279,86 @@ func readInt64(r *bytes.Reader) (int64, error) {
 
 func decodeCanonicalTransactionV3(r *bytes.Reader, tx Transaction) (Transaction, error) {
 	var err error
-	if tx.ID, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.From, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.To, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.AssetID, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.Amount, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Fee, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Nonce, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.Timestamp, err = readInt64(r); err != nil { return Transaction{}, err }
-	if tx.Signature, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.PublicKey, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.FeePayer, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.FeePayerPublicKey, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.FeePayerSignature, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.AssetName, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.AssetSymbol, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if tx.AssetDecimals, err = r.ReadByte(); err != nil { return Transaction{}, fmt.Errorf("%w: asset decimals", ErrInvalidCanonicalTx) }
-	if tx.AssetMaxSupply, err = readUint64(r); err != nil { return Transaction{}, err }
-	if tx.AssetMintable, err = readByteBool(r); err != nil { return Transaction{}, err }
-	if tx.AssetBurnable, err = readByteBool(r); err != nil { return Transaction{}, err }
-	if tx.AssetPausable, err = readByteBool(r); err != nil { return Transaction{}, err }
-	if tx.AssetPermissioned, err = readByteBool(r); err != nil { return Transaction{}, err }
-	if tx.StakeID, err = readCanonicalString(r); err != nil { return Transaction{}, err }
-	if r.Len() != 0 { return Transaction{}, fmt.Errorf("%w: trailing bytes", ErrInvalidCanonicalTx) }
+	if tx.ID, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.From, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.To, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetID, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Amount, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Fee, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Nonce, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Timestamp, err = readInt64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.Signature, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.PublicKey, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.FeePayer, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.FeePayerPublicKey, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.FeePayerSignature, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetName, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetSymbol, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetDecimals, err = r.ReadByte(); err != nil {
+		return Transaction{}, fmt.Errorf("%w: asset decimals", ErrInvalidCanonicalTx)
+	}
+	if tx.AssetMaxSupply, err = readUint64(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetMintable, err = readByteBool(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetBurnable, err = readByteBool(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetPausable, err = readByteBool(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.AssetPermissioned, err = readByteBool(r); err != nil {
+		return Transaction{}, err
+	}
+	if tx.StakeID, err = readCanonicalString(r); err != nil {
+		return Transaction{}, err
+	}
+	if r.Len() != 0 {
+		return Transaction{}, fmt.Errorf("%w: trailing bytes", ErrInvalidCanonicalTx)
+	}
 	return tx, nil
 }
 
 func readByteBool(r *bytes.Reader) (bool, error) {
 	value, err := r.ReadByte()
-	if err != nil { return false, fmt.Errorf("%w: bool: %v", ErrInvalidCanonicalTx, err) }
-	if value > 1 { return false, fmt.Errorf("%w: invalid bool", ErrInvalidCanonicalTx) }
+	if err != nil {
+		return false, fmt.Errorf("%w: bool: %v", ErrInvalidCanonicalTx, err)
+	}
+	if value > 1 {
+		return false, fmt.Errorf("%w: invalid bool", ErrInvalidCanonicalTx)
+	}
 	return value == 1, nil
 }
 

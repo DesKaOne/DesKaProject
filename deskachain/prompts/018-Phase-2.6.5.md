@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -47,13 +47,13 @@ Status saat ini:
   * total supply canonical benar.
 
 Nama patch:
-DesKaChain Phase 2.6.5 — Runtime Stats & Safety Cleanup
+IndoChain Phase 2.6.5 — Runtime Stats & Safety Cleanup
 
 Tujuan:
 Membersihkan bug kecil dan memperkuat safety runtime sebelum masuk ke:
 
 * Protocol Spec Freeze,
-* IDR Base58 Address Migration,
+* iND Base58 Address Migration,
 * Difficulty Adjustment,
 * Coinbase Maturity,
 * Standalone Miner.
@@ -574,21 +574,21 @@ go test -race ./node/...
 
 Manual quick test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/safety dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/safety init
-go run ./node/cmd/deskachain --datadir ./testdata/safety wallet new
+go run ./node/cmd/indochain --datadir ./testdata/safety dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/safety init
+go run ./node/cmd/indochain --datadir ./testdata/safety wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/safety node start --rpc :8371 --p2p :9371 --advertise-p2p http://127.0.0.1:9371
+go run ./node/cmd/indochain --datadir ./testdata/safety node start --rpc :8371 --p2p :9371 --advertise-p2p http://127.0.0.1:9371
 
 Mine:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8371 mine --address <addr> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8371 mine --address <addr> --blocks 3
 
 Check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8371 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8371 chain info
 
 Expected:
 height: 3
@@ -597,7 +597,7 @@ coinbase blocks: 3
 total transactions: 3
 coinbase transactions: 3
 normal transactions: 0
-total supply: 150 IDR
+total supply: 150 dIDR
 
 Mempool duplicate/manual if possible:
 send same tx twice or submit same tx twice.

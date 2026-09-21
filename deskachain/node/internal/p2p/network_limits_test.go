@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 func TestP2PBlockAndHeaderResponsesHonorNetworkLimits(t *testing.T) {
@@ -60,25 +60,25 @@ func TestSyncRejectsRemoteRangeBeforeHeaderFetch(t *testing.T) {
 		switch r.URL.Path {
 		case "/p2p/handshake":
 			writeJSON(w, http.StatusOK, Handshake{
-				NetworkName: profile.NetworkName,
-				NetworkID: profile.NetworkID,
-				ChainID: profile.ChainID,
-				ProtocolVersion: profile.ProtocolVersion,
+				NetworkName:        profile.NetworkName,
+				NetworkID:          profile.NetworkID,
+				ChainID:            profile.ChainID,
+				ProtocolVersion:    profile.ProtocolVersion,
 				MinProtocolVersion: profile.MinProtocolVersion,
 				P2PProtocolVersion: profile.P2PProtocolVersion,
-				GenesisHash: genesis.Hash,
+				GenesisHash:        genesis.Hash,
 			})
 		case "/p2p/status":
 			statusRequests++
 			writeJSON(w, http.StatusOK, Status{
-				Network: profile.Name,
-				NetworkID: profile.NetworkID,
-				ChainID: profile.ChainID,
-				GenesisHash: genesis.Hash,
-				ProtocolVersion: profile.ProtocolVersion,
+				Network:            profile.Name,
+				NetworkID:          profile.NetworkID,
+				ChainID:            profile.ChainID,
+				GenesisHash:        genesis.Hash,
+				ProtocolVersion:    profile.ProtocolVersion,
 				P2PProtocolVersion: profile.P2PProtocolVersion,
-				Height: 3,
-				TipHash: "peer-tip",
+				Height:             3,
+				TipHash:            "peer-tip",
 			})
 		case "/p2p/headers":
 			headerRequests++
@@ -111,28 +111,28 @@ func TestReorgRejectsOversizedRemoteBranchBeforeBlockFetch(t *testing.T) {
 		switch r.URL.Path {
 		case "/p2p/handshake":
 			writeJSON(w, http.StatusOK, Handshake{
-				NetworkName: profile.NetworkName,
-				NetworkID: profile.NetworkID,
-				ChainID: profile.ChainID,
-				ProtocolVersion: profile.ProtocolVersion,
+				NetworkName:        profile.NetworkName,
+				NetworkID:          profile.NetworkID,
+				ChainID:            profile.ChainID,
+				ProtocolVersion:    profile.ProtocolVersion,
 				MinProtocolVersion: profile.MinProtocolVersion,
 				P2PProtocolVersion: profile.P2PProtocolVersion,
-				GenesisHash: genesis.Hash,
+				GenesisHash:        genesis.Hash,
 			})
 		case "/p2p/status":
 			writeJSON(w, http.StatusOK, Status{
-				Network: profile.Name,
-				NetworkID: profile.NetworkID,
-				ChainID: profile.ChainID,
-				GenesisHash: genesis.Hash,
-				ProtocolVersion: profile.ProtocolVersion,
+				Network:            profile.Name,
+				NetworkID:          profile.NetworkID,
+				ChainID:            profile.ChainID,
+				GenesisHash:        genesis.Hash,
+				ProtocolVersion:    profile.ProtocolVersion,
 				P2PProtocolVersion: profile.P2PProtocolVersion,
-				Height: 5,
-				TipHash: "remote-tip",
+				Height:             5,
+				TipHash:            "remote-tip",
 			})
 		case "/p2p/locator":
 			writeJSON(w, http.StatusOK, LocatorResponse{
-				Height: 5,
+				Height:  5,
 				TipHash: "remote-tip",
 				Locator: []chain.BlockLocatorEntry{{Height: 0, Hash: genesis.Hash}},
 			})

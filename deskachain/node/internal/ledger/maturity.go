@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/asset"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/staking"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/asset"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/staking"
+	"indochain/internal/types"
 )
 
 var ErrImmatureBalance = errors.New("spends immature coinbase")
@@ -226,7 +226,7 @@ func (l *MatureLedger) AssetModelEnabled() bool {
 	return l.profile.TxVersion >= types.TxVersionAsset
 }
 
-// FeePoolBalance returns the pending native IDR fees collected from transactions
+// FeePoolBalance returns the pending native dIDR fees collected from transactions
 // that have been applied but not yet settled to the block producer.
 func (l *MatureLedger) FeePoolBalance() uint64 {
 	if l == nil || !l.AssetModelEnabled() {
@@ -338,7 +338,6 @@ func (l *MatureLedger) applyBlock(block types.Block) error {
 
 }
 
-
 func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64) error {
 	if !tx.Coinbase {
 		return errors.New("transaction is not coinbase")
@@ -348,10 +347,12 @@ func (l *MatureLedger) ApplyCoinbaseAtHeight(tx types.Transaction, height uint64
 	}
 	acct := l.accounts[tx.To]
 	confirmed, err := arith.Add(acct.Confirmed, tx.Amount)
-	if err != nil { return fmt.Errorf("coinbase balance overflow: %w", err) }
+	if err != nil {
+		return fmt.Errorf("coinbase balance overflow: %w", err)
+	}
 	if l.AssetModelEnabled() {
 		if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
-			return fmt.Errorf("native IDR coinbase credit: %w", err)
+			return fmt.Errorf("native dIDR coinbase credit: %w", err)
 		}
 	}
 	acct.Confirmed = confirmed
@@ -406,10 +407,10 @@ func (l *MatureLedger) ApplyTransactionAtHeight(tx types.Transaction, height uin
 		l.accounts[tx.To] = to
 		if l.AssetModelEnabled() {
 			if err := l.assets.Debit(tx.From, asset.NativeAssetID, cost); err != nil {
-				return fmt.Errorf("legacy native IDR asset debit: %w", err)
+				return fmt.Errorf("legacy native dIDR asset debit: %w", err)
 			}
 			if err := l.assets.Credit(tx.To, asset.NativeAssetID, tx.Amount); err != nil {
-				return fmt.Errorf("legacy native IDR asset credit: %w", err)
+				return fmt.Errorf("legacy native dIDR asset credit: %w", err)
 			}
 		}
 	case types.TxTypeStakeLock:
@@ -591,7 +592,7 @@ func BalanceDetailsFromState(
 			continue
 		}
 		if tx.TxType() == types.TxTypeTransfer {
-			// Only native IDR transfers change the native balance.
+			// Only native dIDR transfers change the native balance.
 			if asset.IsNative(tx.EffectiveAssetID()) {
 				if tx.From == address {
 					pendingOutgoing = arith.AddCap(pendingOutgoing, tx.Amount)

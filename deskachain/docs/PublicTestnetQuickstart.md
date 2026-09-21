@@ -1,6 +1,6 @@
-# DesKaChain Public Testnet Quickstart
+# IndoChain Public Testnet Quickstart
 
-This guide is for external public-testnet testers and operators. Testnet IDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
+This guide is for external public-testnet testers and operators. Testnet dIDR has no monetary value. Mainnet is not available. Do not expose wallet/admin RPC publicly.
 
 ## 1. Download
 
@@ -24,7 +24,7 @@ sha256sum -c SHA256SUMS.txt
 Windows PowerShell:
 
 ```powershell
-Get-FileHash .\deskachain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.4.6-testnet-rc1-windows-amd64.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS.txt
 ```
 
@@ -35,16 +35,16 @@ Checksums verify download integrity. They do not replace source review. Do not r
 Linux:
 
 ```sh
-mkdir deskachain-rc
-cd deskachain-rc
-tar -xzf deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-./deskachain version
+mkdir indochain-rc
+cd indochain-rc
+tar -xzf indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+./indochain version
 ```
 
 Windows PowerShell:
 
 ```powershell
-.\deskachain.exe version
+.\indochain.exe version
 ```
 
 Expected output includes version, commit, build time, Go version, OS/ARCH, networks `localnet,testnet`, and `mainnet: not available`.
@@ -54,13 +54,13 @@ Expected output includes version, commit, build time, Go version, OS/ARCH, netwo
 Linux:
 
 ```sh
-./deskachain --datadir ./data/testnet --network testnet init
+./indochain --datadir ./data/testnet --network testnet init
 ```
 
 Windows PowerShell:
 
 ```powershell
-.\deskachain.exe --datadir .\data\testnet --network testnet init
+.\indochain.exe --datadir .\data\testnet --network testnet init
 ```
 
 ## 5. Start A Peer Node
@@ -70,7 +70,7 @@ Replace seed and advertised P2P placeholders with operator-published values.
 Linux:
 
 ```sh
-./deskachain --datadir ./data/testnet node start \
+./indochain --datadir ./data/testnet node start \
   --rpc 127.0.0.1:9311 \
   --p2p 0.0.0.0:10311 \
   --advertise-p2p http://<YOUR_REACHABLE_IP>:10311 \
@@ -82,7 +82,7 @@ Linux:
 Windows PowerShell:
 
 ```powershell
-.\deskachain.exe --datadir .\data\testnet node start `
+.\indochain.exe --datadir .\data\testnet node start `
   --rpc 127.0.0.1:9311 `
   --p2p 0.0.0.0:10311 `
   --advertise-p2p http://<YOUR_REACHABLE_IP>:10311 `
@@ -96,7 +96,7 @@ Seeds are not trusted authorities. They only help a fresh node find peers; every
 Mining nodes should also set an upstream peer so accepted blocks are pushed/backfilled to the public head/explorer node:
 
 ```sh
-./deskachain --datadir ./data/testnet --network testnet node start \
+./indochain --datadir ./data/testnet --network testnet node start \
   --public-rpc \
   --enable-miner-rpc \
   --seed-peer http://100.86.152.39:10311 \
@@ -123,11 +123,11 @@ curl "http://127.0.0.1:9311/explorer/blocks?limit=5"
 Peer diagnostics:
 
 ```sh
-./deskachain --rpc-url http://127.0.0.1:9311 peer list
-./deskachain --rpc-url http://127.0.0.1:9311 peer health
-./deskachain --rpc-url http://127.0.0.1:9311 peer discover
-./deskachain --rpc-url http://127.0.0.1:9311 mining status
-./deskachain --rpc-url http://127.0.0.1:9311 mining difficulty
+./indochain --rpc-url http://127.0.0.1:9311 peer list
+./indochain --rpc-url http://127.0.0.1:9311 peer health
+./indochain --rpc-url http://127.0.0.1:9311 peer discover
+./indochain --rpc-url http://127.0.0.1:9311 mining status
+./indochain --rpc-url http://127.0.0.1:9311 mining difficulty
 ```
 
 ## 7. After Installing RC1
@@ -135,16 +135,16 @@ Peer diagnostics:
 Run the health check:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID idr-testnet-1 -ExpectedChainID 777101 -CheckMining
+powershell -ExecutionPolicy Bypass -File .\scripts\testnet-health.ps1 -RpcUrl http://127.0.0.1:9311 -ExpectedNetwork testnet -ExpectedNetworkID ind-testnet-1 -ExpectedChainID 777101 -CheckMining
 ```
 
 Linux:
 
 ```sh
-bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id idr-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
+bash ./scripts/testnet-health.sh http://127.0.0.1:9311 --expected-network testnet --expected-network-id ind-testnet-1 --expected-chain-id 777101 --check-peer-list --check-mining
 ```
 
-Then verify the explorer, report issues using `.github/ISSUE_TEMPLATE/testnet-bug-report.md`, do not expose wallet/admin RPC, and remember testnet IDR has no monetary value.
+Then verify the explorer, report issues using `.github/ISSUE_TEMPLATE/testnet-bug-report.md`, do not expose wallet/admin RPC, and remember testnet dIDR has no monetary value.
 
 Monitoring and feedback docs:
 
@@ -166,17 +166,17 @@ Use a separate miner wallet datadir.
 Linux:
 
 ```sh
-./deskachain --datadir ./data/miner-wallet --network testnet init
-ADDR="$(./deskachain --datadir ./data/miner-wallet wallet new)"
-./idrminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
+./indochain --datadir ./data/miner-wallet --network testnet init
+ADDR="$(./indochain --datadir ./data/miner-wallet wallet new)"
+./indominer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
 ```
 
 Windows PowerShell:
 
 ```powershell
-.\deskachain.exe --datadir .\data\miner-wallet --network testnet init
-$addr = .\deskachain.exe --datadir .\data\miner-wallet wallet new
-.\idrminer.exe --rpc-url http://127.0.0.1:9311 --address $addr --threads 2 --once
+.\indochain.exe --datadir .\data\miner-wallet --network testnet init
+$addr = .\indochain.exe --datadir .\data\miner-wallet wallet new
+.\indominer.exe --rpc-url http://127.0.0.1:9311 --address $addr --threads 2 --once
 ```
 
 ## 9. Optional Faucet
@@ -186,7 +186,7 @@ Use faucet only if an operator provides a faucet RPC URL. Faucet funds are testn
 ## 10. Safety
 
 - Testnet only.
-- Testnet IDR has no monetary value.
+- Testnet dIDR has no monetary value.
 - Mainnet is unavailable.
 - No mining income, staking APY, profit, or reward promise.
 - Staking is collateral-only.

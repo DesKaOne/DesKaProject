@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/asset"
-	"deskachain/internal/crypto"
-	"deskachain/internal/fees"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/asset"
+	"indochain/internal/crypto"
+	"indochain/internal/fees"
+	"indochain/internal/types"
 )
 
 func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
@@ -78,7 +78,7 @@ func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
 			if tx.EffectiveFeePayer() == tx.From {
 				cost, err = arith.Add(tx.Amount, tx.Fee)
 				if err != nil {
-					return fmt.Errorf("native IDR transfer cost overflow: %w", err)
+					return fmt.Errorf("native dIDR transfer cost overflow: %w", err)
 				}
 			}
 			if err := l.validateNativeSpend(tx.From, cost); err != nil {
@@ -90,7 +90,7 @@ func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
 				}
 			}
 			if l.assets.Balance(tx.From, asset.NativeAssetID) < tx.Amount {
-				return errors.New("native IDR asset balance insufficient")
+				return errors.New("native dIDR asset balance insufficient")
 			}
 			return nil
 		}
@@ -126,7 +126,7 @@ func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
 			return asset.ErrAssetNotFound
 		}
 		if asset.IsNative(def.ID) {
-			return errors.New("native IDR cannot be minted through asset operation")
+			return errors.New("native dIDR cannot be minted through asset operation")
 		}
 		if def.Issuer != tx.From {
 			return asset.ErrUnauthorized
@@ -156,7 +156,7 @@ func (l *MatureLedger) validateAssetTransactionV3(tx types.Transaction) error {
 			return asset.ErrAssetNotFound
 		}
 		if asset.IsNative(def.ID) {
-			return errors.New("native IDR cannot be burned through asset operation")
+			return errors.New("native dIDR cannot be burned through asset operation")
 		}
 		if !def.Burnable {
 			return errors.New("asset is not burnable")
@@ -182,7 +182,7 @@ func (l *MatureLedger) validateNativeSpend(address string, amount uint64) error 
 	}
 	account := l.accounts[address]
 	if account.Confirmed < amount {
-		return errors.New("insufficient native IDR balance")
+		return errors.New("insufficient native dIDR balance")
 	}
 	if account.Mature < amount {
 		return ErrImmatureBalance
@@ -196,7 +196,7 @@ func (l *MatureLedger) validateNativeSpend(address string, amount uint64) error 
 		return errors.New("invalid transaction: spends locked stake")
 	}
 	if l.assets.Balance(address, asset.NativeAssetID) < amount {
-		return errors.New("native IDR asset balance insufficient")
+		return errors.New("native dIDR asset balance insufficient")
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func (l *MatureLedger) spendNative(address string, amount uint64) error {
 	account := l.accounts[address]
 	confirmed, err := arith.Sub(account.Confirmed, amount)
 	if err != nil {
-		return errors.New("native IDR balance underflow")
+		return errors.New("native dIDR balance underflow")
 	}
 	mature, err := arith.Sub(account.Mature, amount)
 	if err != nil {
@@ -230,11 +230,11 @@ func (l *MatureLedger) receiveNative(address string, amount uint64) error {
 	account := l.accounts[address]
 	confirmed, err := arith.Add(account.Confirmed, amount)
 	if err != nil {
-		return fmt.Errorf("recipient native IDR balance overflow: %w", err)
+		return fmt.Errorf("recipient native dIDR balance overflow: %w", err)
 	}
 	mature, err := arith.Add(account.Mature, amount)
 	if err != nil {
-		return fmt.Errorf("recipient mature IDR balance overflow: %w", err)
+		return fmt.Errorf("recipient mature dIDR balance overflow: %w", err)
 	}
 	if err := l.assets.Credit(address, asset.NativeAssetID, amount); err != nil {
 		return err

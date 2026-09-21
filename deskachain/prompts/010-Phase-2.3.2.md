@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go yang sudah ada: DesKaChain.
+Kamu sedang bekerja pada project Go yang sudah ada: IndoChain.
 
 Status saat ini:
 
@@ -10,7 +10,7 @@ Status saat ini:
 * Masalah baru muncul saat remote mining:
 
 Command:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3
 
 Command tersebut stuck/hang tanpa output.
 
@@ -35,7 +35,7 @@ Kemungkinan penyebab:
 * Tidak ada timeout/context pada mining job atau broadcast.
 
 Nama patch:
-DesKaChain Phase 2.3.2 — RPC Mine Deadlock Fix & Mining Job Runtime
+IndoChain Phase 2.3.2 — RPC Mine Deadlock Fix & Mining Job Runtime
 
 Tujuan utama:
 
@@ -204,7 +204,7 @@ Tambahkan CLI:
 mine status
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine status
 
 Output:
 mining status: running
@@ -227,7 +227,7 @@ Untuk remote CLI, default timeout HTTP harus cukup besar:
 5m
 
 Contoh:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
 
 RPC server harus memakai request context:
 
@@ -295,7 +295,7 @@ Response /mine:
 {
 "mined_blocks": 3,
 "new_height": 3,
-"miner_balance": "150 IDR",
+"miner_balance": "150 dIDR",
 "blocks": [...],
 "broadcast": {
 "peers": 1,
@@ -347,7 +347,7 @@ Tapi tambahkan guard:
   --max-nonce <n optional>
 
 Untuk testing:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 1 --max-nonce 5000000
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 1 --max-nonce 5000000
 
 Jika nonce melewati max:
 mining failed: max nonce reached
@@ -397,7 +397,7 @@ Tambahkan command:
 debug locks
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 debug locks
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 debug locks
 
 Response minimal:
 {
@@ -473,16 +473,16 @@ Phase 2.3.2 — RPC Mine Deadlock Fix & Mining Job Runtime
 Tambahkan troubleshooting:
 
 Jika command ini terlihat stuck:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3
 
 Cek dari terminal lain:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 debug locks
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 debug locks
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
 Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 
 Tambahkan contoh:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
 
 Tambahkan catatan:
 
@@ -502,29 +502,29 @@ go test ./...
 
 Setup 2 node seperti biasa:
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
 
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 
 Terminal 1:
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
 Terminal 2:
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 
 Terminal 3:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3 --timeout 5m
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3 --timeout 5m
 
 Jika command mining terlihat lama, terminal lain:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 debug locks
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 debug locks
 
 Expected:
 

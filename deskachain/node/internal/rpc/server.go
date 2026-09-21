@@ -1,14 +1,15 @@
 package rpc
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"deskachain/internal/config"
-	"deskachain/internal/mining"
-	"deskachain/internal/nodestate"
+	"indochain/internal/config"
+	"indochain/internal/mining"
+	"indochain/internal/nodestate"
 )
 
 type NodeInfo struct {
@@ -55,7 +56,12 @@ func ListenAndServe(addr string, paths config.Paths) error {
 }
 
 func ListenAndServeWithInfo(addr string, paths config.Paths, info NodeInfo) error {
-	return NewHTTPServer(addr, paths, info).ListenAndServe()
+	server := NewHTTPServer(addr, paths, info)
+	indexer := newExplorerIndexer(paths, normalizeRPCProfile(info))
+	ctx, cancel := context.WithCancel(context.Background())
+	go indexer.run(ctx, 2*time.Second)
+	server.RegisterOnShutdown(cancel)
+	return server.ListenAndServe()
 }
 
 func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server {
@@ -75,7 +81,6 @@ func NewHTTPServer(addr string, paths config.Paths, info NodeInfo) *http.Server 
 		MaxHeaderBytes:    1 << 20,
 	}
 }
-
 
 func normalizeRPCProfile(info NodeInfo) config.NetworkConfig {
 	if info.Profile.Name == "" {
@@ -105,6 +110,7 @@ func mainnetReadOnlyRPCPath(path string) bool {
 	switch strings.TrimRight(path, "/") {
 	case "/health",
 		"/ready",
+		"/node/metrics",
 		"/network/info",
 		"/node/id",
 		"/node/compare",

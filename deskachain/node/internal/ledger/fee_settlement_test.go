@@ -3,23 +3,29 @@ package ledger
 import (
 	"testing"
 
-	"deskachain/internal/asset"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/asset"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestV3FeesSettleToMinerWithoutIssuance(t *testing.T) {
 	profile := feeTestProfile()
 	miner, err := wallet.NewWithProfile(profile)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	sender, err := wallet.NewWithProfile(profile)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	receiver, err := wallet.NewWithProfile(profile)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	l := NewMatureWithProfile(profile.Consensus, profile)
 	if err := l.ApplyBlock(types.Block{
-		Height:      1,
+		Height:       1,
 		MinerAddress: miner.Address,
 		Transactions: []types.Transaction{types.NewCoinbaseTransactionWithVersion(sender.Address, 100, 1, types.TxVersionAsset)},
 	}); err != nil {
@@ -31,7 +37,7 @@ func TestV3FeesSettleToMinerWithoutIssuance(t *testing.T) {
 		t.Fatal(err)
 	}
 	block := types.Block{
-		Height:      2,
+		Height:       2,
 		MinerAddress: miner.Address,
 		Transactions: []types.Transaction{types.NewCoinbaseTransactionWithVersion(miner.Address, 0, 2, types.TxVersionAsset), tx},
 	}

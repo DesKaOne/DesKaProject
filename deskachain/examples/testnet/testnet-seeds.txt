@@ -1,4 +1,4 @@
-# DesKaChain public testnet RC1 seed peers.
+# IndoChain public testnet RC1 seed peers.
 # Keep one P2P URL per line. Blank lines and comments are ignored.
 # Seeds are discovery helpers only; they are not trusted for consensus.
 #

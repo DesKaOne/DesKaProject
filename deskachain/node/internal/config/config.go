@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	CoinName = "DesKaChain"
+	CoinName = "IndoChain"
 	// Ticker/Decimals/UnitsPerCoin are retained for legacy v1/v2 compatibility.
 	// v3 uses the explicit native asset model below.
-	Ticker   = "IDR"
+	Ticker   = "dIDR"
 	Decimals = 8
 
-	NativeAssetID             = "IDR"
-	NativeAssetSymbol         = "IDR"
+	NativeAssetID             = "dIDR"
+	NativeAssetSymbol         = "dIDR"
 	NativeAssetDecimals uint8 = Decimals
 	FeeAssetID                = NativeAssetID
 
@@ -34,12 +34,12 @@ const (
 	BlockTimeTargetSecs  int64  = 10
 
 	GenesisTimestamp int64 = 1717200000
-	GenesisMessage         = "DesKaChain Genesis - fair CPU mining starts here"
+	GenesisMessage         = "IndoChain Genesis - fair CPU mining starts here"
 
 	// MainnetGenesisHash is the frozen deterministic genesis hash for the
 	// production mainnet profile. Any mismatch must stop startup rather than
 	// silently accepting a different mainnet history.
-	MainnetGenesisHash = "b01cbf6a3b04f3a9e374cad6adfb5cd8d24f5b2ef9723c3f7f440eb7fe53bde4"
+	MainnetGenesisHash = "3f7c6b188ce915a6c1a20a44fa6d02a17f7350776c1db1500daf7356f5f83416"
 )
 
 type Paths struct {
@@ -293,9 +293,9 @@ func Localnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "localnet",
 		Name:                 "localnet",
-		NetworkID:            "idr-local-1",
+		NetworkID:            "ind-local-1",
 		ChainID:              777001,
-		AddressPrefix:        "IDR",
+		AddressPrefix:        "iND",
 		AddressVersion:       0x1E,
 		LegacyAddressAllowed: true,
 		DefaultRPCPort:       8331,
@@ -303,7 +303,7 @@ func Localnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "idr-p2p/1",
+		P2PProtocolVersion:   "ind-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -376,9 +376,9 @@ func Testnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "testnet",
 		Name:                 "testnet",
-		NetworkID:            "idr-testnet-1",
+		NetworkID:            "ind-testnet-1",
 		ChainID:              777101,
-		AddressPrefix:        "IDR",
+		AddressPrefix:        "iND",
 		AddressVersion:       0x1F,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       18331,
@@ -386,7 +386,7 @@ func Testnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "idr-p2p/1",
+		P2PProtocolVersion:   "ind-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -439,12 +439,12 @@ func Testnet() NetworkConfig {
 			BlockSubsidy:  0,
 			FeeOnlyBlocks: true,
 		},
-		MaxPeers:            128,
-		MaxReorgDepth:       128,
-		MinMiningPeers:      1,
-		AllowIsolatedMining: false,
-		MinWritePeers:       1,
-		AllowIsolatedWrites: false,
+		MaxPeers:                 128,
+		MaxReorgDepth:            128,
+		MinMiningPeers:           1,
+		AllowIsolatedMining:      false,
+		MinWritePeers:            1,
+		AllowIsolatedWrites:      false,
 		SeedPeers:                nil,
 		GenesisHash:              "",
 		RequireAuthenticatedNode: true,
@@ -460,9 +460,9 @@ func Mainnet() NetworkConfig {
 	return NetworkConfig{
 		NetworkName:          "mainnet",
 		Name:                 "mainnet",
-		NetworkID:            "idr-main-1",
+		NetworkID:            "ind-main-1",
 		ChainID:              777000,
-		AddressPrefix:        "IDR",
+		AddressPrefix:        "iND",
 		AddressVersion:       0x20,
 		LegacyAddressAllowed: false,
 		DefaultRPCPort:       8333,
@@ -470,7 +470,7 @@ func Mainnet() NetworkConfig {
 		ProtocolVersion:      1,
 		MinProtocolVersion:   1,
 		RPCAPIVersion:        "v1",
-		P2PProtocolVersion:   "idr-p2p/1",
+		P2PProtocolVersion:   "ind-p2p/1",
 		BlockVersion:         1,
 		TxVersion:            3,
 		Difficulty: DifficultyParams{
@@ -523,12 +523,12 @@ func Mainnet() NetworkConfig {
 			BlockSubsidy:  0,
 			FeeOnlyBlocks: true,
 		},
-		MaxPeers:            256,
-		MaxReorgDepth:       64,
-		MinMiningPeers:      1,
-		AllowIsolatedMining: false,
-		MinWritePeers:       1,
-		AllowIsolatedWrites: false,
+		MaxPeers:                 256,
+		MaxReorgDepth:            64,
+		MinMiningPeers:           1,
+		AllowIsolatedMining:      false,
+		MinWritePeers:            1,
+		AllowIsolatedWrites:      false,
 		SeedPeers:                nil,
 		GenesisHash:              MainnetGenesisHash,
 		RequireAuthenticatedNode: true,
@@ -541,7 +541,7 @@ func Mainnet() NetworkConfig {
 }
 
 // ValidateNetworkProfile enforces the protocol invariants shared by all
-// built-in DesKaChain networks. Keeping these checks centralized prevents a
+// built-in IndoChain networks. Keeping these checks centralized prevents a
 // network profile from silently drifting away from the frozen v3 asset/fee
 // model.
 func ValidateNetworkProfile(profile NetworkConfig) error {
@@ -557,17 +557,17 @@ func ValidateNetworkProfile(profile NetworkConfig) error {
 	if profile.ProtocolVersion != 1 || profile.MinProtocolVersion != 1 {
 		return fmt.Errorf("unsupported protocol version range: %d/%d", profile.MinProtocolVersion, profile.ProtocolVersion)
 	}
-	if profile.RPCAPIVersion != "v1" || profile.P2PProtocolVersion != "idr-p2p/1" {
+	if profile.RPCAPIVersion != "v1" || profile.P2PProtocolVersion != "ind-p2p/1" {
 		return fmt.Errorf("unsupported transport protocol versions")
 	}
 	if profile.BlockVersion != 1 || profile.TxVersion != 3 {
 		return fmt.Errorf("unsupported consensus versions: block=%d tx=%d", profile.BlockVersion, profile.TxVersion)
 	}
 	if profile.Asset.NativeAssetID != NativeAssetID || profile.Asset.NativeAssetSymbol != NativeAssetSymbol || profile.Asset.NativeAssetDecimals != NativeAssetDecimals {
-		return fmt.Errorf("native asset must remain IDR with %d decimals", NativeAssetDecimals)
+		return fmt.Errorf("native asset must remain dIDR with %d decimals", NativeAssetDecimals)
 	}
 	if profile.Asset.FeeAssetID != NativeAssetID {
-		return fmt.Errorf("fee asset must remain IDR")
+		return fmt.Errorf("fee asset must remain dIDR")
 	}
 	if !profile.Asset.TokenTransfersEnabled || !profile.Asset.UserIssuedTokensEnabled || !profile.Asset.PaymasterEnabled {
 		return fmt.Errorf("v3 asset capabilities are incomplete")
@@ -624,31 +624,31 @@ func DefaultMaxReorgDepth(profile NetworkConfig) uint64 {
 }
 
 func MaxReorgDepthFromEnv(profile NetworkConfig) (uint64, error) {
-	value := strings.TrimSpace(os.Getenv("IDR_MAX_REORG_DEPTH"))
+	value := strings.TrimSpace(os.Getenv("IND_MAX_REORG_DEPTH"))
 	if value == "" {
 		return DefaultMaxReorgDepth(profile), nil
 	}
 	parsed, err := strconv.ParseUint(value, 10, 64)
 	if err != nil || parsed == 0 {
-		return 0, fmt.Errorf("invalid IDR_MAX_REORG_DEPTH: %q", value)
+		return 0, fmt.Errorf("invalid IND_MAX_REORG_DEPTH: %q", value)
 	}
 	return parsed, nil
 }
 
 func MinMiningPeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("IDR_MIN_MINING_PEERS", profile.MinMiningPeers)
+	return intFromEnv("IND_MIN_MINING_PEERS", profile.MinMiningPeers)
 }
 
 func AllowIsolatedMiningFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("IDR_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
+	return boolFromEnv("IND_ALLOW_ISOLATED_MINING", profile.AllowIsolatedMining)
 }
 
 func MinWritePeersFromEnv(profile NetworkConfig) (int, error) {
-	return intFromEnv("IDR_MIN_WRITE_PEERS", profile.MinWritePeers)
+	return intFromEnv("IND_MIN_WRITE_PEERS", profile.MinWritePeers)
 }
 
 func AllowIsolatedWritesFromEnv(profile NetworkConfig) (bool, error) {
-	return boolFromEnv("IDR_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
+	return boolFromEnv("IND_ALLOW_ISOLATED_WRITES", profile.AllowIsolatedWrites)
 }
 
 func intFromEnv(name string, fallback int) (int, error) {

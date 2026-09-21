@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -12,9 +12,9 @@ Status saat ini:
 * Linux arm64 binary build valid.
 * Version metadata valid:
 
-  * deskachain version
-  * idrminer --version
-  * idrservice --version
+  * indochain version
+  * indominer --version
+  * indoservice --version
 * Binary smoke test valid:
 
   * init testnet
@@ -25,18 +25,18 @@ Status saat ini:
   * chain validate pass
 * Release archives valid:
 
-  * deskachain-v0.3.7-testnet-windows-amd64.zip
-  * deskachain-v0.3.7-testnet-linux-amd64.tar.gz
-  * deskachain-v0.3.7-testnet-linux-arm64.tar.gz
+  * indochain-v0.3.7-testnet-windows-amd64.zip
+  * indochain-v0.3.7-testnet-linux-amd64.tar.gz
+  * indochain-v0.3.7-testnet-linux-arm64.tar.gz
   * SHA256SUMS.txt
 * Public RPC safety valid.
 * Seed peer bootstrap valid.
 * Faucet/staking/service-node testnet E2E valid.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 
 Patch name:
-DesKaChain Phase 3.8 — GitHub Actions CI Release Artifacts
+IndoChain Phase 3.8 — GitHub Actions CI Release Artifacts
 
 Goal:
 Add GitHub Actions workflows for CI and release artifact builds.
@@ -141,7 +141,7 @@ Behavior:
 
 Artifact name example:
 
-deskachain-${version}-release-artifacts
+indochain-${version}-release-artifacts
 
 Do not require GitHub secrets.
 
@@ -200,7 +200,7 @@ Package artifacts must not include:
 * wallets/
 * chain db files
 * faucet_state.json
-* idrservice-state.json
+* indoservice-state.json
 * peer runtime store if generated
 * private keys
 * .env
@@ -211,9 +211,9 @@ Allowed in archive:
 
 * binaries:
 
-  * deskachain / deskachain.exe
-  * idrminer / idrminer.exe
-  * idrservice / idrservice.exe
+  * indochain / indochain.exe
+  * indominer / indominer.exe
+  * indoservice / indoservice.exe
 * README.md or README-ID.md
 * LICENSE if present
 * docs/Release.md or QUICKSTART.md
@@ -252,9 +252,9 @@ Examples:
 
 After build, workflow should run:
 
-./dist/linux-amd64/deskachain version
-./dist/linux-amd64/idrminer --version
-./dist/linux-amd64/idrservice --version
+./dist/linux-amd64/indochain version
+./dist/linux-amd64/indominer --version
+./dist/linux-amd64/indoservice --version
 
 For Windows binary on Linux runner, do not run `.exe` unless using Wine. Just build and package it.
 Linux amd64 binary can be smoke-tested on ubuntu runner.
@@ -272,27 +272,27 @@ Commands:
 * create separate miner wallet datadir.
 * start node in background with public RPC + miner RPC.
 * wait for /health.
-* mine once with idrminer.
+* mine once with indominer.
 * chain info.
 * chain validate.
 * stop node.
 
 Example:
 
-./dist/linux-amd64/deskachain --datadir ./ci-data/node --network testnet init
+./dist/linux-amd64/indochain --datadir ./ci-data/node --network testnet init
 
-./dist/linux-amd64/deskachain --datadir ./ci-data/wallet --network testnet init
-ADDR=$(./dist/linux-amd64/deskachain --datadir ./ci-data/wallet wallet new)
+./dist/linux-amd64/indochain --datadir ./ci-data/wallet --network testnet init
+ADDR=$(./dist/linux-amd64/indochain --datadir ./ci-data/wallet wallet new)
 
-./dist/linux-amd64/deskachain --datadir ./ci-data/node node start --rpc :9311 --p2p :10311 --advertise-p2p http://127.0.0.1:10311 --public-rpc --enable-miner-rpc &
+./dist/linux-amd64/indochain --datadir ./ci-data/node node start --rpc :9311 --p2p :10311 --advertise-p2p http://127.0.0.1:10311 --public-rpc --enable-miner-rpc &
 NODE_PID=$!
 
 wait until:
-./dist/linux-amd64/deskachain --rpc-url http://127.0.0.1:9311 chain info
+./dist/linux-amd64/indochain --rpc-url http://127.0.0.1:9311 chain info
 
-./dist/linux-amd64/idrminer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
+./dist/linux-amd64/indominer --rpc-url http://127.0.0.1:9311 --address "$ADDR" --threads 2 --once
 
-./dist/linux-amd64/deskachain --rpc-url http://127.0.0.1:9311 chain validate
+./dist/linux-amd64/indochain --rpc-url http://127.0.0.1:9311 chain validate
 
 kill $NODE_PID
 
@@ -320,7 +320,7 @@ Linux:
 sha256sum -c SHA256SUMS.txt
 
 Windows:
-Get-FileHash .\deskachain-v0.3.7-testnet-windows-amd64.zip -Algorithm SHA256
+Get-FileHash .\indochain-v0.3.7-testnet-windows-amd64.zip -Algorithm SHA256
 
 ==================================================
 8. README and docs update
@@ -345,7 +345,7 @@ Add section:
 Make clear:
 
 * This is public testnet preparation.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
 * Do not expose wallet/admin RPC publicly.
 

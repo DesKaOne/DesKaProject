@@ -13,24 +13,24 @@ import (
 	"sync"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/arith"
-	"deskachain/internal/asset"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/faucet"
-	"deskachain/internal/fees"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/mining"
-	"deskachain/internal/p2p"
-	"deskachain/internal/servicenode"
-	"deskachain/internal/staking"
-	"deskachain/internal/state"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/arith"
+	"indochain/internal/asset"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/faucet"
+	"indochain/internal/fees"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/mining"
+	"indochain/internal/p2p"
+	"indochain/internal/servicenode"
+	"indochain/internal/staking"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 type handler struct {
@@ -106,6 +106,12 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /explorer-ui", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer-ui/", h.wrap("generic", h.explorerUI))
 	mux.HandleFunc("GET /explorer/status", h.wrap("generic", h.explorerStatus))
+	mux.HandleFunc("GET /explorer/indexer", h.wrap("generic", h.explorerIndexerStatus))
+	mux.HandleFunc("GET /explorer/indexer/stats", h.wrap("generic", h.explorerIndexerStats))
+	mux.HandleFunc("GET /explorer/indexed/search", h.wrap("generic", h.explorerIndexedSearch))
+	mux.HandleFunc("GET /explorer/indexed/tx/", h.wrap("generic", h.explorerIndexedTx))
+	mux.HandleFunc("GET /explorer/indexed/address/", h.wrap("generic", h.explorerIndexedAddressRouter))
+	mux.HandleFunc("GET /explorer/indexed/asset/", h.wrap("generic", h.explorerIndexedAssetRouter))
 	mux.HandleFunc("GET /explorer/search", h.wrap("generic", h.explorerSearch))
 	mux.HandleFunc("GET /explorer/blocks", h.wrap("generic", h.explorerBlocks))
 	mux.HandleFunc("GET /explorer/blocks/", h.wrap("generic", h.explorerBlockByHeight))
@@ -119,6 +125,7 @@ func RegisterHandlers(mux *http.ServeMux, paths config.Paths, info NodeInfo) {
 	mux.HandleFunc("GET /node/id", h.wrap("generic", h.nodeID))
 	mux.HandleFunc("GET /node/compare", h.wrap("generic", h.nodeCompare))
 	mux.HandleFunc("GET /node/status", h.wrap("generic", h.nodeStatus))
+	mux.HandleFunc("GET /node/metrics", h.wrap("generic", h.nodeMetrics))
 	mux.HandleFunc("GET /debug/p2p", h.wrap("admin", h.debugP2P))
 	mux.HandleFunc("POST /debug/p2p/ping", h.wrap("admin", h.debugP2PPing))
 	mux.HandleFunc("GET /peer/health", h.wrap("generic", h.peerHealth))
@@ -251,6 +258,266 @@ func (h handler) ready(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
+func (h handler) explorerIndexerReady() (*explorerIndexer, ExplorerIndexerStatus, bool) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.status()
+	if err != nil || !status.Ready {
+		return indexer, status, false
+	}
+	return indexer, status, true
+}
+
+func (h handler) explorerIndexedUnavailable(w http.ResponseWriter, status ExplorerIndexerStatus) {
+	explorerError(w, http.StatusServiceUnavailable, "indexer_not_ready",
+		fmt.Sprintf("explorer indexer is not ready (indexed_height=%d chain_height=%d lag=%d)", status.IndexedHeight, status.ChainHeight, status.Lag))
+}
+
+func (h handler) explorerIndexerStats(w http.ResponseWriter, _ *http.Request) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.status()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	stats, err := indexer.stats(status)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok": true,
+		"api_version": ExplorerAPIVersion,
+		"stats": stats,
+	})
+}
+
+func (h handler) explorerIndexedTx(w http.ResponseWriter, r *http.Request) {
+	txID := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/tx/")
+	if !isHexHash(txID) {
+		explorerError(w, http.StatusBadRequest, "invalid_txid", "transaction id must be a 64-character hex string")
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	tx, found, err := indexer.transaction(txID)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if !found {
+		explorerError(w, http.StatusNotFound, "tx_not_found", "indexed transaction not found")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":          true,
+		"api_version": ExplorerAPIVersion,
+		"indexer":     status,
+		"transaction": tx,
+	})
+}
+
+func (h handler) explorerIndexedAddressRouter(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/address/")
+	if strings.HasSuffix(path, "/txs") {
+		h.explorerIndexedAddressTxs(w, r, strings.TrimSuffix(path, "/txs"))
+		return
+	}
+	explorerError(w, http.StatusNotFound, "not_found", "indexed explorer endpoint not found")
+}
+
+func (h handler) explorerIndexedAddressTxs(w http.ResponseWriter, r *http.Request, address string) {
+	if err := crypto.ValidateAddressForNetwork(address, h.profile()); err != nil {
+		explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
+		return
+	}
+	limit, offset, ok := explorerLimitOffset(w, r, 20, 100)
+	if !ok {
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	history, total, err := indexer.addressHistory(address, limit, offset)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(history))
+	for _, item := range history {
+		items = append(items, map[string]any{
+			"txid":         item.TxID,
+			"block_height": item.BlockHeight,
+			"block_hash":   item.BlockHash,
+			"role":         item.Role,
+			"counterparty": item.Counterparty,
+			"asset_id":     item.AssetID,
+			"amount":       item.Amount,
+			"fee":          item.Fee,
+		})
+	}
+	resp := explorerPagedResponse("transactions", items, total, limit, offset)
+	resp["address"] = address
+	resp["api_version"] = ExplorerAPIVersion
+	resp["indexer"] = status
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h handler) explorerIndexedAssetRouter(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/explorer/indexed/asset/")
+	if strings.HasSuffix(path, "/txs") {
+		h.explorerIndexedAssetTxs(w, r, strings.TrimSuffix(path, "/txs"))
+		return
+	}
+	explorerError(w, http.StatusNotFound, "not_found", "indexed asset endpoint not found")
+}
+
+func (h handler) explorerIndexedAssetTxs(w http.ResponseWriter, r *http.Request, assetID string) {
+	assetID = strings.TrimSpace(assetID)
+	if assetID == "" || len(assetID) > 128 {
+		explorerError(w, http.StatusBadRequest, "invalid_asset_id", "asset id is required")
+		return
+	}
+	limit, offset, ok := explorerLimitOffset(w, r, 20, 100)
+	if !ok {
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	events, total, err := indexer.assetEvents(assetID, limit, offset)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	items := make([]map[string]any, 0, len(events))
+	for _, item := range events {
+		items = append(items, map[string]any{
+			"txid": item.TxID,
+			"block_height": item.BlockHeight,
+			"block_hash": item.BlockHash,
+			"asset_id": item.AssetID,
+			"from": item.From,
+			"to": item.To,
+			"amount": item.Amount,
+			"fee": item.Fee,
+		})
+	}
+	resp := explorerPagedResponse("events", items, total, limit, offset)
+	resp["asset_id"] = assetID
+	resp["api_version"] = ExplorerAPIVersion
+	resp["indexer"] = status
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (h handler) explorerIndexedSearch(w http.ResponseWriter, r *http.Request) {
+	query := strings.TrimSpace(r.URL.Query().Get("q"))
+	if query == "" {
+		explorerError(w, http.StatusBadRequest, "empty_query", "search query is required")
+		return
+	}
+	if len(query) > 128 {
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query is too long")
+		return
+	}
+	indexer, status, ready := h.explorerIndexerReady()
+	if !ready {
+		h.explorerIndexedUnavailable(w, status)
+		return
+	}
+	results := []map[string]any{}
+	if isUnsignedInteger(query) {
+		height, err := strconv.ParseUint(query, 10, 64)
+		if err != nil {
+			explorerError(w, http.StatusBadRequest, "invalid_height", "block height is invalid")
+			return
+		}
+		block, found, err := indexer.blockByHeight(height)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if found {
+			results = append(results, map[string]any{
+				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
+				"path":     fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
+			})
+		}
+	} else if strings.HasPrefix(query, "iND") {
+		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
+			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
+			return
+		}
+		results = append(results, map[string]any{
+			"type": "address", "id": query, "label": "Address " + query,
+			"path": "/explorer-ui/#/address/" + query, "api_path": "/explorer/address/" + query,
+		})
+	} else if isHexHash(query) {
+		block, found, err := indexer.blockByHash(query)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if found {
+			results = append(results, map[string]any{
+				"type": "block", "id": block.Hash, "label": fmt.Sprintf("Block %d", block.Height),
+				"path":     fmt.Sprintf("/explorer-ui/#/block/%d", block.Height),
+				"api_path": fmt.Sprintf("/explorer/blocks/%d", block.Height), "height": block.Height, "hash": block.Hash,
+			})
+		}
+		tx, found, err := indexer.transaction(query)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if found {
+			results = append(results, map[string]any{
+				"type": "tx", "id": tx.ID, "label": "Transaction " + tx.ID,
+				"path": "/explorer-ui/#/tx/" + tx.ID, "api_path": "/explorer/tx/" + tx.ID,
+				"block_height": tx.BlockHeight, "block_hash": tx.BlockHash, "status": tx.Status,
+			})
+		}
+	} else {
+		events, _, err := indexer.assetEvents(query, 1, 0)
+		if err != nil {
+			writeError(w, err)
+			return
+		}
+		if len(events) > 0 {
+			results = append(results, map[string]any{
+				"type": "asset", "id": query, "label": "Asset " + query,
+				"path": "/explorer-ui/#/asset/" + query, "api_path": "/explorer/indexed/asset/" + query + "/txs",
+				"event_count": 1,
+			})
+		} else {
+			explorerError(w, http.StatusNotFound, "not_found", "no indexed explorer result found")
+			return
+		}
+	}
+	if len(results) == 0 {
+		explorerError(w, http.StatusNotFound, "not_found", "no indexed explorer result found")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "query": query, "indexer": status, "results": results, "count": len(results)})
+}
+
+func (h handler) explorerIndexerStatus(w http.ResponseWriter, _ *http.Request) {
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.status()
+	if err != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "api_version": ExplorerAPIVersion, "indexer": status})
+}
+
 func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	blocks, pending, err := h.chainInfoData()
 	if err != nil {
@@ -261,6 +528,12 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 	stats := chain.CalculateChainStatsWithProfile(blocks, net)
 	tip := blocks[len(blocks)-1]
 	peers, _ := p2p.NewPeerStore(h.paths.Peers).Load()
+	indexer := newExplorerIndexer(h.paths, h.profile())
+	indexerStatus, indexerErr := indexer.status()
+	if indexerErr != nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ok": false, "error": indexerErr.Error()})
+		return
+	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"ok":                        true,
 		"network":                   net.Name,
@@ -285,8 +558,9 @@ func (h handler) explorerStatus(w http.ResponseWriter, _ *http.Request) {
 		"faucet_rpc":                h.info.EnableFaucetRPC,
 		"service_rpc":               h.info.EnableServiceRPC,
 		"mainnet_available":         false,
-		"testnet_value_warning":     "testnet IDR has no monetary value",
-		"indexer_mode":              "simple_scan",
+		"testnet_value_warning":     "testnet iND has no monetary value",
+		"indexer_mode":              indexerStatus.Mode,
+		"indexer":                   indexerStatus,
 	})
 }
 
@@ -338,7 +612,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 		}
-	} else if strings.HasPrefix(query, "IDR") {
+	} else if strings.HasPrefix(query, "iND") {
 		if err := crypto.ValidateAddressForNetwork(query, h.profile()); err != nil {
 			explorerError(w, http.StatusBadRequest, "invalid_address", err.Error())
 			return
@@ -370,7 +644,7 @@ func (h handler) explorerSearch(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or IDR address")
+		explorerError(w, http.StatusBadRequest, "invalid_query", "search query must be a block height, 64-character hash, or iND address")
 		return
 	}
 
@@ -534,7 +808,7 @@ func (h handler) explorerAddress(w http.ResponseWriter, _ *http.Request, address
 		"service_collateral_eligible": score.StakeEligible,
 		"service_points":              score.SimulatedPoints,
 		"simulation_only":             true,
-		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
+		"service_points_warning":      "service points are simulation-only and are not spendable dIDR",
 	})
 }
 
@@ -683,6 +957,146 @@ func (h handler) nodeCompare(w http.ResponseWriter, r *http.Request) {
 		fmt.Sprint(local["height"]) == fmt.Sprint(remote["height"]) &&
 		fmt.Sprint(local["tip_hash"]) == fmt.Sprint(remote["tip_hash"])
 	writeJSON(w, http.StatusOK, map[string]any{"in_sync": inSync, "local": local, "peer": remote})
+}
+
+func (h handler) nodeMetrics(w http.ResponseWriter, _ *http.Request) {
+	blocks, pending, err := h.chainInfoData()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	if len(blocks) == 0 {
+		writeError(w, errors.New("chain has no blocks"))
+		return
+	}
+	net := h.profile()
+	tip := blocks[len(blocks)-1]
+	peers, err := p2p.NewPeerStore(h.paths.Peers).LoadMetadata()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	activePeers := 0
+	failedPeers := 0
+	seedPeers := 0
+	peerStatusCounts := map[string]int{}
+	bestPeerHeight := uint64(0)
+	for _, peer := range peers {
+		status := string(peer.Status)
+		peerStatusCounts[status]++
+		if peer.Status == p2p.PeerStatusActive {
+			activePeers++
+		}
+		switch peer.Status {
+		case p2p.PeerStatusOffline, p2p.PeerStatusCooldown, p2p.PeerStatusBad:
+			failedPeers++
+		}
+		if strings.Contains(peer.Source, "seed") {
+			seedPeers++
+		}
+		if peer.LastHeight > bestPeerHeight {
+			bestPeerHeight = peer.LastHeight
+		}
+	}
+	transactionCount := 0
+	for _, block := range blocks {
+		transactionCount += len(block.Transactions)
+	}
+	bestPeerLag := uint64(0)
+	if tip.Height > bestPeerHeight {
+		bestPeerLag = tip.Height - bestPeerHeight
+	}
+	uptime := int64(0)
+	if !h.info.StartedAt.IsZero() {
+		uptime = int64(time.Since(h.info.StartedAt).Seconds())
+	}
+	mining := miningMetricsMap(blocks, net, len(pending), h.peerCount())
+	h.addMiningGuardFields(mining)
+
+	observedAt := time.Now().Unix()
+	runtimeMetrics := map[string]any{
+		"observed_at_unix":      observedAt,
+		"uptime_seconds":        uptime,
+		"chain_height":          tip.Height,
+		"active_peer_count":     activePeers,
+		"mempool_pending_count": len(pending),
+	}
+
+	mempoolStats := map[string]any{
+		"pending_tx_count": len(pending),
+		"pending_fee_total": uint64(0),
+		"pending_native_amount": uint64(0),
+		"pending_issued_asset_amount": uint64(0),
+		"oldest_tx_timestamp": int64(0),
+		"newest_tx_timestamp": int64(0),
+		"type_counts": map[string]int{},
+	}
+	typeCounts := mempoolStats["type_counts"].(map[string]int)
+	for _, tx := range pending {
+		mempoolStats["pending_fee_total"] = mempoolStats["pending_fee_total"].(uint64) + tx.Fee
+		typeCounts[tx.TxType()]++
+		if tx.IsIssuedAssetTransaction() {
+			mempoolStats["pending_issued_asset_amount"] = mempoolStats["pending_issued_asset_amount"].(uint64) + tx.Amount
+		} else {
+			mempoolStats["pending_native_amount"] = mempoolStats["pending_native_amount"].(uint64) + tx.Amount
+		}
+		if tx.Timestamp > 0 && (mempoolStats["oldest_tx_timestamp"].(int64) == 0 || tx.Timestamp < mempoolStats["oldest_tx_timestamp"].(int64)) {
+			mempoolStats["oldest_tx_timestamp"] = tx.Timestamp
+		}
+		if tx.Timestamp > mempoolStats["newest_tx_timestamp"].(int64) {
+			mempoolStats["newest_tx_timestamp"] = tx.Timestamp
+		}
+	}
+
+	indexer := newExplorerIndexer(h.paths, net)
+	indexerStatus, indexerErr := indexer.status()
+	var indexerStats any
+	if indexerErr == nil {
+		stats, err := indexer.stats(indexerStatus)
+		if err == nil {
+			indexerStats = stats
+		} else {
+			indexerErr = err
+		}
+	}
+
+	response := map[string]any{
+		"schema_version": "v1",
+		"network": net.Name,
+		"network_id": net.NetworkID,
+		"chain_id": net.ChainID,
+		"genesis_hash": chain.GenesisBlockForNetwork(net).Hash,
+		"uptime_seconds": uptime,
+		"runtime": runtimeMetrics,
+		"chain": map[string]any{
+			"height": tip.Height,
+			"tip_hash": tip.Hash,
+			"difficulty": tip.Difficulty,
+			"cumulative_work": chain.CalculateCumulativeWork(blocks),
+			"block_count": len(blocks),
+			"transaction_count": transactionCount,
+			"pending_tx_count": len(pending),
+		},
+		"peers": map[string]any{
+			"known": len(peers),
+			"active": activePeers,
+			"failed": failedPeers,
+			"seed_count": seedPeers,
+			"best_height": bestPeerHeight,
+			"best_lag": bestPeerLag,
+			"status_counts": peerStatusCounts,
+		},
+		"mempool": mempoolStats,
+		"mining": mining,
+		"indexer": map[string]any{
+			"status": indexerStatus,
+			"stats": indexerStats,
+		},
+	}
+	if indexerErr != nil {
+		response["indexer"].(map[string]any)["error"] = indexerErr.Error()
+	}
+	writeJSON(w, http.StatusOK, response)
 }
 
 func (h handler) nodeStatus(w http.ResponseWriter, _ *http.Request) {
@@ -1774,7 +2188,7 @@ func miningMetricsMap(blocks []types.Block, net config.NetworkConfig, pendingCou
 		"coinbase_maturity":              net.Consensus.CoinbaseMaturity,
 		"pending_tx_count":               pendingCount,
 		"peer_count":                     peerCount,
-		"note":                           "testnet mining is for testing only; testnet IDR has no monetary value",
+		"note":                           "testnet mining is for testing only; testnet dIDR has no monetary value",
 	}
 }
 
@@ -2101,7 +2515,7 @@ func (h handler) feePolicy(w http.ResponseWriter, _ *http.Request) {
 		"bytes_per_gas":  p.Fee.BytesPerGas,
 		"max_gas_per_tx": p.Fee.MaxGasPerTx,
 		"base_gas": map[string]uint64{
-			"transfer_idr":   p.Fee.BaseGasTransfer,
+			"transfer_ind":   p.Fee.BaseGasTransfer,
 			"transfer_token": p.Fee.BaseGasAssetTransfer,
 			"stake_lock":     p.Fee.BaseGasStakeLock,
 			"stake_unlock":   p.Fee.BaseGasStakeUnlock,
@@ -2367,7 +2781,7 @@ func (h handler) faucetInfo(w http.ResponseWriter, _ *http.Request) {
 		"max_per_address":      amount.Format(h.faucetMaxPerAddress()),
 		"min_interval_seconds": int64(h.faucetMinInterval().Seconds()),
 		"mempool_pending":      len(pending),
-		"note":                 "testnet faucet only; testnet IDR has no monetary value",
+		"note":                 "testnet faucet only; testnet dIDR has no monetary value",
 	})
 }
 
@@ -3785,7 +4199,7 @@ func (h handler) explorerServiceSummary(address string, node *servicenode.Node) 
 		"status":                      eligibleStatus,
 		"simulation_only":             true,
 		"scope":                       "local_node_service_store",
-		"service_points_warning":      "service points are simulation-only and are not spendable IDR",
+		"service_points_warning":      "service points are simulation-only and are not spendable dIDR",
 		"service_registry_consensus":  false,
 		"stake_collateral_consensus":  true,
 		"local_service_state_warning": "service registration and score samples are local to this RPC node",

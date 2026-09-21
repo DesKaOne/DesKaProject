@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"deskachain/internal/arith"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/state"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
+	"indochain/internal/arith"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/state"
+	"indochain/internal/storage"
+	"indochain/internal/types"
 )
 
 type Blockchain struct {
@@ -164,13 +164,13 @@ type StateValidationResult struct {
 }
 
 type StateStatusResult struct {
-	Available  bool   `json:"available"`
-	Current    bool   `json:"current"`
-	Version    uint8  `json:"version"`
-	Height     uint64 `json:"height"`
-	StateRoot  string `json:"state_root"`
-	TipHeight  uint64 `json:"tip_height"`
-	TipHash    string `json:"tip_hash"`
+	Available bool   `json:"available"`
+	Current   bool   `json:"current"`
+	Version   uint8  `json:"version"`
+	Height    uint64 `json:"height"`
+	StateRoot string `json:"state_root"`
+	TipHeight uint64 `json:"tip_height"`
+	TipHash   string `json:"tip_hash"`
 }
 
 func (bc *Blockchain) StateStatusWithNetwork(profile config.NetworkConfig) (StateStatusResult, error) {

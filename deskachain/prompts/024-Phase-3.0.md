@@ -1,11 +1,11 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
+  * cmd/indochain/
+  * cmd/indominer/
   * internal/
   * go.mod
   * go.sum
@@ -27,8 +27,8 @@ Status saat ini:
 * Node bisa restart ulang tanpa stale lock.
 * Address final sudah aktif:
 
-  * wallet baru menghasilkan address `IDR...`
-  * format address: `IDR` + Base58Check
+  * wallet baru menghasilkan address `iND...`
+  * format address: `iND` + Base58Check
   * private key raw 32-byte hex
 * Dynamic difficulty sudah aktif:
 
@@ -47,7 +47,7 @@ Status saat ini:
 
   * node punya `/miner/template`
   * node punya `/miner/submit`
-  * `idrminer` bisa mine block via RPC
+  * `indominer` bisa mine block via RPC
   * standalone miner bisa include mempool tx
 * Node hardening sudah aktif:
 
@@ -59,7 +59,7 @@ Status saat ini:
   * peer max/public safety foundation
 
 Nama patch:
-DesKaChain Phase 3.0 — Bandwidth Mining Research & Reward Simulation
+IndoChain Phase 3.0 — Bandwidth Mining Research & Reward Simulation
 
 Tujuan:
 Membuat fondasi awal untuk konsep bandwidth/service-node contribution, tetapi hanya sebagai research dan reward simulation layer.
@@ -78,7 +78,7 @@ Prinsip penting:
 
 Aturan penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan ubah private key format.
 * Jangan ubah difficulty adjustment.
 * Jangan ubah cumulative work formula.
@@ -129,7 +129,7 @@ Phase ini hanya menyimpan dan menghitung:
 * simulated reward points,
 * anti-abuse flags.
 
-Reward hasil simulasi tidak boleh langsung menjadi IDR spendable balance.
+Reward hasil simulasi tidak boleh langsung menjadi dIDR spendable balance.
 
 Gunakan istilah:
 
@@ -148,7 +148,7 @@ Jangan gunakan istilah:
 2. Service node identity
 ========================
 
-Service node harus terikat ke address IDR.
+Service node harus terikat ke address iND.
 
 Registration minimal:
 
@@ -176,15 +176,15 @@ Registration minimal:
 
 Command:
 
-service register --address <IDR_ADDR> --endpoint <URL>
+service register --address <IND_ADDR> --endpoint <URL>
 
 Remote:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8411 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8411 service register --address <IND_ADDR> --endpoint http://127.0.0.1:9501
 
 Rules:
 
-* Validate IDR address.
+* Validate iND address.
 * Endpoint optional for local simulation.
 * Duplicate registration for same address updates existing record, not duplicate.
 * Do not require private key yet.
@@ -197,7 +197,7 @@ Response:
 {
 "ok": true,
 "service_node_id": "...",
-"owner_address": "IDR...",
+"owner_address": "iND...",
 "status": "registered"
 }
 
@@ -209,14 +209,14 @@ Tambahkan heartbeat untuk service node.
 
 Command:
 
-service heartbeat --address <IDR_ADDR>
+service heartbeat --address <IND_ADDR>
 
 RPC:
 POST /service/heartbeat
 
 Request:
 {
-"address": "IDR...",
+"address": "iND...",
 "endpoint": "http://127.0.0.1:9501",
 "client_version": "dev",
 "platform": "windows"
@@ -251,7 +251,7 @@ Cukup buat model challenge yang bisa dites local.
 
 Commands:
 
-service challenge create --address <IDR_ADDR>
+service challenge create --address <IND_ADDR>
 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 1000000 --bytes-down 2000000
 
 RPC:
@@ -287,7 +287,7 @@ Rules:
 * Too large unrealistic values flagged.
 * Challenge can only be submitted once.
 * Challenge result creates measurement sample.
-* No IDR balance mutation.
+* No dIDR balance mutation.
 
 ==================================================
 5. Scoring model
@@ -364,7 +364,7 @@ Keep penalty simple.
 6. Simulated reward points
 ==========================
 
-Tambahkan reward simulation, bukan IDR balance.
+Tambahkan reward simulation, bukan dIDR balance.
 
 Fields:
 
@@ -394,25 +394,25 @@ Example:
 
 Important:
 
-* simulated_points are not IDR.
+* simulated_points are not dIDR.
 * simulated_points are not spendable.
 * simulated_points do not affect chain consensus.
 * simulated_points are for leaderboard/research only.
 
 Command:
 
-service score --address <IDR_ADDR>
-service rewards --address <IDR_ADDR>
+service score --address <IND_ADDR>
+service rewards --address <IND_ADDR>
 
 Output:
-address: IDR...
+address: iND...
 service score: 80
 simulated points: 800
-note: service points are simulation only and are not spendable IDR
+note: service points are simulation only and are not spendable dIDR
 
 RPC:
-GET /service/score?address=<IDR_ADDR>
-GET /service/rewards?address=<IDR_ADDR>
+GET /service/score?address=<IND_ADDR>
+GET /service/rewards?address=<IND_ADDR>
 
 ==================================================
 7. Storage
@@ -495,22 +495,22 @@ service
 Commands:
 
 1. Register:
-   service register --address <IDR_ADDR> --endpoint <URL>
+   service register --address <IND_ADDR> --endpoint <URL>
 
 2. Heartbeat:
-   service heartbeat --address <IDR_ADDR> --endpoint <URL>
+   service heartbeat --address <IND_ADDR> --endpoint <URL>
 
 3. Challenge create:
-   service challenge create --address <IDR_ADDR>
+   service challenge create --address <IND_ADDR>
 
 4. Challenge submit:
    service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 1000000 --bytes-down 2000000 --success true
 
 5. Score:
-   service score --address <IDR_ADDR>
+   service score --address <IND_ADDR>
 
 6. Rewards:
-   service rewards --address <IDR_ADDR>
+   service rewards --address <IND_ADDR>
 
 7. List:
    service list
@@ -561,7 +561,7 @@ Service node score/reward simulation must NOT:
 
 * modify total supply,
 * modify circulating supply,
-* add IDR balance,
+* add dIDR balance,
 * create block tx,
 * affect PoW difficulty,
 * affect cumulative work,
@@ -613,7 +613,7 @@ Content:
 
 * What is service node simulation.
 * It is not consensus mining.
-* It is not spendable IDR.
+* It is not spendable dIDR.
 * It is not real payout.
 * PoW still creates blocks.
 * Service points are research/testnet-only.
@@ -642,7 +642,7 @@ Add/update tests:
 
 1. Service register valid:
 
-* IDR address accepted.
+* dIDR address accepted.
 * service_node_id created.
 * status registered.
 
@@ -698,7 +698,7 @@ Add/update tests:
 12. Simulated rewards:
 
 * score creates points.
-* points are not IDR.
+* points are not dIDR.
 * reward list returns points.
 
 13. No consensus mutation:
@@ -771,13 +771,13 @@ go test ./node/...
 
 Manual basic:
 
-go run ./node/cmd/deskachain --datadir ./testdata/service dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/service init
-go run ./node/cmd/deskachain --datadir ./testdata/service wallet new
+go run ./node/cmd/indochain --datadir ./testdata/service dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/service init
+go run ./node/cmd/indochain --datadir ./testdata/service wallet new
 
 Start node:
 
-go run ./node/cmd/deskachain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
+go run ./node/cmd/indochain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
 
 Health:
 
@@ -790,7 +790,7 @@ service_nodes 0
 
 Register:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service register --address <IND_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 service node registered
@@ -798,7 +798,7 @@ service node id: ...
 
 Heartbeat:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IND_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 status: active
@@ -806,50 +806,50 @@ service score shown
 
 Challenge:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service challenge create --address <IND_ADDR>
 
 Expected:
 challenge id: ...
 
 Submit:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
 
 Score:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service score --address <IND_ADDR>
 
 Expected:
 service score: > 0
 simulated points: maybe > 0
-note: simulation only, not spendable IDR
+note: simulation only, not spendable dIDR
 
 Rewards:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service rewards --address <IND_ADDR>
 
 Expected:
 service points listed
-not IDR
+not dIDR
 
 Consensus check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 balance <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 balance <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 chain validate
 
 Expected:
 total supply unchanged by service rewards
-IDR balance unchanged by service rewards
+dIDR balance unchanged by service rewards
 chain valid
 
 Public RPC service disabled:
 
-go run ./node/cmd/deskachain --datadir ./testdata/service_pub node start --rpc :8441 --p2p :9441 --advertise-p2p http://127.0.0.1:9441 --public-rpc
+go run ./node/cmd/indochain --datadir ./testdata/service_pub node start --rpc :8441 --p2p :9441 --advertise-p2p http://127.0.0.1:9441 --public-rpc
 
 Then:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8441 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8441 service register --address <IND_ADDR> --endpoint http://127.0.0.1:9501
 
 Expected:
 error: service RPC disabled

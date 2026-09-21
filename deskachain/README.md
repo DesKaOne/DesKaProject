@@ -1,17 +1,17 @@
-# DesKaChain
+# IndoChain
 
-DesKaChain is a small experimental CPU-mined blockchain written in Go.
+IndoChain is a small experimental CPU-mined blockchain written in Go.
 
 Current phase: Phase 7 - Mainnet Readiness.
 
-Warning: DesKaChain is experimental local blockchain software. Do not use Phase 1.5 wallets for real funds. Wallet private keys are stored locally for development convenience only.
+Warning: IndoChain is experimental local blockchain software. Do not use Phase 1.5 wallets for real funds. Wallet private keys are stored locally for development convenience only.
 
 Coin details:
 
-- Name: DesKaChain
-- Ticker: IDR
+- Name: IndoChain
+- Ticker: dIDR
 - Decimals: 8
-- Smallest unit: 1 IDR = 100000000 units
+- Smallest unit: 1 dIDR = 100000000 units
 
 ## Scope
 
@@ -39,19 +39,19 @@ Included:
 - Runtime status cache, P2P latency debug, and guarded auto-sync loop
 - Synchronous RPC mining job state, cancellable PoW, and bounded block broadcast timeout
 - Canonical chain-info transaction stats, atomic mempool writes, duplicate mempool guard, and initial HTTP body/timeout safety
-- Final `IDR...` Base58Check wallet address format, secp256k1 keys/signatures, network profiles, and initial protocol version metadata
+- Final `iND...` Base58Check wallet address format, secp256k1 keys/signatures, network profiles, and initial protocol version metadata
 - Dynamic localnet difficulty adjustment, timestamp sanity checks, `chain difficulty`, and cumulative work based on `16^difficulty`
 - Coinbase maturity, mature/immature/spendable balance, and circulating supply based on mature rewards
-- Standalone CPU miner CLI (`idrminer`) using node RPC block templates and submit validation
+- Standalone CPU miner CLI (`indominer`) using node RPC block templates and submit validation
 - Public RPC safety mode, basic rate limiting, CORS configuration, health/readiness endpoints, graceful shutdown, and JSON config foundation
 - Service node / bandwidth contribution research layer with registration, heartbeat, local challenge simulation, scoring, and simulated service points
-- Standalone `idrservice` agent for safe-mode service-node simulation cycles
-- Staking collateral module for locking mature IDR and service-node eligibility
+- Standalone `indoservice` agent for safe-mode service-node simulation cycles
+- Staking collateral module for locking mature dIDR and service-node eligibility
 - Dev/testnet faucet RPC for normal signed funding transactions from a mature faucet wallet
 - Public-testnet seed peer bootstrap through flags, config, environment, and seed files
 - Public-testnet upstream peer backfill for miner-to-head-node block push without trusting the head node
 - Testnet isolated mining and faucet/write guards with explicit local override flags
-- Release build and packaging scripts for `deskachain`, `idrminer`, and `idrservice`
+- Release build and packaging scripts for `indochain`, `indominer`, and `indoservice`
 - GitHub Actions CI and release artifact workflows for public-testnet binaries
 - Public-testnet genesis candidate, seed-node deployment profiles, and VPS deployment runbook
 - Multi-host LAN, Tailscale, and VPS public-testnet deployment runbook
@@ -69,23 +69,23 @@ Not included yet:
 - Real service-node payout, public proxy/VPN relay, staking, PoS, GPU mining, or mining pool
 
 
-Phase 7 starts from the Phase 6 production-readiness baseline. The goal is to freeze and verify the mainnet identity and launch-critical invariants before any live mainnet operation. Mainnet uses IDR as the native fee-settlement asset with zero block subsidy; issued asset tokens remain separate and may use the IDR fee asset or an authorized paymaster. Phase 7 does not change the native IDR economic model or imply that mainnet is live.
+Phase 7 starts from the Phase 6 production-readiness baseline. The goal is to freeze and verify the mainnet identity and launch-critical invariants before any live mainnet operation. Mainnet uses dIDR as the native fee-settlement asset with zero block subsidy; issued asset tokens remain separate and may use the dIDR fee asset or an authorized paymaster. Phase 7 does not change the native dIDR economic model or imply that mainnet is live.
 
 Phase 7 launch-gate status: the mainnet profile is canonical and its genesis identity is frozen, but operational mainnet launch remains intentionally closed. The local CLI rejects mainnet init/node/wallet/send/mining/service/staking operations, the remote CLI rejects `--network mainnet --rpc-url ...`, and the RPC server rejects operational write endpoints on the mainnet profile while keeping read-only introspection available. These controls are launch safeguards, not an indication that mainnet is live.
 
 ## Protocol Basics
 
-DesKaChain Phase 2.6.6 froze the address/key/protocol metadata foundation. Phase 2.7 added dynamic difficulty and more realistic cumulative work. Phase 2.8 added coinbase maturity and mature balance accounting. Phase 2.9 adds a standalone CPU miner that mines RPC block templates without wallet private keys.
+IndoChain Phase 2.6.6 froze the address/key/protocol metadata foundation. Phase 2.7 added dynamic difficulty and more realistic cumulative work. Phase 2.8 added coinbase maturity and mature balance accounting. Phase 2.9 adds a standalone CPU miner that mines RPC block templates without wallet private keys.
 
 Phase 2.10 hardens the node for public testnet preparation without changing consensus rules.
 
-Phase 3.0 introduces service-node contribution research as simulation only. PoW still creates canonical blocks; service points are not IDR, are not spendable, and do not affect supply, difficulty, cumulative work, coinbase rewards, balances, or chain validation.
+Phase 3.0 introduces service-node contribution research as simulation only. PoW still creates canonical blocks; service points are not dIDR, are not spendable, and do not affect supply, difficulty, cumulative work, coinbase rewards, balances, or chain validation.
 
-Phase 3.1 adds `idrservice`, a standalone safe-mode service node agent that registers to node RPC, sends heartbeats, creates/submits simulated challenges, fetches scores, and saves local agent state without opening a proxy, relay, or public listener.
+Phase 3.1 adds `indoservice`, a standalone safe-mode service node agent that registers to node RPC, sends heartbeats, creates/submits simulated challenges, fetches scores, and saves local agent state without opening a proxy, relay, or public listener.
 
 Phase 3.2 adds staking as collateral only. It is not PoS, does not create validators, does not mint staking rewards, and does not affect PoW block production.
 
-Phase 3.2.1 adds staking regression tests and consensus safety checks. Staking remains collateral only: no PoS, no validator set, no APY, no IDR staking reward, and no slashing in this phase.
+Phase 3.2.1 adds staking regression tests and consensus safety checks. Staking remains collateral only: no PoS, no validator set, no APY, no dIDR staking reward, and no slashing in this phase.
 
 Phase 3.2.2 separates localnet and testnet runtime profile plumbing before multi-node bootstrap. RPC, P2P, miner templates, staking info, and service collateral metadata now report the active network profile.
 
@@ -99,11 +99,11 @@ Phase 3.3.2 hardens controlled multi-node sync by normalizing peer URLs, persist
 
 Phase 3.4 adds a dev/testnet faucet flow. The faucet is disabled by default, testnet-only when enabled, uses a configured wallet as the source, creates normal signed transactions in the mempool, requires mining for confirmation, and does not mint supply directly.
 
-Phase 3.4.1 adds an end-to-end faucet-funded service collateral scenario: request 1000 testnet IDR, mine the faucet transaction, lock 1000 IDR as collateral, mine the stake transaction, run the service simulation, and verify service score eligibility. See `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, and `docs/Testnet.md`.
+Phase 3.4.1 adds an end-to-end faucet-funded service collateral scenario: request 1000 testnet dIDR, mine the faucet transaction, lock 1000 dIDR as collateral, mine the stake transaction, run the service simulation, and verify service score eligibility. See `docs/Faucet.md`, `docs/ServiceNode.md`, `docs/Staking.md`, and `docs/Testnet.md`.
 
 Phase 3.5 adds public-testnet operator packaging: safe public RPC defaults, explicit miner RPC enablement, clearer startup/status summaries, operator docs, systemd and environment examples, and circulating supply regression tests. See `docs/Operator.md`.
 
-Phase 3.6 adds public-testnet seed peer bootstrap. Nodes can load normalized seed peers from network profiles, `--seed-peer`, `--seed-peers`, `IDR_SEED_PEERS`, config `p2p.seed_peers`, or `--seed-file`; seeds are stored in the peer store with source `seed`, and normal peer validation still rejects wrong network or genesis peers. See `docs/Operator.md` and `docs/Testnet.md`.
+Phase 3.6 adds public-testnet seed peer bootstrap. Nodes can load normalized seed peers from network profiles, `--seed-peer`, `--seed-peers`, `IND_SEED_PEERS`, config `p2p.seed_peers`, or `--seed-file`; seeds are stored in the peer store with source `seed`, and normal peer validation still rejects wrong network or genesis peers. See `docs/Operator.md` and `docs/Testnet.md`.
 
 Phase 3.7 adds public-testnet release build packaging: version metadata for all binaries, Windows/Linux build scripts, release archives, checksums, and quickstart docs. See `docs/Release.md`.
 
@@ -119,7 +119,7 @@ Phase 4.2 documents the controlled public-testnet faucet, staking collateral, an
 
 Phase 4.3 adds a read-only explorer API under `/explorer/*` for public-testnet chain summary, blocks, transactions, addresses, stake records, and local service simulation data.
 
-Phase 4.4 adds an embedded read-only explorer web UI at `/explorer-ui/`. It provides dashboard, blocks, block detail, transaction detail, address history, stake records, service-node simulation summaries, and search without wallet/admin/write actions. Testnet IDR has no monetary value, mainnet is not available, and service points are simulation-only. See `docs/Explorer.md`.
+Phase 4.4 adds an embedded read-only explorer web UI at `/explorer-ui/`. It provides dashboard, blocks, block detail, transaction detail, address history, stake records, service-node simulation summaries, and search without wallet/admin/write actions. Testnet dIDR has no monetary value, mainnet is not available, and service points are simulation-only. See `docs/Explorer.md`.
 
 Phase 4.5 hardens explorer search and pagination. The read-only API now includes `/explorer/search?q=<query>`, pagination metadata for list endpoints, capped limits, stable JSON explorer errors, and UI polish for search, copy buttons, empty states, and paging. See `docs/Explorer.md`.
 
@@ -131,7 +131,7 @@ Phase 4.8 adds post-release monitoring and RC2 planning workflows for RC1. It in
 
 Phase 4.9 hardens public-testnet peer connectivity with repeated `--seed-peer` support, multi-seed bootstrap, peer discovery hints, peer health metadata, read-only peer diagnostics, and upgraded health-check peer options. See `docs/TestnetTopology.md`, `docs/SeedMonitoringChecklist.md`, `docs/PostReleaseMonitoring.md`, and `docs/PublicTestnetQuickstart.md`.
 
-Phase 4.10 hardens public-testnet mining runtime and observation without changing consensus. `idrminer` now has bounded retry/backoff, stale job detection, submit timeout controls, miner stats, and clearer submit handling; nodes expose read-only `/mining/*` metrics and CLI `mining status|difficulty|blocks`. See `docs/Mining.md`, `docs/MiningStability.md`, and `docs/DifficultyObservation.md`.
+Phase 4.10 hardens public-testnet mining runtime and observation without changing consensus. `indominer` now has bounded retry/backoff, stale job detection, submit timeout controls, miner stats, and clearer submit handling; nodes expose read-only `/mining/*` metrics and CLI `mining status|difficulty|blocks`. See `docs/Mining.md`, `docs/MiningStability.md`, and `docs/DifficultyObservation.md`.
 
 Phase 4.10.3 adds upstream seed backfill and isolated mining/write guards. Mining nodes can use `--upstream-peer` to push/backfill accepted blocks to a VPS head/explorer node while `--seed-peer` remains pull/discovery only. Testnet miner templates and faucet writes are blocked when isolated by default. PoW cumulative work remains consensus; no mainnet is available.
 
@@ -141,11 +141,11 @@ Phase 4.12 adds automatic peer discovery and bootstrap maintenance. Nodes period
 
 Address format:
 
-- New wallet addresses use `IDR` + Base58Check payload.
+- New wallet addresses use `iND` + Base58Check payload.
 - Payload is `version byte + HASH160(compressed secp256k1 public key)`.
 - Checksum is the first 4 bytes of double SHA256 over the payload.
 - Public key hash is `RIPEMD160(SHA256(compressed_public_key))`.
-- The old dev address format is legacy localnet-only. New wallets always generate `IDR...` Base58Check addresses, and legacy dev addresses are not valid for public testnet/mainnet.
+- The old dev address format is legacy localnet-only. New wallets always generate `iND...` Base58Check addresses, and legacy dev addresses are not valid for public testnet/mainnet.
 
 Keys and signatures:
 
@@ -155,23 +155,23 @@ Keys and signatures:
 
 Network profiles:
 
-- `localnet`: chain id `777001`, network id `idr-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev addresses allowed.
-- `testnet`: chain id `777101`, network id `idr-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev addresses disabled.
-- `mainnet`: chain id `777000`, network id `idr-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev addresses disabled.
+- `localnet`: chain id `777001`, network id `ind-local-1`, address version `0x1E`, RPC `8331`, P2P `9331`, legacy dev addresses allowed.
+- `testnet`: chain id `777101`, network id `ind-testnet-1`, address version `0x1F`, RPC `18331`, P2P `19331`, legacy dev addresses disabled.
+- `mainnet`: chain id `777000`, network id `ind-main-1`, address version `0x20`, RPC `8333`, P2P `9333`, legacy dev addresses disabled.
 
 Protocol versions:
 
 - protocol version: `1`
 - block version: `1`
 - tx version: `1`
-- P2P protocol version: `idr-p2p/1`
+- P2P protocol version: `ind-p2p/1`
 - RPC API version: `v1`
 
-Public network note: testnet IDR has no monetary value. No price, APY, or profit is promised. Any future mainnet claim process, if implemented, must be capped and time-limited.
+Public network note: testnet dIDR has no monetary value. No price, APY, or profit is promised. Any future mainnet claim process, if implemented, must be capped and time-limited.
 
 ## Difficulty
 
-DesKaChain no longer relies on fixed difficulty. Phase 2.7 adds a conservative retarget rule for localnet/testnet experiments.
+IndoChain no longer relies on fixed difficulty. Phase 2.7 adds a conservative retarget rule for localnet/testnet experiments.
 
 Localnet params:
 
@@ -187,8 +187,8 @@ Difficulty increases by at most 1 when the last retarget window is too fast, dec
 Useful commands:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain difficulty
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain difficulty
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain info
 ```
 
 ## Coinbase Maturity
@@ -200,48 +200,48 @@ Mining rewards are confirmed immediately but are not spendable until they mature
 - `immature balance`: confirmed mining rewards that are still locked by coinbase maturity.
 - `spendable balance`: mature balance minus pending outgoing mempool transactions.
 
-`send` uses spendable balance. A miner that has mined 3 localnet blocks has `150 IDR` confirmed, `0 IDR` mature, `150 IDR` immature, and `0 IDR` spendable. At height 11, the reward from height 1 matures, so the same miner has `550 IDR` confirmed, `50 IDR` mature, `500 IDR` immature, and `50 IDR` spendable.
+`send` uses spendable balance. A miner that has mined 3 localnet blocks has `150 dIDR` confirmed, `0 dIDR` mature, `150 dIDR` immature, and `0 dIDR` spendable. At height 11, the reward from height 1 matures, so the same miner has `550 dIDR` confirmed, `50 dIDR` mature, `500 dIDR` immature, and `50 dIDR` spendable.
 
 `chain info` reports total supply as all confirmed coinbase rewards, while circulating supply is mature coinbase supply. Circulating supply includes mature coins locked as active/unlocking/released stake because they are owner-controlled collateral. Spendable balance is separate and excludes active/unlocking stake plus pending outgoing transactions.
 
 ## Standalone CPU Miner
 
-Phase 2.9 adds `idrminer`, a separate CPU miner process. The miner only needs a node RPC URL and a reward address. It does not read wallet files, private keys, or node datadirs; the node builds block templates, validates submitted blocks, stores accepted blocks, clears confirmed mempool transactions, and broadcasts accepted blocks to peers.
+Phase 2.9 adds `indominer`, a separate CPU miner process. The miner only needs a node RPC URL and a reward address. It does not read wallet files, private keys, or node datadirs; the node builds block templates, validates submitted blocks, stores accepted blocks, clears confirmed mempool transactions, and broadcasts accepted blocks to peers.
 
 Start a node:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
+go run ./node/cmd/indochain --datadir ./testdata/miner node start --rpc :8401 --p2p :9401 --advertise-p2p http://127.0.0.1:9401
 ```
 
 Create a reward address through the local node:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8401 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8401 wallet new
 ```
 
 Mine one block:
 
 ```powershell
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4 --once
 ```
 
 Mine continuously or build the binary:
 
 ```powershell
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8401 --address <IDR_ADDR> --threads 4
-go build -o idrminer ./node/cmd/idrminer
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8401 --address <IND_ADDR> --threads 4
+go build -o indominer ./node/cmd/indominer
 ```
 
-`idrminer` reports new jobs, hashrate, found blocks, stale templates, retry attempts, and accepted submits. Coinbase maturity still applies to standalone miner rewards.
+`indominer` reports new jobs, hashrate, found blocks, stale templates, retry attempts, and accepted submits. Coinbase maturity still applies to standalone miner rewards.
 
 ## Public RPC Hardening
 
 Local/admin mode remains the default. Public RPC mode disables wallet management, admin/debug, miner, faucet, and service write endpoints unless explicitly re-enabled, while read-only chain endpoints remain available.
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
-go run ./node/cmd/deskachain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --public-rpc --enable-wallet-rpc=false
+go run ./node/cmd/indochain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node node start --rpc :8331 --p2p :9331 --public-rpc --enable-wallet-rpc=false
 ```
 
 Health and readiness:
@@ -254,7 +254,7 @@ curl http://127.0.0.1:8331/ready
 Optional JSON config:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node node start --config ./docs/config.example.json
+go run ./node/cmd/indochain --datadir ./testdata/node node start --config ./docs/config.example.json
 ```
 
 Do not expose wallet RPC to the internet. Public nodes should be read-only by default. Add `--enable-miner-rpc` only when the node should accept direct miner template/submit traffic, and keep the node behind a firewall or reverse proxy with production-grade rate limiting. Operator docs live in `docs/Operator.md`.
@@ -262,7 +262,7 @@ Do not expose wallet RPC to the internet. Public nodes should be read-only by de
 Seed peer bootstrap for public-testnet nodes:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./data/testnet-public --network testnet node start --rpc :8811 --p2p :9811 --advertise-p2p http://<PUBLIC_HOST>:9811 --public-rpc --seed-file ./examples/testnet/testnet-seeds.txt
+go run ./node/cmd/indochain --datadir ./data/testnet-public --network testnet node start --rpc :8811 --p2p :9811 --advertise-p2p http://<PUBLIC_HOST>:9811 --public-rpc --seed-file ./examples/testnet/testnet-seeds.txt
 ```
 
 ## Release Build
@@ -281,9 +281,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package.ps1 -Version v0.4.10-
 
 Binary names:
 
-- `deskachain`
-- `idrminer`
-- `idrservice`
+- `indochain`
+- `indominer`
+- `indoservice`
 
 Linux/macOS equivalents:
 
@@ -302,143 +302,143 @@ Release docs live in `docs/Release.md`; deployment docs live in `docs/DeployTest
 
 ## Service Node Simulation
 
-Phase 3.0 adds a research-only service-node layer. It records service node registration, heartbeat uptime, simulated verification challenges, score components, anti-abuse flags, and daily simulated service points. These points are for local/testnet research and leaderboards only; they are not IDR and are not spendable.
+Phase 3.0 adds a research-only service-node layer. It records service node registration, heartbeat uptime, simulated verification challenges, score components, anti-abuse flags, and daily simulated service points. These points are for local/testnet research and leaderboards only; they are not dIDR and are not spendable.
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service register --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IDR_ADDR> --endpoint http://127.0.0.1:9501
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge create --address <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service score --address <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 service rewards --address <IDR_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service register --address <IND_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service heartbeat --address <IND_ADDR> --endpoint http://127.0.0.1:9501
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service challenge create --address <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service challenge submit --challenge-id <ID> --latency-ms 50 --bytes-up 10000000 --bytes-down 50000000 --success true
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service score --address <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 service rewards --address <IND_ADDR>
 ```
 
 In public RPC mode, service write endpoints are disabled by default. Use `--enable-service-rpc=true` only for controlled verifier/test setups.
 
 ## Service Node Agent
 
-`idrservice` automates the Phase 3.0 service simulation workflow. It needs only a node RPC URL and a IDR address. It does not read private keys, does not mine PoW blocks, does not create spendable IDR, and stays in safe simulation mode.
+`indoservice` automates the Phase 3.0 service simulation workflow. It needs only a node RPC URL and a iND address. It does not read private keys, does not mine PoW blocks, does not create spendable dIDR, and stays in safe simulation mode.
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8431 wallet new
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --once
-go run ./node/cmd/idrservice --rpc-url http://127.0.0.1:8431 --address <IDR_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
-go build -o idrservice ./node/cmd/idrservice
+go run ./node/cmd/indochain --datadir ./testdata/service node start --rpc :8431 --p2p :9431 --advertise-p2p http://127.0.0.1:9431
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8431 wallet new
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --once
+go run ./node/cmd/indoservice --rpc-url http://127.0.0.1:8431 --address <IND_ADDR> --endpoint http://127.0.0.1:9501 --heartbeat-interval 30s --challenge-interval 60s
+go build -o indoservice ./node/cmd/indoservice
 ```
 
-Agent state defaults to `./idrservice-state.json`. Inspect it with:
+Agent state defaults to `./indoservice-state.json`. Inspect it with:
 
 ```powershell
-go run ./node/cmd/idrservice status --state ./idrservice-state.json
+go run ./node/cmd/indoservice status --state ./indoservice-state.json
 ```
 
 Do not enable service RPC publicly without rate limits and abuse protection. Phase 3.1 service RPC is for controlled testnet/verifier simulation.
 
 ## Staking Collateral
 
-Phase 3.2 staking locks mature IDR as service-node collateral. Locked and unbonding stake reduce spendable balance, but confirmed balance, mature balance, total supply, coinbase rewards, difficulty, and PoW consensus are unchanged.
+Phase 3.2 staking locks mature dIDR as service-node collateral. Locked and unbonding stake reduce spendable balance, but confirmed balance, mature balance, total supply, coinbase rewards, difficulty, and PoW consensus are unchanged.
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake lock --address <IDR_ADDR> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake list --address <IDR_ADDR>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8471 stake unlock --address <IDR_ADDR> --stake-id <STAKE_ID>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake lock --address <IND_ADDR> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake list --address <IND_ADDR>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8471 stake unlock --address <IND_ADDR> --stake-id <STAKE_ID>
 ```
 
-Localnet requires 10 IDR minimum stake and 100 IDR active stake for service reward simulation eligibility. There is no slashing and no staking APY in Phase 3.2.
+Localnet requires 10 dIDR minimum stake and 100 dIDR active stake for service reward simulation eligibility. There is no slashing and no staking APY in Phase 3.2.
 
-For testnet service-node collateral, the current threshold is 1000 IDR. A faucet-funded runbook is documented in `docs/Testnet.md`.
+For testnet service-node collateral, the current threshold is 1000 dIDR. A faucet-funded runbook is documented in `docs/Testnet.md`.
 
 ## Data Directories
 
 All local state lives under `./data` by default. Use `--datadir` before the command to run separate local nodes:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node1 chain info
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 chain info
 ```
 
 ## Clean Run
 
 ```powershell
-go run ./node/cmd/deskachain dev reset --yes
-go run ./node/cmd/deskachain init
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain mine --address <addr> --blocks 3
-go run ./node/cmd/deskachain balance <addr>
-go run ./node/cmd/deskachain chain info
-go run ./node/cmd/deskachain chain validate
+go run ./node/cmd/indochain dev reset --yes
+go run ./node/cmd/indochain init
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain mine --address <addr> --blocks 3
+go run ./node/cmd/indochain balance <addr>
+go run ./node/cmd/indochain chain info
+go run ./node/cmd/indochain chain validate
 ```
 
 Total supply may be higher than one wallet balance because previous mined blocks may belong to another miner address.
 
 ## Transfer Example
 
-Pending transactions do not change confirmed balances until they are mined into a block. Miners receive 50 IDR per block. Transaction fees are still 0 IDR in Phase 1.6.
+Pending transactions do not change confirmed balances until they are mined into a block. Miners receive 50 dIDR per block. Transaction fees are still 0 dIDR in Phase 1.6.
 
 ```powershell
-go run ./node/cmd/deskachain dev reset --yes
-go run ./node/cmd/deskachain init
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain mine --address <walletA> --blocks 11
-go run ./node/cmd/deskachain send --from <walletA> --to <walletB> --amount 10
-go run ./node/cmd/deskachain mempool list
-go run ./node/cmd/deskachain wallet inspect --address <walletA>
-go run ./node/cmd/deskachain wallet inspect --address <walletB>
-go run ./node/cmd/deskachain mine --address <walletA> --blocks 1
-go run ./node/cmd/deskachain balance <walletA>
-go run ./node/cmd/deskachain balance <walletB>
-go run ./node/cmd/deskachain chain validate
-go run ./node/cmd/deskachain tx get <txid>
+go run ./node/cmd/indochain dev reset --yes
+go run ./node/cmd/indochain init
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain mine --address <walletA> --blocks 11
+go run ./node/cmd/indochain send --from <walletA> --to <walletB> --amount 10
+go run ./node/cmd/indochain mempool list
+go run ./node/cmd/indochain wallet inspect --address <walletA>
+go run ./node/cmd/indochain wallet inspect --address <walletB>
+go run ./node/cmd/indochain mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain balance <walletA>
+go run ./node/cmd/indochain balance <walletB>
+go run ./node/cmd/indochain chain validate
+go run ./node/cmd/indochain tx get <txid>
 ```
 
-In that flow, wallet A ends with 190 IDR, wallet B ends with 10 IDR, and total supply is 200 IDR.
+In that flow, wallet A ends with 190 dIDR, wallet B ends with 10 dIDR, and total supply is 200 dIDR.
 
 ## Local P2P Example
 
 Phase 2 uses simple local HTTP P2P. Each node should use a different datadir, RPC port, and P2P port.
 
-When `node start` is running, do not run local write commands against the same datadir from another process. Use `--rpc-url` to control the running node instead. DesKaChain writes `<datadir>/node.lock` while a node is running to reduce accidental concurrent writers.
+When `node start` is running, do not run local write commands against the same datadir from another process. Use `--rpc-url` to control the running node instead. IndoChain writes `<datadir>/node.lock` while a node is running to reduce accidental concurrent writers.
 
 Prepare two local nodes in Windows PowerShell:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node2 dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/node1 init
-go run ./node/cmd/deskachain --datadir ./testdata/node2 init
-go run ./node/cmd/deskachain --datadir ./testdata/node1 wallet new
-go run ./node/cmd/deskachain --datadir ./testdata/node2 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node2 dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 init
+go run ./node/cmd/indochain --datadir ./testdata/node2 init
+go run ./node/cmd/indochain --datadir ./testdata/node1 wallet new
+go run ./node/cmd/indochain --datadir ./testdata/node2 wallet new
 ```
 
 Start node 1 in terminal 1:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 ```
 
 Start node 2 in terminal 2:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 ```
 
 Mine on node 1 from terminal 3:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
+go run ./node/cmd/indochain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 3
 ```
 
 Connect peers and sync node 2:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain validate
 ```
 
 Expected: node 2 height and tip hash match node 1, and node 2 chain is valid.
@@ -446,44 +446,44 @@ Expected: node 2 height and tip hash match node 1, and node 2 chain is valid.
 Broadcast tx example:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 send --from <walletNode1> --to <walletNode2> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
-go run ./node/cmd/deskachain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 1
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 balance <walletNode2>
+go run ./node/cmd/indochain --datadir ./testdata/node1 send --from <walletNode1> --to <walletNode2> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
+go run ./node/cmd/indochain --datadir ./testdata/node1 mine --address <walletNode1> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 balance <walletNode2>
 ```
 
 Preferred Phase 2.3 remote-control flow:
 
 ```powershell
 # Terminal 1
-go run ./node/cmd/deskachain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node1 node start --rpc :8331 --p2p :9331 --advertise-p2p http://127.0.0.1:9331
 
 # Terminal 2
-go run ./node/cmd/deskachain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain --datadir ./testdata/node2 node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 
 # Terminal 3
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 peer list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3 --timeout 5m
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 mempool list
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 balance <walletB>
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 3 --timeout 5m
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 send --from <walletA> --to <walletB> --amount 10
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 mempool list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <walletA> --blocks 1
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 balance <walletB>
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 chain validate
 ```
 
-Expected: node 2 receives the tx broadcast, receives the block broadcast, wallet B balance becomes 10 IDR, both chains validate, and `node compare` reports `nodes in sync`.
+Expected: node 2 receives the tx broadcast, receives the block broadcast, wallet B balance becomes 10 dIDR, both chains validate, and `node compare` reports `nodes in sync`.
 
 Phase 2.3 broadcast debug command:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p test-broadcast --from <walletA> --to <walletB> --amount 10 --miner <walletA> --peer-rpc http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p test-broadcast --from <walletA> --to <walletB> --amount 10 --miner <walletA> --peer-rpc http://127.0.0.1:8332
 ```
 
 Expected output includes `tx broadcast: success=1 failed=0`, `block broadcast: success=1 failed=0`, `compare: nodes in sync`, and `p2p broadcast test passed`.
@@ -494,10 +494,10 @@ Phase 2.3.1 latency/debug commands:
 Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 Invoke-RestMethod http://127.0.0.1:9332/p2p/status
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 p2p ping http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 p2p ping http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 p2p debug
 ```
 
 Expected: `/p2p/status` responds quickly, `p2p ping` prints `result: ok`, and `p2p debug` shows peer latency plus `last_error`.
@@ -505,12 +505,12 @@ Expected: `/p2p/status` responds quickly, `p2p ping` prints `result: ok`, and `p
 Phase 2.3 remote peer commands while nodes are running:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync --peer http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync --peer http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node compare --peer http://127.0.0.1:8332
 ```
 
 If you accidentally run a local write command against a locked datadir, the CLI prints the matching `--rpc-url` command to use instead.
@@ -545,8 +545,8 @@ Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 Invoke-RestMethod http://127.0.0.1:9331/p2p/tip
 Invoke-RestMethod http://127.0.0.1:9331/p2p/handshake
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p ping http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
 ```
 
 If `context deadline exceeded` appears for `/p2p/status`, first check the direct `Invoke-RestMethod` commands above. Broadcast tx/block and sync do not intentionally hold peer metadata locks while performing outbound requests.
@@ -554,12 +554,12 @@ If `context deadline exceeded` appears for `/p2p/status`, first check the direct
 Phase 2.3.2 mining diagnostics:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine --address <addr> --blocks 3 --timeout 5m
 
 # If mining appears stuck, run these from another terminal:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 mine status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 debug locks
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 p2p debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 mine status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 debug locks
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 p2p debug
 Invoke-RestMethod http://127.0.0.1:9331/p2p/status
 ```
 
@@ -583,9 +583,9 @@ Phase 2.3.3 runtime hygiene:
 Troubleshooting stale peers after reset:
 
 ```powershell
-go run ./node/cmd/deskachain --datadir ./testdata/node1 dev inspect
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer list --source
-go run ./node/cmd/deskachain --datadir ./testdata/node1 peer clear --yes
+go run ./node/cmd/indochain --datadir ./testdata/node1 dev inspect
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer list --source
+go run ./node/cmd/indochain --datadir ./testdata/node1 peer clear --yes
 ```
 
 Expected after `dev reset --yes` and `init`: `peers: 0`, with `peers.json: missing` or an empty peer file.
@@ -593,14 +593,14 @@ Expected after `dev reset --yes` and `init`: `peers: 0`, with `peers.json: missi
 Phase 2.4 fork diagnostics:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 ```
 
 Current phase: Phase 4.12 - Peer Discovery & Auto Bootstrap.
 
-Reorg is the explicit process of replacing the local canonical branch with a peer branch that has greater cumulative work. Reorg is experimental for localnet/testnet, is not automatic by default, and normal `peer sync` still rejects forks unless `--allow-reorg --yes` is supplied. DesKaChain uses cumulative work for reorg decisions, not height alone, and refuses equal-work or lower-work peer branches. Preview is dry-run only; apply requires an explicit `--yes`. Reorg preview/apply now validates handshake, chain ID, network ID, and consensus replay against the active network profile.
+Reorg is the explicit process of replacing the local canonical branch with a peer branch that has greater cumulative work. Reorg is experimental for localnet/testnet, is not automatic by default, and normal `peer sync` still rejects forks unless `--allow-reorg --yes` is supplied. IndoChain uses cumulative work for reorg decisions, not height alone, and refuses equal-work or lower-work peer branches. Preview is dry-run only; apply requires an explicit `--yes`. Reorg preview/apply now validates handshake, chain ID, network ID, and consensus replay against the active network profile.
 
 Phase 2.6 adds mempool recovery checks for reorgs with normal transactions:
 
@@ -614,14 +614,14 @@ Phase 2.6 adds mempool recovery checks for reorgs with normal transactions:
 Example reorg transaction recovery scenario:
 
 ```powershell
-go run ./node/cmd/deskachain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
+go run ./node/cmd/indochain dev reorg-tx-sim --datadir-a ./testdata/reorgTxA --datadir-b ./testdata/reorgTxB --scenario requeue-valid
 
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
-go run ./node/cmd/deskachain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxA node start --rpc :8351 --p2p :9351 --advertise-p2p http://127.0.0.1:9351
+go run ./node/cmd/indochain --datadir ./testdata/reorgTxB node start --rpc :8352 --p2p :9352 --advertise-p2p http://127.0.0.1:9352
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8351 mempool list --detail
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg preview --peer http://127.0.0.1:9352
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 reorg apply --peer http://127.0.0.1:9352 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8351 mempool list --detail
 ```
 
 Expected for `requeue-valid`:
@@ -637,8 +637,8 @@ Phase 2.4.1 common ancestor troubleshooting:
 If `chain common-ancestor --peer <p2p-url>` reports `common ancestor not found` while `fork check` says the nodes are in sync, inspect the exact locator being sent:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain locator
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain locator
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332 --debug
 ```
 
 Expected for nodes in sync:
@@ -652,8 +652,8 @@ hash: <tip hash>
 Phase 2.4.2 local fork simulation:
 
 ```powershell
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
-go run ./node/cmd/deskachain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
 ```
 
 Expected:
@@ -671,33 +671,33 @@ Phase 2.4.2 only proves that real forks are detected and automatic sync rejects 
 Initialize chain:
 
 ```powershell
-go run ./node/cmd/deskachain init
+go run ./node/cmd/indochain init
 ```
 
 Reset local development data:
 
 ```powershell
-go run ./node/cmd/deskachain dev reset --yes
+go run ./node/cmd/indochain dev reset --yes
 ```
 
 Inspect local runtime files:
 
 ```powershell
-go run ./node/cmd/deskachain dev inspect
+go run ./node/cmd/indochain dev inspect
 ```
 
 Create and list wallets:
 
 ```powershell
-go run ./node/cmd/deskachain wallet new
-go run ./node/cmd/deskachain wallet list
+go run ./node/cmd/indochain wallet new
+go run ./node/cmd/indochain wallet list
 ```
 
 When a node is running and the datadir is locked, create wallets through the local/admin RPC instead:
 
 ```powershell
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 wallet new
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 wallet list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 wallet new
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 wallet list
 ```
 
 Wallet RPC creates private keys on the node. Do not expose wallet RPC on public RPC nodes. Public RPC nodes should disable wallet management in a future hardening phase.
@@ -705,97 +705,97 @@ Wallet RPC creates private keys on the node. Do not expose wallet RPC on public 
 Export a local development private key:
 
 ```powershell
-go run ./node/cmd/deskachain wallet export --address <addr> --show-private-key
+go run ./node/cmd/indochain wallet export --address <addr> --show-private-key
 ```
 
 Inspect a wallet or address:
 
 ```powershell
-go run ./node/cmd/deskachain wallet inspect --address <addr>
-go run ./node/cmd/deskachain address validate <addr>
+go run ./node/cmd/indochain wallet inspect --address <addr>
+go run ./node/cmd/indochain address validate <addr>
 ```
 
 Check balance:
 
 ```powershell
-go run ./node/cmd/deskachain balance <addr>
+go run ./node/cmd/indochain balance <addr>
 ```
 
 Create a pending transaction:
 
 ```powershell
-go run ./node/cmd/deskachain send --from <fromAddress> --to <toAddress> --amount 1.25
+go run ./node/cmd/indochain send --from <fromAddress> --to <toAddress> --amount 1.25
 ```
 
 Inspect or clear mempool:
 
 ```powershell
-go run ./node/cmd/deskachain mempool list
-go run ./node/cmd/deskachain mempool clear --yes
+go run ./node/cmd/indochain mempool list
+go run ./node/cmd/indochain mempool clear --yes
 ```
 
 Lookup a transaction:
 
 ```powershell
-go run ./node/cmd/deskachain tx get <txid>
+go run ./node/cmd/indochain tx get <txid>
 ```
 
 Mine blocks:
 
 ```powershell
-go run ./node/cmd/deskachain mine --address <addr> --blocks 3
+go run ./node/cmd/indochain mine --address <addr> --blocks 3
 ```
 
 Inspect and validate chain:
 
 ```powershell
-go run ./node/cmd/deskachain chain info
-go run ./node/cmd/deskachain chain locator
-go run ./node/cmd/deskachain chain print
-go run ./node/cmd/deskachain chain validate
-go run ./node/cmd/deskachain chain common-ancestor --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain chain info
+go run ./node/cmd/indochain chain locator
+go run ./node/cmd/indochain chain print
+go run ./node/cmd/indochain chain validate
+go run ./node/cmd/indochain chain common-ancestor --peer http://127.0.0.1:9332
 ```
 
 Start the HTTP API:
 
 ```powershell
-go run ./node/cmd/deskachain rpc --addr :8332
+go run ./node/cmd/indochain rpc --addr :8332
 ```
 
 Start combined RPC + P2P node:
 
 ```powershell
-go run ./node/cmd/deskachain node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
+go run ./node/cmd/indochain node start --rpc :8332 --p2p :9332 --advertise-p2p http://127.0.0.1:9332 --peers http://127.0.0.1:9331
 ```
 
 Show network identity:
 
 ```powershell
-go run ./node/cmd/deskachain network info
+go run ./node/cmd/indochain network info
 ```
 
 Check node status:
 
 ```powershell
-go run ./node/cmd/deskachain node status
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 node status
+go run ./node/cmd/indochain node status
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 node status
 ```
 
 Manage peers:
 
 ```powershell
-go run ./node/cmd/deskachain peer list
-go run ./node/cmd/deskachain peer list --source
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
-go run ./node/cmd/deskachain peer add http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer status
-go run ./node/cmd/deskachain peer remove http://127.0.0.1:9331
-go run ./node/cmd/deskachain peer clear --yes
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer clear --yes
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8332 peer sync
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
-go run ./node/cmd/deskachain chain info
+go run ./node/cmd/indochain peer list
+go run ./node/cmd/indochain peer list --source
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer check http://127.0.0.1:9331
+go run ./node/cmd/indochain peer add http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer connect http://127.0.0.1:9331
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer status
+go run ./node/cmd/indochain peer remove http://127.0.0.1:9331
+go run ./node/cmd/indochain peer clear --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer clear --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8332 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 fork check --peer http://127.0.0.1:9332
+go run ./node/cmd/indochain chain info
 ```
 
 Running `peer sync` repeatedly should not duplicate blocks: height, total supply, and tip hash should stay unchanged once the node is up to date.
@@ -830,14 +830,14 @@ Running `peer sync` repeatedly should not duplicate blocks: height, total supply
 - `POST /fork/check`
 - `GET /faucet/info`
 - `POST /faucet/request`
-- `GET /miner/template?address=<IDR_ADDR>`
+- `GET /miner/template?address=<IND_ADDR>`
 - `POST /miner/submit`
 - `POST /service/register`
 - `POST /service/heartbeat`
 - `POST /service/challenge/create`
 - `POST /service/challenge/submit`
-- `GET /service/score?address=<IDR_ADDR>`
-- `GET /service/rewards?address=<IDR_ADDR>`
+- `GET /service/score?address=<IND_ADDR>`
+- `GET /service/rewards?address=<IND_ADDR>`
 - `GET /service/list`
 - `GET /stake/info`
 - `GET /stake/list`
@@ -886,8 +886,8 @@ Example send body:
 
 ```json
 {
-  "from": "<IDR_ADDR>",
-  "to": "<IDR_ADDR>",
+  "from": "<IND_ADDR>",
+  "to": "<IND_ADDR>",
   "amount": "1.25"
 }
 ```
@@ -896,7 +896,7 @@ Example mine body:
 
 ```json
 {
-  "address": "<IDR_ADDR>",
+  "address": "<IND_ADDR>",
   "blocks": 1
 }
 ```
@@ -906,7 +906,7 @@ Example mine body:
 ```powershell
 go mod tidy
 go test ./...
-go run ./node/cmd/deskachain chain validate
+go run ./node/cmd/indochain chain validate
 ```
 
 ## Roadmap
@@ -920,19 +920,19 @@ go run ./node/cmd/deskachain chain validate
 
 ## Phase 2.4.3 — Same Height Fork Sync Fix & Chain Info Tx Count
 
-Same height does not mean same chain. Nodes are only up to date when both the height and tip hash match. If two nodes have the same height but different tip hashes, DesKaChain treats that as a fork. Peer sync rejects forked chains until Phase 2.5 introduces safe automatic reorg support.
+Same height does not mean same chain. Nodes are only up to date when both the height and tip hash match. If two nodes have the same height but different tip hashes, IndoChain treats that as a fork. Peer sync rejects forked chains until Phase 2.5 introduces safe automatic reorg support.
 
 Example fork simulation and sync rejection:
 
 ```bash
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer sync
 ```
 
 Expected:
@@ -949,28 +949,28 @@ automatic reorg: disabled
 Create forked local chains:
 
 ```sh
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
 ```
 
 Start both nodes:
 
 ```sh
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 ```
 
 Preview and explicitly apply the safe reorg:
 
 ```sh
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
 ```
 
 Verify:
 
 ```sh
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain validate
 ```
 
 Expected output includes `nodes in sync` and `chain valid`.

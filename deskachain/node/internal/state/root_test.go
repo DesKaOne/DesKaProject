@@ -3,10 +3,10 @@ package state
 import (
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestStateRootDeterministicAcrossMapInsertionOrder(t *testing.T) {

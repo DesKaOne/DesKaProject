@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/crypto"
+	"indochain/internal/crypto"
 )
 
 const (

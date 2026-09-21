@@ -1,6 +1,6 @@
-# DesKaChain RC1 Feedback Summary - YYYY-MM-DD
+# IndoChain RC1 Feedback Summary - YYYY-MM-DD
 
-Testnet IDR has no monetary value. Mainnet is not available.
+Testnet dIDR has no monetary value. Mainnet is not available.
 
 ## Overall Status
 
@@ -41,5 +41,5 @@ Testnet IDR has no monetary value. Mainnet is not available.
 
 ## No Monetary Value Reminder
 
-Testnet IDR has no monetary value. Mainnet is not available.
+Testnet dIDR has no monetary value. Mainnet is not available.
 

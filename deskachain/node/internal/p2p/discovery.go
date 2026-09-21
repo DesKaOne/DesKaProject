@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 type DiscoveryResult struct {

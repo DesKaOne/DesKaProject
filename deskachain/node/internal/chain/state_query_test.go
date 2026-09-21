@@ -4,11 +4,11 @@ import (
 	"errors"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/staking"
-	"deskachain/internal/state"
-	"deskachain/internal/types"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/staking"
+	"indochain/internal/state"
+	"indochain/internal/types"
 )
 
 var errReplayMustNotRun = errors.New("block replay must not run")
@@ -49,13 +49,13 @@ func (s *queryOnlyStore) GetStateStakesForAddress(string) ([]staking.Record, err
 }
 
 func (s *queryOnlyStore) ValidateChainStateConsistency() error { return nil }
-func (s *queryOnlyStore) ValidateStateIndexes() error { return nil }
+func (s *queryOnlyStore) ValidateStateIndexes() error          { return nil }
 
 func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
 		tip: types.Block{Height: 5, Hash: "tip", StateRoot: "legacy-state-root"},
 		account: ledger.StateAccount{
-			Address:   "IDR-alice",
+			Address:   "iND-alice",
 			Confirmed: 100,
 			Mature:    80,
 			Nonce:     9,
@@ -63,7 +63,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 		stakes: []staking.Record{
 			{
 				StakeID:      "stake-1",
-				OwnerAddress: "IDR-alice",
+				OwnerAddress: "iND-alice",
 				Amount:       20,
 				Status:       staking.StatusActive,
 			},
@@ -71,7 +71,7 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 	}
 	bc := New(store)
 
-	got, err := bc.BalanceDetailsForWithProfile("IDR-alice", nil, config.Localnet())
+	got, err := bc.BalanceDetailsForWithProfile("iND-alice", nil, config.Localnet())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,11 +83,11 @@ func TestBalanceDetailsPrefersCurrentStateIndexOverReplay(t *testing.T) {
 func TestAccountNoncePrefersCurrentStateIndexOverReplay(t *testing.T) {
 	store := &queryOnlyStore{
 		tip:     types.Block{Height: 5, Hash: "tip", StateRoot: "legacy-state-root"},
-		account: ledger.StateAccount{Address: "IDR-alice", Nonce: 11},
+		account: ledger.StateAccount{Address: "iND-alice", Nonce: 11},
 	}
 	bc := New(store)
 
-	got, err := bc.AccountNonceWithProfile("IDR-alice", config.Localnet())
+	got, err := bc.AccountNonceWithProfile("iND-alice", config.Localnet())
 	if err != nil {
 		t.Fatal(err)
 	}

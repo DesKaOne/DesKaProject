@@ -1,12 +1,12 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur project:
 
 * node/
 
-  * cmd/deskachain/
-  * cmd/idrminer/
-  * cmd/idrservice/
+  * cmd/indochain/
+  * cmd/indominer/
+  * cmd/indoservice/
   * internal/
 
     * address/
@@ -48,15 +48,15 @@ Status saat ini:
 * go test ./node/... pass.
 * go test -count=1 ./node/... pass.
 * Staking regression tests sudah ada dan pass.
-* Service node simulation + idrservice agent sudah pass.
+* Service node simulation + indoservice agent sudah pass.
 * Public RPC hardening sudah pass.
 * Standalone miner sudah pass.
-* Address final sudah `IDR...`.
+* Address final sudah `iND...`.
 * Staking tetap collateral-only, bukan PoS.
-* Service points tetap simulation only, bukan spendable IDR.
+* Service points tetap simulation only, bukan spendable dIDR.
 
 Nama patch:
-DesKaChain Phase 3.2.2 — Pre-Testnet Cleanup & Network Profile Plumbing
+IndoChain Phase 3.2.2 — Pre-Testnet Cleanup & Network Profile Plumbing
 
 Tujuan:
 Membersihkan repo dan memastikan network profile benar-benar mengalir dari CLI/config ke seluruh layer sebelum masuk Phase 3.3 multi-node testnet bootstrap.
@@ -65,7 +65,7 @@ Phase ini fokus pada:
 
 * hapus runtime state file yang tidak seharusnya masuk repo,
 * rapikan .gitignore,
-* bersihkan docs dari address lama `idr1...`,
+* bersihkan docs dari address lama `iND1...`,
 * sinkronkan Roadmap phase agar tidak mengarah ke PoS dulu,
 * rename typo docs/Arsitecture.md menjadi docs/Architecture.md,
 * hilangkan hardcode `config.Localnet()` di runtime path penting,
@@ -74,7 +74,7 @@ Phase ini fokus pada:
 
 Prinsip penting:
 
-* Jangan ubah address format `IDR...`.
+* Jangan ubah address format `iND...`.
 * Jangan ubah private key format.
 * Jangan ubah PoW consensus.
 * Jangan ubah difficulty formula.
@@ -102,7 +102,7 @@ Prinsip penting:
 
 Cek root repo apakah ada file runtime lokal seperti:
 
-* idrservice-state.json
+* indoservice-state.json
 * service_nodes.json
 * service_challenges.json
 * service_rewards.json
@@ -118,8 +118,8 @@ Jika ada di root repo atau folder non-test fixture:
 
 Tambahkan ke .gitignore:
 
-idrservice-state.json
-**/idrservice-state.json
+indoservice-state.json
+**/indoservice-state.json
 service_nodes.json
 service_challenges.json
 service_rewards.json
@@ -155,36 +155,36 @@ Namun karena project punya folder prompts/ untuk roadmap patch, rekomendasi:
 * ignore hanya runtime/cache.
 
 ==================================================
-3. Bersihkan docs dari address lama idr1...
+3. Bersihkan docs dari address lama iND1...
 ===========================================
 
 Cari semua kemunculan:
 
-* idr1
-* idr1...
-* "address": "idr1..."
-* "from": "idr1..."
-* "to": "idr1..."
+* iND1
+* iND1...
+* "address": "iND1..."
+* "from": "iND1..."
+* "to": "iND1..."
 
 Command referensi:
 
-grep -R "idr1" -n README.md README-ID.md Roadmap.md docs node 2>/dev/null
+grep -R "iND1" -n README.md README-ID.md Roadmap.md docs node 2>/dev/null
 
 Atau Windows PowerShell:
 
-Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "idr1" -Recurse
+Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "iND1" -Recurse
 
 Ganti contoh address lama menjadi format final:
 
-IDR...
+iND...
 
 Contoh aman untuk docs:
 
-IDRDExampleAddressReplaceWithRealWalletOutput
+iNDDExampleAddressReplaceWithRealWalletOutput
 
 Atau lebih baik:
 
-<IDR_ADDR>
+<IND_ADDR>
 
 Rules:
 
@@ -320,30 +320,30 @@ Minimal harus ada:
 Localnet expected:
 
 * network: localnet
-* network_id: idr-local-1
+* network_id: ind-local-1
 * chain_id: 777001
-* address prefix: IDR
+* address prefix: iND
 * target block time: 10s
 * retarget window: 10
 * min difficulty: 1
 * max difficulty: 8
 * coinbase maturity: 10
 * staking enabled: true
-* min stake amount: 10 IDR
-* min service stake: 100 IDR
+* min stake amount: 10 dIDR
+* min service stake: 100 dIDR
 * unbonding period: 10
 
 Testnet expected placeholder:
 
 * network: testnet
-* network_id: idr-testnet-1
+* network_id: ind-testnet-1
 * chain_id: pilih existing kalau sudah ada; kalau belum, gunakan angka berbeda dari localnet, contoh 777101
-* address prefix tetap IDR untuk Phase ini, kecuali project sudah punya versi address network-specific.
+* address prefix tetap iND untuk Phase ini, kecuali project sudah punya versi address network-specific.
 * target block time boleh lebih realistis, contoh 30s atau tetap sesuai existing config.
 * retarget window lebih besar dari localnet jika sudah disiapkan.
 * coinbase maturity lebih besar dari localnet, contoh 20/50/100 sesuai existing.
 * staking enabled true
-* min service stake lebih besar dari localnet, contoh 1000 IDR jika sudah ada.
+* min service stake lebih besar dari localnet, contoh 1000 dIDR jika sudah ada.
 * unbonding period lebih besar dari localnet.
 
 Rules:
@@ -356,7 +356,7 @@ Rules:
 8. CLI network flag
 ===================
 
-Pastikan `deskachain` mendukung network selection konsisten.
+Pastikan `indochain` mendukung network selection konsisten.
 
 Flags:
 
@@ -400,7 +400,7 @@ atau metadata storage existing.
 Isi minimal:
 {
 "network": "localnet",
-"network_id": "idr-local-1",
+"network_id": "ind-local-1",
 "chain_id": 777001,
 "genesis_hash": "..."
 }
@@ -408,7 +408,7 @@ Isi minimal:
 Untuk testnet:
 {
 "network": "testnet",
-"network_id": "idr-testnet-1",
+"network_id": "ind-testnet-1",
 "chain_id": 777101,
 "genesis_hash": "..."
 }
@@ -462,14 +462,14 @@ Endpoints yang harus mencerminkan active profile:
 Expected localnet /health:
 {
 "network": "localnet",
-"network_id": "idr-local-1",
+"network_id": "ind-local-1",
 "chain_id": 777001
 }
 
 Expected testnet /health:
 {
 "network": "testnet",
-"network_id": "idr-testnet-1",
+"network_id": "ind-testnet-1",
 "chain_id": 777101
 }
 
@@ -532,11 +532,11 @@ Miner template harus pakai active profile:
 * coinbase reward/maturity if applicable
 * target from active difficulty params
 
-idrminer harus tetap compatible:
+indominer harus tetap compatible:
 
 * localnet works.
 * testnet works if RPC target is testnet.
-* idrminer tidak perlu tahu config selain dari template response.
+* indominer tidak perlu tahu config selain dari template response.
 
 ==================================================
 15. Staking/service harus pakai active profile
@@ -660,7 +660,7 @@ go test -count=1 ./node/...
 Search cleanup:
 
 PowerShell:
-Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "idr1" -Recurse
+Select-String -Path README.md,README-ID.md,Roadmap.md,docs* -Pattern "iND1" -Recurse
 
 Expected:
 
@@ -678,45 +678,45 @@ Expected:
 
 Localnet init:
 
-go run ./node/cmd/deskachain --datadir ./testdata/profile_local dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/profile_local --network localnet init
-go run ./node/cmd/deskachain --datadir ./testdata/profile_local node start --rpc :8511 --p2p :9511 --advertise-p2p http://127.0.0.1:9511
+go run ./node/cmd/indochain --datadir ./testdata/profile_local dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/profile_local --network localnet init
+go run ./node/cmd/indochain --datadir ./testdata/profile_local node start --rpc :8511 --p2p :9511 --advertise-p2p http://127.0.0.1:9511
 
 Check:
 
 Invoke-RestMethod http://127.0.0.1:8511/health
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8511 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8511 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8511 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8511 stake info
 
 Expected:
 
 * network localnet
-* network_id idr-local-1
+* network_id ind-local-1
 * chain id 777001
-* min service stake 100 IDR
+* min service stake 100 dIDR
 
 Testnet init:
 
-go run ./node/cmd/deskachain --datadir ./testdata/profile_test dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/profile_test --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/profile_test node start --rpc :8521 --p2p :9521 --advertise-p2p http://127.0.0.1:9521
+go run ./node/cmd/indochain --datadir ./testdata/profile_test dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/profile_test --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/profile_test node start --rpc :8521 --p2p :9521 --advertise-p2p http://127.0.0.1:9521
 
 Check:
 
 Invoke-RestMethod http://127.0.0.1:8521/health
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8521 stake info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8521 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8521 stake info
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain id different from 777001
 * min service stake testnet value, not 100 localnet if configured differently
 
 Mismatch test:
 
-go run ./node/cmd/deskachain --datadir ./testdata/profile_local --network testnet node start --rpc :8531 --p2p :9531 --advertise-p2p http://127.0.0.1:9531
+go run ./node/cmd/indochain --datadir ./testdata/profile_local --network testnet node start --rpc :8531 --p2p :9531 --advertise-p2p http://127.0.0.1:9531
 
 Expected:
 
@@ -725,18 +725,18 @@ Expected:
 
 Miner template testnet:
 
-go run ./node/cmd/deskachain --datadir ./testdata/profile_test wallet new
-Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IDR_ADDR>"
+go run ./node/cmd/indochain --datadir ./testdata/profile_test wallet new
+Invoke-RestMethod "http://127.0.0.1:8521/miner/template?address=<IND_ADDR>"
 
 Expected:
 
 * network testnet
-* network_id idr-testnet-1
+* network_id ind-testnet-1
 * chain_id testnet
 
 Optional miner testnet:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8521 --address <IDR_ADDR> --threads 4 --once
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8521 --address <IND_ADDR> --threads 4 --once
 
 Expected:
 

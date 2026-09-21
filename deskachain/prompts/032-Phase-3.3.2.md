@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -14,7 +14,7 @@ Status saat ini:
 * testnet:
 
   * network: testnet
-  * network_id: idr-testnet-1
+  * network_id: ind-testnet-1
   * chain_id: 777101
   * genesis hash: db0ec6a6425f3a16241c429e7fdf4f29ee4a40c4a6eead84dab2d0e0f356bbf4
 * Multi-node controlled local testnet sudah jalan:
@@ -32,15 +32,15 @@ Status saat ini:
 * Service node testnet valid.
 * Testnet staking/service params sudah profile-aware:
 
-  * min stake amount: 100 IDR
-  * min service stake: 1000 IDR
+  * min stake amount: 100 dIDR
+  * min service stake: 1000 dIDR
   * unbonding period: 100
 * Staking tetap collateral-only.
 * Service points tetap simulation-only.
 * PoW tetap satu-satunya consensus block production.
 
 Nama patch:
-DesKaChain Phase 3.3.2 — Multi-node Sync Regression & Peer Persistence Hardening
+IndoChain Phase 3.3.2 — Multi-node Sync Regression & Peer Persistence Hardening
 
 Tujuan:
 Menguatkan fondasi testnet multi-node sebelum masuk faucet/explorer/public testnet planning.
@@ -69,7 +69,7 @@ Non-goals:
 * Jangan implement validator set.
 * Jangan implement staking reward.
 * Jangan implement slashing.
-* Jangan ubah address format IDR.
+* Jangan ubah address format dIDR.
 * Jangan ubah private key format.
 * Jangan ubah localnet genesis.
 * Jangan ubah testnet genesis kecuali bug fatal.
@@ -429,29 +429,29 @@ Manual flow:
 
 Clean:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_a dev reset --yes
-go run ./node/cmd/deskachain --datadir ./testdata/persist_b dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/persist_a dev reset --yes
+go run ./node/cmd/indochain --datadir ./testdata/persist_b dev reset --yes
 
 Init A:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_a --network testnet init
-go run ./node/cmd/deskachain --datadir ./testdata/persist_a wallet new
+go run ./node/cmd/indochain --datadir ./testdata/persist_a --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/persist_a wallet new
 
 Start A:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_a node start --rpc :8711 --p2p :9711 --advertise-p2p http://127.0.0.1:9711
+go run ./node/cmd/indochain --datadir ./testdata/persist_a node start --rpc :8711 --p2p :9711 --advertise-p2p http://127.0.0.1:9711
 
 Init B:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_b --network testnet init
+go run ./node/cmd/indochain --datadir ./testdata/persist_b --network testnet init
 
 Start B with bootnode:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_b node start --rpc :8712 --p2p :9712 --advertise-p2p http://127.0.0.1:9712 --bootnode http://127.0.0.1:9711/
+go run ./node/cmd/indochain --datadir ./testdata/persist_b node start --rpc :8712 --p2p :9712 --advertise-p2p http://127.0.0.1:9712 --bootnode http://127.0.0.1:9711/
 
 Check B peers:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer list
 
 Expected:
 
@@ -462,11 +462,11 @@ Expected:
 
 Mine A:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8711 --address <A_IDR_ADDR> --threads 4 --max-blocks 2
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8711 --address <A_IND_ADDR> --threads 4 --max-blocks 2
 
 Sync B:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:9711
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:9711
 
 Expected:
 
@@ -477,15 +477,15 @@ Expected:
 Stop B.
 Mine A again:
 
-go run ./node/cmd/idrminer --rpc-url http://127.0.0.1:8711 --address <A_IDR_ADDR> --threads 4 --max-blocks 2
+go run ./node/cmd/indominer --rpc-url http://127.0.0.1:8711 --address <A_IND_ADDR> --threads 4 --max-blocks 2
 
 Restart B WITHOUT bootnode flag:
 
-go run ./node/cmd/deskachain --datadir ./testdata/persist_b node start --rpc :8712 --p2p :9712 --advertise-p2p http://127.0.0.1:9712
+go run ./node/cmd/indochain --datadir ./testdata/persist_b node start --rpc :8712 --p2p :9712 --advertise-p2p http://127.0.0.1:9712
 
 Check B peers:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer list
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer list
 
 Expected:
 
@@ -493,7 +493,7 @@ Expected:
 
 Sync B from saved peer:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:9711
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:9711
 
 Expected:
 
@@ -505,7 +505,7 @@ Offline peer test:
 * Stop A.
 * From B:
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer check http://127.0.0.1:9711
+  go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer check http://127.0.0.1:9711
 
 Expected:
 
@@ -515,7 +515,7 @@ Expected:
 Restart A.
 From B:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer check http://127.0.0.1:9711
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer check http://127.0.0.1:9711
 
 Expected:
 
@@ -528,7 +528,7 @@ Mismatch still rejected:
 * Start localnet node C.
 * From B testnet:
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:<LOCALNET_P2P_PORT>
+  go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8712 peer sync http://127.0.0.1:<LOCALNET_P2P_PORT>
 
 Expected:
 

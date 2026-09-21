@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/p2p"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/p2p"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 type minerTemplateTestResponse struct {
@@ -336,6 +336,246 @@ func TestMinerSubmitDuplicateAndConcurrentRace(t *testing.T) {
 	}
 	if _, err := chain.ValidateChain(rpcBlocks(t, paths)); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
+	paths, server := newMinerRPCServer(t)
+	miner := newRPCWallet(t)
+
+	tpl := fetchMinerTemplate(t, server.URL, miner.Address)
+	mined := chain.Mine(tpl.Block)
+	if submit := submitMinerBlock(t, server.URL, tpl.TemplateID, mined); !submit.Accepted {
+		t.Fatalf("submit rejected: %#v", submit)
+	}
+
+	if err := mempool.New(paths.Mempool).Add(types.NewUnsignedTransaction(miner.Address, "receiver", 7, 2, 1)); err != nil {
+		t.Fatal(err)
+	}
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	mining, ok := metrics["mining"].(map[string]any)
+	if !ok {
+		t.Fatalf("mining metrics missing or wrong type: %#v", metrics["mining"])
+	}
+	for _, key := range []string{
+		"height",
+		"current_difficulty",
+		"next_difficulty",
+		"target_block_time_seconds",
+		"blocks_until_retarget",
+		"last_block_time",
+		"last_block_age_seconds",
+		"average_interval_seconds",
+		"min_interval_seconds",
+		"max_interval_seconds",
+		"recent_block_intervals_seconds",
+		"recent_difficulties",
+		"projected_retarget_direction",
+	} {
+		if _, ok := mining[key]; !ok {
+			t.Fatalf("mining metrics missing %q: %#v", key, mining)
+		}
+	}
+	if got, ok := mining["height"].(float64); !ok || got != 1 {
+		t.Fatalf("mining height = %#v, want 1", mining["height"])
+	}
+	if _, ok := mining["average_interval_seconds"].(float64); !ok {
+		t.Fatalf("average interval has unexpected type: %#v", mining["average_interval_seconds"])
+	}
+	if _, ok := mining["recent_difficulties"].([]any); !ok {
+		t.Fatalf("recent difficulties has unexpected type: %#v", mining["recent_difficulties"])
+	}
+
+	mempoolStats, ok := metrics["mempool"].(map[string]any)
+	if !ok {
+		t.Fatalf("mempool metrics missing or wrong type: %#v", metrics["mempool"])
+	}
+	if got, ok := mempoolStats["pending_tx_count"].(float64); !ok || got != 1 {
+		t.Fatalf("pending tx count = %#v, want 1", mempoolStats["pending_tx_count"])
+	}
+	if got, ok := mempoolStats["pending_fee_total"].(float64); !ok || got != 2 {
+		t.Fatalf("pending fee total = %#v, want 2", mempoolStats["pending_fee_total"])
+	}
+	if got, ok := mempoolStats["pending_native_amount"].(float64); !ok || got != 7 {
+		t.Fatalf("pending native amount = %#v, want 7", mempoolStats["pending_native_amount"])
+	}
+	if got, ok := mempoolStats["type_counts"].(map[string]any); !ok || got["transfer"] != float64(1) {
+		t.Fatalf("mempool type counts = %#v", mempoolStats["type_counts"])
+	}
+
+	_ = paths
+}
+
+
+
+func TestNodeMetricsExposeRuntimeSoakMetrics(t *testing.T) {
+	_, server := newMinerRPCServer(t)
+
+	first := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	runtime, ok := first["runtime"].(map[string]any)
+	if !ok {
+		t.Fatalf("runtime metrics missing or wrong type: %#v", first["runtime"])
+	}
+	for _, key := range []string{"observed_at_unix", "uptime_seconds", "chain_height", "active_peer_count", "mempool_pending_count"} {
+		if _, ok := runtime[key]; !ok {
+			t.Fatalf("runtime metric %q missing: %#v", key, runtime)
+		}
+	}
+	if runtime["observed_at_unix"].(float64) <= 0 {
+		t.Fatalf("observed_at_unix = %#v, want positive timestamp", runtime["observed_at_unix"])
+	}
+	if runtime["uptime_seconds"].(float64) < 0 {
+		t.Fatalf("uptime_seconds = %#v, want non-negative", runtime["uptime_seconds"])
+	}
+	if runtime["chain_height"].(float64) != 0 {
+		t.Fatalf("chain_height = %#v, want genesis height 0", runtime["chain_height"])
+	}
+	if runtime["active_peer_count"].(float64) < 0 || runtime["mempool_pending_count"].(float64) < 0 {
+		t.Fatalf("runtime counts must be non-negative: %#v", runtime)
+	}
+
+	second := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	runtime2 := second["runtime"].(map[string]any)
+	if runtime2["observed_at_unix"].(float64) < runtime["observed_at_unix"].(float64) {
+		t.Fatalf("runtime observation timestamp moved backwards: first=%#v second=%#v", runtime["observed_at_unix"], runtime2["observed_at_unix"])
+	}
+}
+
+func TestNodeMetricsExposeExplorerIndexerStatistics(t *testing.T) {
+	paths, server := newMinerRPCServer(t)
+	miner := newRPCWallet(t)
+
+	tpl := fetchMinerTemplate(t, server.URL, miner.Address)
+	if submit := submitMinerBlock(t, server.URL, tpl.TemplateID, chain.Mine(tpl.Block)); !submit.Accepted {
+		t.Fatalf("submit rejected: %#v", submit)
+	}
+
+	indexer := newExplorerIndexer(paths, config.Localnet())
+	status, err := indexer.sync()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.Ready {
+		t.Fatalf("indexer status not ready after sync: %#v", status)
+	}
+
+	expected, err := indexer.stats(status)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	indexerMetrics, ok := metrics["indexer"].(map[string]any)
+	if !ok {
+		t.Fatalf("indexer metrics missing or wrong type: %#v", metrics["indexer"])
+	}
+	stats, ok := indexerMetrics["stats"].(map[string]any)
+	if !ok {
+		t.Fatalf("indexer stats missing or wrong type: %#v", indexerMetrics["stats"])
+	}
+
+	checks := map[string]float64{
+		"block_count":           float64(expected.BlockCount),
+		"transaction_count":    float64(expected.TransactionCount),
+		"address_history_count": float64(expected.AddressHistoryCount),
+		"asset_event_count":     float64(expected.AssetEventCount),
+		"indexed_height":        float64(expected.IndexedHeight),
+		"chain_height":          float64(expected.ChainHeight),
+		"lag":                   float64(expected.Lag),
+		"sync_count":            float64(expected.SyncCount),
+		"last_sync_block_count": float64(expected.LastSyncBlockCount),
+		"sync_failure_count":    float64(expected.SyncFailureCount),
+	}
+	for key, want := range checks {
+		got, ok := stats[key].(float64)
+		if !ok || got != want {
+			t.Fatalf("indexer %s = %#v, want %v", key, stats[key], want)
+		}
+	}
+	if stats["ready"] != expected.Ready {
+		t.Fatalf("indexer ready = %#v, want %v", stats["ready"], expected.Ready)
+	}
+	if stats["sync_status"] != expected.SyncStatus {
+		t.Fatalf("indexer sync status = %#v, want %q", stats["sync_status"], expected.SyncStatus)
+	}
+	if stats["schema_version"] != expected.SchemaVersion {
+		t.Fatalf("indexer schema version = %#v, want %q", stats["schema_version"], expected.SchemaVersion)
+	}
+	if indexerMetrics["status"] == nil {
+		t.Fatal("node metrics indexer status missing")
+	}
+}
+
+
+func TestNodeMetricsConsolidatedMonitoringAcceptance(t *testing.T) {
+	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	if metrics["schema_version"] != "v1" {
+		t.Fatalf("metrics schema_version = %#v, want v1", metrics["schema_version"])
+	}
+	for _, section := range []string{"network", "chain", "peers", "mempool", "mining", "indexer", "runtime"} {
+		if metrics[section] == nil {
+			t.Fatalf("monitoring section %q missing", section)
+		}
+	}
+
+	chainInfo, ok := metrics["chain"].(map[string]any)
+	if !ok || chainInfo["height"] == nil || chainInfo["tip_hash"] == nil || chainInfo["transaction_count"] == nil {
+		t.Fatalf("chain monitoring fields incomplete: %#v", metrics["chain"])
+	}
+	peerInfo, ok := metrics["peers"].(map[string]any)
+	if !ok || peerInfo["known"] == nil || peerInfo["active"] == nil || peerInfo["best_height"] == nil || peerInfo["best_lag"] == nil || peerInfo["status_counts"] == nil {
+		t.Fatalf("peer monitoring fields incomplete: %#v", metrics["peers"])
+	}
+	mempoolInfo, ok := metrics["mempool"].(map[string]any)
+	if !ok || mempoolInfo["pending_tx_count"] == nil || mempoolInfo["pending_fee_total"] == nil || mempoolInfo["type_counts"] == nil {
+		t.Fatalf("mempool monitoring fields incomplete: %#v", metrics["mempool"])
+	}
+	miningInfo, ok := metrics["mining"].(map[string]any)
+	if !ok || miningInfo["height"] == nil || miningInfo["current_difficulty"] == nil || miningInfo["next_difficulty"] == nil {
+		t.Fatalf("mining monitoring fields incomplete: %#v", metrics["mining"])
+	}
+	indexerInfo, ok := metrics["indexer"].(map[string]any)
+	if !ok || indexerInfo["status"] == nil || indexerInfo["stats"] == nil {
+		t.Fatalf("indexer monitoring fields incomplete: %#v", metrics["indexer"])
+	}
+	runtimeInfo, ok := metrics["runtime"].(map[string]any)
+	if !ok || runtimeInfo["observed_at_unix"] == nil || runtimeInfo["uptime_seconds"] == nil || runtimeInfo["chain_height"] == nil {
+		t.Fatalf("runtime monitoring fields incomplete: %#v", metrics["runtime"])
+	}
+
+	resp, err := http.Post(server.URL+"/node/metrics", "application/json", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /node/metrics status = %d, want 405", resp.StatusCode)
+	}
+}
+
+func TestNodeMetricsPublicReadOnlyContract(t *testing.T) {
+	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	if metrics["schema_version"] != "v1" {
+		t.Fatalf("metrics schema_version = %#v, want v1", metrics["schema_version"])
+	}
+	for _, key := range []string{"network", "chain", "peers", "mempool", "mining", "indexer", "runtime"} {
+		if metrics[key] == nil {
+			t.Fatalf("public node metrics missing %q: %#v", key, metrics)
+		}
+	}
+
+	resp, err := http.Post(server.URL+"/node/metrics", "application/json", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /node/metrics status = %d, want 405", resp.StatusCode)
 	}
 }
 

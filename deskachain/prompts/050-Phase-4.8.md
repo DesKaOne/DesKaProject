@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -10,9 +10,9 @@ Status saat ini:
   * v0.4.6-testnet-rc1
 * Release artifacts sudah siap:
 
-  * deskachain-v0.4.6-testnet-rc1-windows-amd64.zip
-  * deskachain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
-  * deskachain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
+  * indochain-v0.4.6-testnet-rc1-windows-amd64.zip
+  * indochain-v0.4.6-testnet-rc1-linux-amd64.tar.gz
+  * indochain-v0.4.6-testnet-rc1-linux-arm64.tar.gz
   * SHA256SUMS.txt
 * Release docs sudah siap:
 
@@ -24,14 +24,14 @@ Status saat ini:
   * announcement draft
 * Public RPC safety tetap aman.
 * Explorer API/UI read-only.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 * PoW remains the only block-production consensus.
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 
 Patch name:
-DesKaChain Phase 4.8 — Public Testnet RC1 Post-Release Monitoring & Feedback Loop
+IndoChain Phase 4.8 — Public Testnet RC1 Post-Release Monitoring & Feedback Loop
 
 Goal:
 Add lightweight post-release monitoring, feedback tracking, issue triage docs, and RC2 planning workflow for Public Testnet RC1.
@@ -57,7 +57,7 @@ Non-goals:
 * Do not change consensus.
 * Do not change block/tx format.
 * Do not promise price/profit/rewards.
-* Do not give testnet IDR monetary value.
+* Do not give testnet dIDR monetary value.
 * Do not add staking APY.
 * Do not make service points spendable.
 * Do not expose wallet/admin RPC publicly.
@@ -180,7 +180,7 @@ Fail conditions:
 Options:
 
 * `-ExpectedNetwork testnet`
-* `-ExpectedNetworkID idr-testnet-1`
+* `-ExpectedNetworkID ind-testnet-1`
 * `-ExpectedChainID 777101`
 * `-AllowWalletRPC`
 * `-AllowAdminRPC`
@@ -208,7 +208,7 @@ Include:
 * Confirm seed advertises correct URL.
 * Confirm network ID:
 
-  * idr-testnet-1
+  * ind-testnet-1
 * Confirm chain ID:
 
   * 777101
@@ -248,7 +248,7 @@ Initial sections:
 Seed with expected known limitations:
 
 * Mainnet is not available.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Explorer uses simple scan mode.
 * No persistent explorer database yet.
 * No wallet web UI.
@@ -335,7 +335,7 @@ docs/FeedbackSummaryTemplate.md
 
 Template for daily/weekly RC1 feedback summary:
 
-# DesKaChain RC1 Feedback Summary — YYYY-MM-DD
+# IndoChain RC1 Feedback Summary — YYYY-MM-DD
 
 ## Overall status
 
@@ -375,7 +375,7 @@ Template for daily/weekly RC1 feedback summary:
 
 ## No monetary value reminder
 
-Testnet IDR has no monetary value. Mainnet is not available.
+Testnet dIDR has no monetary value. Mainnet is not available.
 
 ==================================================
 7. RC2 planning doc
@@ -430,22 +430,22 @@ Include copy-paste responses for:
 
 * asking for version:
 
-  * `deskachain version`
+  * `indochain version`
 * asking for health:
 
   * `/health`
 * asking for chain info:
 
-  * `deskachain --rpc-url ... chain info`
+  * `indochain --rpc-url ... chain info`
 * asking for peer list:
 
-  * `deskachain --rpc-url ... peer list`
+  * `indochain --rpc-url ... peer list`
 * asking for logs:
 
   * PowerShell terminal output.
-  * systemd `journalctl -u deskachain-testnet -n 200 --no-pager`
+  * systemd `journalctl -u indochain-testnet -n 200 --no-pager`
 * warning not to paste private keys.
-* explaining testnet IDR no monetary value.
+* explaining testnet dIDR no monetary value.
 * explaining coinbase maturity.
 * explaining localnet/testnet mismatch.
 * explaining public RPC safety.
@@ -477,7 +477,7 @@ Add short section:
 * verify explorer,
 * report issues using template,
 * do not expose wallet/admin RPC,
-* remember testnet IDR has no monetary value.
+* remember testnet dIDR has no monetary value.
 
 ==================================================
 10. Optional GitHub issue labels docs
@@ -549,7 +549,7 @@ Manual post-release style validation:
 3. Confirm output shows:
 
    * network testnet.
-   * network_id idr-testnet-1.
+   * network_id ind-testnet-1.
    * chain_id 777101.
    * wallet_rpc false.
    * admin_rpc false.
@@ -582,4 +582,4 @@ Phase 4.8 valid if:
 * smoke test passes.
 * build/package still works.
 * public safety remains intact.
-* docs clearly say testnet IDR has no monetary value and mainnet is unavailable.
+* docs clearly say testnet dIDR has no monetary value and mainnet is unavailable.

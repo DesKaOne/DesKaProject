@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -33,7 +33,7 @@ Status saat ini:
   normal transactions: 0
 
 Nama patch:
-DesKaChain Phase 2.5 — Safe Reorg Experimental
+IndoChain Phase 2.5 — Safe Reorg Experimental
 
 Tujuan utama:
 Menambahkan fitur reorg aman secara eksperimental, tetapi tidak otomatis secara default.
@@ -146,7 +146,7 @@ Tambahkan command:
 reorg preview --peer <p2p-url>
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
 
 Flags:
 --max-depth <n> default 10
@@ -245,7 +245,7 @@ Tambahkan command:
 reorg apply --peer <p2p-url> --yes
 
 Remote:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
 
 Flags:
 --max-depth <n> default 10
@@ -525,28 +525,28 @@ Tambahkan penjelasan:
 * Reorg tidak otomatis secara default.
 * peer sync biasa tetap menolak fork.
 * Reorg hanya dilakukan dengan command eksplisit dan --yes.
-* DesKaChain memakai cumulative work, bukan height saja.
+* IndoChain memakai cumulative work, bukan height saja.
 * Untuk Phase 2.5, reorg masih experimental localnet/testnet.
 
 Tambahkan contoh:
 
 Buat fork:
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
 
 Start:
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
 Preview:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
 
 Apply:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
 
 Verify:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain validate
 
 Expected:
 nodes in sync
@@ -563,13 +563,13 @@ go test ./node/...
 
 Skenario 1: equal work, reorg harus ditolak
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
 
 Expected:
 allowed: false
@@ -577,20 +577,20 @@ reason: peer chain does not have more cumulative work
 
 Skenario 2: peer lebih kuat, reorg boleh
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 5
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg preview --peer http://127.0.0.1:9342
 
 Expected:
 allowed: true
 peer chain has more cumulative work
 
 Apply:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 reorg apply --peer http://127.0.0.1:9342 --yes
 
 Expected:
 reorg applied
@@ -599,15 +599,15 @@ new height: 5
 chain valid: true
 
 Verify:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 node compare --peer http://127.0.0.1:8342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain info
 
 Expected:
 nodes in sync
 chain valid
 height: 5
-total supply: 250 IDR
+total supply: 250 dIDR
 
 Jangan over-engineer.
 Fokus Phase 2.5 hanya pada:

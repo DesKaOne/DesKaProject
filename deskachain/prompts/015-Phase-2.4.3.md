@@ -1,10 +1,10 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Struktur:
 
 * node/
 
-  * cmd/deskachain/
+  * cmd/indochain/
   * internal/
   * go.mod
   * go.sum
@@ -33,7 +33,7 @@ Status saat ini:
 Bug yang ditemukan:
 Command:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer sync
 
 Pada kondisi forkA dan forkB punya height sama tetapi tip berbeda, output saat ini:
 
@@ -69,7 +69,7 @@ Padahal setiap mined block punya coinbase transaction. Jika total transactions m
 total transactions: 3
 
 Nama patch:
-DesKaChain Phase 2.4.3 — Same Height Fork Sync Fix & Chain Info Tx Count
+IndoChain Phase 2.4.3 — Same Height Fork Sync Fix & Chain Info Tx Count
 
 Tujuan:
 
@@ -240,13 +240,13 @@ Sebelum sync:
 
 * height A = 3
 * tip A = hashA
-* total supply A = 150 IDR
+* total supply A = 150 dIDR
 
 Setelah peer sync ke forkB yang fork:
 
 * height A tetap 3
 * tip A tetap hashA
-* total supply A tetap 150 IDR
+* total supply A tetap 150 dIDR
 * chain validate A tetap pass
 * mempool A tidak berubah
 
@@ -374,14 +374,14 @@ Tambahkan catatan:
 
 Tambahkan contoh:
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer sync
 
 Expected:
 sync failed: fork detected
@@ -399,24 +399,24 @@ go test ./node/...
 
 Simulasi:
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
 Terminal A:
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
 Terminal B:
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
 Terminal kontrol:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 fork check --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 fork check --peer http://127.0.0.1:9342
 
 Expected:
 fork detected
 common ancestor height: 0
 
 Sync:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer sync
 
 Expected:
 sync failed: fork detected
@@ -424,13 +424,13 @@ common ancestor height: 0
 automatic reorg: disabled
 
 Verify unchanged:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain info
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain validate
 
 Expected:
 height: 3
 tip hash: original forkA tip
-total supply: 150 IDR
+total supply: 150 dIDR
 total transactions: 3
 coinbase transactions: 3
 normal transactions: 0

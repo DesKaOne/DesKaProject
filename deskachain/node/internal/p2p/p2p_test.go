@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"errors"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -13,14 +14,14 @@ import (
 	"testing"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/nodestate"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/nodestate"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestCreateLockIsExclusive(t *testing.T) {
@@ -44,10 +45,16 @@ func TestCreateLockIsExclusive(t *testing.T) {
 func TestNodeIDPersistent(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "node_id")
 	first, err := LoadOrCreateNodeID(path)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	second, err := LoadOrCreateNodeID(path)
-	if err != nil { t.Fatal(err) }
-	if first == "" || first != second { t.Fatalf("node id not persistent: %q %q", first, second) }
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first == "" || first != second {
+		t.Fatalf("node id not persistent: %q %q", first, second)
+	}
 }
 
 func TestHandshakeValidation(t *testing.T) {
@@ -59,33 +66,49 @@ func TestHandshakeValidation(t *testing.T) {
 		MinProtocolVersion: local.MinProtocolVersion,
 		GenesisHash:        chain.GenesisHashForNetwork(local),
 	}
-	if err := ValidateHandshake(local, peer); err != nil { t.Fatal(err) }
+	if err := ValidateHandshake(local, peer); err != nil {
+		t.Fatal(err)
+	}
 	peer.NetworkID = "other"
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") { t.Fatalf("expected network mismatch, got %v", err) }
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "network id mismatch") {
+		t.Fatalf("expected network mismatch, got %v", err)
+	}
 	peer.NetworkID = local.NetworkID
 	peer.GenesisHash = "other"
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected genesis mismatch, got %v", err) }
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
+		t.Fatalf("expected genesis mismatch, got %v", err)
+	}
 	peer.GenesisHash = chain.GenesisHashForNetwork(local)
 	peer.ProtocolVersion = 0
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") { t.Fatalf("expected protocol mismatch, got %v", err) }
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "incompatible protocol") {
+		t.Fatalf("expected protocol mismatch, got %v", err)
+	}
 }
 
 func TestMainnetHandshakeValidationUsesCanonicalGenesis(t *testing.T) {
 	local := config.Mainnet()
 	local.GenesisHash = "tampered"
 	peer := Handshake{NetworkName: local.NetworkName, NetworkID: local.NetworkID, ChainID: local.ChainID, ProtocolVersion: local.ProtocolVersion, P2PProtocolVersion: local.P2PProtocolVersion, MinProtocolVersion: local.MinProtocolVersion, GenesisHash: config.MainnetGenesisHash}
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity required") { t.Fatalf("unexpected canonical genesis result: %v", err) }
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "authenticated node identity required") {
+		t.Fatalf("unexpected canonical genesis result: %v", err)
+	}
 	peer.GenesisHash = strings.Repeat("f", 64)
-	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
+	if err := ValidateHandshake(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
+		t.Fatalf("expected canonical genesis mismatch rejection, got %v", err)
+	}
 }
 
 func TestMainnetStatusValidationUsesCanonicalGenesis(t *testing.T) {
 	local := config.Mainnet()
 	local.GenesisHash = "tampered"
 	peer := Status{NetworkID: local.NetworkID, ChainID: local.ChainID, GenesisHash: config.MainnetGenesisHash, ProtocolVersion: local.ProtocolVersion}
-	if err := ValidateStatus(local, peer); err != nil { t.Fatalf("canonical mainnet status should pass despite tampered local profile, got %v", err) }
+	if err := ValidateStatus(local, peer); err != nil {
+		t.Fatalf("canonical mainnet status should pass despite tampered local profile, got %v", err)
+	}
 	peer.GenesisHash = strings.Repeat("f", 64)
-	if err := ValidateStatus(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") { t.Fatalf("expected canonical genesis mismatch rejection, got %v", err) }
+	if err := ValidateStatus(local, peer); err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
+		t.Fatalf("expected canonical genesis mismatch rejection, got %v", err)
+	}
 }
 
 func TestP2PServerTimeoutConfig(t *testing.T) {
@@ -123,7 +146,7 @@ func TestSyncBlocksFromPeer(t *testing.T) {
 	}
 	validateChain(t, b)
 	if !strings.Contains(out.String(), "imported block height=3") {
-		t.Fatalf("sync output missing imported block:\n%s", out.String())
+		t.Fatalf("sync output missing imported block: %s", out.String())
 	}
 }
 
@@ -179,6 +202,70 @@ func TestBroadcastTxAndBlock(t *testing.T) {
 	l := ledgerFor(t, b)
 	if got := l.Balance(receiver.Address); got != 10*config.UnitsPerCoin {
 		t.Fatalf("receiver balance = %d", got)
+	}
+}
+
+func TestThreeNodeSyncConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, nodeA, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+2)
+
+	serverA := newP2PTestServer(nodeA)
+	defer serverA.Close()
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	tipC := tip(t, nodeC)
+	if tipA.Height != tipB.Height || tipA.Hash != tipB.Hash || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
+		t.Fatalf("three-node tips did not converge: A=%d %s B=%d %s C=%d %s", tipA.Height, tipA.Hash, tipB.Height, tipB.Hash, tipC.Height, tipC.Hash)
+	}
+	validateChain(t, nodeB)
+	validateChain(t, nodeC)
+}
+
+func TestThreeNodeHealthConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, nodeA, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+2)
+
+	serverA := newP2PTestServer(nodeA)
+	defer serverA.Close()
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+	serverC := newP2PTestServer(nodeC)
+	defer serverC.Close()
+
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+
+	healthA := fetchHealth(t, serverA.URL)
+	healthB := fetchHealth(t, serverB.URL)
+	healthC := fetchHealth(t, serverC.URL)
+	if healthA.Height != healthB.Height || healthA.TipHash != healthB.TipHash || healthA.Height != healthC.Height || healthA.TipHash != healthC.TipHash {
+		t.Fatalf("three-node health tips did not converge: A=%d %s B=%d %s C=%d %s", healthA.Height, healthA.TipHash, healthB.Height, healthB.TipHash, healthC.Height, healthC.TipHash)
+	}
+	if healthA.NetworkID != healthB.NetworkID || healthA.NetworkID != healthC.NetworkID || healthA.ChainID != healthB.ChainID || healthA.ChainID != healthC.ChainID {
+		t.Fatalf("three-node health network identity diverged: A=%+v B=%+v C=%+v", healthA, healthB, healthC)
+	}
+	if healthA.GenesisHash == "" || healthA.GenesisHash != healthB.GenesisHash || healthA.GenesisHash != healthC.GenesisHash {
+		t.Fatalf("three-node health genesis mismatch: A=%s B=%s C=%s", healthA.GenesisHash, healthB.GenesisHash, healthC.GenesisHash)
 	}
 }
 
@@ -278,7 +365,7 @@ func TestPeerStoreMetadataAndLegacyMigration(t *testing.T) {
 	if len(meta) != 1 || meta[0].URL != "http://127.0.0.1:9331" {
 		t.Fatalf("legacy migration failed: %#v", meta)
 	}
-	hs := Handshake{NodeID: "n1", NetworkID: "idr-local-1", ChainID: 777001, Height: 3, TipHash: "abc"}
+	hs := Handshake{NodeID: "n1", NetworkID: "ind-local-1", ChainID: 777001, Height: 3, TipHash: "abc"}
 	if err := store.Upsert(MetadataFromHandshake(meta[0].URL, hs, 1)); err != nil {
 		t.Fatal(err)
 	}
@@ -790,7 +877,7 @@ func TestSyncSameHeightSameTipUpToDate(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !strings.Contains(out.String(), "local chain already up to date") {
-		t.Fatalf("expected up to date output, got:\n%s", out.String())
+		t.Fatalf("expected up to date output, got: %s", out.String())
 	}
 }
 
@@ -849,7 +936,7 @@ func TestSyncHigherPeerForkReorgsToMoreWork(t *testing.T) {
 		t.Fatalf("sync did not reorg to peer tip: local=%#v peer=%#v", after, peerTip)
 	}
 	if !strings.Contains(out.String(), "reorg applied: true") || !strings.Contains(out.String(), "decision: reorg_apply_higher_work") {
-		t.Fatalf("reorg output missing decision:\n%s", out.String())
+		t.Fatalf("reorg output missing decision: %s", out.String())
 	}
 	validateChain(t, local)
 }
@@ -979,6 +1066,41 @@ func newP2PTestServer(paths config.Paths) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
+type HealthResponse struct {
+	OK             bool   `json:"ok"`
+	Network        string `json:"network"`
+	NetworkID      string `json:"network_id"`
+	ChainID        uint64 `json:"chain_id"`
+	GenesisHash    string `json:"genesis_hash"`
+	Height         uint64 `json:"height"`
+	TipHash        string `json:"tip_hash"`
+	CumulativeWork uint64 `json:"cumulative_work"`
+}
+
+func fetchHealth(t *testing.T, baseURL string) HealthResponse {
+	t.Helper()
+	resp, err := http.Get(baseURL + "/p2p/health")
+	if err != nil {
+
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+
+		t.Fatalf("health status = %d", resp.StatusCode)
+	}
+	var health HealthResponse
+	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
+
+		t.Fatal(err)
+	}
+	if !health.OK {
+
+		t.Fatalf("health response not ok: %#v", health)
+	}
+	return health
+}
+
 func fetchStatus(t *testing.T, baseURL string) Status {
 	t.Helper()
 	resp, err := http.Get(baseURL + "/p2p/status")
@@ -1067,6 +1189,18 @@ func signedTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, v
 	return tx
 }
 
+func signedLoadTestTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, value uint64) types.Transaction {
+	t.Helper()
+	l := ledgerFor(t, paths)
+	pending, _ := mempool.New(paths.Mempool).Load()
+	pendingCount, _, _ := mempool.PendingOutgoing(pending, from.Address)
+	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount+1)
+	if err := from.SignTransaction(&tx); err != nil {
+		t.Fatal(err)
+	}
+	return tx
+}
+
 func ledgerFor(t *testing.T, paths config.Paths) *ledger.Ledger {
 	t.Helper()
 	bc, closeFn := openTestChain(t, paths)
@@ -1100,6 +1234,322 @@ func validateChain(t *testing.T, paths config.Paths) {
 	if _, err := chain.ValidateChainWithNetwork(blocks, fundedP2PProfile()); err != nil {
 		t.Fatal(err)
 	}
+}
+
+
+func TestBoundedTransactionLoad(t *testing.T) {
+	node := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+8)
+
+	const rounds = 3
+	const batchSize = 1
+	value := 10 * config.UnitsPerCoin
+	confirmed := 0
+
+	for round := 0; round < rounds; round++ {
+		var pending []types.Transaction
+		receivers := make([]wallet.Wallet, 0, batchSize)
+		for i := 0; i < batchSize; i++ {
+			receiver := newWallet(t)
+			receivers = append(receivers, receiver)
+			tx := signedLoadTestTx(t, node, miner, receiver.Address, value)
+			if err := mempool.New(node.Mempool).Add(tx); err != nil {
+				t.Fatalf("round %d tx %d rejected: %v", round, i, err)
+			}
+			pending = append(pending, tx)
+		}
+		stored, err := mempool.New(node.Mempool).Load()
+		if err != nil { t.Fatal(err) }
+		if len(stored) != batchSize { t.Fatalf("round %d pending tx count = %d, want %d", round, len(stored), batchSize) }
+		block := mineBlock(t, node, miner.Address, pending)
+		if got := len(block.Transactions) - 1; got != batchSize { t.Fatalf("round %d confirmed tx count = %d, want %d", round, got, batchSize) }
+		stored, err = mempool.New(node.Mempool).Load()
+		if err != nil { t.Fatal(err) }
+		if len(stored) != 0 { t.Fatalf("round %d mempool not drained: %#v", round, stored) }
+		for _, receiver := range receivers {
+			if got := ledgerFor(t, node).Balance(receiver.Address); got != value { t.Fatalf("round %d receiver balance = %d, want %d", round, got, value) }
+		}
+		confirmed += batchSize
+	}
+	if confirmed != rounds*batchSize { t.Fatalf("confirmed transaction count = %d, want %d", confirmed, rounds*batchSize) }
+	validateChain(t, node)
+}
+
+
+
+
+func TestNodeRestartRecovery(t *testing.T) {
+	paths := config.NewPaths(t.TempDir())
+	miner := newWallet(t)
+	mineBlocks(t, paths, miner.Address, 2)
+	before := tip(t, paths)
+	validateChain(t, paths)
+
+	after := tip(t, paths)
+	if after.Height != before.Height || after.Hash != before.Hash {
+		t.Fatalf("restart changed tip: before=%#v after=%#v", before, after)
+	}
+	validateChain(t, paths)
+}
+
+func TestBoundedMempoolPressure(t *testing.T) {
+	node := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+4)
+
+	const pressure = 2
+	value := 10 * config.UnitsPerCoin
+	pending := make([]types.Transaction, 0, pressure)
+	receivers := make([]wallet.Wallet, 0, pressure)
+
+	for i := 0; i < pressure; i++ {
+		receiver := newWallet(t)
+		receivers = append(receivers, receiver)
+		tx := signedLoadTestTx(t, node, miner, receiver.Address, value)
+		if err := mempool.New(node.Mempool).Add(tx); err != nil {
+			t.Fatalf("pressure tx %d rejected: %v", i, err)
+		}
+		pending = append(pending, tx)
+	}
+
+	stored, err := mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure {
+		t.Fatalf("mempool pressure count = %d, want %d", len(stored), pressure)
+	}
+	count, amount, _ := mempool.PendingOutgoing(stored, miner.Address)
+	if count != pressure || amount != uint64(pressure)*value {
+		t.Fatalf("pending outgoing = count:%d amount:%d, want count:%d amount:%d", count, amount, pressure, uint64(pressure)*value)
+	}
+
+	if err := mempool.New(node.Mempool).Add(pending[0]); !errors.Is(err, mempool.ErrDuplicateTx) {
+		t.Fatalf("duplicate pressure tx error = %v, want %v", err, mempool.ErrDuplicateTx)
+	}
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure {
+		t.Fatalf("duplicate pressure tx changed mempool count: got %d, want %d", len(stored), pressure)
+	}
+
+	mineBlock(t, node, miner.Address, pending[:1])
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure-1 {
+		t.Fatalf("mempool after first drain = %d, want %d", len(stored), pressure-1)
+	}
+	if ledgerFor(t, node).Balance(receivers[0].Address) != value {
+		t.Fatalf("first receiver balance = %d, want %d", ledgerFor(t, node).Balance(receivers[0].Address), value)
+	}
+
+	mineBlock(t, node, miner.Address, stored)
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != 0 {
+		t.Fatalf("mempool not drained after pressure cycle: %#v", stored)
+	}
+	if ledgerFor(t, node).Balance(receivers[1].Address) != value {
+		t.Fatalf("second receiver balance = %d, want %d", ledgerFor(t, node).Balance(receivers[1].Address), value)
+	}
+	validateChain(t, node)
+}
+
+func TestBoundedMiningLoad(t *testing.T) {
+	t.Helper()
+	node := newTestNode(t)
+	miner := newWallet(t)
+
+	const blocks = 3
+	start := time.Now()
+	mined := make([]types.Block, 0, blocks)
+	for i := 0; i < blocks; i++ {
+		block := mineBlock(t, node, miner.Address, nil)
+		mined = append(mined, block)
+	}
+
+	if len(mined) != blocks {
+		t.Fatalf("mined block count = %d, want %d", len(mined), blocks)
+	}
+	for i, block := range mined {
+		wantHeight := uint64(i + 1)
+		if block.Height != wantHeight {
+			t.Fatalf("mined block %d height = %d, want %d", i, block.Height, wantHeight)
+		}
+		if block.Difficulty != config.InitialDifficulty {
+			t.Fatalf("mined block %d difficulty = %d, want initial difficulty %d", i, block.Difficulty, config.InitialDifficulty)
+		}
+		if i > 0 && block.Timestamp < mined[i-1].Timestamp {
+			t.Fatalf("block timestamps regressed: previous=%d current=%d", mined[i-1].Timestamp, block.Timestamp)
+		}
+	}
+
+	finalTip := tip(t, node)
+	if finalTip.Height != blocks {
+		t.Fatalf("mining load final height = %d, want %d", finalTip.Height, blocks)
+	}
+	if mined[len(mined)-1].Difficulty != config.InitialDifficulty {
+		t.Fatalf("final mining difficulty = %d, want initial difficulty %d", mined[len(mined)-1].Difficulty, config.InitialDifficulty)
+	}
+	if time.Since(start) <= 0 {
+		t.Fatal("mining load elapsed time was not recorded")
+	}
+	validateChain(t, node)
+}
+
+func TestBoundedMultiNodeSoak(t *testing.T) {
+	t.Helper()
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	minerA := newWallet(t)
+	minerC := newWallet(t)
+
+	mineBlocks(t, nodeA, minerA.Address, 8)
+
+	serverA := newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	if tipA.Height != 8 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash {
+		t.Fatalf("initial soak convergence failed: A=%#v B=%#v", tipA, tipB)
+	}
+	validateChain(t, nodeB)
+
+	mineBlocks(t, nodeA, minerA.Address, 8)
+
+	serverA = newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeC, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	serverA = newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatal(err)
+	}
+	serverA.Close()
+
+	tipA = tip(t, nodeA)
+	tipB = tip(t, nodeB)
+	tipC := tip(t, nodeC)
+	if tipA.Height != 16 || tipB.Height != tipA.Height || tipB.Hash != tipA.Hash || tipC.Height != tipA.Height || tipC.Hash != tipA.Hash {
+		t.Fatalf("repeated soak convergence failed: A=%#v B=%#v C=%#v", tipA, tipB, tipC)
+	}
+	validateChain(t, nodeB)
+	validateChain(t, nodeC)
+
+	mineBlocks(t, nodeC, minerC.Address, 2)
+	serverC := newP2PTestServer(nodeC)
+	if err := SyncFromPeerWithProfile(nodeA, serverC.URL, nil, fundedP2PProfile()); err != nil {
+		serverC.Close()
+		t.Fatal(err)
+	}
+	serverC.Close()
+
+	tipA = tip(t, nodeA)
+	tipC = tip(t, nodeC)
+	if tipA.Height != 18 || tipA.Height != tipC.Height || tipA.Hash != tipC.Hash {
+		t.Fatalf("final soak convergence failed: A=%#v C=%#v", tipA, tipC)
+	}
+	validateChain(t, nodeA)
+	validateChain(t, nodeC)
+}
+
+func TestBoundedPeerChurn(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	miner := newWallet(t)
+
+	mineBlocks(t, nodeA, miner.Address, 2)
+
+	for cycle := 0; cycle < 3; cycle++ {
+	serverA := newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		serverA.Close()
+		t.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
+	}
+	serverA.Close()
+
+	got := tip(t, nodeB)
+	want := tip(t, nodeA)
+	if got.Height != want.Height || got.Hash != want.Hash {
+		t.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
+	}
+	validateChain(t, nodeB)
+
+	if cycle < 2 {
+		mineBlocks(t, nodeA, miner.Address, 1)
+	}
+	}
+
+	finalA := tip(t, nodeA)
+	finalB := tip(t, nodeB)
+	if finalA.Height != 4 || finalB.Height != finalA.Height || finalB.Hash != finalA.Hash {
+	t.Fatalf("final peer churn convergence failed: A=%#v B=%#v", finalA, finalB)
+	}
+	validateChain(t, nodeA)
+	validateChain(t, nodeB)
+}
+
+func TestThreeNodeControlledForkConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+
+	mineBlocks(t, nodeA, newWallet(t).Address, 2)
+	mineBlocks(t, nodeB, newWallet(t).Address, 3)
+
+	tipA := tip(t, nodeA)
+	tipB := tip(t, nodeB)
+	if tipA.Height != 2 || tipB.Height != 3 || tipA.Hash == tipB.Hash {
+		t.Fatalf("expected divergent tips before convergence: A=%#v B=%#v", tipA, tipB)
+	}
+
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+
+	var out bytes.Buffer
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, &out, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	tipC := tip(t, nodeC)
+	if tipC.Height != tipB.Height || tipC.Hash != tipB.Hash {
+		t.Fatalf("node C did not converge to higher-work branch: B=%#v C=%#v", tipB, tipC)
+	}
+	if !strings.Contains(out.String(), "imported block height=3") {
+		t.Fatalf("sync output missing higher-work branch import: %s", out.String())
+	}
+	validateChain(t, nodeC)
+
+	serverC := newP2PTestServer(nodeC)
+	defer serverC.Close()
+	var reorgOut bytes.Buffer
+	if err := SyncFromPeerWithProfile(nodeA, serverC.URL, &reorgOut, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	afterA := tip(t, nodeA)
+	if afterA.Height != tipC.Height || afterA.Hash != tipC.Hash {
+		t.Fatalf("node A did not converge after controlled fork: A=%#v C=%#v", afterA, tipC)
+	}
+	if !strings.Contains(reorgOut.String(), "reorg applied: true") {
+		t.Fatalf("controlled fork did not report reorg application: %s", reorgOut.String())
+	}
+	validateChain(t, nodeA)
 }
 
 func TestReorgPreviewSameWorkRejected(t *testing.T) {

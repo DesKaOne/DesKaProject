@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -17,20 +17,20 @@ Status saat ini:
 * Staking remains collateral-only.
 * Service points remain simulation-only.
 * PoW remains the only block-production consensus.
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet does not exist yet.
 
 Patch name:
-DesKaChain Phase 3.7 — Public Testnet Release Build & Binary Packaging
+IndoChain Phase 3.7 — Public Testnet Release Build & Binary Packaging
 
 Goal:
-Prepare DesKaChain for public testnet binary distribution.
+Prepare IndoChain for public testnet binary distribution.
 
 This phase should make it possible to build and package:
 
-* deskachain CLI/node binary,
-* idrminer binary,
-* idrservice binary,
+* indochain CLI/node binary,
+* indominer binary,
+* indoservice binary,
   for Windows and Linux, with version metadata, checksums, release archives, and quickstart docs.
 
 Non-goals:
@@ -58,9 +58,9 @@ Add or finalize version output for all binaries.
 
 Commands:
 
-deskachain version
-idrminer --version
-idrservice --version
+indochain version
+indominer --version
+indoservice --version
 
 or equivalent consistent style if project already has one.
 
@@ -77,7 +77,7 @@ Version output should include:
 
 Example:
 
-DesKaChain
+IndoChain
 version: v0.3.7-testnet
 commit: <commit>
 built: <date>
@@ -113,13 +113,13 @@ Build outputs:
 
 dist/
 windows-amd64/
-deskachain.exe
-idrminer.exe
-idrservice.exe
+indochain.exe
+indominer.exe
+indoservice.exe
 linux-amd64/
-deskachain
-idrminer
-idrservice
+indochain
+indominer
+indoservice
 
 Support at least:
 
@@ -173,15 +173,15 @@ scripts/package.sh
 Output examples:
 
 dist/releases/
-deskachain-v0.3.7-testnet-windows-amd64.zip
-deskachain-v0.3.7-testnet-linux-amd64.tar.gz
+indochain-v0.3.7-testnet-windows-amd64.zip
+indochain-v0.3.7-testnet-linux-amd64.tar.gz
 SHA256SUMS.txt
 
 Each archive should include:
 
-* deskachain binary
-* idrminer binary
-* idrservice binary
+* indochain binary
+* indominer binary
+* indoservice binary
 * README or QUICKSTART
 * LICENSE if exists
 * docs links or copied minimal docs if desired
@@ -193,7 +193,7 @@ Do not include:
 * wallets/
 * chain data/
 * faucet_state.json
-* idrservice-state.json
+* indoservice-state.json
 * private keys
 * .env files with secrets
 * .git
@@ -248,12 +248,12 @@ Add smoke tests that can run without starting long-lived services.
 
 Examples:
 
-* `deskachain version`
-* `deskachain --help`
-* `idrminer --version`
-* `idrminer --help`
-* `idrservice --version`
-* `idrservice --help`
+* `indochain version`
+* `indochain --help`
+* `indominer --version`
+* `indominer --help`
+* `indoservice --version`
+* `indoservice --help`
 
 If tests run compiled binary, keep them fast and cross-platform.
 
@@ -271,12 +271,12 @@ Include:
 
 * install from archive.
 * verify checksum.
-* run `deskachain version`.
+* run `indochain version`.
 * init testnet.
 * start public testnet node.
 * create miner wallet in separate datadir.
-* mine using idrminer.
-* run idrservice.
+* mine using indominer.
+* run indoservice.
 * safe public RPC notes.
 * seed peer usage.
 * systemd usage for Linux.
@@ -286,24 +286,24 @@ Example binary workflow:
 
 Windows:
 
-.\deskachain.exe --datadir .\data\testnet --network testnet init
+.\indochain.exe --datadir .\data\testnet --network testnet init
 
-.\deskachain.exe --datadir .\data\testnet node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
+.\indochain.exe --datadir .\data\testnet node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
 
-.\deskachain.exe --datadir .\data\miner --network testnet init
-.\deskachain.exe --datadir .\data\miner wallet new
+.\indochain.exe --datadir .\data\miner --network testnet init
+.\indochain.exe --datadir .\data\miner wallet new
 
-.\idrminer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
+.\indominer.exe --rpc-url http://127.0.0.1:9011 --address <ADDR> --threads 2 --once
 
 Linux:
 
-./deskachain --datadir ./data/testnet --network testnet init
+./indochain --datadir ./data/testnet --network testnet init
 
-./deskachain --datadir ./data/testnet node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
+./indochain --datadir ./data/testnet node start --rpc :9011 --p2p :10011 --advertise-p2p http://127.0.0.1:10011 --public-rpc --enable-miner-rpc
 
 Safety notes:
 
-* Testnet IDR has no monetary value.
+* Testnet dIDR has no monetary value.
 * Mainnet is not available.
 * Do not expose wallet/admin RPC publicly.
 * Use separate datadir for miner reward wallet if node datadir is locked.
@@ -319,9 +319,9 @@ Update README.md and README-ID.md:
 * Add Release Build section.
 * Add binary names:
 
-  * deskachain
-  * idrminer
-  * idrservice
+  * indochain
+  * indominer
+  * indoservice
 * Add build commands.
 * Add package commands.
 * Link docs/Release.md and docs/Operator.md.
@@ -345,7 +345,7 @@ Ensure .gitignore excludes:
 
   * testdata/
   * faucet_state.json
-  * idrservice-state.json
+  * indoservice-state.json
   * peer store runtime files if needed
   * wallet runtime data if under examples accidentally
 
@@ -409,36 +409,36 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build.ps1 -Version v0.3.7-tes
 
 Expected:
 
-* dist/windows-amd64/deskachain.exe exists
-* dist/windows-amd64/idrminer.exe exists
-* dist/windows-amd64/idrservice.exe exists
+* dist/windows-amd64/indochain.exe exists
+* dist/windows-amd64/indominer.exe exists
+* dist/windows-amd64/indoservice.exe exists
 * version commands work
 
 Manual commands:
 
-.\dist\windows-amd64\deskachain.exe version
-.\dist\windows-amd64\idrminer.exe --version
-.\dist\windows-amd64\idrservice.exe --version
+.\dist\windows-amd64\indochain.exe version
+.\dist\windows-amd64\indominer.exe --version
+.\dist\windows-amd64\indoservice.exe --version
 
 Manual binary smoke:
 
-.\dist\windows-amd64\deskachain.exe --datadir .\testdata\release_node dev reset --yes
-.\dist\windows-amd64\deskachain.exe --datadir .\testdata\release_node --network testnet init
-.\dist\windows-amd64\deskachain.exe --datadir .\testdata\release_wallet --network testnet init
-.\dist\windows-amd64\deskachain.exe --datadir .\testdata\release_wallet wallet new
+.\dist\windows-amd64\indochain.exe --datadir .\testdata\release_node dev reset --yes
+.\dist\windows-amd64\indochain.exe --datadir .\testdata\release_node --network testnet init
+.\dist\windows-amd64\indochain.exe --datadir .\testdata\release_wallet --network testnet init
+.\dist\windows-amd64\indochain.exe --datadir .\testdata\release_wallet wallet new
 
 Start node:
 
-.\dist\windows-amd64\deskachain.exe --datadir .\testdata\release_node node start --rpc :9211 --p2p :10211 --advertise-p2p http://127.0.0.1:10211 --public-rpc --enable-miner-rpc
+.\dist\windows-amd64\indochain.exe --datadir .\testdata\release_node node start --rpc :9211 --p2p :10211 --advertise-p2p http://127.0.0.1:10211 --public-rpc --enable-miner-rpc
 
 Mine once:
 
-.\dist\windows-amd64\idrminer.exe --rpc-url http://127.0.0.1:9211 --address <ADDR> --threads 2 --once
+.\dist\windows-amd64\indominer.exe --rpc-url http://127.0.0.1:9211 --address <ADDR> --threads 2 --once
 
 Check:
 
-.\dist\windows-amd64\deskachain.exe --rpc-url http://127.0.0.1:9211 chain info
-.\dist\windows-amd64\deskachain.exe --rpc-url http://127.0.0.1:9211 chain validate
+.\dist\windows-amd64\indochain.exe --rpc-url http://127.0.0.1:9211 chain info
+.\dist\windows-amd64\indochain.exe --rpc-url http://127.0.0.1:9211 chain validate
 
 Expected:
 

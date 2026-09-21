@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
+	"indochain/internal/chain"
+	"indochain/internal/config"
 )
 
 func CheckFork(paths config.Paths, peer string) (ForkCheckResult, error) {

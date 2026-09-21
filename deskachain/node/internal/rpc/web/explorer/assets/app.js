@@ -15,6 +15,8 @@
   var stakeLimit = 20;
   var serviceOffset = 0;
   var serviceLimit = 20;
+  var assetOffset = 0;
+  var assetLimit = 20;
 
   function api(path) {
     return apiBase + path;
@@ -30,6 +32,11 @@
     value = String(value == null ? "" : value);
     if (value.length <= 18) return value;
     return value.slice(0, 10) + "..." + value.slice(-8);
+  }
+
+  function badge(value, fallback) {
+    var text = value == null || value === "" ? (fallback || "-") : String(value);
+    return '<span class="pill tx-badge">' + escapeHTML(text) + '</span>';
   }
 
   function copyButton(value) {
@@ -68,7 +75,11 @@
   }
 
   function setError(message) {
-    app.innerHTML = panel("Explorer error", '<p class="error">' + escapeHTML(message) + "</p>");
+    app.innerHTML = panel("Explorer error",
+      '<div class="error-state">' +
+      '<p class="error">' + escapeHTML(message) + "</p>" +
+      '<div class="toolbar"><button type="button" class="primary" data-refresh="dashboard">Back to dashboard</button></div>" +
+      "</div>");
   }
 
   function friendlyError(err, fallback) {
@@ -150,12 +161,30 @@
     });
   }
 
+  function dashboardSection(title, metrics) {
+    return panel(title, '<div class="grid">' + metrics + "</div>");
+  }
+
   function renderDashboard() {
     setLoading("Dashboard");
-    Promise.all([jsonFetch("/explorer/status"), jsonFetch("/health")]).then(function (results) {
+    Promise.all([jsonFetch("/explorer/status"), jsonFetch("/health"), jsonFetch("/explorer/indexer/stats")]).then(function (results) {
       var s = results[0];
       var health = results[1];
-      var metrics = [
+      var indexer = results[2].stats || {};
+      var ready = indexer.ready === true;
+      var healthOK = health.ok === true;
+      var lag = Number(indexer.lag || 0);
+      var statusClass = ready && healthOK && lag === 0 ? "status-ok" : "status-warn";
+      var statusText = ready && healthOK && lag === 0 ? "Synced" : (ready ? "Catching up" : "Indexer not ready");
+      var summary = '<div class="dashboard-summary">' +
+        '<div class="status-card ' + statusClass + '">' +
+        '<span class="muted">Explorer status</span><strong>' + escapeHTML(statusText) + '</strong>' +
+        '<small>Health ' + escapeHTML(String(health.ok)) + ' · Indexer height ' + escapeHTML(indexer.indexed_height) + ' · Chain height ' + escapeHTML(indexer.chain_height) + '</small>' +
+        '</div>' +
+        '<button class="primary" type="button" data-refresh="dashboard">Refresh</button>' +
+        '</div>';
+
+      var chainMetrics = [
         metric("Network", s.network),
         metric("Network ID", s.network_id),
         metric("Chain ID", s.chain_id),
@@ -164,7 +193,10 @@
         metric("Difficulty", s.difficulty),
         metric("Next difficulty", s.next_difficulty),
         metric("Total supply", s.total_supply),
-        metric("Circulating supply", s.circulating_supply),
+        metric("Circulating supply", s.circulating_supply)
+      ].join("");
+
+      var networkMetrics = [
         metric("Pending tx", s.pending_tx_count),
         metric("Peers", s.peer_count),
         metric("Public RPC", s.public_rpc),
@@ -173,8 +205,101 @@
         metric("Mainnet available", s.mainnet_available),
         metric("Health", health.ok)
       ].join("");
-      app.innerHTML = panel("Dashboard", '<div class="grid">' + metrics + "</div>");
+
+      var indexerMetrics = [
+        metric("Indexer ready", indexer.ready),
+        metric("Indexed height", indexer.indexed_height),
+        metric("Chain height", indexer.chain_height),
+        metric("Indexer lag", indexer.lag),
+        metric("Indexed blocks", indexer.block_count),
+        metric("Indexed transactions", indexer.transaction_count),
+        metric("Address histories", indexer.address_history_count),
+        metric("Asset events", indexer.asset_event_count)
+      ].join("");
+
+      var syncMetrics = [
+        metric("Sync count", indexer.sync_count),
+        metric("Sync failures", indexer.sync_failure_count),
+        metric("Last sync duration", String(indexer.last_sync_duration_ms || 0) + " ms"),
+        metric("Blocks / second", Number(indexer.blocks_per_second || 0).toFixed(2)),
+        metric("Last sync", timestamp(indexer.last_sync_at_unix))
+      ].join("");
+
+      var syncError = indexer.last_sync_error ? '<p class="error">Latest indexer sync error: ' + escapeHTML(indexer.last_sync_error) + "</p>" : "";
+      app.innerHTML = panel("Dashboard", summary) +
+        dashboardSection("Chain", chainMetrics) +
+        dashboardSection("Network & RPC", networkMetrics) +
+        dashboardSection("Explorer indexer", indexerMetrics) +
+        dashboardSection("Indexer sync", syncMetrics + syncError);
     }).catch(setError);
+  }
+
+  function renderMonitoring() {
+    setLoading("Monitoring");
+    jsonFetch("/node/metrics").then(function (data) {
+      var chain = data.chain || {};
+      var peers = data.peers || {};
+      var mempool = data.mempool || {};
+      var mining = data.mining || {};
+      var indexer = data.indexer || {};
+      var indexerStats = indexer.stats || {};
+      var runtime = data.runtime || {};
+
+      var nodeMetrics = [
+        metric("Schema", data.schema_version),
+        metric("Network", data.network),
+        metric("Uptime", String(runtime.uptime_seconds == null ? data.uptime_seconds : runtime.uptime_seconds) + "s"),
+        metric("Observed", timestamp(runtime.observed_at_unix))
+      ].join("");
+      var chainMetrics = [
+        metric("Height", chain.height),
+        metric("Tip hash", chain.tip_hash),
+        metric("Blocks", chain.block_count),
+        metric("Transactions", chain.transaction_count),
+        metric("Difficulty", chain.difficulty),
+        metric("Cumulative work", chain.cumulative_work)
+      ].join("");
+      var peerMetrics = [
+        metric("Known", peers.known),
+        metric("Active", peers.active),
+        metric("Failed", peers.failed),
+        metric("Best height", peers.best_height),
+        metric("Best lag", peers.best_lag)
+      ].join("");
+      var mempoolMetrics = [
+        metric("Pending", mempool.pending_tx_count),
+        metric("Fees", mempool.pending_fee_total),
+        metric("Native dIDR", mempool.pending_native_amount),
+        metric("Issued assets", mempool.pending_issued_asset_amount),
+        metric("Oldest", timestamp(mempool.oldest_tx_timestamp)),
+        metric("Newest", timestamp(mempool.newest_tx_timestamp))
+      ].join("");
+      var indexerMetrics = [
+        metric("Status", indexer.status),
+        metric("Ready", indexerStats.ready),
+        metric("Indexed height", indexerStats.indexed_height),
+        metric("Chain height", indexerStats.chain_height),
+        metric("Lag", indexerStats.lag),
+        metric("Sync failures", indexerStats.sync_failure_count)
+      ].join("");
+      var miningMetrics = [
+        metric("Height", mining.height),
+        metric("Current difficulty", mining.current_difficulty),
+        metric("Next difficulty", mining.next_difficulty),
+        metric("Blocks until retarget", mining.blocks_until_retarget),
+        metric("Average interval", mining.average_interval_seconds),
+        metric("Retarget direction", mining.projected_retarget_direction)
+      ].join("");
+
+      app.innerHTML = panel("Monitoring", '<p class="muted">Read-only node observability. These values do not participate in consensus.</p>' +
+        '<div class="toolbar"><button class="primary" type="button" data-refresh="monitoring">Refresh</button></div>') +
+        dashboardSection("Node runtime", nodeMetrics) +
+        dashboardSection("Chain", chainMetrics) +
+        dashboardSection("Peers", peerMetrics) +
+        dashboardSection("Mempool", mempoolMetrics) +
+        dashboardSection("Mining", miningMetrics) +
+        dashboardSection("Explorer indexer", indexerMetrics);
+    }).catch(function (err) { setError(friendlyError(err, "Unable to load monitoring metrics.")); });
   }
 
   function renderBlocks() {
@@ -222,7 +347,7 @@
           linkAddress(b.miner_address)
         ]);
       });
-      app.innerHTML = panel("Mining / Difficulty", '<div class="grid">' + metrics + "</div><p class=\"muted\">Difficulty observation is informational only. Testnet IDR has no monetary value.</p>") +
+      app.innerHTML = panel("Mining / Difficulty", '<div class="grid">' + metrics + "</div><p class=\"muted\">Difficulty observation is informational only. Testnet dIDR has no monetary value.</p>") +
         panel("Recent mined blocks", table(["Height", "Hash", "Time", "Interval", "Difficulty", "Txs", "Miner"], rows, "No mined blocks found."));
     }).catch(function (err) { setError(friendlyError(err, "Unable to load mining metrics.")); });
   }
@@ -241,18 +366,26 @@
         metric("Tx count", b.tx_count),
         metric("Confirmations", b.confirmations)
       ].join("");
-      var rows = (b.transactions || []).map(function (tx) {
+      var rows = (b.transactions || []).map(function (tx, index) {
         return row([
+          escapeHTML(index + 1),
           linkHash("tx", tx.txid),
-          escapeHTML(tx.type),
+          badge(tx.status, "confirmed"),
+          badge(tx.type),
           linkAddress(tx.from),
           linkAddress(tx.to),
           escapeHTML(tx.amount),
           escapeHTML(tx.fee)
         ]);
       });
-      app.innerHTML = panel("Block detail", '<div class="grid">' + metrics + "</div>") +
-        panel("Transactions", table(["Txid", "Type", "From", "To", "Amount", "Fee"], rows, "No transactions in this block."));
+      var height = Number(b.height);
+      var navigation = '<div class="toolbar block-navigation">' +
+        '<button type="button" data-block-nav="' + (Number.isFinite(height) && height > 0 ? height - 1 : "") + '"' + (height > 0 ? "" : " disabled") + '>Previous block</button>' +
+        '<span class="muted">Block ' + escapeHTML(b.height) + '</span>' +
+        '<button type="button" data-block-nav="' + (Number.isFinite(height) ? height + 1 : "") + '">Next block</button>' +
+        '</div>';
+      app.innerHTML = panel("Block detail", navigation + '<div class="grid">' + metrics + "</div>") +
+        panel("Transactions", table(["#", "Txid", "Status", "Type", "From", "To", "Amount", "Fee"], rows, "No transactions in this block."));
     }).catch(function (err) { setError(friendlyError(err, "Unable to load block.")); });
   }
 
@@ -261,8 +394,8 @@
     jsonFetch("/explorer/tx/" + encodeURIComponent(txid)).then(function (tx) {
       var metrics = [
         metric("Txid", tx.txid),
-        metric("Status", tx.status),
-        metric("Type", tx.type),
+        metric("Status", badge(tx.status)),
+        metric("Type", badge(tx.type)),
         metric("Block height", tx.block_height),
         metric("Block hash", tx.block_hash),
         metric("Confirmations", tx.confirmations),
@@ -290,8 +423,11 @@
       var txData = results[1];
       var txs = txData.transactions || [];
       var stakes = results[2].stakes || [];
+      var addressHeader = '<div class="address-header">' +
+        '<div><span class="muted">Address</span><div class="hash address-value">' + escapeHTML(a.address) + "</div></div>" +
+        copyButton(a.address) +
+        '</div>';
       var metrics = [
-        metric("Address", a.address),
         metric("Confirmed balance", a.confirmed_balance),
         metric("Mature balance", a.mature_balance),
         metric("Immature balance", a.immature_balance),
@@ -307,7 +443,7 @@
       var txRows = txs.map(function (tx) {
         return row([
           linkHash("tx", tx.txid),
-          escapeHTML(tx.type),
+          badge(tx.type),
           tx.block_height == null ? '<span class="muted">pending</span>' : '<a href="#/block/' + encodeURIComponent(tx.block_height) + '">' + escapeHTML(tx.block_height) + "</a>",
           escapeHTML(tx.amount_delta),
           escapeHTML(tx.confirmations)
@@ -323,11 +459,36 @@
           escapeHTML(s.release_height)
         ]);
       });
-      app.innerHTML = panel("Address detail", '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable IDR.</p>") +
+      app.innerHTML = panel("Address detail", addressHeader + '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable dIDR.</p>") +
         panel("Recent transactions", pagerHTML("address", txData, addressTxLimit) + table(["Txid", "Type", "Block", "Delta", "Confirmations"], txRows, "No recent transactions for this address.")) +
         panel("Stake records", table(["Stake id", "Amount", "Status", "Lock height", "Unlock height", "Release height"], stakeRows, "Stake records not found."));
       selectLimit("address", addressTxLimit);
     }).catch(function (err) { setError(friendlyError(err, "Unable to load address.")); });
+  }
+
+  function renderAsset(assetID) {
+    setLoading("Asset");
+    jsonFetch("/explorer/indexed/asset/" + encodeURIComponent(assetID) + "/txs?limit=" + assetLimit + "&offset=" + assetOffset).then(function (data) {
+      var rows = (data.events || []).map(function (event) {
+        return row([
+          linkHash("tx", event.txid),
+          '<a href="#/block/' + encodeURIComponent(event.block_height) + '">' + escapeHTML(event.block_height) + "</a>",
+          linkAddress(event.from),
+          linkAddress(event.to),
+          escapeHTML(event.amount),
+          escapeHTML(event.fee)
+        ]);
+      });
+      app.innerHTML = panel("Asset detail",
+        '<div class="grid">' +
+        metric("Asset ID", data.asset_id) +
+        metric("Event count", data.total_count) +
+        metric("Indexer height", data.indexer && data.indexer.indexed_height) +
+        metric("Indexer lag", data.indexer && data.indexer.lag) +
+        "</div>") +
+        panel("Asset events", pagerHTML("asset", data, assetLimit) + table(["Txid", "Block", "From", "To", "Amount", "Fee"], rows, "No indexed events found for this asset."));
+      selectLimit("asset", assetLimit);
+    }).catch(function (err) { setError(friendlyError(err, "Unable to load asset events.")); });
   }
 
   function renderStakes() {
@@ -364,7 +525,7 @@
           escapeHTML(s.simulation_only)
         ]);
       });
-      app.innerHTML = panel("Service nodes", '<p class="muted">Service points are simulation-only and are not spendable IDR. Service state is local to this RPC node.</p>' +
+      app.innerHTML = panel("Service nodes", '<p class="muted">Service points are simulation-only and are not spendable dIDR. Service state is local to this RPC node.</p>' +
         pagerHTML("services", data, serviceLimit) + table(["Owner", "Endpoint", "Score", "Points", "Required stake", "Active stake", "Eligibility", "Simulation only"], rows, "Service records not found."));
       selectLimit("services", serviceLimit);
     }).catch(function (err) { setError(friendlyError(err, "Unable to load service records.")); });
@@ -382,9 +543,15 @@
       return renderBlocks();
     }
     if (parts[0] === "mining") return renderMining();
+    if (parts[0] === "monitoring") return renderMonitoring();
     if (parts[0] === "block" && parts[1]) return renderBlock(parts[1]);
     if (parts[0] === "tx" && parts[1]) return renderTx(parts[1]);
     if (parts[0] === "address" && parts[1]) return renderAddress(parts[1]);
+    if (parts[0] === "asset" && parts[1]) {
+      assetLimit = Number(parsed.query.get("limit")) || assetLimit;
+      assetOffset = Number(parsed.query.get("offset")) || assetOffset;
+      return renderAsset(parts[1]);
+    }
     if (parts[0] === "stakes") return renderStakes();
     if (parts[0] === "services") return renderServices();
     setError("Route not found.");
@@ -393,15 +560,15 @@
   function runSearch(q) {
     q = String(q || "").trim();
     if (!q) {
-      setError("Enter a block height, block hash, transaction id, or IDR address.");
+      setError("Enter a block height, block hash, transaction id, iND address, or indexed asset ID.");
       return;
     }
     input.value = q;
     setLoading("Search");
-    jsonFetch("/explorer/search?q=" + encodeURIComponent(q)).then(function (data) {
+    jsonFetch("/explorer/indexed/search?q=" + encodeURIComponent(q)).then(function (data) {
       var results = data.results || [];
       if (!results.length) {
-        setError("No explorer result found.");
+        setError("No explorer result found. Try a block height, block hash, transaction id, iND address, or indexed asset ID.");
         return;
       }
       window.location.hash = routeFromExplorerPath(results[0].path);
@@ -432,6 +599,19 @@
         done();
       }
     }
+    var blockNav = event.target.closest("[data-block-nav]");
+    if (blockNav && blockNav.getAttribute("data-block-nav")) {
+      event.preventDefault();
+      window.location.hash = "#/block/" + encodeURIComponent(blockNav.getAttribute("data-block-nav"));
+      return;
+    }
+    var refresh = event.target.closest("[data-refresh]");
+    if (refresh && (refresh.getAttribute("data-refresh") === "dashboard" || refresh.getAttribute("data-refresh") === "monitoring")) {
+      event.preventDefault();
+      window.location.hash = refresh.getAttribute("data-refresh") === "monitoring" ? "#/monitoring" : "#/";
+      if (refresh.getAttribute("data-refresh") === "monitoring") renderMonitoring(); else renderDashboard();
+      return;
+    }
     var page = event.target.closest("[data-page]");
     if (page) {
       var parts = page.getAttribute("data-page").split(":");
@@ -452,6 +632,10 @@
       if (scope === "services") {
         serviceOffset = direction === "prev" ? Math.max(0, serviceOffset - serviceLimit) : serviceOffset + serviceLimit;
         renderServices();
+      }
+      if (scope === "asset") {
+        assetOffset = direction === "prev" ? Math.max(0, assetOffset - assetLimit) : assetOffset + assetLimit;
+        route();
       }
     }
   });
@@ -477,6 +661,11 @@
       serviceLimit = Number(event.target.value) || 20;
       serviceOffset = 0;
       renderServices();
+    }
+    if (scope === "asset") {
+      assetLimit = Number(event.target.value) || 20;
+      assetOffset = 0;
+      route();
     }
   });
 

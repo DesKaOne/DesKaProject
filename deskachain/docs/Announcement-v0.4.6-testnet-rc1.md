@@ -1,10 +1,10 @@
-# Announcement Draft - DesKaChain Public Testnet RC1
+# Announcement Draft - IndoChain Public Testnet RC1
 
-DesKaChain Public Testnet RC1 (`v0.4.6-testnet-rc1`) is ready for limited technical testing.
+IndoChain Public Testnet RC1 (`v0.4.6-testnet-rc1`) is ready for limited technical testing.
 
-DesKaChain is a small experimental CPU-mined blockchain written in Go. This RC includes the node/CLI, standalone CPU miner, service-node simulation agent, public testnet profile, read-only Explorer API, embedded Explorer Web UI, faucet operator mode, staking collateral, and service-node simulation.
+IndoChain is a small experimental CPU-mined blockchain written in Go. This RC includes the node/CLI, standalone CPU miner, service-node simulation agent, public testnet profile, read-only Explorer API, embedded Explorer Web UI, faucet operator mode, staking collateral, and service-node simulation.
 
-This is testnet only. Testnet IDR has no monetary value. Mainnet is not available. There is no mining income, staking APY, profit, or reward promise. Service points are simulation-only and are not spendable IDR.
+This is testnet only. Testnet dIDR has no monetary value. Mainnet is not available. There is no mining income, staking APY, profit, or reward promise. Service points are simulation-only and are not spendable dIDR.
 
 ## Downloads
 

@@ -3,7 +3,7 @@ package amount
 import (
 	"testing"
 
-	"deskachain/internal/config"
+	"indochain/internal/config"
 )
 
 func TestParseHandlesDecimalsSafely(t *testing.T) {

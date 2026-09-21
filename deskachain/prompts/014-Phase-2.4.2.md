@@ -1,4 +1,4 @@
-Kamu sedang bekerja pada project Go monorepo DesKaChain.
+Kamu sedang bekerja pada project Go monorepo IndoChain.
 
 Status saat ini:
 
@@ -6,7 +6,7 @@ Status saat ini:
 * Common ancestor endpoint sudah fixed.
 * Command berikut berhasil:
 
-  go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
+  go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8331 chain common-ancestor --peer http://127.0.0.1:9332
 
 Output:
 common ancestor found
@@ -17,7 +17,7 @@ hash: <tip hash>
 * Dua node yang sedang in sync bisa menemukan common ancestor di tip height.
 
 Nama patch:
-DesKaChain Phase 2.4.2 — Fork Simulation & Sync Rejection Hardening
+IndoChain Phase 2.4.2 — Fork Simulation & Sync Rejection Hardening
 
 Tujuan:
 Menguji dan memperkuat fork detection pada kondisi fork nyata, bukan hanya node yang sudah sinkron.
@@ -106,7 +106,7 @@ Tambahkan command:
 fork inspect --other-datadir <path>
 
 Contoh:
-go run ./node/cmd/deskachain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
+go run ./node/cmd/indochain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
 
 Output jika fork:
 fork detected
@@ -267,9 +267,9 @@ Phase 2.4.2 — Fork Simulation & Sync Rejection Hardening
 
 Tambahkan contoh:
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
+go run ./node/cmd/indochain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
 
 Expected:
 fork detected
@@ -293,9 +293,9 @@ go test ./node/...
 
 Simulasi fork lokal:
 
-go run ./node/cmd/deskachain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
+go run ./node/cmd/indochain dev fork-sim --datadir-a ./testdata/forkA --datadir-b ./testdata/forkB --blocks-a 3 --blocks-b 3
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
+go run ./node/cmd/indochain --datadir ./testdata/forkA fork inspect --other-datadir ./testdata/forkB
 
 Expected:
 fork detected
@@ -304,13 +304,13 @@ reorg supported: false
 
 Jalankan node forkA dan forkB:
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
+go run ./node/cmd/indochain --datadir ./testdata/forkA node start --rpc :8341 --p2p :9341 --advertise-p2p http://127.0.0.1:9341
 
-go run ./node/cmd/deskachain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
+go run ./node/cmd/indochain --datadir ./testdata/forkB node start --rpc :8342 --p2p :9342 --advertise-p2p http://127.0.0.1:9342
 
 Fork check:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 fork check --peer http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 fork check --peer http://127.0.0.1:9342
 
 Expected:
 fork detected
@@ -319,16 +319,16 @@ reorg supported: false
 
 Sync rejection:
 
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 peer sync
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer add http://127.0.0.1:9342
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 peer sync
 
 Expected:
 sync failed: fork detected
 automatic reorg: disabled
 
 After failed sync:
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain validate
-go run ./node/cmd/deskachain --rpc-url http://127.0.0.1:8341 chain info
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain validate
+go run ./node/cmd/indochain --rpc-url http://127.0.0.1:8341 chain info
 
 Expected:
 chain valid

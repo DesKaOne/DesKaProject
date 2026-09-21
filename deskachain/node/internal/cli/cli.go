@@ -23,22 +23,22 @@ import (
 	"syscall"
 	"time"
 
-	"deskachain/internal/amount"
-	"deskachain/internal/chain"
-	"deskachain/internal/config"
-	"deskachain/internal/crypto"
-	"deskachain/internal/ledger"
-	"deskachain/internal/mempool"
-	"deskachain/internal/mining"
-	"deskachain/internal/nodestate"
-	"deskachain/internal/p2p"
-	"deskachain/internal/rpc"
-	"deskachain/internal/servicenode"
-	"deskachain/internal/staking"
-	"deskachain/internal/storage"
-	"deskachain/internal/types"
-	"deskachain/internal/version"
-	"deskachain/internal/wallet"
+	"indochain/internal/amount"
+	"indochain/internal/chain"
+	"indochain/internal/config"
+	"indochain/internal/crypto"
+	"indochain/internal/ledger"
+	"indochain/internal/mempool"
+	"indochain/internal/mining"
+	"indochain/internal/nodestate"
+	"indochain/internal/p2p"
+	"indochain/internal/rpc"
+	"indochain/internal/servicenode"
+	"indochain/internal/staking"
+	"indochain/internal/storage"
+	"indochain/internal/types"
+	"indochain/internal/version"
+	"indochain/internal/wallet"
 )
 
 type App struct {
@@ -70,8 +70,8 @@ func isHelpArg(arg string) bool {
 }
 
 func printHelp(out io.Writer) {
-	fmt.Fprintln(out, "DesKaChain")
-	fmt.Fprintln(out, "usage: deskachain [--datadir DIR] [--network localnet|testnet|mainnet] <command> [args]")
+	fmt.Fprintln(out, "IndoChain")
+	fmt.Fprintln(out, "usage: indochain [--datadir DIR] [--network localnet|testnet|mainnet] <command> [args]")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "commands:")
 	fmt.Fprintln(out, "  version")
@@ -103,10 +103,10 @@ func (a App) Run(args []string) error {
 		return nil
 	}
 	if len(args) > 0 && (args[0] == "--version" || args[0] == "-version") {
-		fmt.Fprint(a.out, version.String("DesKaChain"))
+		fmt.Fprint(a.out, version.String("IndoChain"))
 		return nil
 	}
-	fs := flag.NewFlagSet("deskachain", flag.ContinueOnError)
+	fs := flag.NewFlagSet("indochain", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	datadir := fs.String("datadir", a.paths.DataDir, "data directory")
 	rpcURL := fs.String("rpc-url", "", "remote RPC URL")
@@ -135,7 +135,7 @@ func (a App) Run(args []string) error {
 		return errors.New("command is required")
 	}
 	if args[0] == "version" {
-		fmt.Fprint(a.out, version.String("DesKaChain"))
+		fmt.Fprint(a.out, version.String("IndoChain"))
 		return nil
 	}
 	if args[0] == "help" {
@@ -206,7 +206,7 @@ func (a App) Run(args []string) error {
 	}
 	switch args[0] {
 	case "version":
-		fmt.Fprint(a.out, version.String("DesKaChain"))
+		fmt.Fprint(a.out, version.String("IndoChain"))
 		return nil
 	case "network":
 		return a.network(args[1:])
@@ -352,7 +352,7 @@ func (a App) dev(args []string) error {
 			return a.lockedError(args)
 		}
 		if !*yes {
-			fmt.Fprintf(a.out, "This will delete local DesKaChain dev data under %s.\n", a.paths.DataDir)
+			fmt.Fprintf(a.out, "This will delete local IndoChain dev data under %s.\n", a.paths.DataDir)
 			fmt.Fprintln(a.out, "Re-run with --yes to confirm.")
 			return nil
 		}
@@ -735,7 +735,7 @@ func (a App) wallet(args []string) error {
 		fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 		fmt.Fprintln(a.out, "key curve: secp256k1")
 		if crypto.IsLegacyDevAddress(w.Address) {
-			fmt.Fprintln(a.out, "warning: legacy idr1 dev address; localnet compatibility only")
+			fmt.Fprintln(a.out, "warning: legacy iND1 dev address; localnet compatibility only")
 		}
 		fmt.Fprintf(a.out, "private_key: %s\n", w.PrivateKeyHex)
 		return nil
@@ -1538,11 +1538,11 @@ func (a App) node(args []string) error {
 	bootnodesText := fs.String("bootnodes", "", "comma-separated bootstrap peer URLs")
 	var seedPeer multiStringFlag
 	fs.Var(&seedPeer, "seed-peer", "seed peer URL; may be repeated")
-	seedPeersText := fs.String("seed-peers", os.Getenv("IDR_SEED_PEERS"), "comma-separated seed peer URLs")
+	seedPeersText := fs.String("seed-peers", os.Getenv("IND_SEED_PEERS"), "comma-separated seed peer URLs")
 	seedFile := fs.String("seed-file", "", "seed peer file, one URL per line")
 	var upstreamPeer multiStringFlag
 	fs.Var(&upstreamPeer, "upstream-peer", "upstream peer URL; may be repeated")
-	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IDR_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
+	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IND_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
 	upstreamFile := fs.String("upstream-file", "", "upstream peer file, one URL per line")
 	configPath := fs.String("config", "", "optional JSON config file")
 	publicRPC := fs.Bool("public-rpc", false, "enable public RPC safety mode")
@@ -1555,7 +1555,7 @@ func (a App) node(args []string) error {
 	faucetAmount := fs.String("faucet-amount", "100", "faucet amount per request")
 	faucetMinInterval := fs.Duration("faucet-min-interval", time.Minute, "minimum interval per faucet recipient")
 	faucetMaxPerAddress := fs.String("faucet-max-per-address", "1000", "maximum faucet amount per address per day")
-	corsOrigins := fs.String("cors-origins", os.Getenv("IDR_CORS_ORIGINS"), "comma-separated allowed CORS origins")
+	corsOrigins := fs.String("cors-origins", os.Getenv("IND_CORS_ORIGINS"), "comma-separated allowed CORS origins")
 	rateLimitPerMinute := 300
 	maxPeers := a.profile.MaxPeers
 	defaultMaxReorgDepth, err := config.MaxReorgDepthFromEnv(a.profile)
@@ -1568,12 +1568,12 @@ func (a App) node(args []string) error {
 		return err
 	}
 	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedMining {
-		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_MINING")); raw != "" {
+		if raw := strings.TrimSpace(os.Getenv("IND_ALLOW_ISOLATED_MINING")); raw != "" {
 			return errors.New("mainnet cannot override isolated mining guard while launch gate is closed")
 		}
 	}
 	if a.profile.Name == "mainnet" && !a.profile.AllowIsolatedWrites {
-		if raw := strings.TrimSpace(os.Getenv("IDR_ALLOW_ISOLATED_WRITES")); raw != "" {
+		if raw := strings.TrimSpace(os.Getenv("IND_ALLOW_ISOLATED_WRITES")); raw != "" {
 			return errors.New("mainnet cannot override isolated writes guard while launch gate is closed")
 		}
 	}
@@ -2170,7 +2170,7 @@ func (a App) upstream(args []string) error {
 	fs := flag.NewFlagSet("upstream "+args[0], flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.Var(&upstreamPeer, "upstream-peer", "upstream peer URL; may be repeated")
-	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IDR_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
+	upstreamPeersText := fs.String("upstream-peers", os.Getenv("IND_UPSTREAM_PEERS"), "comma-separated upstream peer URLs")
 	upstreamFile := fs.String("upstream-file", "", "upstream peer file")
 	defaultMaxDepth, err := config.MaxReorgDepthFromEnv(a.profile)
 	if err != nil {
@@ -2526,7 +2526,7 @@ func (a App) printAddressInspection(address string) error {
 	fmt.Fprintf(a.out, "network: %s\n", a.profile.Name)
 	fmt.Fprintln(a.out, "key curve: secp256k1")
 	if crypto.IsLegacyDevAddress(info.address) {
-		fmt.Fprintln(a.out, "warning: legacy idr1 dev address; localnet compatibility only")
+		fmt.Fprintln(a.out, "warning: legacy iND1 dev address; localnet compatibility only")
 	}
 	fmt.Fprintf(a.out, "exists: %t\n", info.exists)
 	fmt.Fprintf(a.out, "confirmed balance: %s %s\n", amount.Format(info.confirmedBalance), config.Ticker)
@@ -2864,7 +2864,7 @@ func isReadOnlyCommand(args []string) bool {
 func (a App) lockedError(args []string) error {
 	info, _ := p2p.ReadLock(a.paths.Lock)
 	rpcURL := normalizeRPCURL(info.RPC)
-	return fmt.Errorf("datadir is locked by running node\ndatadir: %s\nrpc: %s\np2p: %s\nuse:\ngo run ./node/cmd/deskachain --rpc-url %s %s", a.paths.DataDir, info.RPC, info.P2P, rpcURL, suggestedRemoteCommand(args))
+	return fmt.Errorf("datadir is locked by running node\ndatadir: %s\nrpc: %s\np2p: %s\nuse:\ngo run ./node/cmd/indochain --rpc-url %s %s", a.paths.DataDir, info.RPC, info.P2P, rpcURL, suggestedRemoteCommand(args))
 }
 
 func (a App) runRemote(args []string) error {
@@ -4423,7 +4423,7 @@ func miningObservationInfo(blocks []types.Block, profile config.NetworkConfig, p
 		"peer_count":                     peerCount,
 		"total_supply":                   amount.Format(stats.TotalSupply) + " " + config.Ticker,
 		"coinbase_maturity":              consensusParams(profile).CoinbaseMaturity,
-		"note":                           "difficulty observation is informational only; testnet IDR has no monetary value",
+		"note":                           "difficulty observation is informational only; testnet dIDR has no monetary value",
 	}
 }
 
@@ -5197,7 +5197,7 @@ func stringFromMap(info map[string]any, key string) string {
 }
 
 func localServiceMetadata() servicenode.Metadata {
-	return servicenode.Metadata{ClientVersion: "dev", Platform: runtimePlatform(), UserAgent: "deskachain-cli"}
+	return servicenode.Metadata{ClientVersion: "dev", Platform: runtimePlatform(), UserAgent: "indochain-cli"}
 }
 
 func runtimePlatform() string {

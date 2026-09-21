@@ -2,7 +2,7 @@
 
 This guide helps operators publish a public testnet seed peer safely.
 
-Testnet IDR has no monetary value. Mainnet is not available.
+Testnet dIDR has no monetary value. Mainnet is not available.
 
 ## Choose A Seed URL
 
@@ -34,7 +34,7 @@ Seeds are not trusted authorities. They only help nodes find peers; nodes valida
 Start the seed node with a reachable advertised P2P address:
 
 ```sh
-deskachain --datadir /var/lib/deskachain/testnet --network testnet node start \
+indochain --datadir /var/lib/indochain/testnet --network testnet node start \
   --rpc 127.0.0.1:9311 \
   --p2p 0.0.0.0:10311 \
   --advertise-p2p http://<host>:10311 \
@@ -62,9 +62,9 @@ http://100.101.251.7:10311
 From another node:
 
 ```sh
-deskachain --rpc-url http://127.0.0.1:9312 peer check http://<host>:10311
-deskachain --rpc-url http://127.0.0.1:9312 peer sync http://<host>:10311
-deskachain --rpc-url http://127.0.0.1:9312 chain info
+indochain --rpc-url http://127.0.0.1:9312 peer check http://<host>:10311
+indochain --rpc-url http://127.0.0.1:9312 peer sync http://<host>:10311
+indochain --rpc-url http://127.0.0.1:9312 chain info
 ```
 
 If seed RPC is intentionally reachable from a trusted network:

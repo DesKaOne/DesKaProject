@@ -1,0 +1,220 @@
+# Phase 8.7 — Monitoring & Statistics
+
+Phase 8.7 adds read-only operational observability without changing consensus state.
+
+## 8.7.1 Node metrics
+
+`GET /node/metrics` exposes a versioned monitoring payload:
+
+- network and chain identity
+- node uptime
+- chain height and tip hash
+- block and pending-transaction counts
+- peer known/active/best-height information
+- mempool pending count
+- mining metrics and guard state
+- explorer indexer status/statistics
+
+The endpoint remains read-only and is allowed by the mainnet launch gate.
+
+## 8.7.2 Chain, transaction, and peer statistics
+
+The node metrics payload also exposes derived operational statistics:
+
+- current tip difficulty
+- cumulative chain work
+- total transaction count across the local canonical chain
+- known peer count
+- active peer count
+- failed/offline/cooldown/bad peer count
+- best known peer height
+- best peer lag relative to the local tip
+
+These values are derived from local chain, mempool, and peer-store state at request time. They are monitoring/read-model data and do not participate in consensus, block validation, transaction validity, or fork choice.
+
+## Acceptance
+
+- `/node/metrics` remains read-only.
+- Mainnet read-only RPC gate permits `GET /node/metrics`.
+- Monitoring fields are derived from the node's current canonical chain and local peer state.
+- Monitoring failures do not mutate consensus state.
+- CI must remain green before advancing to the next 8.7 subphase.
+
+## 8.7.4 Mining statistics
+
+The existing mining observation data is included in `/node/metrics` under `mining` and is derived from the canonical chain and current network profile. It includes:
+
+- current and next difficulty
+- target block time and retarget window
+- blocks remaining until retarget
+- latest block timestamp and age
+- recent block intervals with average/minimum/maximum interval
+- recent difficulty samples
+- projected retarget direction
+- pending transaction and peer counts relevant to mining
+- mining guard state added by the RPC handler
+
+The mining statistics are observational only. They do not alter difficulty, mining eligibility, block production, or consensus rules.
+
+### Acceptance
+
+- A mined block is reflected by the `/node/metrics` mining height and latest-block fields.
+- Difficulty/retarget and interval fields are present with stable JSON types.
+- Mining statistics are derived from canonical chain state rather than fabricated counters.
+- CI must remain green before advancing to 8.7.5.
+
+## 8.7.5 Transaction and mempool statistics
+
+`/node/metrics` now exposes read-only mempool statistics:
+
+- pending transaction count
+- aggregate pending fees
+- aggregate native dIDR amount pending
+- aggregate issued-asset amount pending, kept separate because issued assets are distinct from native dIDR
+- oldest and newest pending transaction timestamps
+- pending transaction counts by transaction type
+
+The endpoint derives these values directly from the persisted mempool snapshot at request time. It does not mutate, reorder, admit, reject, or clear mempool transactions.
+
+### Acceptance
+
+- A pending transaction is reflected in the mempool count, fee total, native amount, and type count.
+- Issued-asset amounts remain separated from native dIDR amounts.
+- Empty mempool remains represented by zero counts/totals without requiring special endpoint behavior.
+- CI must remain green before advancing to 8.7.6.
+
+## 8.7.6 Explorer indexer statistics
+
+`/node/metrics` carries the same persistent explorer indexer statistics exposed by `/explorer/indexer/stats`, including:
+
+- indexed height, chain height, and lag
+- ready/sync status and schema version
+- indexed block, transaction, address-history, and issued-asset event counts
+- sync count and last sync timestamp/duration/block count
+- observed blocks-per-second
+- sync failure count and last sync error when present
+
+The node metrics endpoint reads the explorer indexer's existing read model; it does not trigger indexing, rebuild the database, or alter chain state. Explorer indexer failures remain isolated to the monitoring payload.
+
+### Acceptance
+
+- A synchronized explorer index is reflected consistently in `/node/metrics.indexer.stats`.
+- Indexer counts and cursor height match the persistent explorer indexer's statistics.
+- Ready/sync status and schema version are exposed with stable JSON values.
+- Monitoring remains read-only and does not participate in consensus.
+- CI must remain green before advancing to 8.7.7.
+
+## 8.7.7 Soak-test runtime metrics
+
+The /node/metrics endpoint exposes a `runtime` snapshot for bounded and long-running soak observation:
+
+- `observed_at_unix` — wall-clock observation timestamp
+- `uptime_seconds` — current node process uptime
+- `chain_height` — chain height observed at the same metrics request
+- `active_peer_count` — active peer count observed at the same request
+- `mempool_pending_count` — pending transaction count observed at the same request
+
+The runtime snapshot is intentionally lightweight and read-only. It gives operators a consistent point-in-time sample that can be polled during soak tests without introducing a separate mutable consensus metric store.
+
+### Acceptance
+
+- Runtime metrics are present with stable JSON types.
+- Observation timestamps do not move backwards between successive samples.
+- Uptime is non-negative.
+- Chain, peer, and mempool runtime counts reflect the same request snapshot.
+- Runtime monitoring does not alter consensus or node state.
+- CI must remain green before advancing to 8.7.8.
+
+## 8.7.8 Monitoring endpoint/API contract
+
+The public monitoring contract is hardened around `GET /node/metrics`:
+
+- the payload uses schema version `v1`
+- the endpoint exposes the consolidated node, chain, peer, mempool, mining, explorer-indexer, and soak-runtime sections
+- the endpoint is read-only and rejects non-GET writes
+- the contract is suitable for polling by external monitoring/operations tooling without introducing a mutable consensus metric store
+
+### Acceptance
+
+- Public RPC can read `GET /node/metrics` with a stable `v1` schema marker.
+- All consolidated monitoring sections are present in the public response.
+- `POST /node/metrics` is rejected with HTTP 405.
+- Monitoring remains observational and does not alter consensus state.
+- CI must remain green before advancing to 8.7.9.
+
+## 8.7.9 Explorer monitoring dashboard
+
+The read-only IndoChain Explorer now exposes a dedicated Monitoring view backed by `GET /node/metrics`.
+
+The dashboard presents the consolidated operational snapshot for:
+
+- node runtime and metrics schema
+- canonical chain height, tip, block/transaction counts, difficulty, and cumulative work
+- peer health counts and best-peer lag
+- mempool pending counts and aggregate native/issued-asset amounts
+- mining difficulty/retarget observations
+- explorer indexer status, readiness, height, lag, and sync failures
+
+The view is observational only and does not expose wallet, admin, faucet, staking, mining, or service write actions.
+
+### Acceptance
+
+- Explorer navigation exposes a Monitoring view.
+- Monitoring reads the versioned `/node/metrics` contract rather than duplicating monitoring state.
+- The dashboard remains read-only.
+- Monitoring errors use the existing explorer error/recovery presentation.
+- CI must remain green before advancing to 8.7.10.
+
+## 8.7.10 Final monitoring acceptance
+
+Phase 8.7 is accepted when the monitoring contract, explorer presentation, and read-only safety checks are covered together.
+
+The consolidated acceptance test verifies that public GET /node/metrics exposes schema v1 and all major monitoring sections:
+
+- network identity
+- canonical chain statistics
+- peer health
+- mempool statistics
+- mining observations
+- explorer indexer status/statistics
+- soak-test runtime snapshot
+
+The acceptance test also verifies that POST /node/metrics remains rejected with HTTP 405.
+
+### Phase 8.7 exit criteria
+
+- /node/metrics is a stable v1 read-only monitoring contract.
+- Chain, peer, transaction/mempool, mining, indexer, and runtime observations are exposed without introducing consensus state.
+- Explorer Monitoring consumes the node metrics contract rather than maintaining a duplicate monitoring store.
+- Explorer monitoring remains read-only and does not expose write-capable wallet, admin, faucet, staking, mining, or service actions.
+- Consolidated monitoring acceptance coverage passes.
+- CI remains green on the final Phase 8.7 commits.
+
+With these criteria satisfied, Phase 8.7 Monitoring & Statistics is complete and the project can advance to Phase 8.8 CI + integration testing.
+
+
+## 8.8 CI + integration testing
+
+Phase 8.8 adds a bounded integration gate that exercises the Phase 8 runtime path as one read-only-safe flow:
+
+- miner RPC creates and commits a canonical block
+- canonical chain validation confirms the committed tip
+- mempool state is visible through monitoring
+- the persistent explorer indexer catches up to the canonical chain
+- Explorer status, indexer statistics, and block views expose the indexed read model
+- /node/metrics exposes the same indexer state together with chain and mempool observations
+- the embedded Explorer UI exposes the Monitoring presentation
+- POST /node/metrics remains rejected with HTTP 405
+
+The integration test is intentionally bounded for CI. It reuses the existing node/RPC/indexer test fixtures instead of starting an unbounded long-running testnet process. Multi-node convergence, soak, restart/recovery, and peer-churn behavior remain covered by their dedicated Phase 8.5/8.6 tests.
+
+### 8.8 acceptance
+
+- The consolidated integration test passes in the existing Go test workflow.
+- The test covers node → chain → mempool → explorer indexer → Explorer API → monitoring → Explorer UI.
+- Canonical chain validation remains part of the integrated path.
+- Explorer monitoring consumes the same /node/metrics contract already covered by the monitoring acceptance tests.
+- The integration test does not introduce consensus state or mutable monitoring state.
+- CI remains green on the Phase 8.8 integration commit.
+
+With these criteria satisfied, Phase 8.8 CI + integration testing is complete and Phase 8 Testnet can proceed to its final readiness/release-gate review.

@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"deskachain/internal/config"
-	"deskachain/internal/types"
-	"deskachain/internal/wallet"
+	"indochain/internal/config"
+	"indochain/internal/types"
+	"indochain/internal/wallet"
 )
 
 func TestCanonicalTransactionVersionWaitsForNetworkActivation(t *testing.T) {

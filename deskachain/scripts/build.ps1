@@ -11,7 +11,7 @@ try {
     $Commit = (git -C $Root rev-parse --short HEAD).Trim()
 } catch {}
 $BuildDate = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd'T'HH':'mm':'ss'Z'")
-$LdFlags = "-s -w -X deskachain/internal/version.Version=$Version -X deskachain/internal/version.Commit=$Commit -X deskachain/internal/version.BuildDate=$BuildDate"
+$LdFlags = "-s -w -X indochain/internal/version.Version=$Version -X indochain/internal/version.Commit=$Commit -X indochain/internal/version.BuildDate=$BuildDate"
 
 if (-not $SkipTests) {
     Push-Location $Root
@@ -35,9 +35,9 @@ $Targets = @(
 )
 
 $Apps = @(
-    @{ Name = "deskachain"; Path = "./node/cmd/deskachain" },
-    @{ Name = "idrminer"; Path = "./node/cmd/idrminer" },
-    @{ Name = "idrservice"; Path = "./node/cmd/idrservice" }
+    @{ Name = "indochain"; Path = "./node/cmd/indochain" },
+    @{ Name = "indominer"; Path = "./node/cmd/indominer" },
+    @{ Name = "indoservice"; Path = "./node/cmd/indoservice" }
 )
 
 $OldGOOS = $env:GOOS
