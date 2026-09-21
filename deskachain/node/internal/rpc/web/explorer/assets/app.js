@@ -152,9 +152,10 @@
 
   function renderDashboard() {
     setLoading("Dashboard");
-    Promise.all([jsonFetch("/explorer/status"), jsonFetch("/health")]).then(function (results) {
+    Promise.all([jsonFetch("/explorer/status"), jsonFetch("/health"), jsonFetch("/explorer/indexer/stats")]).then(function (results) {
       var s = results[0];
       var health = results[1];
+      var indexer = results[2].stats || {};
       var metrics = [
         metric("Network", s.network),
         metric("Network ID", s.network_id),
@@ -171,9 +172,21 @@
         metric("Wallet RPC", s.wallet_rpc),
         metric("Admin RPC", s.admin_rpc),
         metric("Mainnet available", s.mainnet_available),
-        metric("Health", health.ok)
+        metric("Health", health.ok),
+        metric("Indexer ready", indexer.ready),
+        metric("Indexed height", indexer.indexed_height),
+        metric("Indexer lag", indexer.lag),
+        metric("Indexed blocks", indexer.block_count),
+        metric("Indexed transactions", indexer.transaction_count),
+        metric("Address histories", indexer.address_history_count),
+        metric("Asset events", indexer.asset_event_count),
+        metric("Sync count", indexer.sync_count),
+        metric("Sync failures", indexer.sync_failure_count),
+        metric("Last sync duration", String(indexer.last_sync_duration_ms || 0) + " ms"),
+        metric("Blocks / second", Number(indexer.blocks_per_second || 0).toFixed(2))
       ].join("");
-      app.innerHTML = panel("Dashboard", '<div class="grid">' + metrics + "</div>");
+      var syncError = indexer.last_sync_error ? '<p class="error">Latest indexer sync error: ' + escapeHTML(indexer.last_sync_error) + "</p>" : "";
+      app.innerHTML = panel("Dashboard", '<div class="grid">' + metrics + "</div>" + syncError);
     }).catch(setError);
   }
 
@@ -330,6 +343,30 @@
     }).catch(function (err) { setError(friendlyError(err, "Unable to load address.")); });
   }
 
+  function renderAsset(assetID) {
+    setLoading("Asset");
+    jsonFetch("/explorer/indexed/asset/" + encodeURIComponent(assetID) + "/txs?limit=20&offset=0").then(function (data) {
+      var rows = (data.events || []).map(function (event) {
+        return row([
+          linkHash("tx", event.txid),
+          '<a href="#/block/' + encodeURIComponent(event.block_height) + '">' + escapeHTML(event.block_height) + "</a>",
+          linkAddress(event.from),
+          linkAddress(event.to),
+          escapeHTML(event.amount),
+          escapeHTML(event.fee)
+        ]);
+      });
+      app.innerHTML = panel("Asset detail",
+        '<div class="grid">' +
+        metric("Asset ID", data.asset_id) +
+        metric("Event count", data.total_count) +
+        metric("Indexer height", data.indexer && data.indexer.indexed_height) +
+        metric("Indexer lag", data.indexer && data.indexer.lag) +
+        "</div>") +
+        panel("Asset events", table(["Txid", "Block", "From", "To", "Amount", "Fee"], rows, "No indexed events found for this asset."));
+    }).catch(function (err) { setError(friendlyError(err, "Unable to load asset events.")); });
+  }
+
   function renderStakes() {
     setLoading("Stakes");
     jsonFetch("/explorer/stakes?limit=" + stakeLimit + "&offset=" + stakeOffset).then(function (data) {
@@ -385,6 +422,7 @@
     if (parts[0] === "block" && parts[1]) return renderBlock(parts[1]);
     if (parts[0] === "tx" && parts[1]) return renderTx(parts[1]);
     if (parts[0] === "address" && parts[1]) return renderAddress(parts[1]);
+    if (parts[0] === "asset" && parts[1]) return renderAsset(parts[1]);
     if (parts[0] === "stakes") return renderStakes();
     if (parts[0] === "services") return renderServices();
     setError("Route not found.");
@@ -398,7 +436,7 @@
     }
     input.value = q;
     setLoading("Search");
-    jsonFetch("/explorer/search?q=" + encodeURIComponent(q)).then(function (data) {
+    jsonFetch("/explorer/indexed/search?q=" + encodeURIComponent(q)).then(function (data) {
       var results = data.results || [];
       if (!results.length) {
         setError("No explorer result found.");
