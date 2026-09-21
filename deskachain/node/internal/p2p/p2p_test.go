@@ -1276,6 +1276,76 @@ func TestBoundedTransactionLoad(t *testing.T) {
 }
 
 
+
+func TestBoundedMempoolPressure(t *testing.T) {
+	node := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, node, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+4)
+
+	const pressure = 2
+	value := 10 * config.UnitsPerCoin
+	pending := make([]types.Transaction, 0, pressure)
+	receivers := make([]wallet.Wallet, 0, pressure)
+
+	for i := 0; i < pressure; i++ {
+		receiver := newWallet(t)
+		receivers = append(receivers, receiver)
+		tx := signedLoadTestTx(t, node, miner, receiver.Address, value)
+		if err := mempool.New(node.Mempool).Add(tx); err != nil {
+			t.Fatalf("pressure tx %d rejected: %v", i, err)
+		}
+		pending = append(pending, tx)
+	}
+
+	stored, err := mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure {
+		t.Fatalf("mempool pressure count = %d, want %d", len(stored), pressure)
+	}
+	count, amount, _ := mempool.PendingOutgoing(stored, miner.Address)
+	if count != pressure || amount != uint64(pressure)*value {
+		t.Fatalf("pending outgoing = count:%d amount:%d, want count:%d amount:%d", count, amount, pressure, uint64(pressure)*value)
+	}
+
+	if err := mempool.New(node.Mempool).Add(pending[0]); !errors.Is(err, mempool.ErrDuplicateTx) {
+		t.Fatalf("duplicate pressure tx error = %v, want %v", err, mempool.ErrDuplicateTx)
+	}
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure {
+		t.Fatalf("duplicate pressure tx changed mempool count: got %d, want %d", len(stored), pressure)
+	}
+
+	mineBlock(t, node, miner.Address, pending[:1])
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != pressure-1 {
+		t.Fatalf("mempool after first drain = %d, want %d", len(stored), pressure-1)
+	}
+	if ledgerFor(t, node).Balance(receivers[0].Address) != value {
+		t.Fatalf("first receiver balance = %d, want %d", ledgerFor(t, node).Balance(receivers[0].Address), value)
+	}
+
+	mineBlock(t, node, miner.Address, stored)
+	stored, err = mempool.New(node.Mempool).Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(stored) != 0 {
+		t.Fatalf("mempool not drained after pressure cycle: %#v", stored)
+	}
+	if ledgerFor(t, node).Balance(receivers[1].Address) != value {
+		t.Fatalf("second receiver balance = %d, want %d", ledgerFor(t, node).Balance(receivers[1].Address), value)
+	}
+	validateChain(t, node)
+}
+
 func TestBoundedMiningLoad(t *testing.T) {
 	t.Helper()
 	node := newTestNode(t)
