@@ -135,3 +135,14 @@ The wallet must never:
 Workflow rule: all 11.1–11.5 work remains on `phase-11-indochain-wallet` and the single Phase 11 PR until the complete Phase 11 acceptance gate is satisfied.
 
 Implementation work should proceed from the actual IndoChain transaction/address primitives and existing RPC contracts; no new consensus rules should be invented solely for the wallet layer.
+
+
+## Implementation layout
+
+The implementation is split into:
+
+- `deskachain/node/internal/wallet` — native IndoChain wallet core, transaction builders, signing, secure storage and network guards;
+- `indochainwallet/backend` — Go backend gateway to IndoChain RPC;
+- `indochainwallet/app/indochainwallet` — Flutter Android/iOS application.
+
+The mobile app talks to the wallet backend for chain read/relay operations. Private-key material is not placed in the backend gateway.
