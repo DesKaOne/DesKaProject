@@ -36,6 +36,19 @@ Phase 9 evidence now covers:
 - security and operational hardening review;
 - long-running observation and incident/recovery evidence.
 
+## Evidence artifact index
+
+| Phase | Artifact | Status |
+|---|---|---|
+| 9.1 | Phase9.1-Testnet-Operations-Baseline.md | Complete |
+| 9.2 | Phase9.2-Network-Bootstrap-Provisioning.md | Complete |
+| 9.3 | Phase9.3-Operational-Smoke-Health.md | Complete |
+| 9.4 | Phase9.4-Backup-Restore-Recovery.md | Complete |
+| 9.5 | Phase9.5-Upgrade-Compatibility-Drill.md + Phase9.5-Upgrade-Compatibility-Evidence.md | Procedure + execution record template |
+| 9.6 | Phase9.6-Security-Operational-Hardening.md | Engineering review scope |
+| 9.7 | Phase9.7-LongRunning-Observation.md | Observation procedure |
+| 9.8 | Phase9.8-PreMainnet-Readiness-Evidence.md | Consolidation gate |
+
 ## Evidence index
 
 | Area | Evidence | Gate |
@@ -48,7 +61,7 @@ Phase 9 evidence now covers:
 | Provisioning/bootstrap | Phase 9.2 docs | Operational evidence |
 | Smoke/health | Phase 9.3 scripts/docs | Operational evidence |
 | Backup/recovery | Phase 9.4 scripts/docs | Operational evidence |
-| Upgrade compatibility | Phase 9.5 docs | Operational evidence |
+| Upgrade compatibility | Phase 9.5 procedure + Phase9.5-Upgrade-Compatibility-Evidence.md | Execution evidence only after operator drill |
 | Hardening | Phase 9.6 review/docs | Operational evidence |
 | Long-running observation | Phase 9.7 script/docs | Observation evidence |
 
