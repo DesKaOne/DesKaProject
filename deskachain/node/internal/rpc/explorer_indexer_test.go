@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"encoding/json"
 	"indochain/internal/config"
 	"indochain/internal/types"
 	"testing"
