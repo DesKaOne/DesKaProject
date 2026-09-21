@@ -193,8 +193,8 @@ func TestNewClientForProfileBindsNetworkIdentity(t *testing.T) {
 	if !client.AuthenticateRequests {
 		t.Fatalf("testnet client must authenticate requests")
 	}
-	if client.NetworkID != profile.NetworkID {
-		t.Fatalf("client network id=%q want=%q", client.NetworkID, profile.NetworkID)
+	if client.NetworkID != profile.NetworkID || client.ChainID != profile.ChainID {
+		t.Fatalf("client profile identity=%q/%d want=%q/%d", client.NetworkID, client.ChainID, profile.NetworkID, profile.ChainID)
 	}
 	if client.NodeIdentity.IdentityVersion() != NodeIdentityVersion {
 		t.Fatalf("client node identity is not initialized")
@@ -204,6 +204,12 @@ func TestNewClientForProfileBindsNetworkIdentity(t *testing.T) {
 	client.addHeaders(req)
 	if got := req.Header.Get(authHeaderNetworkID); got != profile.NetworkID {
 		t.Fatalf("auth network header=%q want=%q", got, profile.NetworkID)
+	}
+	if err := SignP2PRequest(client.NodeIdentity, client.NetworkID, client.ChainID, req, nil, time.Now(), strings.Repeat("a", 64)); err != nil {
+		t.Fatalf("sign profile-bound request: %v", err)
+	}
+	if got := req.Header.Get(authHeaderChainID); got != "777101" {
+		t.Fatalf("auth chain header=%q want=777101", got)
 	}
 }
 
@@ -217,8 +223,8 @@ func TestCheckPeerWithProfileUsesAuthenticatedClient(t *testing.T) {
 	if !client.AuthenticateRequests {
 		t.Fatalf("testnet peer checks must use authenticated client")
 	}
-	if client.NetworkID != profile.NetworkID {
-		t.Fatalf("client network id=%q want=%q", client.NetworkID, profile.NetworkID)
+	if client.NetworkID != profile.NetworkID || client.ChainID != profile.ChainID {
+		t.Fatalf("client profile identity=%q/%d want=%q/%d", client.NetworkID, client.ChainID, profile.NetworkID, profile.ChainID)
 	}
 }
 
