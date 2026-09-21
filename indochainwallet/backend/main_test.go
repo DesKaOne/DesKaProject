@@ -10,7 +10,7 @@ import (
 )
 
 func TestBackendWalletSendRelayShape(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/send" || r.Method != http.MethodPost {
 			t.Fatalf("unexpected request: %s %s", r.Method, r.URL.Path)
 		}
@@ -28,7 +28,7 @@ func TestBackendWalletSendRelayShape(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if out["tx_id"] != "abc" {
+	if got, ok := out["tx_id"].(string); !ok || got != "abc" {
 		t.Fatalf("unexpected response: %v", out)
 	}
 }
