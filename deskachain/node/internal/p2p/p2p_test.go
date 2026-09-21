@@ -1480,20 +1480,20 @@ func TestBoundedPeerChurn(t *testing.T) {
 	for cycle := 0; cycle < 3; cycle++ {
 	serverA := newP2PTestServer(nodeA)
 	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
-	\tserverA.Close()
-	\tt.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
+		serverA.Close()
+		t.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
 	}
 	serverA.Close()
 
 	got := tip(t, nodeB)
 	want := tip(t, nodeA)
 	if got.Height != want.Height || got.Hash != want.Hash {
-	\tt.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
+		t.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
 	}
 	validateChain(t, nodeB)
 
 	if cycle < 2 {
-	\tmineBlocks(t, nodeA, miner.Address, 1)
+		mineBlocks(t, nodeA, miner.Address, 1)
 	}
 	}
 
