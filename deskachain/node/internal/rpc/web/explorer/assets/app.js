@@ -503,6 +503,12 @@
         done();
       }
     }
+    var refresh = event.target.closest("[data-refresh]");
+    if (refresh && refresh.getAttribute("data-refresh") === "dashboard") {
+      event.preventDefault();
+      renderDashboard();
+      return;
+    }
     var page = event.target.closest("[data-page]");
     if (page) {
       var parts = page.getAttribute("data-page").split(":");
