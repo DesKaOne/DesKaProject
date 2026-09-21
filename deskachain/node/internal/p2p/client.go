@@ -208,6 +208,13 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 			return fmt.Errorf("peer authenticated response too large")
 		}
 		if err := VerifyP2PResponse(handshake, c.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+			if resp.StatusCode >= 400 && resp.Header.Get(authHeaderVersion) == "" {
+				var remote map[string]string
+				if json.Unmarshal(responseBody, &remote) == nil && strings.TrimSpace(remote["error"]) != "" {
+					return fmt.Errorf("peer returned %s: %s", resp.Status, remote["error"])
+				}
+				return fmt.Errorf("peer returned %s", resp.Status)
+			}
 			return err
 		}
 		if rejectClientError {
