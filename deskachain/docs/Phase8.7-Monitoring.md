@@ -82,3 +82,24 @@ The endpoint derives these values directly from the persisted mempool snapshot a
 - Issued-asset amounts remain separated from native dIDR amounts.
 - Empty mempool remains represented by zero counts/totals without requiring special endpoint behavior.
 - CI must remain green before advancing to 8.7.6.
+
+## 8.7.6 Explorer indexer statistics
+
+`/node/metrics` carries the same persistent explorer indexer statistics exposed by `/explorer/indexer/stats`, including:
+
+- indexed height, chain height, and lag
+- ready/sync status and schema version
+- indexed block, transaction, address-history, and issued-asset event counts
+- sync count and last sync timestamp/duration/block count
+- observed blocks-per-second
+- sync failure count and last sync error when present
+
+The node metrics endpoint reads the explorer indexer's existing read model; it does not trigger indexing, rebuild the database, or alter chain state. Explorer indexer failures remain isolated to the monitoring payload.
+
+### Acceptance
+
+- A synchronized explorer index is reflected consistently in `/node/metrics.indexer.stats`.
+- Indexer counts and cursor height match the persistent explorer indexer's statistics.
+- Ready/sync status and schema version are exposed with stable JSON values.
+- Monitoring remains read-only and does not participate in consensus.
+- CI must remain green before advancing to 8.7.7.
