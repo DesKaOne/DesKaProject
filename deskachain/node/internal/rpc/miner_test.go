@@ -339,6 +339,53 @@ func TestMinerSubmitDuplicateAndConcurrentRace(t *testing.T) {
 	}
 }
 
+func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
+	paths, server := newMinerRPCServer(t)
+	miner := newRPCWallet(t)
+
+	tpl := fetchMinerTemplate(t, server.URL, miner.Address)
+	mined := chain.Mine(tpl.Block)
+	if submit := submitMinerBlock(t, server.URL, tpl.TemplateID, mined); !submit.Accepted {
+		t.Fatalf("submit rejected: %#v", submit)
+	}
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	mining, ok := metrics["mining"].(map[string]any)
+	if !ok {
+		t.Fatalf("mining metrics missing or wrong type: %#v", metrics["mining"])
+	}
+	for _, key := range []string{
+		"height",
+		"current_difficulty",
+		"next_difficulty",
+		"target_block_time_seconds",
+		"blocks_until_retarget",
+		"last_block_time",
+		"last_block_age_seconds",
+		"average_interval_seconds",
+		"min_interval_seconds",
+		"max_interval_seconds",
+		"recent_block_intervals_seconds",
+		"recent_difficulties",
+		"projected_retarget_direction",
+	} {
+		if _, ok := mining[key]; !ok {
+			t.Fatalf("mining metrics missing %q: %#v", key, mining)
+		}
+	}
+	if got, ok := mining["height"].(float64); !ok || got != 1 {
+		t.Fatalf("mining height = %#v, want 1", mining["height"])
+	}
+	if _, ok := mining["average_interval_seconds"].(float64); !ok {
+		t.Fatalf("average interval has unexpected type: %#v", mining["average_interval_seconds"])
+	}
+	if _, ok := mining["recent_difficulties"].([]any); !ok {
+		t.Fatalf("recent difficulties has unexpected type: %#v", mining["recent_difficulties"])
+	}
+
+	_ = paths
+}
+
 func TestMiningObservationEndpointsPublicReadOnly(t *testing.T) {
 	paths, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
 	for _, path := range []string{"/mining/status", "/mining/stats", "/mining/difficulty", "/mining/blocks?limit=5"} {
