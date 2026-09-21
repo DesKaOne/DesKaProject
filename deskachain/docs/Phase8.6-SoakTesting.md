@@ -50,17 +50,19 @@ For each node:
 
 The P2P suite includes `TestBoundedMultiNodeSoak`, which provides a CI-safe bounded approximation of the long-running testnet pattern:
 
-1. Node A produces an initial 16-block chain.
+1. Node A produces an initial 8-block chain.
 2. Node B synchronizes from A and validates the chain.
-3. A advances another 16 blocks.
+3. A advances another 8 blocks.
 4. Node C synchronizes from A.
 5. Node B repeats synchronization from A.
-6. C produces four additional blocks.
+6. C produces two additional blocks.
 7. A synchronizes from C.
 8. A, B, and C are checked for matching tips and validated chains.
 9. P2P test servers are recreated between synchronization cycles to exercise peer/session churn.
 
-This test is intentionally bounded for CI. It complements, rather than replaces, an extended manual or scheduled soak run.
+The P2P suite also includes `TestBoundedMiningLoad`, which performs three sequential block-production cycles on one node and checks block heights, timestamps, difficulty, final tip, elapsed execution, and canonical chain validation.
+
+These tests are intentionally bounded for CI. They complement, rather than replace, an extended manual or scheduled soak run.
 
 ## Operator measurements
 
