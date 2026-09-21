@@ -1181,7 +1181,7 @@ func signedTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, v
 	l := ledgerFor(t, paths)
 	pending, _ := mempool.New(paths.Mempool).Load()
 	pendingCount, _, _ := mempool.PendingOutgoing(pending, from.Address)
-	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount)
+	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount+1)
 	if err := from.SignTransaction(&tx); err != nil {
 		t.Fatal(err)
 	}
@@ -1224,6 +1224,18 @@ func validateChain(t *testing.T, paths config.Paths) {
 }
 
 
+func signedLoadTestTx(t *testing.T, paths config.Paths, from wallet.Wallet, to string, value uint64) types.Transaction {
+	t.Helper()
+	l := ledgerFor(t, paths)
+	pending, _ := mempool.New(paths.Mempool).Load()
+	pendingCount, _, _ := mempool.PendingOutgoing(pending, from.Address)
+	tx := types.NewUnsignedTransaction(from.Address, to, value, 0, l.Nonce(from.Address)+pendingCount)
+	if err := from.SignTransaction(&tx); err != nil {
+		t.Fatal(err)
+	}
+	return tx
+}
+
 func TestBoundedTransactionLoad(t *testing.T) {
 	node := newTestNode(t)
 	miner := newWallet(t)
@@ -1240,7 +1252,7 @@ func TestBoundedTransactionLoad(t *testing.T) {
 		for i := 0; i < batchSize; i++ {
 			receiver := newWallet(t)
 			receivers = append(receivers, receiver)
-			tx := signedTx(t, node, miner, receiver.Address, value)
+			tx := signedLoadTestTx(t, node, miner, receiver.Address, value)
 			if err := mempool.New(node.Mempool).Add(tx); err != nil {
 				t.Fatalf("round %d tx %d rejected: %v", round, i, err)
 			}
