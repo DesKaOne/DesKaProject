@@ -190,11 +190,22 @@ func VerifyP2PResponse(handshake Handshake, networkID string, chainID uint64, re
 	if nodeID == "" || publicKeyRaw == "" || responseNetworkID == "" || chainText == "" || timestampText == "" || nonce == "" || signatureRaw == "" {
 		return errors.New("incomplete p2p response authentication headers")
 	}
-	if nodeID != handshake.NodeID {
-		return errors.New("p2p response node id mismatch")
-	}
-	if publicKeyRaw != handshake.NodePublicKey {
+	handshakePublicKey := strings.TrimSpace(handshake.NodePublicKey)
+	if publicKeyRaw != handshakePublicKey {
 		return errors.New("p2p response node public key mismatch")
+	}
+	if handshake.NodeID == "" || handshakePublicKey == "" {
+		return errors.New("peer handshake identity is incomplete")
+	}
+	if nodeID == handshake.NodeID {
+		// Expected identity binding: both node id and public key are aligned.
+	} else {
+		// Keep the cryptographic binding anchored to the handshake public key. Older
+		// peers may carry a stale NodeID string while retaining the same key.
+		publicKey, decodeErr := hex.DecodeString(handshakePublicKey)
+		if decodeErr != nil || len(publicKey) != ed25519.PublicKeySize {
+			return errors.New("invalid p2p response public key")
+		}
 	}
 	if responseNetworkID != networkID {
 		return errors.New("p2p response network id mismatch")
