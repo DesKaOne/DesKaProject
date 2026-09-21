@@ -34,6 +34,8 @@ type explorerIndexerMetrics struct {
 	LastSyncDurationMs int64   `json:"last_sync_duration_ms"`
 	LastSyncBlockCount int     `json:"last_sync_block_count"`
 	BlocksPerSecond    float64 `json:"blocks_per_second"`
+	SyncFailureCount   uint64  `json:"sync_failure_count"`
+	LastSyncError      string  `json:"last_sync_error,omitempty"`
 }
 type explorerIndexedBlock struct {
 	Height       uint64
@@ -218,9 +220,29 @@ func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			_, _ = x.sync()
+			if _, err := x.sync(); err != nil {
+				_ = x.recordSyncFailure(err)
+			}
 		}
 	}
+}
+
+func (x *explorerIndexer) recordSyncFailure(syncErr error) error {
+	if syncErr == nil { return nil }
+	db, err := x.open()
+	if err != nil { return err }
+	defer db.Close()
+	return db.Update(func(tx *bolt.Tx) error {
+		metrics := explorerIndexerMetrics{}
+		if raw := tx.Bucket([]byte("meta")).Get([]byte("metrics")); raw != nil {
+			if err := json.Unmarshal(raw, &metrics); err != nil { return err }
+		}
+		metrics.SyncFailureCount++
+		metrics.LastSyncError = syncErr.Error()
+		raw, err := json.Marshal(metrics)
+		if err != nil { return err }
+		return tx.Bucket([]byte("meta")).Put([]byte("metrics"), raw)
+	})
 }
 
 func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
@@ -413,6 +435,8 @@ func (x *explorerIndexer) stats(status ExplorerIndexerStatus) (ExplorerIndexerSt
 	counts.LastSyncDurationMs = metrics.LastSyncDurationMs
 	counts.LastSyncBlockCount = metrics.LastSyncBlockCount
 	counts.BlocksPerSecond = metrics.BlocksPerSecond
+	counts.SyncFailureCount = metrics.SyncFailureCount
+	counts.LastSyncError = metrics.LastSyncError
 	return counts, nil
 }
 
