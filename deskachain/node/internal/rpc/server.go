@@ -110,6 +110,7 @@ func mainnetReadOnlyRPCPath(path string) bool {
 	switch strings.TrimRight(path, "/") {
 	case "/health",
 		"/ready",
+		"/node/metrics",
 		"/network/info",
 		"/node/id",
 		"/node/compare",
