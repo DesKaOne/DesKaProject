@@ -151,3 +151,31 @@ func TestExplorerIndexerStatsCountsIndexedRecords(t *testing.T) {
 		t.Fatalf("unexpected index stats: %#v", stats)
 	}
 }
+
+
+func TestExplorerIndexerStatsExposePersistedSyncMetrics(t *testing.T) {
+	dir := t.TempDir()
+	paths := config.NewPaths(dir)
+	x := newExplorerIndexer(paths, config.Localnet())
+	db, err := x.open()
+	if err != nil { t.Fatal(err) }
+	metrics := explorerIndexerMetrics{
+		SyncCount: 7,
+		LastSyncAtUnix: 123,
+		LastSyncDurationMs: 250,
+		LastSyncBlockCount: 5,
+		BlocksPerSecond: 20,
+	}
+	err = db.Update(func(tx *bolt.Tx) error {
+		raw, err := json.Marshal(metrics)
+		if err != nil { return err }
+		return tx.Bucket([]byte("meta")).Put([]byte("metrics"), raw)
+	})
+	_ = db.Close()
+	if err != nil { t.Fatal(err) }
+	stats, err := x.stats(ExplorerIndexerStatus{IndexedHeight: 5, ChainHeight: 5, Ready: true, SchemaVersion: explorerIndexerSchemaVersion})
+	if err != nil { t.Fatal(err) }
+	if stats.SyncCount != 7 || stats.LastSyncAtUnix != 123 || stats.LastSyncDurationMs != 250 || stats.LastSyncBlockCount != 5 || stats.BlocksPerSecond != 20 {
+		t.Fatalf("unexpected sync metrics: %#v", stats)
+	}
+}
