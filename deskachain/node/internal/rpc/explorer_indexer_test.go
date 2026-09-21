@@ -145,7 +145,7 @@ func TestExplorerIndexerStatsCountsIndexedRecords(t *testing.T) {
 	err = db.Update(func(tx *bolt.Tx) error { return indexExplorerBlockTx(tx, block) })
 	_ = db.Close()
 	if err != nil { t.Fatal(err) }
-	stats, err := x.stats()
+	stats, err := x.stats(ExplorerIndexerStatus{IndexedHeight: 3, ChainHeight: 3, Ready: true, SchemaVersion: explorerIndexerSchemaVersion})
 	if err != nil { t.Fatal(err) }
 	if stats.BlockCount != 1 || stats.TransactionCount != 2 || stats.AddressHistoryCount != 4 || stats.AssetEventCount != 1 {
 		t.Fatalf("unexpected index stats: %#v", stats)
