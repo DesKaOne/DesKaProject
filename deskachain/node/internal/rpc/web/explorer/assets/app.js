@@ -32,6 +32,11 @@
     return value.slice(0, 10) + "..." + value.slice(-8);
   }
 
+  function badge(value, fallback) {
+    var text = value == null || value === "" ? (fallback || "-") : String(value);
+    return '<span class="pill tx-badge">' + escapeHTML(text) + '</span>';
+  }
+
   function copyButton(value) {
     if (!value) return "";
     return '<button class="copy" type="button" data-copy="' + escapeHTML(value) + '" title="Copy full value">Copy</button>';
