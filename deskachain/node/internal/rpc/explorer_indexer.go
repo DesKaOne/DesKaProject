@@ -327,11 +327,7 @@ func (x *explorerIndexer) status() (ExplorerIndexerStatus, error) {
 	return x.statusUnlocked()
 }
 
-func (x *explorerIndexer) stats() (ExplorerIndexerStats, error) {
-	status, err := x.statusUnlocked()
-	if err != nil {
-		return ExplorerIndexerStats{}, err
-	}
+func (x *explorerIndexer) stats(status ExplorerIndexerStatus) (ExplorerIndexerStats, error) {
 	db, err := x.open()
 	if err != nil {
 		return ExplorerIndexerStats{}, err
