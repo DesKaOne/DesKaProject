@@ -165,41 +165,44 @@ func TestP2PMessageAuthServerMiddleware(t *testing.T) {
 }
 
 func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
-	profile := config.Testnet()
-	paths := config.NewPaths(t.TempDir())
-	server := NewServerWithProfile(paths, profile)
-	serverIdentity, err := LoadOrCreateNodeIdentity(paths.NodeID)
-	if err != nil {
-		t.Fatalf("load server identity: %v", err)
-	}
-
-	handler := server.authenticated(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-	}))
-	httpServer := httptest.NewServer(handler)
+	serverProfile := config.Testnet()
+	serverPaths := config.NewPaths(t.TempDir())
+	server := NewServerWithAdvertiseAndProfile(serverPaths, "127.0.0.1:0", "http://127.0.0.1:0", serverProfile)
+	mux := http.NewServeMux()
+	server.Register(mux)
+	httpServer := httptest.NewServer(mux)
 	defer httpServer.Close()
 
-	client, err := NewClientForProfile(config.NewPaths(t.TempDir()), profile, time.Second)
+	clientProfile := config.Testnet()
+	client, err := NewClientForProfile(config.NewPaths(t.TempDir()), clientProfile, time.Second)
 	if err != nil {
 		t.Fatalf("create client: %v", err)
 	}
 
-	// The middleware response must be verifiable against the server identity
-	// advertised by the handshake contract. This test exercises the same
-	// signing/verification primitives used by the live client/server path.
-	nonce := strings.Repeat("b", 64)
-	body := []byte("{\"ok\":true}")
-	responseHeaders, err := SignP2PResponse(serverIdentity, profile.NetworkID, profile.ChainID, nonce, http.StatusOK, body, time.Now())
+	hs, err := client.Handshake(httpServer.URL)
 	if err != nil {
-		t.Fatalf("sign response: %v", err)
+		t.Fatalf("live handshake: %v", err)
 	}
-	hs := testHandshakeForIdentity(t, serverIdentity, profile)
-	if err := VerifyP2PResponse(hs, profile.NetworkID, profile.ChainID, nonce, http.StatusOK, body, responseHeaders, time.Now()); err != nil {
-		t.Fatalf("verify server response: %v", err)
+	if hs.NodeID == "" {
+		t.Fatalf("live handshake node id is empty")
+	}
+	if hs.IdentityVersion != NodeIdentityVersion {
+		t.Fatalf("live handshake identity version=%d want=%d", hs.IdentityVersion, NodeIdentityVersion)
+	}
+	if hs.NodePublicKey == "" || hs.NodeSignature == "" {
+		t.Fatalf("live handshake identity proof is incomplete")
+	}
+	if hs.NetworkID != serverProfile.NetworkID || hs.ChainID != serverProfile.ChainID {
+		t.Fatalf("live handshake network identity=%q/%d want=%q/%d", hs.NetworkID, hs.ChainID, serverProfile.NetworkID, serverProfile.ChainID)
 	}
 
-	_ = client
-	_ = httpServer
+	var got map[string]bool
+	if err := client.getJSONMode(httpServer.URL, "/p2p/status", nil, &got, true, true); err != nil {
+		t.Fatalf("live authenticated status: %v", err)
+	}
+	if !got["ok"] {
+		t.Fatalf("live authenticated status response=%v", got)
+	}
 }
 
 func TestP2PMessageAuthOptionalUnsignedCompatibility(t *testing.T) {
