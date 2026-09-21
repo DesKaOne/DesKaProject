@@ -2,9 +2,9 @@
 
 > Current development roadmap from IndoChain and IndoScan through DesKaCash.
 >
-> Current branch checkpoint: **Phase 10 — Pre-Mainnet / Mainnet Readiness Evidence**.
+> Current checkpoint: **Phase 11 — IndoChainWallet frozen and merged. Next work is local-node deployment validation on a Mini PC Ubuntu host with the main PC as client, followed by private-testnet VPS deployment if the local drill passes.**
 >
-> Phase 8 testnet engineering and IndoScan foundations are complete. Phase 9 testnet operations/evidence scope is complete. Phase 10 readiness controls and reproducible snapshot validation are complete as an engineering gate; production/mainnet approval, release authority, and final production identifiers remain separately gated.
+> Phase 8 testnet engineering and IndoScan foundations are complete. Phase 9 testnet operations/evidence scope is complete. Phase 10 readiness controls and reproducible snapshot validation are complete as engineering gates; production/mainnet approval, release authority, and final production identifiers remain separately gated.
 
 ## Roadmap Overview
 
@@ -340,24 +340,25 @@ Evidence: `deskachain/docs/Phase10.8-Mainnet-Release-Gate.md`
 
 ## Phase 11 — IndoChainWallet
 
-**Status: ⏳ Next after Phase 10 readiness gates**
+**Status: ✅ Frozen & merged to `main`**
 
-Build the native blockchain wallet after the chain and explorer foundations are stable.
+Phase 11 is frozen at its current engineering state. Future wallet enhancements continue later as a separate phase/workstream and must not be inferred from the frozen Phase 11 release.
 
 ### 11.1 — Wallet Core
 
 - Key generation
 - Address generation
 - Private key protection
-- Seed phrase
-- Transaction signing
+- Seed phrase lifecycle
+- Transaction signing primitives
 - Nonce handling
 - Transaction creation
+- Network/minimum-fee guards
 
 ### 11.2 — Wallet Transactions
 
-- Send
-- Receive
+- Send relay boundary
+- Receive/read flows
 - Transaction history
 - Fee display
 - Confirmation status
@@ -383,17 +384,173 @@ IndoChain
 ### 11.5 — Wallet Security
 
 - Encrypted storage
-- Backup
-- Restore
+- Backup/restore boundary
 - Signing protection
 - Network validation
 - Transaction confirmation
+- Backend never receives private-key material
+- Wallet relay requires signed transaction material
 
-**Milestone:** IndoChainWallet usable on IndoChain Testnet first, with production/mainnet network selection kept explicit and isolated.
+**Frozen checkpoint:** Phase 11 PR #12 was validated with no base-branch divergence/conflict and green CI before merge.
+
+**Milestone:** IndoChainWallet engineering foundation frozen. Resume wallet feature work after infrastructure/node validation.
 
 ---
 
-## Phase 12 — DesKaPay
+## Phase 12 — Local IndoChain Node / Client-Server Deployment Validation
+
+**Status: 🔵 Next**
+
+Validate IndoChain as a real local node/server deployment before any VPS private-testnet rollout.
+
+Target topology:
+
+```
+Mini PC Ubuntu
+      │
+      ├── IndoChain node/server
+      ├── RPC endpoint
+      ├── P2P endpoint
+      └── persistent datadir
+               │
+               ▼
+        Local network / LAN
+               │
+               ▼
+        Main PC client
+```
+
+### 12.1 — Mini PC Server Provisioning
+
+- Ubuntu host preparation
+- IndoChain binary build/install
+- Dedicated datadir
+- Network/testnet profile selection
+- Node identity persistence
+- Controlled RPC/P2P bind addresses
+
+### 12.2 — Main PC Client Validation
+
+- RPC connectivity from LAN client
+- Network identity verification
+- Chain height/status query
+- Address/balance query
+- Transaction submission/readback
+- Explorer/API connectivity where applicable
+
+### 12.3 — Two-Machine Smoke Test
+
+- Start server node
+- Connect client
+- Verify P2P reachability
+- Verify RPC reachability
+- Exercise wallet/read paths
+- Submit a test transaction
+- Confirm transaction propagation and confirmation
+
+### 12.4 — Restart / Persistence Drill
+
+- Stop/start node
+- Verify datadir persistence
+- Verify node identity persistence
+- Verify chain state recovery
+- Repeat client connectivity checks
+
+### 12.5 — LAN Security Boundary
+
+- RPC exposure limited to intended LAN/client hosts
+- P2P port exposure documented
+- No public internet exposure during local drill
+- Credentials/secrets kept outside source control
+
+**Exit gate:** no blocking node/client errors in the complete local deployment drill.
+
+---
+
+## Phase 13 — Private IndoChain Testnet on VPS
+
+**Status: ⏳ Planned after local validation**
+
+After the Mini PC/server + Main PC/client deployment passes, move the same topology to controlled VPS infrastructure for a private testnet.
+
+Target components:
+
+```
+VPS-1
+  └── Bootstrap / Seed
+
+VPS-2
+  └── Full Node
+
+VPS-3
+  └── Full Node / Service
+
+        │
+        ▼
+  Private IndoChain Testnet
+        │
+   ┌────┴────┐
+   ▼         ▼
+IndoScan  RPC / API
+   │
+   ▼
+Wallet / DesKaPay / DesKaCash
+```
+
+### 13.1 — VPS Node Provisioning
+
+- Linux host baseline
+- Firewall/network rules
+- Dedicated datadir
+- Node identity
+- Persistent service startup
+- Monitoring/logging
+
+### 13.2 — Private Testnet Topology
+
+- Bootstrap/seed node
+- Full nodes
+- RPC access boundary
+- P2P access boundary
+- IndoScan integration
+
+### 13.3 — Stable Service Endpoints
+
+Establish stable internal endpoints for:
+
+- IndoChain RPC
+- IndoScan API
+- wallet/backend integration
+- future DesKaPay integration
+- future DesKaCash integration
+
+### 13.4 — Client Integration Contract
+
+Products should consume explicit environment/configuration values rather than hard-coded deployment assumptions:
+
+```
+INDOCHAIN_RPC_URL
+INDOSCAN_BASE_URL
+WALLET_BACKEND_URL
+DESKAPAY_API_URL
+DESKACASH_API_URL
+```
+
+### 13.5 — Private Testnet Acceptance
+
+- Nodes synchronize
+- RPC is reachable through intended boundary
+- transactions propagate
+- restart recovery passes
+- backup/restore boundary verified
+- IndoScan reads the canonical chain
+- wallet integration can query and relay through the intended RPC path
+
+**Milestone:** Private IndoChain Testnet Infrastructure
+
+---
+
+## Phase 14 — DesKaPay
 
 **Status: ⏳ Planned**
 
@@ -401,7 +558,7 @@ DesKaPay is the payment/merchant infrastructure layer, not the consumer e-wallet
 
 It is intended to provide the backend and APIs that can later be consumed by DesKaCash.
 
-### 12.1 — DesKaPay Core
+### 14.1 — DesKaPay Core
 
 ```
 DesKaPay
@@ -417,7 +574,7 @@ DesKaPay
 └── Settlement
 ```
 
-### 12.2 — Ledger
+### 14.2 — Ledger
 
 The ledger is the source of truth for financial balances and transaction state.
 
@@ -431,7 +588,7 @@ Balance
 Transaction
 ```
 
-### 12.3 — Payment API
+### 14.3 — Payment API
 
 Planned API capabilities:
 
@@ -444,7 +601,7 @@ GET  /balance
 GET  /transactions
 ```
 
-### 12.4 — Virtual Account
+### 14.4 — Virtual Account
 
 Target flow:
 
@@ -464,7 +621,7 @@ DesKaPay
 Ledger
 ```
 
-### 12.5 — QRIS
+### 14.5 — QRIS
 
 Planned capabilities:
 
@@ -472,7 +629,7 @@ Planned capabilities:
 - QRIS payment
 - QRIS status
 
-### 12.6 — Payment Gateway / Partner Integration
+### 14.6 — Payment Gateway / Partner Integration
 
 Potential integration categories:
 
@@ -481,7 +638,7 @@ Potential integration categories:
 - Virtual Account provider
 - QRIS provider
 
-### 12.7 — Callback / Webhook
+### 14.7 — Callback / Webhook
 
 ```
 Partner
@@ -502,7 +659,7 @@ Ledger
 Transaction
 ```
 
-### 12.8 — Reconciliation
+### 14.8 — Reconciliation
 
 ```
 Partner Statement
@@ -517,7 +674,7 @@ Reconciliation
 Ledger
 ```
 
-### 12.9 — Merchant API
+### 14.9 — Merchant API
 
 DesKaPay can provide infrastructure for:
 
@@ -531,7 +688,7 @@ DesKaPay can provide infrastructure for:
 
 ---
 
-## Phase 13 — DesKaCash
+## Phase 15 — DesKaCash
 
 **Status: ⏳ Planned**
 
@@ -559,7 +716,7 @@ Architecture:
              Ledger
 ```
 
-### 13.1 — DesKaCash Account
+### 15.1 — DesKaCash Account
 
 - Registration
 - Login
@@ -567,12 +724,12 @@ Architecture:
 - Wallet account
 - Account security
 
-### 13.2 — Balance
+### 15.2 — Balance
 
 - IDR balance
 - Balance sourced from the DesKaPay ledger
 
-### 13.3 — Internal Transfer
+### 15.3 — Internal Transfer
 
 ```
 User A
@@ -586,7 +743,7 @@ User B
 
 Internal user-to-user transfers use the internal ledger rather than VA-to-VA transfers.
 
-### 13.4 — Deposit
+### 15.4 — Deposit
 
 ```
 Bank / VA
@@ -598,7 +755,7 @@ Ledger
 DesKaCash
 ```
 
-### 13.5 — Withdrawal
+### 15.5 — Withdrawal
 
 ```
 DesKaCash
@@ -608,7 +765,7 @@ DesKaPay
 Partner Bank
 ```
 
-### 13.6 — QRIS
+### 15.6 — QRIS
 
 ```
 DesKaCash
@@ -618,7 +775,7 @@ DesKaPay
 QRIS
 ```
 
-### 13.7 — Transaction History
+### 15.7 — Transaction History
 
 - Transfer
 - Deposit
@@ -628,7 +785,7 @@ QRIS
 - Status
 - Receipt
 
-### 13.8 — Security
+### 15.8 — Security
 
 - PIN
 - Biometric authentication
@@ -680,8 +837,10 @@ QRIS
 2. **IndoChain Mainnet**
 3. **IndoScan Mainnet**
 4. **IndoChainWallet**
-5. **DesKaPay Payment Infrastructure**
-6. **DesKaCash MVP**
+5. **Local IndoChain Node / Client Validation**
+6. **Private IndoChain Testnet on VPS**
+7. **DesKaPay Payment Infrastructure**
+8. **DesKaCash MVP**
 
 ---
 
