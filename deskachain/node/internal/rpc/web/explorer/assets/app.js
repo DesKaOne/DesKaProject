@@ -15,6 +15,8 @@
   var stakeLimit = 20;
   var serviceOffset = 0;
   var serviceLimit = 20;
+  var assetOffset = 0;
+  var assetLimit = 20;
 
   function api(path) {
     return apiBase + path;
@@ -391,7 +393,7 @@
 
   function renderAsset(assetID) {
     setLoading("Asset");
-    jsonFetch("/explorer/indexed/asset/" + encodeURIComponent(assetID) + "/txs?limit=20&offset=0").then(function (data) {
+    jsonFetch("/explorer/indexed/asset/" + encodeURIComponent(assetID) + "/txs?limit=" + assetLimit + "&offset=" + assetOffset).then(function (data) {
       var rows = (data.events || []).map(function (event) {
         return row([
           linkHash("tx", event.txid),
@@ -409,7 +411,8 @@
         metric("Indexer height", data.indexer && data.indexer.indexed_height) +
         metric("Indexer lag", data.indexer && data.indexer.lag) +
         "</div>") +
-        panel("Asset events", table(["Txid", "Block", "From", "To", "Amount", "Fee"], rows, "No indexed events found for this asset."));
+        panel("Asset events", pagerHTML("asset", data, assetLimit) + table(["Txid", "Block", "From", "To", "Amount", "Fee"], rows, "No indexed events found for this asset."));
+      selectLimit("asset", assetLimit);
     }).catch(function (err) { setError(friendlyError(err, "Unable to load asset events.")); });
   }
 
@@ -468,7 +471,11 @@
     if (parts[0] === "block" && parts[1]) return renderBlock(parts[1]);
     if (parts[0] === "tx" && parts[1]) return renderTx(parts[1]);
     if (parts[0] === "address" && parts[1]) return renderAddress(parts[1]);
-    if (parts[0] === "asset" && parts[1]) return renderAsset(parts[1]);
+    if (parts[0] === "asset" && parts[1]) {
+      assetLimit = Number(parsed.query.get("limit")) || assetLimit;
+      assetOffset = Number(parsed.query.get("offset")) || assetOffset;
+      return renderAsset(parts[1]);
+    }
     if (parts[0] === "stakes") return renderStakes();
     if (parts[0] === "services") return renderServices();
     setError("Route not found.");
@@ -549,6 +556,10 @@
         serviceOffset = direction === "prev" ? Math.max(0, serviceOffset - serviceLimit) : serviceOffset + serviceLimit;
         renderServices();
       }
+      if (scope === "asset") {
+        assetOffset = direction === "prev" ? Math.max(0, assetOffset - assetLimit) : assetOffset + assetLimit;
+        route();
+      }
     }
   });
 
@@ -573,6 +584,11 @@
       serviceLimit = Number(event.target.value) || 20;
       serviceOffset = 0;
       renderServices();
+    }
+    if (scope === "asset") {
+      assetLimit = Number(event.target.value) || 20;
+      assetOffset = 0;
+      route();
     }
   });
 
