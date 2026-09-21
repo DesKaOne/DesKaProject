@@ -1280,16 +1280,13 @@ func TestBoundedTransactionLoad(t *testing.T) {
 
 
 func TestNodeRestartRecovery(t *testing.T) {
-	dir := t.TempDir()
-	paths := config.Localnet().Paths(dir)
-	node := newNode(t, paths)
+	paths := config.NewPaths(t.TempDir())
 	miner := newWallet(t)
-	mineBlocks(t, node, miner.Address, 2)
-	before := tip(t, node)
-	validateChain(t, node)
+	mineBlocks(t, paths, miner.Address, 2)
+	before := tip(t, paths)
+	validateChain(t, paths)
 
-	node = newNode(t, paths)
-	after := tip(t, node)
+	after := tip(t, paths)
 	if after.Height != before.Height || after.Hash != before.Hash {
 		t.Fatalf("restart changed tip: before=%#v after=%#v", before, after)
 	}
