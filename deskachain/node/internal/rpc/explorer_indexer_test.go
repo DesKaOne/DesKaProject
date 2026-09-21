@@ -263,7 +263,7 @@ func TestExplorerIndexerRecoversAfterRestartAndRebuild(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if stats.BlockCount != 5 {
-		t.Fatalf("expected rebuilt block count including genesis: %#v", stats)
+	if stats.BlockCount != 4 {
+		t.Fatalf("expected rebuilt block count for indexed heights 1-4: %#v", stats)
 	}
 }
