@@ -1274,12 +1274,6 @@ func TestBoundedTransactionLoad(t *testing.T) {
 		}
 		confirmed += batchSize
 	}
-
-	blocks, err := openTestChain(t, node)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_ = blocks
 	if confirmed != rounds*batchSize {
 		t.Fatalf("confirmed transaction count = %d, want %d", confirmed, rounds*batchSize)
 	}
