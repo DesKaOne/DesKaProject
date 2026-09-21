@@ -198,3 +198,72 @@ func TestExplorerIndexerRecordSyncFailurePersistsMetrics(t *testing.T) {
 		t.Fatalf("unexpected failure metrics: %#v", stats)
 	}
 }
+
+
+func TestExplorerIndexerRecoversAfterRestartAndRebuild(t *testing.T) {
+	profile := config.Testnet()
+	paths := newProfileRPCTestNode(t, profile)
+
+	mineRPCProfileBlocks(t, paths, profile, 2)
+	x := newExplorerIndexer(paths, profile)
+	status, err := x.sync()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.Ready || status.IndexedHeight != 2 {
+		t.Fatalf("expected ready index at height 2: %#v", status)
+	}
+
+	mineRPCProfileBlocks(t, paths, profile, 2)
+
+	// Reopen the persistent indexer and catch up the newly produced blocks.
+	x = newExplorerIndexer(paths, profile)
+	status, err = x.sync()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.Ready || status.IndexedHeight != 4 || status.Lag != 0 {
+		t.Fatalf("expected caught-up index at height 4: %#v", status)
+	}
+
+	// Simulate stale/corrupted cursor metadata. The canonical chain remains
+	// untouched; the next sync must rebuild the Explorer read model.
+	db, err := x.open()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cur := explorerIndexCursor{Height: 2, Hash: "stale-index-tip"}
+	raw, err := json.Marshal(cur)
+	if err != nil {
+		_ = db.Close()
+		t.Fatal(err)
+	}
+	err = db.Update(func(tx *bolt.Tx) error {
+		return tx.Bucket([]byte("meta")).Put([]byte("cursor"), raw)
+	})
+	_ = db.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	x = newExplorerIndexer(paths, profile)
+	status, err = x.sync()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.Ready || status.IndexedHeight != 4 || status.Lag != 0 {
+		t.Fatalf("indexer did not recover after rebuild: %#v", status)
+	}
+
+	block, ok, err := x.blockByHeight(4)
+	if err != nil || !ok || block.Height != 4 {
+		t.Fatalf("recovered block index missing: ok=%v err=%v block=%#v", ok, err, block)
+	}
+	stats, err := x.stats(status)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.BlockCount != 5 {
+		t.Fatalf("expected rebuilt block count including genesis: %#v", stats)
+	}
+}
