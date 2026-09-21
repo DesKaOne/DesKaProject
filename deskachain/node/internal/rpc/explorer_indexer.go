@@ -249,7 +249,6 @@ func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
 func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	x.mu.Lock()
 	defer x.mu.Unlock()
-	syncStarted := time.Now()
 	store, err := storage.OpenBolt(x.paths.DB)
 	if err != nil {
 		return ExplorerIndexerStatus{}, err
@@ -288,6 +287,7 @@ func (x *explorerIndexer) sync() (ExplorerIndexerStatus, error) {
 	if rebuild {
 		cur = explorerIndexCursor{}
 	}
+	syncStarted := time.Now()
 	indexedBlocks := 0
 	err = db.Update(func(tx *bolt.Tx) error {
 		if rebuild || cur.Hash == "" {
