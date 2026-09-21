@@ -1290,7 +1290,7 @@ func TestNodeRestartRecovery(t *testing.T) {
 	if after.Height != before.Height || after.Hash != before.Hash {
 		t.Fatalf("restart changed tip: before=%#v after=%#v", before, after)
 	}
-	validateChain(t, node)
+	validateChain(t, paths)
 }
 
 func TestBoundedMempoolPressure(t *testing.T) {
