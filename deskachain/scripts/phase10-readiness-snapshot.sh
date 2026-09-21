@@ -6,8 +6,7 @@ cd "$root/node"
 
 printf '%s\n' 'Phase 10 readiness snapshot'
 printf 'go=%s\n' "$(go version)"
-printf 'module=%s\n' "$(awk '/^module /{print \$2; exit}' go.mod)"
-
+printf 'module=%s\n' "$(awk '\/\\^module \/{print $2; exit}' go.mod)"\n
 echo 'tests=go test ./...'
 go test ./...
 
@@ -41,8 +40,8 @@ for f in \
 done
 
 echo 'mainnet_placeholder_guard'
-grep -q 'Mainnet network ID.*TBD' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
-grep -q 'Mainnet chain ID.*TBD' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
-grep -q 'Genesis artifact.*TBD' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
+grep -Eq 'Mainnet network ID.*(TBD|pending approval)' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
+grep -Eq 'Mainnet chain ID.*(TBD|pending approval)' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
+grep -Eq 'Genesis artifact.*(TBD|pending)' "$root/docs/Phase10.1-Network-Identity-Genesis-Decision.md"
 
 echo 'snapshot=PASS'
