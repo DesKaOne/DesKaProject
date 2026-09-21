@@ -124,3 +124,20 @@ The runtime snapshot is intentionally lightweight and read-only. It gives operat
 - Chain, peer, and mempool runtime counts reflect the same request snapshot.
 - Runtime monitoring does not alter consensus or node state.
 - CI must remain green before advancing to 8.7.8.
+
+## 8.7.8 Monitoring endpoint/API contract
+
+The public monitoring contract is hardened around `GET /node/metrics`:
+
+- the payload uses schema version `v1`
+- the endpoint exposes the consolidated node, chain, peer, mempool, mining, explorer-indexer, and soak-runtime sections
+- the endpoint is read-only and rejects non-GET writes
+- the contract is suitable for polling by external monitoring/operations tooling without introducing a mutable consensus metric store
+
+### Acceptance
+
+- Public RPC can read `GET /node/metrics` with a stable `v1` schema marker.
+- All consolidated monitoring sections are present in the public response.
+- `POST /node/metrics` is rejected with HTTP 405.
+- Monitoring remains observational and does not alter consensus state.
+- CI must remain green before advancing to 8.7.9.
