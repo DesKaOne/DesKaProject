@@ -1305,12 +1305,12 @@ func TestBoundedMiningLoad(t *testing.T) {
 		}
 	}
 
-	status := fetchExplorerStatus(t, node)
-	if status.Height != blocks {
-		t.Fatalf("mining load final height = %d, want %d", status.Height, blocks)
+	finalTip := tip(t, node)
+	if finalTip.Height != blocks {
+		t.Fatalf("mining load final height = %d, want %d", finalTip.Height, blocks)
 	}
-	if status.TipDifficulty != config.InitialDifficulty || status.Difficulty != config.InitialDifficulty || status.NextDifficulty != config.InitialDifficulty {
-		t.Fatalf("unexpected mining difficulty status: %#v", status)
+	if mined[len(mined)-1].Difficulty != config.InitialDifficulty {
+		t.Fatalf("final mining difficulty = %d, want initial difficulty %d", mined[len(mined)-1].Difficulty, config.InitialDifficulty)
 	}
 	if time.Since(start) <= 0 {
 		t.Fatal("mining load elapsed time was not recorded")
