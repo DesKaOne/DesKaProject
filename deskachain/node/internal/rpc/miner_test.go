@@ -508,6 +508,54 @@ func TestNodeMetricsExposeExplorerIndexerStatistics(t *testing.T) {
 }
 
 
+func TestNodeMetricsConsolidatedMonitoringAcceptance(t *testing.T) {
+	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	if metrics["schema_version"] != "v1" {
+		t.Fatalf("metrics schema_version = %#v, want v1", metrics["schema_version"])
+	}
+	for _, section := range []string{"network", "chain", "peers", "mempool", "mining", "indexer", "runtime"} {
+		if metrics[section] == nil {
+			t.Fatalf("monitoring section %q missing", section)
+		}
+	}
+
+	chainInfo, ok := metrics["chain"].(map[string]any)
+	if !ok || chainInfo["height"] == nil || chainInfo["tip_hash"] == nil || chainInfo["difficulty"] == nil || chainInfo["total_transaction_count"] == nil {
+		t.Fatalf("chain monitoring fields incomplete: %#v", metrics["chain"])
+	}
+	peerInfo, ok := metrics["peers"].(map[string]any)
+	if !ok || peerInfo["known"] == nil || peerInfo["active"] == nil || peerInfo["best_height"] == nil || peerInfo["best_lag"] == nil || peerInfo["status_counts"] == nil {
+		t.Fatalf("peer monitoring fields incomplete: %#v", metrics["peers"])
+	}
+	mempoolInfo, ok := metrics["mempool"].(map[string]any)
+	if !ok || mempoolInfo["pending_tx_count"] == nil || mempoolInfo["pending_fee_total"] == nil || mempoolInfo["type_counts"] == nil {
+		t.Fatalf("mempool monitoring fields incomplete: %#v", metrics["mempool"])
+	}
+	miningInfo, ok := metrics["mining"].(map[string]any)
+	if !ok || miningInfo["height"] == nil || miningInfo["current_difficulty"] == nil || miningInfo["next_difficulty"] == nil {
+		t.Fatalf("mining monitoring fields incomplete: %#v", metrics["mining"])
+	}
+	indexerInfo, ok := metrics["indexer"].(map[string]any)
+	if !ok || indexerInfo["status"] == nil || indexerInfo["stats"] == nil {
+		t.Fatalf("indexer monitoring fields incomplete: %#v", metrics["indexer"])
+	}
+	runtimeInfo, ok := metrics["runtime"].(map[string]any)
+	if !ok || runtimeInfo["observed_at_unix"] == nil || runtimeInfo["uptime_seconds"] == nil || runtimeInfo["chain_height"] == nil {
+		t.Fatalf("runtime monitoring fields incomplete: %#v", metrics["runtime"])
+	}
+
+	resp, err := http.Post(server.URL+"/node/metrics", "application/json", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /node/metrics status = %d, want 405", resp.StatusCode)
+	}
+}
+
 func TestNodeMetricsPublicReadOnlyContract(t *testing.T) {
 	_, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
 
