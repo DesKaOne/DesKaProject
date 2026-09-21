@@ -273,6 +273,11 @@ func (h handler) explorerIndexedUnavailable(w http.ResponseWriter, status Explor
 
 func (h handler) explorerIndexerStats(w http.ResponseWriter, _ *http.Request) {
 	indexer := newExplorerIndexer(h.paths, h.profile())
+	status, err := indexer.status()
+	if err != nil {
+		writeError(w, err)
+		return
+	}
 	stats, err := indexer.stats(status)
 	if err != nil {
 		writeError(w, err)
