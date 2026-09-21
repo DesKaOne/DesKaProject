@@ -718,6 +718,14 @@ func (s Server) authenticated(next http.Handler) http.Handler {
 		}
 		auth, err := VerifyP2PRequest(s.network().NetworkID, s.network().ChainID, r, body, time.Now())
 		if err != nil {
+			log.Printf("p2p auth rejected method=%s path=%s node_id=%s network_id=%s chain_id=%s error=%v",
+				r.Method,
+				r.URL.RequestURI(),
+				r.Header.Get(authHeaderNodeID),
+				r.Header.Get(authHeaderNetworkID),
+				r.Header.Get(authHeaderChainID),
+				err,
+			)
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
 			return
 		}
