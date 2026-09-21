@@ -34,6 +34,10 @@ func NewClientWithTimeout(timeout time.Duration) Client {
 
 func NewClientForProfile(paths config.Paths, profile config.NetworkConfig, timeout time.Duration) (Client, error) {
 	client := NewClientWithTimeout(timeout)
+	if profile.Name == "" {
+		profile = config.Localnet()
+	}
+	client.NetworkID = profile.NetworkID
 	if !profile.RequireAuthenticatedNode {
 		return client, nil
 	}
@@ -160,7 +164,10 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if err := c.NodeIdentityValidation(); err != nil {
 			return err
 		}
-		if c.NetworkID != "" && c.NetworkID != handshake.NetworkID {
+		if c.NetworkID == "" {
+			return fmt.Errorf("authenticated client network id is required")
+		}
+		if c.NetworkID != handshake.NetworkID {
 			return fmt.Errorf("peer handshake network id mismatch")
 		}
 	}
@@ -182,7 +189,7 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if err != nil {
 			return err
 		}
-		if err := SignP2PRequest(c.NodeIdentity, handshake.NetworkID, handshake.ChainID, req, raw, time.Now(), requestNonce); err != nil {
+		if err := SignP2PRequest(c.NodeIdentity, c.NetworkID, handshake.ChainID, req, raw, time.Now(), requestNonce); err != nil {
 			return err
 		}
 	}
@@ -200,7 +207,7 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if len(responseBody) > p2pMessageAuthResponseLimit {
 			return fmt.Errorf("peer authenticated response too large")
 		}
-		if err := VerifyP2PResponse(handshake, handshake.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+		if err := VerifyP2PResponse(handshake, c.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
 			return err
 		}
 		if rejectClientError {
