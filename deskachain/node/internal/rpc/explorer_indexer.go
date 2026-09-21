@@ -212,7 +212,9 @@ func (x *explorerIndexer) run(ctx context.Context, interval time.Duration) {
 	if interval <= 0 {
 		interval = 2 * time.Second
 	}
-	_, _ = x.sync()
+	if _, err := x.sync(); err != nil {
+		_ = x.recordSyncFailure(err)
+	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
