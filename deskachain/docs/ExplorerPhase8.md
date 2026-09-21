@@ -47,3 +47,7 @@ The UI consumes explorer endpoints rather than scanning raw RPC responses. Futur
 - explorer indexer status endpoint
 - asset-aware universal search
 - testnet soak-test metrics
+
+### Phase 8.3 lifecycle
+
+The persistent explorer indexer runs in the RPC server lifecycle and advances its durable cursor in the background. Indexed read endpoints remain read-only and return an explicit not-ready response until the index catches up.
