@@ -164,3 +164,30 @@ The view is observational only and does not expose wallet, admin, faucet, stakin
 - The dashboard remains read-only.
 - Monitoring errors use the existing explorer error/recovery presentation.
 - CI must remain green before advancing to 8.7.10.
+
+## 8.7.10 Final monitoring acceptance
+
+Phase 8.7 is accepted when the monitoring contract, explorer presentation, and read-only safety checks are covered together.
+
+The consolidated acceptance test verifies that public GET /node/metrics exposes schema v1 and all major monitoring sections:
+
+- network identity
+- canonical chain statistics
+- peer health
+- mempool statistics
+- mining observations
+- explorer indexer status/statistics
+- soak-test runtime snapshot
+
+The acceptance test also verifies that POST /node/metrics remains rejected with HTTP 405.
+
+### Phase 8.7 exit criteria
+
+- /node/metrics is a stable v1 read-only monitoring contract.
+- Chain, peer, transaction/mempool, mining, indexer, and runtime observations are exposed without introducing consensus state.
+- Explorer Monitoring consumes the node metrics contract rather than maintaining a duplicate monitoring store.
+- Explorer monitoring remains read-only and does not expose write-capable wallet, admin, faucet, staking, mining, or service actions.
+- Consolidated monitoring acceptance coverage passes.
+- CI remains green on the final Phase 8.7 commits.
+
+With these criteria satisfied, Phase 8.7 Monitoring & Statistics is complete and the project can advance to Phase 8.8 CI + integration testing.
