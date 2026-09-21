@@ -351,8 +351,11 @@
       var txData = results[1];
       var txs = txData.transactions || [];
       var stakes = results[2].stakes || [];
+      var addressHeader = '<div class="address-header">' +
+        '<div><span class="muted">Address</span><div class="hash address-value">' + escapeHTML(a.address) + "</div></div>" +
+        copyButton(a.address) +
+        '</div>';
       var metrics = [
-        metric("Address", a.address),
         metric("Confirmed balance", a.confirmed_balance),
         metric("Mature balance", a.mature_balance),
         metric("Immature balance", a.immature_balance),
@@ -384,7 +387,7 @@
           escapeHTML(s.release_height)
         ]);
       });
-      app.innerHTML = panel("Address detail", '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable dIDR.</p>") +
+      app.innerHTML = panel("Address detail", addressHeader + '<div class="grid">' + metrics + "</div><p class=\"muted\">Service points are simulation-only and are not spendable dIDR.</p>") +
         panel("Recent transactions", pagerHTML("address", txData, addressTxLimit) + table(["Txid", "Type", "Block", "Delta", "Confirmations"], txRows, "No recent transactions for this address.")) +
         panel("Stake records", table(["Stake id", "Amount", "Status", "Lock height", "Unlock height", "Release height"], stakeRows, "Stake records not found."));
       selectLimit("address", addressTxLimit);
