@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -505,18 +506,17 @@ func (x *explorerIndexer) assetEvents(assetID string, limit, offset int) ([]expl
 	defer db.Close()
 	var all []explorerIndexedAssetEvent
 	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("assets"))
 		prefix := []byte(assetID + "|")
-		return tx.Bucket([]byte("assets")).ForEach(func(k, v []byte) error {
-			if !strings.HasPrefix(string(k), string(prefix)) {
-				return nil
-			}
+		cursor := b.Cursor()
+		for k, v := cursor.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = cursor.Next() {
 			var e explorerIndexedAssetEvent
 			if err := json.Unmarshal(v, &e); err != nil {
 				return err
 			}
 			all = append(all, e)
-			return nil
-		})
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, 0, err
@@ -546,17 +546,17 @@ func (x *explorerIndexer) addressHistory(address string, limit, offset int) ([]e
 	defer db.Close()
 	var all []explorerIndexedHistory
 	err = db.View(func(tx *bolt.Tx) error {
-		return tx.Bucket([]byte("addresses")).ForEach(func(k, v []byte) error {
+		b := tx.Bucket([]byte("addresses"))
+		prefix := []byte(address + "|")
+		cursor := b.Cursor()
+		for k, v := cursor.Seek(prefix); k != nil && bytes.HasPrefix(k, prefix); k, v = cursor.Next() {
 			var e explorerIndexedHistory
 			if err := json.Unmarshal(v, &e); err != nil {
 				return err
 			}
-			prefix := []byte(address + "|")
-			if strings.HasPrefix(string(k), string(prefix)) {
-				all = append(all, e)
-			}
-			return nil
-		})
+			all = append(all, e)
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, 0, err
