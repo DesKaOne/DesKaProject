@@ -304,8 +304,20 @@ tr:last-child td {
 }
 
 .error {
-  border-color: var(--danger);
   color: var(--danger);
+}
+
+.error-state {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.error-state p {
+  margin: 0;
 }
 
 .copy {
@@ -336,6 +348,15 @@ tr:last-child td {
 
   .search {
     grid-template-columns: 1fr;
+  }
+
+  .address-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .address-header .copy {
+    margin-left: 0;
   }
 
   table {
