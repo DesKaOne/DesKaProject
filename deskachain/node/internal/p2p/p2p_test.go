@@ -233,6 +233,41 @@ func TestThreeNodeSyncConvergence(t *testing.T) {
 	validateChain(t, nodeC)
 }
 
+func TestThreeNodeHealthConvergence(t *testing.T) {
+	nodeA := newTestNode(t)
+	nodeB := newTestNode(t)
+	nodeC := newTestNode(t)
+	miner := newWallet(t)
+	mineBlocks(t, nodeA, miner.Address, int(config.Localnet().Consensus.CoinbaseMaturity)+2)
+
+	serverA := newP2PTestServer(nodeA)
+	defer serverA.Close()
+	serverB := newP2PTestServer(nodeB)
+	defer serverB.Close()
+	serverC := newP2PTestServer(nodeC)
+	defer serverC.Close()
+
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+	if err := SyncFromPeerWithProfile(nodeC, serverB.URL, nil, fundedP2PProfile()); err != nil {
+		t.Fatal(err)
+	}
+
+	healthA := fetchHealth(t, serverA.URL)
+	healthB := fetchHealth(t, serverB.URL)
+	healthC := fetchHealth(t, serverC.URL)
+	if healthA.Height != healthB.Height || healthA.TipHash != healthB.TipHash || healthA.Height != healthC.Height || healthA.TipHash != healthC.TipHash {
+		t.Fatalf("three-node health tips did not converge: A=%d %s B=%d %s C=%d %s", healthA.Height, healthA.TipHash, healthB.Height, healthB.TipHash, healthC.Height, healthC.TipHash)
+	}
+	if healthA.NetworkID != healthB.NetworkID || healthA.NetworkID != healthC.NetworkID || healthA.ChainID != healthB.ChainID || healthA.ChainID != healthC.ChainID {
+		t.Fatalf("three-node health network identity diverged: A=%+v B=%+v C=%+v", healthA, healthB, healthC)
+	}
+	if healthA.GenesisHash == "" || healthA.GenesisHash != healthB.GenesisHash || healthA.GenesisHash != healthC.GenesisHash {
+		t.Fatalf("three-node health genesis mismatch: A=%s B=%s C=%s", healthA.GenesisHash, healthB.GenesisHash, healthC.GenesisHash)
+	}
+}
+
 func TestPeerStoreAtomicReplacementAndConcurrentUpsert(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "peers.json")
 	store := NewPeerStore(path)
@@ -1030,7 +1065,7 @@ func newP2PTestServer(paths config.Paths) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
-func fetchStatus(t *testing.T, baseURL string) Status {
+type HealthResponse struct {\n\tOK             bool   `json:"ok"`\n\tNetwork        string `json:"network"`\n\tNetworkID      string `json:"network_id"`\n\tChainID        uint64 `json:"chain_id"`\n\tGenesisHash    string `json:"genesis_hash"`\n\tHeight         uint64 `json:"height"`\n\tTipHash        string `json:"tip_hash"`\n\tCumulativeWork uint64 `json:"cumulative_work"`\n}\n\nfunc fetchHealth(t *testing.T, baseURL string) HealthResponse {\n\tt.Helper()\n\tresp, err := http.Get(baseURL + "/p2p/health")\n\tif err != nil {\n\t\tt.Fatal(err)\n\t}\n\tdefer resp.Body.Close()\n\tif resp.StatusCode != http.StatusOK {\n\t\tt.Fatalf("health status = %d", resp.StatusCode)\n\t}\n\tvar health HealthResponse\n\tif err := json.NewDecoder(resp.Body).Decode(&health); err != nil {\n\t\tt.Fatal(err)\n\t}\n\tif !health.OK {\n\t\tt.Fatalf("health response not ok: %#v", health)\n\t}\n\treturn health\n}\n\nfunc fetchStatus(t *testing.T, baseURL string) Status {
 	t.Helper()
 	resp, err := http.Get(baseURL + "/p2p/status")
 	if err != nil {
