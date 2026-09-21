@@ -407,6 +407,72 @@ func TestNodeMetricsExposeMiningStatistics(t *testing.T) {
 	_ = paths
 }
 
+
+func TestNodeMetricsExposeExplorerIndexerStatistics(t *testing.T) {
+	paths, server := newMinerRPCServer(t)
+	miner := newRPCWallet(t)
+
+	tpl := fetchMinerTemplate(t, server.URL, miner.Address)
+	if submit := submitMinerBlock(t, server.URL, tpl.TemplateID, chain.Mine(tpl.Block)); !submit.Accepted {
+		t.Fatalf("submit rejected: %#v", submit)
+	}
+
+	indexer := newExplorerIndexer(paths, config.Localnet())
+	status, err := indexer.sync()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.Ready {
+		t.Fatalf("indexer status not ready after sync: %#v", status)
+	}
+
+	expected, err := indexer.stats(status)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	metrics := getRPCMap(t, server.URL+"/node/metrics", http.StatusOK)
+	indexerMetrics, ok := metrics["indexer"].(map[string]any)
+	if !ok {
+		t.Fatalf("indexer metrics missing or wrong type: %#v", metrics["indexer"])
+	}
+	stats, ok := indexerMetrics["stats"].(map[string]any)
+	if !ok {
+		t.Fatalf("indexer stats missing or wrong type: %#v", indexerMetrics["stats"])
+	}
+
+	checks := map[string]float64{
+		"block_count":           float64(expected.BlockCount),
+		"transaction_count":    float64(expected.TransactionCount),
+		"address_history_count": float64(expected.AddressHistoryCount),
+		"asset_event_count":     float64(expected.AssetEventCount),
+		"indexed_height":        float64(expected.IndexedHeight),
+		"chain_height":          float64(expected.ChainHeight),
+		"lag":                   float64(expected.Lag),
+		"sync_count":            float64(expected.SyncCount),
+		"last_sync_block_count": float64(expected.LastSyncBlockCount),
+		"sync_failure_count":    float64(expected.SyncFailureCount),
+	}
+	for key, want := range checks {
+		got, ok := stats[key].(float64)
+		if !ok || got != want {
+			t.Fatalf("indexer %s = %#v, want %v", key, stats[key], want)
+		}
+	}
+	if stats["ready"] != expected.Ready {
+		t.Fatalf("indexer ready = %#v, want %v", stats["ready"], expected.Ready)
+	}
+	if stats["sync_status"] != expected.SyncStatus {
+		t.Fatalf("indexer sync status = %#v, want %q", stats["sync_status"], expected.SyncStatus)
+	}
+	if stats["schema_version"] != expected.SchemaVersion {
+		t.Fatalf("indexer schema version = %#v, want %q", stats["schema_version"], expected.SchemaVersion)
+	}
+	if indexerMetrics["status"] == nil {
+		t.Fatal("node metrics indexer status missing")
+	}
+}
+
 func TestMiningObservationEndpointsPublicReadOnly(t *testing.T) {
 	paths, server := newHardeningRPCServer(t, NodeInfo{PublicRPC: true})
 	for _, path := range []string{"/mining/status", "/mining/stats", "/mining/difficulty", "/mining/blocks?limit=5"} {
