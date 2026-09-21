@@ -66,6 +66,8 @@ For mempool pressure, `TestBoundedMempoolPressure` keeps two valid transactions 
 
 For restart/recovery, `TestNodeRestartRecovery` reopens the same persistent paths after block production and verifies that the chain tip and canonical validation remain unchanged across the restart boundary.
 
+For peer churn, `TestBoundedPeerChurn` recreates the P2P server for three synchronization cycles, advances the source node between sessions, and verifies that the peer resumes synchronization and converges to the same canonical tip after each reconnect.
+
 These tests are intentionally bounded for CI. They complement, rather than replace, an extended manual or scheduled soak run.
 
 ## Operator measurements
