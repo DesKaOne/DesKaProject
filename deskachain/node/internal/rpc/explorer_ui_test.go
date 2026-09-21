@@ -26,7 +26,7 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") {
 		t.Fatalf("app js missing explorer API references")
 	}
-	for _, item := range []string{"dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync"} {
+	for _, item := range []string{"dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block"} {
 		if !strings.Contains(js, item) {
 			t.Fatalf("app js missing dashboard presentation feature %q", item)
 		}
