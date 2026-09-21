@@ -26,7 +26,7 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 	if !strings.Contains(js, "/explorer/status") || !strings.Contains(js, "/explorer/blocks") || !strings.Contains(js, "/explorer/indexed/search") || !strings.Contains(js, "/explorer/indexer/stats") || !strings.Contains(js, "/explorer/indexed/asset/") {
 		t.Fatalf("app js missing explorer API references")
 	}
-	for _, item := range []string{"dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block", "tx-badge", "Status", "Type", "pagerHTML(\"asset\"", "selectLimit(\"asset\"", "Asset events", "address-header", "address-value"} {
+	for _, item := range []string{"dashboardSection", "dashboard-summary", "data-refresh=\"dashboard\"", "Last sync", "data-block-nav", "Previous block", "Next block", "tx-badge", "Status", "Type", "pagerHTML(\"asset\"", "selectLimit(\"asset\"", "Asset events", "address-header", "address-value", "error-state", "indexed asset ID"} {
 		if !strings.Contains(js, item) {
 			t.Fatalf("app js missing dashboard presentation feature %q", item)
 		}
@@ -35,7 +35,7 @@ func TestExplorerUIStaticRoutes(t *testing.T) {
 		t.Fatalf("app js missing copy helper feedback")
 	}
 	css := getText(t, server.URL+"/explorer-ui/assets/styles.css", http.StatusOK)
-	if !strings.Contains(css, ".topbar") || !strings.Contains(css, "@media") {
+	if !strings.Contains(css, ".topbar") || !strings.Contains(css, ".error-state") || !strings.Contains(css, "@media") {
 		t.Fatalf("css missing expected responsive styles")
 	}
 
