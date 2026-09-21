@@ -1478,29 +1478,29 @@ func TestBoundedPeerChurn(t *testing.T) {
 	mineBlocks(t, nodeA, miner.Address, 2)
 
 	for cycle := 0; cycle < 3; cycle++ {
-	\tserverA := newP2PTestServer(nodeA)
-	\tif err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
-	\t\tserverA.Close()
-	\t\tt.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
-	\t}
+	serverA := newP2PTestServer(nodeA)
+	if err := SyncFromPeerWithProfile(nodeB, serverA.URL, nil, fundedP2PProfile()); err != nil {
 	\tserverA.Close()
+	\tt.Fatalf("peer churn cycle %d sync failed: %v", cycle+1, err)
+	}
+	serverA.Close()
 
-	\tgot := tip(t, nodeB)
-	\twant := tip(t, nodeA)
-	\tif got.Height != want.Height || got.Hash != want.Hash {
-	\t\tt.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
-	\t}
-	\tvalidateChain(t, nodeB)
+	got := tip(t, nodeB)
+	want := tip(t, nodeA)
+	if got.Height != want.Height || got.Hash != want.Hash {
+	\tt.Fatalf("peer churn cycle %d did not converge: A=%#v B=%#v", cycle+1, want, got)
+	}
+	validateChain(t, nodeB)
 
-	\tif cycle < 2 {
-	\t\tmineBlocks(t, nodeA, miner.Address, 1)
-	\t}
+	if cycle < 2 {
+	\tmineBlocks(t, nodeA, miner.Address, 1)
+	}
 	}
 
 	finalA := tip(t, nodeA)
 	finalB := tip(t, nodeB)
 	if finalA.Height != 4 || finalB.Height != finalA.Height || finalB.Hash != finalA.Hash {
-	\tt.Fatalf("final peer churn convergence failed: A=%#v B=%#v", finalA, finalB)
+	t.Fatalf("final peer churn convergence failed: A=%#v B=%#v", finalA, finalB)
 	}
 	validateChain(t, nodeA)
 	validateChain(t, nodeB)
