@@ -745,7 +745,9 @@ func (s Server) authenticated(next http.Handler) http.Handler {
 func mustAuthenticatedErrorBody(message string, status int) ([]byte, int) {
 	payload, err := json.Marshal(map[string]string{"error": message})
 	if err != nil {
-		return []byte("{"error":"authenticated p2p error"}"), status
+		fallback := []byte(`{"error":"authenticated p2p error"}`)
+		fallback = append(fallback, '\n')
+		return fallback, status
 	}
 	payload = append(payload, '\n')
 	return payload, status
