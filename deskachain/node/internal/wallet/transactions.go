@@ -65,10 +65,8 @@ func (w Wallet) NewStakeLock(profile config.NetworkConfig, amount, nonce uint64)
 	if amount < profile.Consensus.Staking.MinStakeAmount {
 		return types.Transaction{}, fmt.Errorf("stake amount below network minimum")
 	}
-	if profile.Fee.Enabled && profile.Fee.MinFee > 0 && profile.Fee.MinFee > 0 {
-		return types.Transaction{}, nil
-	}
 	tx := types.NewStakeLockTransaction(w.Address, amount, nonce)
+	tx.Fee = profile.Fee.MinFee
 	return tx, nil
 }
 
