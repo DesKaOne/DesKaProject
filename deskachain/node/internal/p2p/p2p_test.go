@@ -375,6 +375,43 @@ func TestPeerStoreMetadataAndLegacyMigration(t *testing.T) {
 	}
 }
 
+func TestPeerSuccessfulCheckRecoversBadPeerStatus(t *testing.T) {
+	store := NewPeerStore(filepath.Join(t.TempDir(), "peers.json"))
+	peer := "http://127.0.0.1:9331"
+	if err := store.SaveMetadata([]PeerMetadata{{
+		URL:           peer,
+		Status:        PeerStatusBad,
+		Score:         -66,
+		FailureCount:  12,
+		LastError:     "request failed",
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.UpdateLatency(peer, 42, ""); err != nil {
+		t.Fatal(err)
+	}
+	meta, err := store.LoadMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(meta) != 1 {
+		t.Fatalf("metadata count = %d, want 1", len(meta))
+	}
+	if meta[0].Status != PeerStatusActive {
+		t.Fatalf("successful check did not recover peer status: %+v", meta[0])
+	}
+	if meta[0].Score != -64 {
+		t.Fatalf("successful latency score changed unexpectedly: %d", meta[0].Score)
+	}
+	if meta[0].LastError != "" || meta[0].SuccessCount != 1 {
+		t.Fatalf("successful check did not clear failure state: %+v", meta[0])
+	}
+	selected := SelectPeers(meta, false, 1)
+	if len(selected) != 1 || selected[0].URL != peer {
+		t.Fatalf("recovered peer is still excluded from selection: %+v", selected)
+	}
+}
+
 func TestPeerScoreClampedCooldownAndBadStatus(t *testing.T) {
 	store := NewPeerStore(filepath.Join(t.TempDir(), "peers.json"))
 	peer := "http://127.0.0.1:9331"
