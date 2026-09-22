@@ -207,8 +207,8 @@ func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("live Status client call: %v", err)
 	}
-	if !status.OK {
-		t.Fatalf("live Status response not ok: %+v", status)
+	if status.NetworkID != serverProfile.NetworkID || status.ChainID != serverProfile.ChainID {
+		t.Fatalf("live Status identity=%q/%d want=%q/%d", status.NetworkID, status.ChainID, serverProfile.NetworkID, serverProfile.ChainID)
 	}
 }
 
