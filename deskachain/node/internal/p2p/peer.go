@@ -205,7 +205,9 @@ func (s PeerStore) Upsert(peer PeerMetadata) error {
 	}
 	peer.URL = normalized
 	peer.Score = clampScore(peer.Score)
-	peer.Status = statusForScore(peer.Score, peer.Status)
+	if peer.Status == "" {
+		peer.Status = statusForScore(peer.Score, PeerStatusUnknown)
+	}
 	peers, err := s.LoadMetadata()
 	if err != nil {
 		return err
@@ -301,7 +303,7 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 		peers[i].LastLatencyMS = latencyMS
 		peers[i].LastStatusCheckAt = now
 		peers[i].LastError = errText
-		if errText == "" && peers[i].Status != PeerStatusBad {
+		if errText == "" {
 			peers[i].Status = PeerStatusActive
 			peers[i].LastSuccessAt = now
 			peers[i].SuccessCount++
@@ -618,7 +620,6 @@ func uniqueMetadata(peers []PeerMetadata) []PeerMetadata {
 			peer.Source = "peers.json"
 		}
 		peer.Score = clampScore(peer.Score)
-		peer.Status = currentStatus(peer)
 		if peer.FirstSeenAt == "" {
 			peer.FirstSeenAt = peer.LastSeenAt
 		}
@@ -658,7 +659,10 @@ func currentStatus(peer PeerMetadata) string {
 			peer.Status = PeerStatusUnknown
 		}
 	}
-	return statusForScore(peer.Score, peer.Status)
+	if peer.Status == "" {
+		return statusForScore(peer.Score, PeerStatusUnknown)
+	}
+	return peer.Status
 }
 
 func reasonTriggersCooldown(reason string, score int) bool {
