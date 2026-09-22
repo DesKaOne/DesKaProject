@@ -39,7 +39,15 @@ func CreateLock(path, rpcAddr, p2pAddr string, advertise ...string) (LockInfo, e
 		if errors.Is(err, os.ErrExist) {
 			existing, readErr := ReadLock(path)
 			if readErr == nil {
-				return existing, errors.New("datadir is already locked")
+				if processAlive(existing.PID) {
+					return existing, errors.New("datadir is already locked")
+				}
+				// The recorded owner is no longer running. This is a stale
+				// lock left behind by a crash, power loss, or forced close.
+				if removeErr := RemoveLock(path); removeErr != nil {
+					return existing, fmt.Errorf("remove stale datadir lock: %w", removeErr)
+				}
+				return CreateLock(path, rpcAddr, p2pAddr, advertise...)
 			}
 			return LockInfo{}, fmt.Errorf("datadir lock already exists: %w", readErr)
 		}
