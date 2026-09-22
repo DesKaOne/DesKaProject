@@ -2,7 +2,7 @@
 
 > Current development roadmap from IndoChain and IndoScan through DesKaCash.
 >
-> Current checkpoint: **Phase 11 — IndoChainWallet frozen and merged. Next work is local-node deployment validation on a Mini PC Ubuntu host with the main PC as client, followed by private-testnet VPS deployment if the local drill passes.**
+> Current checkpoint: **Phase 12 — local-node deployment validation on a Mini PC Ubuntu host with the main PC as client. P2P peer recovery validation is green; restart/persistence hardening continues before the Phase 12 exit gate.**
 >
 > Phase 8 testnet engineering and IndoScan foundations are complete. Phase 9 testnet operations/evidence scope is complete. Phase 10 readiness controls and reproducible snapshot validation are complete as engineering gates; production/mainnet approval, release authority, and final production identifiers remain separately gated.
 
@@ -399,7 +399,7 @@ IndoChain
 
 ## Phase 12 — Local IndoChain Node / Client-Server Deployment Validation
 
-**Status: 🔵 Next**
+**Status: 🟡 In Progress — P2P recovery gate green**
 
 Validate IndoChain as a real local node/server deployment before any VPS private-testnet rollout.
 
@@ -440,6 +440,8 @@ Mini PC Ubuntu
 
 ### 12.3 — Two-Machine Smoke Test
 
+**Status: 🟢 P2P peer recovery validation passed**
+
 - Start server node
 - Connect client
 - Verify P2P reachability
@@ -450,10 +452,14 @@ Mini PC Ubuntu
 
 ### 12.4 — Restart / Persistence Drill
 
+**Status: 🟡 In Progress**
+
 - Stop/start node
 - Verify datadir persistence
 - Verify node identity persistence
 - Verify chain state recovery
+- Recover stale datadir lock after crash, power loss, or forced close when the recorded PID is no longer running
+- Keep active-node lock protection intact when the recorded PID is still running
 - Repeat client connectivity checks
 
 ### 12.5 — LAN Security Boundary
