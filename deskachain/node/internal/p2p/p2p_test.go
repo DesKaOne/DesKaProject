@@ -42,6 +42,34 @@ func TestCreateLockIsExclusive(t *testing.T) {
 	}
 }
 
+func TestCreateLockRecoversStaleOwner(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "node.lock")
+	stale := LockInfo{
+		PID:       2147483647,
+		RPC:       ":8331",
+		P2P:       ":9331",
+		StartedAt: time.Now().Add(-time.Hour).Format(time.RFC3339),
+	}
+	raw, err := json.Marshal(stale)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, raw, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	fresh, err := CreateLock(path, ":8332", ":9332", "http://127.0.0.1:9332")
+	if err != nil {
+		t.Fatalf("expected stale lock recovery, got %v", err)
+	}
+	if fresh.PID != os.Getpid() || fresh.RPC != ":8332" || fresh.P2P != ":9332" {
+		t.Fatalf("stale lock was not replaced: %+v", fresh)
+	}
+	if err := RemoveLock(path); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestNodeIDPersistent(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "node_id")
 	first, err := LoadOrCreateNodeID(path)
