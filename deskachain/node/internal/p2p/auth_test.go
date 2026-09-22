@@ -196,12 +196,12 @@ func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
 		t.Fatalf("live handshake network identity=%q/%d want=%q/%d", hs.NetworkID, hs.ChainID, serverProfile.NetworkID, serverProfile.ChainID)
 	}
 
-	var got map[string]bool
+	var got Status
 	if err := client.getJSONMode(httpServer.URL, "/p2p/status", nil, &got, true, true); err != nil {
 		t.Fatalf("live authenticated status: %v", err)
 	}
-	if !got["ok"] {
-		t.Fatalf("live authenticated status response=%v", got)
+	if got.NetworkID != serverProfile.NetworkID || got.ChainID != serverProfile.ChainID {
+		t.Fatalf("live authenticated status response=%+v", got)
 	}
 	status, err := client.Status(httpServer.URL)
 	if err != nil {
@@ -282,7 +282,12 @@ func TestP2PClientSurfacesUnsignedAuthRejection(t *testing.T) {
 	paths := config.NewPaths(t.TempDir())
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/p2p/handshake" {
-			hs := Handshake{NetworkID: profile.NetworkID, ChainID: profile.ChainID, NodeID: serverIdentity.NodeID, IdentityVersion: NodeIdentityVersion, NodePublicKey: hex.EncodeToString(serverIdentity.PublicKey), AuthChallenge: r.URL.Query().Get("challenge")}
+			hs := Handshake{NetworkID: profile.NetworkID, ChainID: profile.ChainID, ProtocolVersion: profile.ProtocolVersion, P2PProtocolVersion: profile.P2PProtocolVersion, MinProtocolVersion: profile.MinProtocolVersion, GenesisHash: chain.GenesisHashForNetwork(profile), NodeID: serverIdentity.NodeID, IdentityVersion: NodeIdentityVersion, NodePublicKey: hex.EncodeToString(serverIdentity.PublicKey), AuthChallenge: r.URL.Query().Get("challenge")}
+			signature, err := SignHandshake(serverIdentity, hs)
+			if err != nil {
+				t.Fatalf("sign auth error handshake: %v", err)
+			}
+			hs.NodeSignature = signature
 			writeJSON(w, http.StatusOK, hs)
 			return
 		}
