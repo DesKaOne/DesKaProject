@@ -382,7 +382,6 @@ func notePeerSuccess(paths config.Paths, peer string, hs Handshake, scoreDelta i
 	lastReason := ""
 	lastScoreAt := ""
 	var existingMeta *PeerMetadata
-	now := time.Now()
 	for i := range peers {
 		existing := peers[i]
 		if existing.URL == peer {
