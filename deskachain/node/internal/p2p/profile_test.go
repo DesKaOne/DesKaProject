@@ -250,7 +250,7 @@ func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err := SyncFromPeerWithProfile(local, server.URL, nil, config.Testnet())
+	err := SyncFromPeerWithProfile(local, server.URL, nil, profile)
 	if err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
 		t.Fatalf("expected genesis mismatch before up-to-date return, got %v", err)
 	}
