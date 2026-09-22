@@ -260,7 +260,11 @@ func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) err
 			return nil
 		}
 		peers[i].Score = clampScore(peers[i].Score + delta)
-		peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+		if reasonRequiresCooldown(reason) {
+			peers[i].Status = PeerStatusActive
+		} else {
+			peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+		}
 		if reasonTriggersCooldown(reason, peers[i].Score) {
 			peers[i].CooldownUntil = now.Add(time.Minute).Format(time.RFC3339)
 			peers[i].Status = PeerStatusCooldown
@@ -315,7 +319,11 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 		delta, reason := latencyScoreDelta(latencyMS, errText)
 		if delta != 0 {
 			peers[i].Score = clampScore(peers[i].Score + delta)
-			peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+			if errText == "" {
+				peers[i].Status = PeerStatusActive
+			} else {
+				peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+			}
 			peers[i].LastScoreReason = reason
 			peers[i].LastScoreAt = now
 			if reasonTriggersCooldown(reason, peers[i].Score) {
