@@ -401,6 +401,10 @@ func notePeerSuccess(paths config.Paths, peer string, hs Handshake, scoreDelta i
 		}
 	}
 	meta := MetadataFromHandshake(peer, hs, score)
+	// A successful authenticated handshake is an explicit recovery signal.
+	// Do not let a previously negative reputation score reclassify the peer
+	// back to bad during metadata refresh; score and liveness are separate.
+	meta.Status = PeerStatusActive
 	if existingMeta != nil {
 		meta.FirstSeenAt = existingMeta.FirstSeenAt
 		meta.Source = existingMeta.Source
