@@ -205,7 +205,7 @@ func TestPeerSyncRejectsNetworkMismatch(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	err := SyncFromPeerWithProfile(local, server.URL, nil, profile)
+	err := SyncFromPeerWithProfile(local, server.URL, nil, config.Testnet())
 	if err == nil || !strings.Contains(err.Error(), "network id mismatch") {
 		t.Fatalf("expected sync network mismatch, got %v", err)
 	}
