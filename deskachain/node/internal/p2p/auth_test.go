@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"indochain/internal/chain"
 	"indochain/internal/config"
 )
 
@@ -38,297 +39,86 @@ func signedTestRequest(t *testing.T, identity NodeIdentity, networkID string, ch
 func TestP2PMessageAuthRequestRoundTripAndReplay(t *testing.T) {
 	identity := testNodeIdentity(t, "node-a")
 	now := time.Unix(1_800_000_000, 0)
-	body := []byte("{\"hello\":\"world\"}")
+	body := []byte("{"hello":"world"}")
 	req, _ := signedTestRequest(t, identity, "ind-testnet-1", 777101, http.MethodPost, "/p2p/tx?x=1", body, now)
 
 	got, err := VerifyP2PRequest("ind-testnet-1", 777101, req, body, now)
-	if err != nil {
-		t.Fatalf("verify request: %v", err)
-	}
-	if got.NodeID != identity.NodeID || hex.EncodeToString(got.PublicKey) != hex.EncodeToString(identity.PublicKey) {
-		t.Fatalf("verified identity mismatch")
-	}
-	if _, err := VerifyP2PRequest("ind-testnet-1", 777101, req, body, now); err == nil || !strings.Contains(err.Error(), "replay") {
-		t.Fatalf("expected replay rejection, got %v", err)
-	}
+	if err != nil { t.Fatalf("verify request: %v", err) }
+	if got.NodeID != identity.NodeID || hex.EncodeToString(got.PublicKey) != hex.EncodeToString(identity.PublicKey) { t.Fatalf("verified identity mismatch") }
+	if _, err := VerifyP2PRequest("ind-testnet-1", 777101, req, body, now); err == nil || !strings.Contains(err.Error(), "replay") { t.Fatalf("expected replay rejection, got %v", err) }
 }
 
 func TestP2PMessageAuthRequestRejectsTampering(t *testing.T) {
 	identity := testNodeIdentity(t, "node-b")
 	now := time.Unix(1_800_000_100, 0)
 	body := []byte("payload")
-
-	tests := []struct {
-		name   string
-		mutate func(*http.Request)
-	}{
-		{
-			name: "body",
-			mutate: func(req *http.Request) {
-				req.Body = ioNopCloser([]byte("tampered"))
-			},
-		},
-		{
-			name: "path",
-			mutate: func(req *http.Request) {
-				req.URL.Path = "/p2p/block"
-			},
-		},
-		{
-			name: "node id",
-			mutate: func(req *http.Request) {
-				req.Header.Set(authHeaderNodeID, "node-evil")
-			},
-		},
+	tests := []struct{name string; mutate func(*http.Request)}{
+		{name:"body", mutate:func(req *http.Request){req.Body=ioNopCloser([]byte("tampered"))}},
+		{name:"path", mutate:func(req *http.Request){req.URL.Path="/p2p/block"}},
+		{name:"node id", mutate:func(req *http.Request){req.Header.Set(authHeaderNodeID,"node-evil")}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req, _ := signedTestRequest(t, identity, "ind-testnet-1", 777101, http.MethodPost, "/p2p/tx", body, now)
-			tt.mutate(req)
-			verifyBody := body
-			if tt.name == "body" {
-				verifyBody = []byte("tampered")
-			}
-			if _, err := VerifyP2PRequest("ind-testnet-1", 777101, req, verifyBody, now); err == nil {
-				t.Fatalf("expected tampering rejection")
-			}
+			tt.mutate(req); verifyBody:=body; if tt.name=="body" {verifyBody=[]byte("tampered")}
+			if _, err := VerifyP2PRequest("ind-testnet-1", 777101, req, verifyBody, now); err == nil {t.Fatalf("expected tampering rejection")}
 		})
 	}
 }
 
 func TestP2PMessageAuthResponseRoundTripAndTampering(t *testing.T) {
 	serverIdentity := testNodeIdentity(t, "server-a")
-	handshake := Handshake{
-		NodeID:          serverIdentity.NodeID,
-		NodePublicKey:   hex.EncodeToString(serverIdentity.PublicKey),
-		IdentityVersion: NodeIdentityVersion,
-	}
-	requestNonce, err := newP2PAuthNonce()
-	if err != nil {
-		t.Fatalf("new nonce: %v", err)
-	}
-	now := time.Unix(1_800_000_200, 0)
-	body := []byte("{\"ok\":true}")
-	headers, err := SignP2PResponse(serverIdentity, "ind-testnet-1", 777101, requestNonce, http.StatusOK, body, now)
-	if err != nil {
-		t.Fatalf("sign response: %v", err)
-	}
-	if err := VerifyP2PResponse(handshake, "ind-testnet-1", 777101, requestNonce, http.StatusOK, body, headers, now); err != nil {
-		t.Fatalf("verify response: %v", err)
-	}
-	tampered := append([]byte(nil), body...)
-	tampered[0] ^= 0x01
-	if err := VerifyP2PResponse(handshake, "ind-testnet-1", 777101, requestNonce, http.StatusOK, tampered, headers, now); err == nil {
-		t.Fatalf("expected response body tampering rejection")
-	}
+	handshake := Handshake{NodeID:serverIdentity.NodeID, NodePublicKey:hex.EncodeToString(serverIdentity.PublicKey), IdentityVersion:NodeIdentityVersion}
+	requestNonce, err := newP2PAuthNonce(); if err != nil {t.Fatalf("new nonce: %v",err)}
+	now:=time.Unix(1_800_000_200,0); body:=[]byte("{"ok":true}")
+	headers,err:=SignP2PResponse(serverIdentity,"ind-testnet-1",777101,requestNonce,http.StatusOK,body,now); if err!=nil {t.Fatalf("sign response: %v",err)}
+	if err:=VerifyP2PResponse(handshake,"ind-testnet-1",777101,requestNonce,http.StatusOK,body,headers,now);err!=nil{t.Fatalf("verify response: %v",err)}
+	tampered:=append([]byte(nil),body...);tampered[0]^=0x01
+	if err:=VerifyP2PResponse(handshake,"ind-testnet-1",777101,requestNonce,http.StatusOK,tampered,headers,now);err==nil{t.Fatalf("expected response body tampering rejection")}
 }
 
 func TestP2PMessageAuthServerMiddleware(t *testing.T) {
-	profile := config.Localnet()
-	profile.RequireAuthenticatedNode = true
-	paths := config.NewPaths(t.TempDir())
-	server := NewServerWithProfile(paths, profile)
-	remote := testNodeIdentity(t, "remote-node")
-	now := time.Now().Truncate(time.Second)
-	body := []byte("{\"message\":\"hello\"}")
-
-	var next http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Test", "ok")
-		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-	})
-	handler := server.authenticated(next)
-
-	req, nonce := signedTestRequest(t, remote, profile.NetworkID, profile.ChainID, http.MethodPost, "/p2p/tx", body, now)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("authenticated request status=%d body=%s", rec.Code, rec.Body.String())
-	}
-	if rec.Header().Get(authHeaderNonce) != nonce {
-		t.Fatalf("response nonce mismatch")
-	}
-	serverIdentity, err := LoadOrCreateNodeIdentity(paths.NodeID)
-	if err != nil {
-		t.Fatalf("load server identity: %v", err)
-	}
-	hs := Handshake{NodeID: serverIdentity.NodeID, NodePublicKey: hex.EncodeToString(serverIdentity.PublicKey), IdentityVersion: NodeIdentityVersion}
-	if err := VerifyP2PResponse(hs, profile.NetworkID, profile.ChainID, nonce, rec.Code, rec.Body.Bytes(), rec.Header(), time.Now()); err != nil {
-		t.Fatalf("verify middleware response: %v", err)
-	}
-
-	unsigned := httptest.NewRequest(http.MethodPost, "http://peer.example/p2p/tx", bytes.NewReader(body))
-	unsignedRec := httptest.NewRecorder()
-	handler.ServeHTTP(unsignedRec, unsigned)
-	if unsignedRec.Code != http.StatusUnauthorized {
-		t.Fatalf("unsigned status=%d want=%d", unsignedRec.Code, http.StatusUnauthorized)
-	}
+	profile:=config.Localnet();profile.RequireAuthenticatedNode=true;paths:=config.NewPaths(t.TempDir());server:=NewServerWithProfile(paths,profile);remote:=testNodeIdentity(t,"remote-node");now:=time.Now().Truncate(time.Second);body:=[]byte("{"message":"hello"}")
+	var next http.Handler=http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){w.Header().Set("X-Test","ok");writeJSON(w,http.StatusOK,map[string]bool{"ok":true})})
+	handler:=server.authenticated(next);req,nonce:=signedTestRequest(t,remote,profile.NetworkID,profile.ChainID,http.MethodPost,"/p2p/tx",body,now);rec:=httptest.NewRecorder();handler.ServeHTTP(rec,req)
+	if rec.Code!=http.StatusOK{t.Fatalf("authenticated request status=%d body=%s",rec.Code,rec.Body.String())};if rec.Header().Get(authHeaderNonce)!=nonce{t.Fatalf("response nonce mismatch")}
+	serverIdentity,err:=LoadOrCreateNodeIdentity(paths.NodeID);if err!=nil{t.Fatalf("load server identity: %v",err)}
+	hs:=Handshake{NodeID:serverIdentity.NodeID,NodePublicKey:hex.EncodeToString(serverIdentity.PublicKey),IdentityVersion:NodeIdentityVersion}
+	if err:=VerifyP2PResponse(hs,profile.NetworkID,profile.ChainID,nonce,rec.Code,rec.Body.Bytes(),rec.Header(),time.Now());err!=nil{t.Fatalf("verify middleware response: %v",err)}
+	unsigned:=httptest.NewRequest(http.MethodPost,"http://peer.example/p2p/tx",bytes.NewReader(body));unsignedRec:=httptest.NewRecorder();handler.ServeHTTP(unsignedRec,unsigned);if unsignedRec.Code!=http.StatusUnauthorized{t.Fatalf("unsigned status=%d want=%d",unsignedRec.Code,http.StatusUnauthorized)}
 }
 
 func TestP2PMessageAuthClientServerEndToEnd(t *testing.T) {
-	serverProfile := config.Testnet()
-	serverPaths := config.NewPaths(t.TempDir())
-	server := NewServerWithAdvertiseAndProfile(serverPaths, "127.0.0.1:0", "http://127.0.0.1:0", serverProfile)
-	mux := http.NewServeMux()
-	server.Register(mux)
-	httpServer := httptest.NewServer(mux)
-	defer httpServer.Close()
-
-	clientProfile := config.Testnet()
-	client, err := NewClientForProfile(config.NewPaths(t.TempDir()), clientProfile, time.Second)
-	if err != nil {
-		t.Fatalf("create client: %v", err)
-	}
-
-	hs, err := client.Handshake(httpServer.URL)
-	if err != nil {
-		t.Fatalf("live handshake: %v", err)
-	}
-	if hs.NodeID == "" {
-		t.Fatalf("live handshake node id is empty")
-	}
-	if hs.IdentityVersion != NodeIdentityVersion {
-		t.Fatalf("live handshake identity version=%d want=%d", hs.IdentityVersion, NodeIdentityVersion)
-	}
-	if hs.NodePublicKey == "" || hs.NodeSignature == "" {
-		t.Fatalf("live handshake identity proof is incomplete")
-	}
-	if hs.NetworkID != serverProfile.NetworkID || hs.ChainID != serverProfile.ChainID {
-		t.Fatalf("live handshake network identity=%q/%d want=%q/%d", hs.NetworkID, hs.ChainID, serverProfile.NetworkID, serverProfile.ChainID)
-	}
-
-	var got Status
-	if err := client.getJSONMode(httpServer.URL, "/p2p/status", nil, &got, true, true); err != nil {
-		t.Fatalf("live authenticated status: %v", err)
-	}
-	if got.NetworkID != serverProfile.NetworkID || got.ChainID != serverProfile.ChainID {
-		t.Fatalf("live authenticated status response=%+v", got)
-	}
-	status, err := client.Status(httpServer.URL)
-	if err != nil {
-		t.Fatalf("live Status client call: %v", err)
-	}
-	if status.NetworkID != serverProfile.NetworkID || status.ChainID != serverProfile.ChainID {
-		t.Fatalf("live Status identity=%q/%d want=%q/%d", status.NetworkID, status.ChainID, serverProfile.NetworkID, serverProfile.ChainID)
-	}
+	serverProfile:=config.Testnet();serverPaths:=config.NewPaths(t.TempDir());server:=NewServerWithAdvertiseAndProfile(serverPaths,"127.0.0.1:0","http://127.0.0.1:0",serverProfile);mux:=http.NewServeMux();server.Register(mux);httpServer:=httptest.NewServer(mux);defer httpServer.Close()
+	clientProfile:=config.Testnet();client,err:=NewClientForProfile(config.NewPaths(t.TempDir()),clientProfile,time.Second);if err!=nil{t.Fatalf("create client: %v",err)}
+	hs,err:=client.Handshake(httpServer.URL);if err!=nil{t.Fatalf("live handshake: %v",err)};if hs.NodeID==""{t.Fatalf("live handshake node id is empty")};if hs.IdentityVersion!=NodeIdentityVersion{t.Fatalf("live handshake identity version=%d want=%d",hs.IdentityVersion,NodeIdentityVersion)};if hs.NodePublicKey==""||hs.NodeSignature==""{t.Fatalf("live handshake identity proof is incomplete")};if hs.NetworkID!=serverProfile.NetworkID||hs.ChainID!=serverProfile.ChainID{t.Fatalf("live handshake network identity=%q/%d want=%q/%d",hs.NetworkID,hs.ChainID,serverProfile.NetworkID,serverProfile.ChainID)}
+	var got Status;if err:=client.getJSONMode(httpServer.URL,"/p2p/status",nil,&got,true,true);err!=nil{t.Fatalf("live authenticated status: %v",err)};if got.NetworkID!=serverProfile.NetworkID||got.ChainID!=serverProfile.ChainID{t.Fatalf("live authenticated status response=%+v",got)}
+	status,err:=client.Status(httpServer.URL);if err!=nil{t.Fatalf("live Status client call: %v",err)};if status.NetworkID!=serverProfile.NetworkID||status.ChainID!=serverProfile.ChainID{t.Fatalf("live Status identity=%q/%d want=%q/%d",status.NetworkID,status.ChainID,serverProfile.NetworkID,serverProfile.ChainID)}
 }
 
 func TestP2PMessageAuthOptionalUnsignedCompatibility(t *testing.T) {
-	profile := config.Localnet()
-	profile.RequireAuthenticatedNode = false
-	server := NewServerWithProfile(config.NewPaths(t.TempDir()), profile)
-	handler := server.authenticated(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-	}))
-	req := httptest.NewRequest(http.MethodGet, "http://peer.example/p2p/status", nil)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-	if rec.Code != http.StatusOK {
-		t.Fatalf("optional unsigned status=%d want=%d", rec.Code, http.StatusOK)
-	}
-	if rec.Header().Get(authHeaderSignature) != "" {
-		t.Fatalf("unsigned compatibility response should not claim authentication")
-	}
+	profile:=config.Localnet();profile.RequireAuthenticatedNode=false;server:=NewServerWithProfile(config.NewPaths(t.TempDir()),profile);handler:=server.authenticated(http.HandlerFunc(func(w http.ResponseWriter,_ *http.Request){writeJSON(w,http.StatusOK,map[string]bool{"ok":true})}));req:=httptest.NewRequest(http.MethodGet,"http://peer.example/p2p/status",nil);rec:=httptest.NewRecorder();handler.ServeHTTP(rec,req);if rec.Code!=http.StatusOK{t.Fatalf("optional unsigned status=%d want=%d",rec.Code,http.StatusOK)};if rec.Header().Get(authHeaderSignature)!=""{t.Fatalf("unsigned compatibility response should not claim authentication")}
 }
 
 func TestNewClientForProfileBindsNetworkIdentity(t *testing.T) {
-	profile := config.Testnet()
-	paths := config.NewPaths(t.TempDir())
-
-	client, err := NewClientForProfile(paths, profile, time.Second)
-	if err != nil {
-		t.Fatalf("create authenticated client: %v", err)
-	}
-	if !client.AuthenticateRequests {
-		t.Fatalf("testnet client must authenticate requests")
-	}
-	if client.NetworkID != profile.NetworkID || client.ChainID != profile.ChainID {
-		t.Fatalf("client profile identity=%q/%d want=%q/%d", client.NetworkID, client.ChainID, profile.NetworkID, profile.ChainID)
-	}
-	if client.NodeIdentity.IdentityVersion() != NodeIdentityVersion {
-		t.Fatalf("client node identity is not initialized")
-	}
-
-	req := httptest.NewRequest(http.MethodGet, "http://peer.example/p2p/status", nil)
-	client.addHeaders(req)
-	if got := req.Header.Get(authHeaderNetworkID); got != profile.NetworkID {
-		t.Fatalf("auth network header=%q want=%q", got, profile.NetworkID)
-	}
-	if err := SignP2PRequest(client.NodeIdentity, client.NetworkID, client.ChainID, req, nil, time.Now(), strings.Repeat("a", 64)); err != nil {
-		t.Fatalf("sign profile-bound request: %v", err)
-	}
-	if got := req.Header.Get(authHeaderChainID); got != "777101" {
-		t.Fatalf("auth chain header=%q want=777101", got)
-	}
+	profile:=config.Testnet();paths:=config.NewPaths(t.TempDir());client,err:=NewClientForProfile(paths,profile,time.Second);if err!=nil{t.Fatalf("create authenticated client: %v",err)};if !client.AuthenticateRequests{t.Fatalf("testnet client must authenticate requests")};if client.NetworkID!=profile.NetworkID||client.ChainID!=profile.ChainID{t.Fatalf("client profile identity=%q/%d want=%q/%d",client.NetworkID,client.ChainID,profile.NetworkID,profile.ChainID)};if client.NodeIdentity.IdentityVersion()!=NodeIdentityVersion{t.Fatalf("client node identity is not initialized")}
+	req:=httptest.NewRequest(http.MethodGet,"http://peer.example/p2p/status",nil);client.addHeaders(req);if got:=req.Header.Get(authHeaderNetworkID);got!=profile.NetworkID{t.Fatalf("auth network header=%q want=%q",got,profile.NetworkID)};if err:=SignP2PRequest(client.NodeIdentity,client.NetworkID,client.ChainID,req,nil,time.Now(),strings.Repeat("a",64));err!=nil{t.Fatalf("sign profile-bound request: %v",err)};if got:=req.Header.Get(authHeaderChainID);got!="777101"{t.Fatalf("auth chain header=%q want=777101",got)}
 }
 
 func TestCheckPeerWithProfileUsesAuthenticatedClient(t *testing.T) {
-	profile := config.Testnet()
-	paths := config.NewPaths(t.TempDir())
-	client, err := NewClientForProfile(paths, profile, time.Second)
-	if err != nil {
-		t.Fatalf("create authenticated client: %v", err)
-	}
-	if !client.AuthenticateRequests {
-		t.Fatalf("testnet peer checks must use authenticated client")
-	}
-	if client.NetworkID != profile.NetworkID || client.ChainID != profile.ChainID {
-		t.Fatalf("client profile identity=%q/%d want=%q/%d", client.NetworkID, client.ChainID, profile.NetworkID, profile.ChainID)
-	}
+	profile:=config.Testnet();paths:=config.NewPaths(t.TempDir());client,err:=NewClientForProfile(paths,profile,time.Second);if err!=nil{t.Fatalf("create authenticated client: %v",err)};if !client.AuthenticateRequests{t.Fatalf("testnet peer checks must use authenticated client")};if client.NetworkID!=profile.NetworkID||client.ChainID!=profile.ChainID{t.Fatalf("client profile identity=%q/%d want=%q/%d",client.NetworkID,client.ChainID,profile.NetworkID,profile.ChainID)}
 }
 
 func TestP2PClientSurfacesUnsignedAuthRejection(t *testing.T) {
-	serverIdentity := testNodeIdentity(t, "server-auth-error")
-	profile := config.Testnet()
-	paths := config.NewPaths(t.TempDir())
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/p2p/handshake" {
-			hs := Handshake{NetworkID: profile.NetworkID, ChainID: profile.ChainID, ProtocolVersion: profile.ProtocolVersion, P2PProtocolVersion: profile.P2PProtocolVersion, MinProtocolVersion: profile.MinProtocolVersion, GenesisHash: chain.GenesisHashForNetwork(profile), NodeID: serverIdentity.NodeID, IdentityVersion: NodeIdentityVersion, NodePublicKey: hex.EncodeToString(serverIdentity.PublicKey), AuthChallenge: r.URL.Query().Get("challenge")}
-			signature, err := SignHandshake(serverIdentity, hs)
-			if err != nil {
-				t.Fatalf("sign auth error handshake: %v", err)
-			}
-			hs.NodeSignature = signature
-			writeJSON(w, http.StatusOK, hs)
-			return
-		}
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid p2p message signature"})
-	}))
-	defer server.Close()
-	client, err := NewClientForProfile(paths, profile, time.Second)
-	if err != nil {
-		t.Fatalf("create client: %v", err)
-	}
-	_, err = client.Status(server.URL)
-	if err == nil || !strings.Contains(err.Error(), "invalid p2p message signature") {
-		t.Fatalf("expected server auth rejection, got %v", err)
-	}
+	serverIdentity:=testNodeIdentity(t,"server-auth-error");profile:=config.Testnet();paths:=config.NewPaths(t.TempDir())
+	server:=httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){if r.URL.Path=="/p2p/handshake"{hs:=Handshake{NetworkID:profile.NetworkID,ChainID:profile.ChainID,ProtocolVersion:profile.ProtocolVersion,P2PProtocolVersion:profile.P2PProtocolVersion,MinProtocolVersion:profile.MinProtocolVersion,GenesisHash:chain.GenesisHashForNetwork(profile),NodeID:serverIdentity.NodeID,IdentityVersion:NodeIdentityVersion,NodePublicKey:hex.EncodeToString(serverIdentity.PublicKey),AuthChallenge:r.URL.Query().Get("challenge")};signature,err:=SignHandshake(serverIdentity,hs);if err!=nil{t.Fatalf("sign auth error handshake: %v",err)};hs.NodeSignature=signature;writeJSON(w,http.StatusOK,hs);return};writeJSON(w,http.StatusUnauthorized,map[string]string{"error":"invalid p2p message signature"})}));defer server.Close()
+	client,err:=NewClientForProfile(paths,profile,time.Second);if err!=nil{t.Fatalf("create client: %v",err)};_,err=client.Status(server.URL);if err==nil||!strings.Contains(err.Error(),"invalid p2p message signature"){t.Fatalf("expected server auth rejection, got %v",err)}
 }
 
 func TestP2PMessageAuthRejectsInvalidRequestBeforeSigning(t *testing.T) {
-	profile := config.Testnet()
-	paths := config.NewPaths(t.TempDir())
-	server := NewServerWithProfile(paths, profile)
-	remote := testNodeIdentity(t, "remote-node-invalid-request")
-	req, _ := signedTestRequest(t, remote, profile.NetworkID, profile.ChainID, http.MethodGet, "/p2p/status", nil, time.Now().Truncate(time.Second))
-	req.Header.Set(authHeaderVersion, "not-a-number")
-	rec := httptest.NewRecorder()
-	server.authenticated(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
-	})).ServeHTTP(rec, req)
-	if rec.Code != http.StatusUnauthorized {
-		t.Fatalf("status=%d want=%d", rec.Code, http.StatusUnauthorized)
-	}
-	if rec.Header().Get(authHeaderVersion) != "" {
-		t.Fatalf("pre-auth rejection must not claim an authenticated response")
-	}
+	profile:=config.Testnet();paths:=config.NewPaths(t.TempDir());server:=NewServerWithProfile(paths,profile);remote:=testNodeIdentity(t,"remote-node-invalid-request");req,_:=signedTestRequest(t,remote,profile.NetworkID,profile.ChainID,http.MethodGet,"/p2p/status",nil,time.Now().Truncate(time.Second));req.Header.Set(authHeaderVersion,"not-a-number");rec:=httptest.NewRecorder();server.authenticated(http.HandlerFunc(func(w http.ResponseWriter,_ *http.Request){writeJSON(w,http.StatusOK,map[string]bool{"ok":true})})).ServeHTTP(rec,req);if rec.Code!=http.StatusUnauthorized{t.Fatalf("status=%d want=%d",rec.Code,http.StatusUnauthorized)};if rec.Header.Get(authHeaderVersion)!=""{t.Fatalf("pre-auth rejection must not claim an authenticated response")}
 }
 
-type nopCloser struct {
-	*bytes.Reader
-}
-
-func (nopCloser) Close() error { return nil }
-
-func ioNopCloser(data []byte) *nopCloser {
-	return &nopCloser{Reader: bytes.NewReader(data)}
-}
+type nopCloser struct {*bytes.Reader}
+func (nopCloser) Close() error{return nil}
+func ioNopCloser(data []byte)*nopCloser{return &nopCloser{Reader:bytes.NewReader(data)}}
