@@ -205,7 +205,7 @@ func TestPeerSyncRejectsNetworkMismatch(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	err := SyncFromPeerWithProfile(local, server.URL, nil, config.Testnet())
+	err := SyncFromPeerWithProfile(local, server.URL, nil, profile)
 	if err == nil || !strings.Contains(err.Error(), "network id mismatch") {
 		t.Fatalf("expected sync network mismatch, got %v", err)
 	}
@@ -226,7 +226,9 @@ func TestPeerSyncRejectsNetworkMismatchEvenWhenLocalUpToDate(t *testing.T) {
 }
 
 func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
-	local := newProfileTestNode(t, config.Testnet())
+	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
+	local := newProfileTestNode(t, profile)
 	localGenesis := chain.GenesisBlockForNetwork(config.Testnet())
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
