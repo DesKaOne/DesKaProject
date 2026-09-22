@@ -3371,7 +3371,14 @@ func (a App) remotePeer(args []string) error {
 		if *jsonOut {
 			return json.NewEncoder(a.out).Encode(info)
 		}
-		peers := info["peers"].([]any)
+		peers, ok := info["peers"].([]any)
+		if !ok {
+			if known, knownOK := info["known_peers"].([]any); knownOK {
+				peers = known
+			} else {
+				return errors.New("peer list response missing peers")
+			}
+		}
 		fmt.Fprintf(a.out, "peers: %d\n", len(peers))
 		for _, peer := range peers {
 			if meta, ok := peer.(map[string]any); ok {
