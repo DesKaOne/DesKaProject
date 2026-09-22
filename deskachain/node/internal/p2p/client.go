@@ -20,6 +20,7 @@ type Client struct {
 	NodeID               string
 	P2PURL               string
 	NetworkID            string
+	ChainID              uint64
 	NodeIdentity         NodeIdentity
 	AuthenticateRequests bool
 }
@@ -34,6 +35,11 @@ func NewClientWithTimeout(timeout time.Duration) Client {
 
 func NewClientForProfile(paths config.Paths, profile config.NetworkConfig, timeout time.Duration) (Client, error) {
 	client := NewClientWithTimeout(timeout)
+	if profile.Name == "" {
+		profile = config.Localnet()
+	}
+	client.NetworkID = profile.NetworkID
+	client.ChainID = profile.ChainID
 	if !profile.RequireAuthenticatedNode {
 		return client, nil
 	}
@@ -81,6 +87,11 @@ func (c Client) Handshake(peer string) (Handshake, error) {
 	if handshake.IdentityVersion != 0 || handshake.NodePublicKey != "" || handshake.NodeSignature != "" {
 		if err := VerifyHandshakeIdentity(handshake); err != nil {
 			return Handshake{}, err
+		}
+	}
+	if c.AuthenticateRequests {
+		if handshake.IdentityVersion != NodeIdentityVersion || strings.TrimSpace(handshake.NodeID) == "" || strings.TrimSpace(handshake.NodePublicKey) == "" || strings.TrimSpace(handshake.NodeSignature) == "" {
+			return Handshake{}, fmt.Errorf("peer handshake authenticated identity incomplete")
 		}
 	}
 	return handshake, nil
@@ -153,15 +164,25 @@ func (c Client) postJSON(peer, path string, body, target any) error {
 func (c Client) doJSON(peer, method, path string, raw []byte, target any, authenticated, rejectClientError bool) error {
 	var handshake Handshake
 	if authenticated {
-		handshake, err := c.Handshake(peer)
+		var err error
+		handshake, err = c.Handshake(peer)
 		if err != nil {
 			return err
 		}
 		if err := c.NodeIdentityValidation(); err != nil {
 			return err
 		}
-		if c.NetworkID != "" && c.NetworkID != handshake.NetworkID {
+		if c.NetworkID == "" {
+			return fmt.Errorf("authenticated client network id is required")
+		}
+		if c.NetworkID != handshake.NetworkID {
 			return fmt.Errorf("peer handshake network id mismatch")
+		}
+		if c.ChainID == 0 {
+			return fmt.Errorf("authenticated client chain id is required")
+		}
+		if handshake.ChainID != c.ChainID {
+			return fmt.Errorf("peer handshake chain id mismatch")
 		}
 	}
 	var bodyReader io.Reader
@@ -182,7 +203,7 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if err != nil {
 			return err
 		}
-		if err := SignP2PRequest(c.NodeIdentity, handshake.NetworkID, handshake.ChainID, req, raw, time.Now(), requestNonce); err != nil {
+		if err := SignP2PRequest(c.NodeIdentity, c.NetworkID, c.ChainID, req, raw, time.Now(), requestNonce); err != nil {
 			return err
 		}
 	}
@@ -200,7 +221,14 @@ func (c Client) doJSON(peer, method, path string, raw []byte, target any, authen
 		if len(responseBody) > p2pMessageAuthResponseLimit {
 			return fmt.Errorf("peer authenticated response too large")
 		}
-		if err := VerifyP2PResponse(handshake, handshake.NetworkID, handshake.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+		if err := VerifyP2PResponse(handshake, c.NetworkID, c.ChainID, requestNonce, resp.StatusCode, responseBody, resp.Header, time.Now()); err != nil {
+			if resp.StatusCode >= 400 && resp.Header.Get(authHeaderVersion) == "" {
+				var remote map[string]string
+				if json.Unmarshal(responseBody, &remote) == nil && strings.TrimSpace(remote["error"]) != "" {
+					return fmt.Errorf("peer returned %s: %s", resp.Status, remote["error"])
+				}
+				return fmt.Errorf("peer returned %s", resp.Status)
+			}
 			return err
 		}
 		if rejectClientError {

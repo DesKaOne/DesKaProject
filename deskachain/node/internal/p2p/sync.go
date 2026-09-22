@@ -382,17 +382,13 @@ func notePeerSuccess(paths config.Paths, peer string, hs Handshake, scoreDelta i
 	lastReason := ""
 	lastScoreAt := ""
 	var existingMeta *PeerMetadata
-	now := time.Now()
 	for i := range peers {
 		existing := peers[i]
 		if existing.URL == peer {
-			if reasonRequiresCooldown(reason) &&
-				existing.LastScoreReason == reason &&
-				!scoreCooldownElapsed(existing.LastScoreAt, now) &&
-				existing.LastHeight == hs.Height &&
-				existing.LastTipHash == hs.TipHash {
-				return nil
-			}
+			// Keep the score deduplication behavior for repeated successful checks,
+			// but do not return before refreshing liveness metadata. A peer that was
+			// previously marked bad must still recover to active on an authenticated
+			// successful check even when the score update is cooldown-deduplicated.
 			score = existing.Score
 			lastReason = existing.LastScoreReason
 			lastScoreAt = existing.LastScoreAt
@@ -401,6 +397,10 @@ func notePeerSuccess(paths config.Paths, peer string, hs Handshake, scoreDelta i
 		}
 	}
 	meta := MetadataFromHandshake(peer, hs, score)
+	// A successful authenticated handshake is an explicit recovery signal.
+	// Do not let a previously negative reputation score reclassify the peer
+	// back to bad during metadata refresh; score and liveness are separate.
+	meta.Status = PeerStatusActive
 	if existingMeta != nil {
 		meta.FirstSeenAt = existingMeta.FirstSeenAt
 		meta.Source = existingMeta.Source

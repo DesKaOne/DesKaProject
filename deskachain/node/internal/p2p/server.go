@@ -703,22 +703,29 @@ func (s Server) openChain() (*chain.Blockchain, func(), error) {
 
 func (s Server) authenticated(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hasAuth := hasP2PAuthHeaders(r.Header)
-		if !hasAuth && !s.network().RequireAuthenticatedNode {
-			next.ServeHTTP(w, r)
-			return
-		}
 		body, err := readAuthenticatedRequestBody(r)
 		if err != nil {
 			writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"error": err.Error()})
 			return
 		}
-		if !hasAuth {
+		if !hasP2PAuthHeaders(r.Header) {
+			if !s.network().RequireAuthenticatedNode {
+				next.ServeHTTP(w, r)
+				return
+			}
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "authenticated p2p message required"})
 			return
 		}
 		auth, err := VerifyP2PRequest(s.network().NetworkID, s.network().ChainID, r, body, time.Now())
 		if err != nil {
+			log.Printf("p2p auth rejected method=%s path=%s node_id=%s network_id=%s chain_id=%s error=%v",
+				r.Method,
+				r.URL.RequestURI(),
+				r.Header.Get(authHeaderNodeID),
+				r.Header.Get(authHeaderNetworkID),
+				r.Header.Get(authHeaderChainID),
+				err,
+			)
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": err.Error()})
 			return
 		}
@@ -726,23 +733,32 @@ func (s Server) authenticated(next http.Handler) http.Handler {
 		next.ServeHTTP(capture, r)
 		responseBody := capture.body.Bytes()
 		if len(responseBody) > p2pMessageAuthResponseLimit {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "authenticated p2p response too large"})
-			return
+			responseBody, capture.status = mustAuthenticatedErrorBody("authenticated p2p response too large", http.StatusInternalServerError)
 		}
 		identity, err := LoadOrCreateNodeIdentity(s.paths.NodeID)
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
+			responseBody, capture.status = mustAuthenticatedErrorBody(err.Error(), http.StatusInternalServerError)
 		}
-		responseHeaders, err := SignP2PResponse(identity, s.network().NetworkID, s.network().ChainID, auth.Nonce, capture.status, responseBody, time.Now())
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		responseHeaders, signErr := SignP2PResponse(identity, s.network().NetworkID, s.network().ChainID, auth.Nonce, capture.status, responseBody, time.Now())
+		if signErr != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": signErr.Error()})
 			return
 		}
 		if err := capture.commit(responseHeaders, responseBody, capture.status); err != nil {
 			log.Printf("authenticated p2p response write failed: %v", err)
 		}
 	})
+}
+
+func mustAuthenticatedErrorBody(message string, status int) ([]byte, int) {
+	payload, err := json.Marshal(map[string]string{"error": message})
+	if err != nil {
+		fallback := []byte(`{"error":"authenticated p2p error"}`)
+		fallback = append(fallback, '\n')
+		return fallback, status
+	}
+	payload = append(payload, '\n')
+	return payload, status
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

@@ -205,7 +205,9 @@ func (s PeerStore) Upsert(peer PeerMetadata) error {
 	}
 	peer.URL = normalized
 	peer.Score = clampScore(peer.Score)
-	peer.Status = statusForScore(peer.Score, peer.Status)
+	if peer.Status == "" {
+		peer.Status = statusForScore(peer.Score, PeerStatusUnknown)
+	}
 	peers, err := s.LoadMetadata()
 	if err != nil {
 		return err
@@ -258,7 +260,11 @@ func (s PeerStore) AdjustPeerScore(peerURL string, delta int, reason string) err
 			return nil
 		}
 		peers[i].Score = clampScore(peers[i].Score + delta)
-		peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+		if reasonRequiresCooldown(reason) {
+			peers[i].Status = PeerStatusActive
+		} else {
+			peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+		}
 		if reasonTriggersCooldown(reason, peers[i].Score) {
 			peers[i].CooldownUntil = now.Add(time.Minute).Format(time.RFC3339)
 			peers[i].Status = PeerStatusCooldown
@@ -301,7 +307,7 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 		peers[i].LastLatencyMS = latencyMS
 		peers[i].LastStatusCheckAt = now
 		peers[i].LastError = errText
-		if errText == "" && peers[i].Status != PeerStatusBad {
+		if errText == "" {
 			peers[i].Status = PeerStatusActive
 			peers[i].LastSuccessAt = now
 			peers[i].SuccessCount++
@@ -313,7 +319,11 @@ func (s PeerStore) UpdateLatency(peerURL string, latencyMS int64, errText string
 		delta, reason := latencyScoreDelta(latencyMS, errText)
 		if delta != 0 {
 			peers[i].Score = clampScore(peers[i].Score + delta)
-			peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+			if errText == "" {
+				peers[i].Status = PeerStatusActive
+			} else {
+				peers[i].Status = statusForScore(peers[i].Score, peers[i].Status)
+			}
 			peers[i].LastScoreReason = reason
 			peers[i].LastScoreAt = now
 			if reasonTriggersCooldown(reason, peers[i].Score) {
@@ -618,7 +628,6 @@ func uniqueMetadata(peers []PeerMetadata) []PeerMetadata {
 			peer.Source = "peers.json"
 		}
 		peer.Score = clampScore(peer.Score)
-		peer.Status = currentStatus(peer)
 		if peer.FirstSeenAt == "" {
 			peer.FirstSeenAt = peer.LastSeenAt
 		}
@@ -658,7 +667,10 @@ func currentStatus(peer PeerMetadata) string {
 			peer.Status = PeerStatusUnknown
 		}
 	}
-	return statusForScore(peer.Score, peer.Status)
+	if peer.Status == "" {
+		return statusForScore(peer.Score, PeerStatusUnknown)
+	}
+	return peer.Status
 }
 
 func reasonTriggersCooldown(reason string, score int) bool {

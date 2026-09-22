@@ -23,7 +23,11 @@ func CheckPeerWithProfile(paths config.Paths, peer string, profile config.Networ
 	local := profile
 	local.GenesisHash = chain.GenesisHashForNetwork(profile)
 	start := time.Now()
-	hs, err := NewClientWithTimeout(2 * time.Second).Handshake(peer)
+	client, err := NewClientForProfile(paths, profile, 2*time.Second)
+	if err != nil {
+		return Handshake{}, err
+	}
+	hs, err := client.Handshake(peer)
 	latency := time.Since(start).Milliseconds()
 	if err != nil {
 		_ = NewPeerStore(paths.Peers).UpdateLatency(peer, latency, err.Error())

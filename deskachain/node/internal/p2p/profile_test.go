@@ -226,7 +226,9 @@ func TestPeerSyncRejectsNetworkMismatchEvenWhenLocalUpToDate(t *testing.T) {
 }
 
 func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
-	local := newProfileTestNode(t, config.Testnet())
+	profile := config.Testnet()
+	profile.RequireAuthenticatedNode = false
+	local := newProfileTestNode(t, profile)
 	localGenesis := chain.GenesisBlockForNetwork(config.Testnet())
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -248,7 +250,7 @@ func TestPeerSyncRejectsGenesisMismatchEvenWhenLocalUpToDate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	err := SyncFromPeerWithProfile(local, server.URL, nil, config.Testnet())
+	err := SyncFromPeerWithProfile(local, server.URL, nil, profile)
 	if err == nil || !strings.Contains(err.Error(), "genesis hash mismatch") {
 		t.Fatalf("expected genesis mismatch before up-to-date return, got %v", err)
 	}

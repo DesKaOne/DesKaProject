@@ -191,9 +191,9 @@ func VerifyP2PResponse(handshake Handshake, networkID string, chainID uint64, re
 		return errors.New("incomplete p2p response authentication headers")
 	}
 	if nodeID != handshake.NodeID {
-		return errors.New("p2p response node id mismatch")
+		return fmt.Errorf("p2p response node id mismatch: handshake=%s response=%s", handshake.NodeID, nodeID)
 	}
-	if publicKeyRaw != handshake.NodePublicKey {
+	if publicKeyRaw != strings.TrimSpace(handshake.NodePublicKey) {
 		return errors.New("p2p response node public key mismatch")
 	}
 	if responseNetworkID != networkID {

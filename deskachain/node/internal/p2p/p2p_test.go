@@ -42,6 +42,34 @@ func TestCreateLockIsExclusive(t *testing.T) {
 	}
 }
 
+func TestCreateLockRecoversStaleOwner(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "node.lock")
+	stale := LockInfo{
+		PID:       2147483647,
+		RPC:       ":8331",
+		P2P:       ":9331",
+		StartedAt: time.Now().Add(-time.Hour).Format(time.RFC3339),
+	}
+	raw, err := json.Marshal(stale)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, raw, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	fresh, err := CreateLock(path, ":8332", ":9332", "http://127.0.0.1:9332")
+	if err != nil {
+		t.Fatalf("expected stale lock recovery, got %v", err)
+	}
+	if fresh.PID != os.Getpid() || fresh.RPC != ":8332" || fresh.P2P != ":9332" {
+		t.Fatalf("stale lock was not replaced: %+v", fresh)
+	}
+	if err := RemoveLock(path); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestNodeIDPersistent(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "node_id")
 	first, err := LoadOrCreateNodeID(path)
@@ -372,6 +400,95 @@ func TestPeerStoreMetadataAndLegacyMigration(t *testing.T) {
 	meta, _ = store.LoadMetadata()
 	if meta[0].NodeID != "n1" || meta[0].Status != PeerStatusActive || meta[0].Score != 1 {
 		t.Fatalf("metadata not stored: %#v", meta[0])
+	}
+}
+
+func TestPeerSuccessfulCheckRecoversBadPeerStatus(t *testing.T) {
+	store := NewPeerStore(filepath.Join(t.TempDir(), "peers.json"))
+	peer := "http://127.0.0.1:9331"
+	if err := store.SaveMetadata([]PeerMetadata{{
+		URL:           peer,
+		Status:        PeerStatusBad,
+		Score:         -66,
+		FailureCount:  12,
+		LastError:     "request failed",
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.UpdateLatency(peer, 42, ""); err != nil {
+		t.Fatal(err)
+	}
+	meta, err := store.LoadMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(meta) != 1 {
+		t.Fatalf("metadata count = %d, want 1", len(meta))
+	}
+	if meta[0].Status != PeerStatusActive {
+		t.Fatalf("successful check did not recover peer status: %+v", meta[0])
+	}
+	if meta[0].Score != -64 {
+		t.Fatalf("successful latency score changed unexpectedly: %d", meta[0].Score)
+	}
+	if meta[0].LastError != "" || meta[0].SuccessCount != 1 {
+		t.Fatalf("successful check did not clear failure state: %+v", meta[0])
+	}
+	selected := SelectPeers(meta, false, 1)
+	if len(selected) != 1 || selected[0].URL != peer {
+		t.Fatalf("recovered peer is still excluded from selection: %+v", selected)
+	}
+}
+
+func TestPeerSuccessfulCheckRecoversBadScoreStatus(t *testing.T) {
+	paths := config.NewPaths(t.TempDir())
+	peer := "http://127.0.0.1:9331"
+	now := time.Now().Format(time.RFC3339)
+	store := NewPeerStore(paths.Peers)
+	if err := store.SaveMetadata([]PeerMetadata{{
+		URL:             peer,
+		Status:          PeerStatusBad,
+		Score:           -60,
+		LastHeight:      106,
+		LastTipHash:     "tip-106",
+		LastScoreReason: "peer status ok",
+		LastScoreAt:     now,
+		LastError:       "stale failure",
+		FailureCount:    12,
+	}}); err != nil {
+		t.Fatal(err)
+	}
+
+	hs := Handshake{
+		NodeID:         "peer-node",
+		NetworkID:      config.Localnet().NetworkID,
+		ChainID:        config.Localnet().ChainID,
+		ProtocolVersion: config.Localnet().ProtocolVersion,
+		P2PProtocolVersion: config.Localnet().P2PProtocolVersion,
+		GenesisHash:    chain.GenesisHashForNetwork(config.Localnet()),
+		Height:         106,
+		TipHash:        "tip-106",
+	}
+	if err := notePeerSuccess(paths, peer, hs, 1, "peer status ok"); err != nil {
+		t.Fatal(err)
+	}
+
+	meta, err := store.LoadMetadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(meta) != 1 {
+		t.Fatalf("metadata count = %d, want 1", len(meta))
+	}
+	got := meta[0]
+	if got.Status != PeerStatusActive {
+		t.Fatalf("successful peer check left peer bad: %+v", got)
+	}
+	if got.Score != -60 {
+		t.Fatalf("score changed during deduplicated success recovery: %d", got.Score)
+	}
+	if got.LastError != "" {
+		t.Fatalf("successful peer check did not clear stale error: %q", got.LastError)
 	}
 }
 

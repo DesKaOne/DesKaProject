@@ -262,6 +262,21 @@ Expected after successful synchronization:
 
 ## 12.8 Transaction drill
 
+The runtime testnet profile is intentionally configured as zero-subsidy, fee-only economics. Therefore a normal runtime mining loop does not fund a fresh wallet with dIDR. The controlled faucet flow also requires a faucet wallet with mature spendable dIDR, so faucet setup is not a substitute for the missing funding source on a zero-subsidy runtime chain.
+
+For Phase 12, do not alter the testnet consensus/economic profile just to create test funds. The transaction propagation gate remains blocked until a reproducible operator/test fixture is provided that is explicitly separated from consensus behavior and cannot be enabled on mainnet or public RPC mode.
+
+Once a valid funding fixture exists, the transaction test must prove:
+
+1. a normal testnet transaction can be created;
+2. the transaction reaches the mempool;
+3. a block confirms it;
+4. both nodes observe the resulting canonical state;
+5. transaction and chain validation succeed.
+
+Do not copy private keys between independent nodes.
+
+
 Create separate test wallets on a trusted local node only.
 
 Example:
